@@ -1,0 +1,32 @@
+{
+  "cSpell.words": [
+    "analyzability",
+    "Backorder",
+    "bierner",
+    "corschenzi",
+    "cutover",
+    "HIPO",
+    "mhutchie",
+    "openspec",
+    "RACI",
+    "Resellable",
+    "SSOT",
+    "stackable",
+    "Stockout",
+    "Stocktake",
+    "systemization",
+    "TAXCLASS"
+  ],
+  "yaml.schemas": {
+    "${workspaceFolder}/schemas/glossary.schema.json": [
+      "glossary.*.yaml",
+      "glossary.*.yml"
+    ]
+  },
+  "yaml.validate": true,
+  "yaml.format.enable": true,
+  "files.associations": {
+    "*.yaml": "yaml",
+    "*.yml": "yaml"
+  }  
+}

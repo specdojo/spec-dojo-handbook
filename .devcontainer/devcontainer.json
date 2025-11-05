@@ -1,0 +1,22 @@
+{
+  "name": "copilot-cli-devcontainer (node base)",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/yamllint:2": {}
+  },
+  "postCreateCommand": "npm install -g @github/copilot @fission-ai/openspec@latest",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "streetsidesoftware.code-spell-checker",
+        "mhutchie.git-graph",
+        "github.copilot",
+        "github.copilot-chat",
+        "CucumberOpen.cucumber-official",
+        "bierner.markdown-mermaid",
+        "corschenzi.mermaid-graphical-editor",
+        "redhat.vscode-yaml"
+      ]
+    }
+  }
+}
