@@ -1,4 +1,3 @@
-
 # 020-実装クラス図
 
 実装クラスやサービスの構造をMermaidのclassDiagramで表現します。
@@ -11,6 +10,7 @@
 ## ドキュメントの内容
 
 ドキュメントには、少なくとも以下を含めます。
+
 - 実装クラス図（Mermaid classDiagram等）
 - 各クラス・サービスの概要・関係性
 - サンプル（小売業務システム例）
@@ -28,26 +28,27 @@
 ## サンプル
 
 ### 実装クラス図（小売業務システム例/Mermaid classDiagram）
+
 ```mermaid
 classDiagram
-	class 商品 {
-		+商品コード: string
-		+商品名: string
-		+在庫数: int
-		+発注点: int
-	}
-	class 在庫 {
-		+商品コード: string
-		+在庫数: int
-		+棚番: string
-	}
-	class 発注 {
-		+発注ID: string
-		+発注日: date
-		+発注先: string
-	}
-	商品 "1" -- "*" 在庫
-	商品 "1" -- "*" 発注
+ class 商品 {
+  +商品コード: string
+  +商品名: string
+  +在庫数: int
+  +発注点: int
+ }
+ class 在庫 {
+  +商品コード: string
+  +在庫数: int
+  +棚番: string
+ }
+ class 発注 {
+  +発注ID: string
+  +発注日: date
+  +発注先: string
+ }
+ 商品 "1" -- "*" 在庫
+ 商品 "1" -- "*" 発注
 ```
 
 ---

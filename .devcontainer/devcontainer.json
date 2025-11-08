@@ -15,7 +15,8 @@
         "CucumberOpen.cucumber-official",
         "bierner.markdown-mermaid",
         "corschenzi.mermaid-graphical-editor",
-        "redhat.vscode-yaml"
+        "redhat.vscode-yaml",
+        "davidanson.vscode-markdownlint"
       ]
     }
   }

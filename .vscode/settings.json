@@ -28,5 +28,13 @@
   "files.associations": {
     "*.yaml": "yaml",
     "*.yml": "yaml"
-  }  
+  },
+  "[markdown]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.markdownlint": "explicit"
+    }
+  },
+  "editor.detectIndentation": false,
+  "editor.insertSpaces": true
 }
