@@ -17,24 +17,37 @@
     "systemization",
     "TAXCLASS"
   ],
-  "yaml.schemas": {
-    "${workspaceFolder}/schemas/glossary.schema.json": [
-      "glossary.*.yaml",
-      "glossary.*.yml"
-    ]
-  },
-  "yaml.validate": true,
-  "yaml.format.enable": true,
-  "files.associations": {
-    "*.yaml": "yaml",
-    "*.yml": "yaml"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "yzhang.markdown-all-in-one",
-    "editor.formatOnSave": true
-  },
-  "markdownlint.run": "onSave",
 
-  "editor.detectIndentation": false,
-  "editor.insertSpaces": true
+  // ===== ファイル全体の共通設定 =====
+  // 行末の余計な空白を削除
+  "files.trimTrailingWhitespace": true,
+  // ファイル末尾に必ず 1 行だけ改行を入れる
+  "files.insertFinalNewline": true,
+  // 2 行以上の余計な末尾改行は削除
+  "files.trimFinalNewlines": true,
+
+  // ===== Prettier 基本設定 =====
+  // 可能なら Prettier をデフォルトフォーマッタに
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  // 保存時に自動フォーマット
+  "editor.formatOnSave": true,
+
+  // Prettier 設定ファイル（.prettierrc 等）があるときだけ有効にするなら true
+  // （プロジェクトごとにルールを変えたい場合に便利）
+  "prettier.requireConfig": true,
+
+  // ===== Markdown 専用設定 =====
+  "[markdown]": {
+    // Markdown だけ Prettier で整形
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+
+    // markdownlint の自動修正も保存時に実行
+    "editor.codeActionsOnSave": {
+      "source.fixAll.markdownlint": "always"
+    },
+
+    // 好み：Markdown は自動折り返しにしておくと読みやすい
+    "editor.wordWrap": "on"
+  }
 }

@@ -18,6 +18,7 @@
         "redhat.vscode-yaml",
         "davidanson.vscode-markdownlint",
         "editorconfig.editorconfig",
+        "esbenp.prettier-vscode",
         "yzhang.markdown-all-in-one"
       ]
     }

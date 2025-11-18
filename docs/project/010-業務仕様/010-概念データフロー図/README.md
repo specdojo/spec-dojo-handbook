@@ -24,11 +24,6 @@
 - データの流れが曖昧になり、設計・開発・運用で誤解や手戻りが発生する。
 - データ連携や処理順序の認識ズレによる品質低下・トラブルにつながる。
 
-
 ## Mermaid を用いたデータフロー図（DFD）作成ルール
 
 [mermaid-dfd-rules.md](mermaid-dfd-rules.md) を参照。生成AIへの指示はテンプレート[mermaid-dfd-instruction.md](mermaid-dfd-instruction.md) を参考にしてください。
-
----
-
-注：上記は例です。実プロジェクトの業務・システム間のデータフローを具体的に記載してください。
