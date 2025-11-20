@@ -1,0 +1,3 @@
+MD013: false # 行の長さ
+MD033: false # インライン HTML を許可
+MD024: false # 同じ内容の見出しを複数許可

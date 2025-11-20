@@ -44,7 +44,7 @@
 
     // markdownlint の自動修正も保存時に実行
     "editor.codeActionsOnSave": {
-      "source.fixAll.markdownlint": "always"
+      "source.fixAll.markdownlint": "explicit"
     },
 
     // 好み：Markdown は自動折り返しにしておくと読みやすい
