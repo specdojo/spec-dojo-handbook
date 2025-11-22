@@ -5,6 +5,7 @@ import * as crypto from 'crypto'
 
 const ROOT = path.resolve('docs')
 const OUT_DIR = path.join(ROOT, 'public', 'mermaid')
+const PUPPETEER_CONFIG = path.resolve('puppeteer-config.json')
 
 /**
  * Mermaidコードの内容からハッシュを作って、SVGファイル名に使う
@@ -33,10 +34,12 @@ function walk(dir: string): void {
 }
 
 function processMarkdown(mdPath: string): void {
+  console.log(`🌀 Generating mermaid SVG from: ${path.relative(process.cwd(), mdPath)}`)
+
   const text = fs.readFileSync(mdPath, 'utf8')
 
-  // ```mermaid ... ``` を全部拾う
-  const mermaidBlocks = [...text.matchAll(/```mermaid([\s\S]*?)```/g)]
+  // ✅ 行頭の ```mermaid ... ``` だけを拾う
+  const mermaidBlocks = [...text.matchAll(/^```mermaid[^\n]*\n([\s\S]*?)^```/gm)]
   if (mermaidBlocks.length === 0) {
     return
   }
@@ -62,7 +65,7 @@ function processMarkdown(mdPath: string): void {
 
     // mermaid-cli を使って .mmd → .svg
     // docs/ をカレントにすると相対パスがシンプルになる
-    execSync(`npx mmdc -i "${tmpMmd}" -o "${svgPath}"`, {
+    execSync(`npx mmdc -p "${PUPPETEER_CONFIG}" -i "${tmpMmd}" -o "${svgPath}"`, {
       stdio: 'inherit',
     })
 

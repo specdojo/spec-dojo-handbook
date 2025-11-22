@@ -1,10 +1,14 @@
 {
-  "name": "copilot-cli-devcontainer (node base)",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node",
+  "name": "grandma-candy-shop devcontainer",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
   "features": {
     "ghcr.io/devcontainers-extra/features/yamllint:2": {}
   },
   "postCreateCommand": "npm install -g @github/copilot @fission-ai/openspec@latest",
+
   "customizations": {
     "vscode": {
       "extensions": [

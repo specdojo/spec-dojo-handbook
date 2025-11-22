@@ -20,10 +20,18 @@ export default defineConfig({
   markdown: {
     //
     // ```mermaid ... ``` のコードブロックを
-    // <img src="[base]/mermaid/<hash>.svg"> に差し替える
+    // <img src="/mermaid/<hash>.svg"> に差し替える
     // （Markdownファイルは書き換えない。HTML生成時だけ差し替え）
     //
     config: md => {
+      // 🔹 インラインコード `...` は必ず v-pre を付けて出力
+      //    → `{{ ... }}` を Vue がパースしなくなる
+      md.renderer.rules.code_inline = (tokens, idx) => {
+        const token = tokens[idx]
+        const content = md.utils.escapeHtml(token.content)
+        return `<code v-pre>${content}</code>`
+      }
+
       const defaultFence = md.renderer.rules.fence
 
       md.renderer.rules.fence = (tokens, idx, options, env, self) => {
@@ -33,7 +41,7 @@ export default defineConfig({
         if (info === 'mermaid') {
           const code = token.content.trim()
           const id = hashCode(code)
-          const src = `${base}mermaid/${id}.svg`
+          const src = `/mermaid/${id}.svg`
           return `<p><img src="${src}" alt="mermaid diagram" loading="lazy"></p>\n`
         }
 

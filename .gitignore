@@ -53,3 +53,5 @@ next-env.d.ts
 # vitepress build output
 /docs/.vitepress/dist
 /docs/.vitepress/cache
+/docs/public/mermaid
+/local
