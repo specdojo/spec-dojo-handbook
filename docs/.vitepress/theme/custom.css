@@ -1,0 +1,23 @@
+/* Mermaid 図用コンテナ */
+.mermaid-container {
+  margin: 1.5rem auto;
+  display: inline-block; /* 中身に合わせて縮む（shrink-to-fit） */
+  max-width: 800px; /* ただし最大 800px まで */
+  max-height: 800px;
+  overflow-x: auto; /* はみ出した場合はスクロール */
+  overflow-y: auto;
+
+  padding: 0.5rem;
+  box-sizing: border-box;
+  background-color: var(--vp-c-bg-soft, #f8f8f8);
+  border-radius: 4px;
+}
+
+/* 画像自体は本来サイズのまま（VitePress の max-width:100% を打ち消す） */
+.mermaid-container .mermaid-image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none !important; /* ← これ大事！ */
+  margin: 0 auto;
+}

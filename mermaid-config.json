@@ -1,0 +1,7 @@
+{
+  "theme": "default",
+  "fontFamily": "Noto Sans JP, sans-serif",
+  "themeVariables": {
+    "fontSize": "12px"
+  }
+}

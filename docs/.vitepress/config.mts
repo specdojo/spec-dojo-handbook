@@ -24,7 +24,7 @@ export default defineConfig({
     // （Markdownファイルは書き換えない。HTML生成時だけ差し替え）
     //
     config: md => {
-      // 🔹 インラインコード `...` は必ず v-pre を付けて出力
+      // インラインコード `...` は必ず v-pre を付けて出力
       //    → `{{ ... }}` を Vue がパースしなくなる
       md.renderer.rules.code_inline = (tokens, idx) => {
         const token = tokens[idx]
@@ -42,7 +42,13 @@ export default defineConfig({
           const code = token.content.trim()
           const id = hashCode(code)
           const src = `/mermaid/${id}.svg`
-          return `<p><img src="${src}" alt="mermaid diagram" loading="lazy"></p>\n`
+
+          // 800x800 を超える場合はスクロールさせるためのラッパーを用意
+          // 具体的な判定は CSS / JS 側で行う想定（ここではクラスだけ付与）
+          return `
+              <p class="mermaid-container">
+                <img src="${src}" alt="mermaid diagram" loading="lazy" class="mermaid-image">
+              </p>\n`
         }
 
         // それ以外のコードブロックはデフォルトの描画
