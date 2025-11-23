@@ -9,4 +9,3 @@ plugins:
     - schemas:
         ./docs/tools/schemas/spec-frontmatter.schema.yaml:
           - ./docs/**/*.md
-          - ./local/*.md
