@@ -1,6 +1,6 @@
 # 調達概念データフロー（現状）
 
-凡例と記号の意味は「mermaid-dfd-rules.md」を参照してください。
+凡例と記号の意味は[mermaid-dfd-rules.md](mermaid-dfd-rules.md)を参照してください。
 
 ## 調達プロセス概要
 
