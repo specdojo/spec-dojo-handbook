@@ -54,15 +54,5 @@
 
     // 好み：Markdown は自動折り返しにしておくと読みやすい
     "editor.wordWrap": "on"
-  },
-
-  // eslint で MDX ファイルもチェックするように設定
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact",
-    "markdown",
-    "mdx"
-  ]
+  }
 }
