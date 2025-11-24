@@ -1,6 +1,6 @@
 # Mermaid を用いた概念クラス図（CCD）作成ルール
 
-本ドキュメントは、業務分析・要求定義のために **概念モデル（Conceptual Model）を Mermaid の `classDiagram` で記述する標準ルール**です。
+本ドキュメントは、業務分析・要求定義のために **概念クラ図（Conceptual Class Diagram）を Mermaid の `classDiagram` で記述する標準ルール**です。
 実装とは切り離し、概念（エンティティ）とその関係を簡潔に表すことを目的とします。
 
 ---
