@@ -1,0 +1,25 @@
+# プレフィックス命名規則
+
+| 種別                 | English                             | prefix | 例                 |
+| -------------------- | ----------------------------------- | ------ | ------------------ |
+| 概念データフロー図   | Conceptual Data Flow Diagram        | cdfd-  | cdfd-overview      |
+| 概念クラス図         | Conceptual Class Diagram            | ccd-   | ccd-customer       |
+| 業務データ辞書       | Business Data Dictionary            | bdd-   | bdd-main           |
+| 業務データストア一覧 | Business Data Store List            | cdsl-  | cdsl-main          |
+| 保管場所一覧         | Storage Location List               | sll-   | sll-main           |
+| ステータス           | Status                              | sts-   | sts-product        |
+| API                  | API                                 | api-   | api-get-order      |
+| 業務プロセス図       | Business Process Diagram            | bp-    | bp-order-flow      |
+| 概念状態遷移図       | Conceptual State Transition Diagram | cstd-  | cstd-product       |
+| 業務プロセス仕様     | Business Process Specification      | bps-   | bps-order-flow     |
+| ビジネスルール       | Business Rule                       | br-    | br-discount        |
+| 画面仕様             | UI Specification                    | ui-    | ui-order-edit      |
+| システム化機能一覧   | System Function List                | sfl-   | sfl-inventory      |
+| 業務イベント一覧     | Business Event List                 | bel-   | bel-order-created  |
+| 業務受け入れ条件     | Business Acceptance Criteria        | bac-   | bac-order-approved |
+| 用語集               | Glossary                            | gl-    | gl-sales           |
+| 用語集の用語         | Glossary Term                       | tm-    | tm-reorder-point   |
+| コンテキスト図       | Context Diagram                     | ctx-   | ctx-customer       |
+| コンテナ図           | Container Diagram                   | ctr-   | ctr-customer       |
+| コンポーネント図     | Component Diagram                   | cpt-   | cpt-inventory      |
+| インフラ構成図       | Infrastructure Diagram              | ifd-   | ifd-main           |
