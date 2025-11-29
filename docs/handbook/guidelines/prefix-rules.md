@@ -8,6 +8,7 @@
 | 業務データストア一覧 | Business Data Store List            | cdsl-  | cdsl-main          |
 | 保管場所一覧         | Storage Location List               | sll-   | sll-main           |
 | ステータス           | Status                              | sts-   | sts-product        |
+| 分類                 | Classification                      | cls-   | cls-product        |
 | API                  | API                                 | api-   | api-get-order      |
 | 業務プロセス図       | Business Process Diagram            | bp-    | bp-order-flow      |
 | 概念状態遷移図       | Conceptual State Transition Diagram | cstd-  | cstd-product       |
