@@ -17,7 +17,8 @@
 | 画面仕様             | UI Specification                    | ui-    | ui-order-edit      |
 | システム化機能一覧   | System Function List                | sfl-   | sfl-inventory      |
 | 業務イベント一覧     | Business Event List                 | bel-   | bel-order-created  |
-| 業務受け入れ条件     | Business Acceptance Criteria        | bac-   | bac-order-approved |
+| 業務イベント         | Business Event                      | bev-   | bev-order-approved |
+| 業務受入条件         | Business Acceptance Criteria        | bac-   | bac-order-approved |
 | 用語集               | Glossary                            | gl-    | gl-sales           |
 | 用語集の用語         | Glossary Term                       | tm-    | tm-reorder-point   |
 | コンテキスト図       | Context Diagram                     | ctx-   | ctx-customer       |
