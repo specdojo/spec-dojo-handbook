@@ -62,11 +62,11 @@
 
 下表の定義済み列挙に限定
 
-| 種類       | 説明         |
-| ---------- | ------------ |
-| draft      | 下書き中     |
-| ready      | 公開準備完了 |
-| deprecated | 廃止済み     |
+| 種類       | 説明     |
+| ---------- | -------- |
+| draft      | 下書き中 |
+| ready      | 公開済み |
+| deprecated | 廃止済み |
 
 ### 3.5. version(バージョン)
 
@@ -77,7 +77,7 @@
 ### 3.6. owners(担当者)
 
 - 任意項目
-- メールアドレス文字列の配列（重複不可）
+- メールアドレス文字列の配列（重複不可、形式は `email`）
 
 ### 3.7. tags(タグ・分類)
 
@@ -111,6 +111,7 @@
 ## 4. バリデーション指針
 
 - スキーマに準拠しない場合は PR をブロック（lint/CI で検知）
+- 未定義プロパティは不可（`additionalProperties: false`）。
 - `id` 配列項目は重複禁止（`uniqueItems: true`）。
 - `version` は SemVer のみ許可。枝番や枝記号はスキーマに従う。
 - 省略可能項目（owners/tags/depends_on 等）は、未指定時に空配列 `[]` を許容。
@@ -135,3 +136,6 @@ tests: [api-get-order-tests]
 supersedes: [api-get-order-v0]
 ---
 ```
+
+- NG例: `id: Order_API_v1`（大文字・アンダースコアNG）, `status: public`（列挙外）, `extra: foo`（未定義プロパティNG）
+- OK例: `id: order-api-v1`, `status: ready`, `version: 1.2.3`, `owners: [owner@example.com]`
