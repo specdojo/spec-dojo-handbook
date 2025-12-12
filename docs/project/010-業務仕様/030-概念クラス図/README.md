@@ -28,4 +28,4 @@
 
 ## Mermaid を用いた概念クラス図作成ルール
 
-[mermaid-ccd-rules.md](mermaid-ccd-rules.md) を参照。生成AIへの指示はテンプレート[mermaid-ccd-instruction.md](mermaid-ccd-instruction.md) を参考にしてください。
+[ccd-mermaid-rules.md](ccd-mermaid-rules.md) を参照。生成AIへの指示はテンプレート[ccd-mermaid-instruction.md](ccd-mermaid-instruction.md) を参考にしてください。

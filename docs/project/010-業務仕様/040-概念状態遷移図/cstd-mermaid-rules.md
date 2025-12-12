@@ -214,4 +214,4 @@ stateDiagram-v2
 > - 結果は ` ```mermaid ～ ``` ` のコードブロックで出力してください。
 > - 図全体は読みやすく、状態と遷移の意味が一目で分かるようにしてください。
 
-このルールとテンプレートをコピーして、生成 AI のプロンプトに貼り付けて利用してください。なお、[mermaid-cstd-instruction.md](mermaid-cstd-instruction.md)として別ファイルに保存しています。
+このルールとテンプレートをコピーして、生成 AI のプロンプトに貼り付けて利用してください。なお、[cstd-mermaid-instruction.md](cstd-mermaid-instruction.md)として別ファイルに保存しています。

@@ -28,4 +28,4 @@
 
 ## Mermaid を用いたデータフロー図（DFD）作成ルール
 
-[mermaid-dfd-rules.md](mermaid-dfd-rules.md) を参照。生成AIへの指示はテンプレート[mermaid-dfd-instruction.md](mermaid-dfd-instruction.md) を参考にしてください。
+[cdfd-mermaid-rules.md](cdfd-mermaid-rules.md) を参照。生成AIへの指示はテンプレート[cdfd-mermaid-instruction.md](cdfd-mermaid-instruction.md) を参考にしてください。

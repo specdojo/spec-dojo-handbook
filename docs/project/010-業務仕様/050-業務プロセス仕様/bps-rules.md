@@ -210,23 +210,18 @@ type 商品 = {
   商品ID: string
   発注点: number
 }
-type 在庫数更新イベント = {
-  商品ID: string
-  新在庫数: number
-}
 
-function 発注候補生成(イベント: 在庫数更新イベント): void {
+// 在庫数更新イベントハンドラ
+function 在庫が更新された(商品ID: string, 新在庫数: number) {
   // 外部API呼び出し
-  const 商品 = 商品取得(イベント.商品ID)
-  const 在庫数 = イベント.新在庫数
+  const 商品 = 商品取得(商品ID)
+  const 在庫数 = 新在庫数
   if (在庫数 < 商品.発注点) {
     const 発注数量 = 商品.発注点 - 在庫数
     // 発注候補生成イベント
-    発注候補生成イベント送信({
-      商品ID: 商品.商品ID,
-      発注数量: 発注数量,
-    })
+    return { 商品.商品ID, 発注数量 }
   }
+  return null
 }
 ```
 
