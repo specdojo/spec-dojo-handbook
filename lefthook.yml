@@ -1,10 +1,11 @@
 # Git hooks for development workflow
 pre-commit:
+  piped: false
   parallel: true
   commands:
     docs-build:
       glob: 'docs/**'
-      run: npm run docs:build
+      run: npx tsx docs/tools/src/lefthook-docs-build.ts
       stage_fixed: true
 
     format-markdown:
