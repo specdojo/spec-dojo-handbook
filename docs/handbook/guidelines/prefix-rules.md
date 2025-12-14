@@ -17,6 +17,7 @@ idやファイル名のプレフィックスを定義します。
 | 業務プロセス仕様     | Business Process Specification      | bps-   | bps-order-flow     |
 | ビジネスルール       | Business Rule                       | br-    | br-discount        |
 | 画面仕様             | UI Specification                    | ui-    | ui-order-edit      |
+| 画面仕様一覧         | UI Specification List               | uil-   | uil-main           |
 | システム化機能一覧   | System Function List                | sfl-   | sfl-inventory      |
 | 業務イベント一覧     | Business Event List                 | bel-   | bel-order-created  |
 | 業務イベント         | Business Event                      | bev-   | bev-order-approved |
