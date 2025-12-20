@@ -9,7 +9,7 @@
 
 | 項目       | 説明                            | 必須 |
 | ---------- | ------------------------------- | ---- |
-| id         | ステータス一覧ID (sts-xxx-xxxx) | ○    |
+| id         | ステータス一覧ID (stl-xxx-xxxx) | ○    |
 | type       | `domain` 固定                   | ○    |
 | title      | ステータス一覧名                | ○    |
 | status     | `draft`/`ready`/`deprecated`    | ○    |
@@ -20,7 +20,7 @@
 
 ### 1.1 ID規約
 
-- ステータス一覧IDは `^sts-[a-z0-9-]+$` に合致する一意IDを用いる。
+- ステータス一覧IDは `^stl-[a-z0-9-]+$` に合致する一意IDを用いる。
 - `type: domain` は業務ドメイン仕様であることを示す。
 
 ## 2. 記述ルール
@@ -68,7 +68,7 @@
 
 ```yaml
 ---
-id: sts-money
+id: stl-money
 type: domain
 title: お金のステータス
 version: 0.1.0
@@ -113,7 +113,7 @@ supersedes: []
 >
 >   ```yaml
 >   ---
->   id: sts-<英小文字とハイフンで構成したID> # 例: sts-money
+>   id: stl-<英小文字とハイフンで構成したID> # 例: stl-money
 >   type: domain
 >   title: <ステータス一覧名> # 例: お金のステータス
 >   status: draft # draft / ready / deprecated のいずれか
