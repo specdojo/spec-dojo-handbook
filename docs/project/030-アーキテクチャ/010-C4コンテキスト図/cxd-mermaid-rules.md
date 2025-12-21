@@ -291,3 +291,5 @@ flowchart LR
 >     - `style 境界 fill:#ffffff,fill-opacity:0,stroke:#868e96,stroke-width:1px,stroke-dasharray: 5 5;`
 > - 禁止: 物理テーブル名・カラム名・SQL全文、APIエンドポイントやHTTP詳細、実装クラス/関数名、対象システム内部の詳細プロセス/データストア
 > - 出力は Mermaid のコードブロック形式（\```mermaidで開始し、\``` で終了）で提示してください。
+
+このテンプレートをコピーして、生成 AI のプロンプトに貼り付けて利用してください。なお、[cxd-mermaid-instruction.md](cxd-mermaid-instruction.md)として別ファイルに保存しています。
