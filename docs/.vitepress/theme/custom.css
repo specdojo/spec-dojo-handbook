@@ -39,3 +39,8 @@
   background: #fff;
   cursor: zoom-out;
 }
+
+:root {
+  --vp-sidebar-width: 340px; /* お好みで */
+  --vp-sidebar-width-mobile: 320px; /* モバイル用（必要なら） */
+}
