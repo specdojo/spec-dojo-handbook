@@ -5,8 +5,95 @@ import * as crypto from 'crypto'
 // GitHub Pages の公開パス: https://naoji3x.github.io/grandma-candy-shop/
 const base = '/grandma-candy-shop/'
 
-function hashCode(code: string): string {
-  return crypto.createHash('md5').update(code).digest('hex').slice(0, 8)
+const hashCode = (code: string): string =>
+  crypto.createHash('md5').update(code).digest('hex').slice(0, 8)
+
+type SidebarItem = {
+  text?: string
+  link?: string
+  items?: SidebarItem[]
+  collapsed?: boolean
+}
+
+// link から末尾要素（拡張子なし想定）を取り出す："/foo/010-bar" -> "010-bar"
+const getBaseFromLink = (link?: string): string => {
+  if (!link) return ''
+  const clean = link.split('#')[0].replace(/\/+$/, '')
+  return clean.split('/').pop() ?? ''
+}
+
+// "xxx-" を削除（xxx は英小文字）
+const stripLeadingXxxDash = (label: string): string => {
+  return label.replace(/^[a-z]+-/, '')
+}
+
+// 判定：README / *rules / *instruction
+const isReadme = (item: SidebarItem): boolean => {
+  return getBaseFromLink(item.link).toLowerCase() === 'readme'
+}
+
+const isRules = (item: SidebarItem): boolean => {
+  return getBaseFromLink(item.link).toLowerCase().endsWith('rules')
+}
+
+const isInstruction = (item: SidebarItem): boolean => {
+  return getBaseFromLink(item.link).toLowerCase().endsWith('instruction')
+}
+
+// ソート用のキー：
+// 1) README（最優先）
+// 2) *rules（次）
+// 3) その他：先頭 xxx- を削除した名前でファイル名順
+const sortKey = (item: SidebarItem): { bucket: number; name: string } => {
+  if (isReadme(item)) return { bucket: 0, name: '' }
+  if (isRules(item))
+    return { bucket: 1, name: stripLeadingXxxDash(getBaseFromLink(item.link)).toLowerCase() }
+  return { bucket: 2, name: stripLeadingXxxDash(getBaseFromLink(item.link)).toLowerCase() }
+}
+
+const normalizeLink = (link?: string): string | undefined => {
+  if (!link) return link
+
+  // hash は保持して、パス部分だけ正規化
+  const [path, hash] = link.split('#')
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return hash ? `${normalizedPath}#${hash}` : normalizedPath
+}
+
+// 再帰的に：instruction除外、表示名整形（xxx-削除）、並び替え
+const transformSidebar = (items: SidebarItem[]): SidebarItem[] => {
+  const transformed = items
+    .filter(it => !isInstruction(it))
+    .map(it => {
+      const next: SidebarItem = { ...it }
+
+      // prev/next 解決
+      if (next.link) next.link = normalizeLink(next.link)
+
+      // 子も同じルールで処理
+      if (next.items) next.items = transformSidebar(next.items)
+
+      // 表示テキストの先頭 xxx- を削除（README も rules も含めて削除してOKならこのまま）
+      if (
+        typeof next.text === 'string' &&
+        next.text.trim().length > 0 &&
+        !isReadme(next) &&
+        !isRules(next)
+      ) {
+        next.text = stripLeadingXxxDash(next.text)
+      }
+
+      return next
+    })
+
+  transformed.sort((a, b) => {
+    const ka = sortKey(a)
+    const kb = sortKey(b)
+    if (ka.bucket !== kb.bucket) return ka.bucket - kb.bucket
+    return ka.name.localeCompare(kb.name, 'ja')
+  })
+
+  return transformed
 }
 
 export default defineConfig({
@@ -15,13 +102,15 @@ export default defineConfig({
   base,
 
   themeConfig: {
-    sidebar: generateSidebar({
-      documentRootPath: 'docs',
-      scanStartPath: '.',
-      useTitleFromFileHeading: false,
-      collapseDepth: 2,
-      collapsed: true, // デフォルトは折りたたんだ状態にする
-    }),
+    sidebar: transformSidebar(
+      generateSidebar({
+        documentRootPath: 'docs',
+        scanStartPath: '.',
+        useTitleFromFileHeading: false,
+        collapseDepth: 2,
+        collapsed: true,
+      }) as SidebarItem[]
+    ),
   },
 
   markdown: {
