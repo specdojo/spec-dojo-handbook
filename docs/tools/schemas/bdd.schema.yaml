@@ -1,6 +1,7 @@
 $schema: 'http://json-schema.org/draft-07/schema#'
 title: Business Data Dictionary Schema
 type: object
+additionalProperties: false
 
 required:
   - id
@@ -48,35 +49,36 @@ properties:
     minItems: 1
     items:
       type: object
+      additionalProperties: false
       required:
-        - logicalName
-        - physicalName
-        - keyFields
+        - logical_name
+        - physical_name
+        - key_fields
         - fields
 
       properties:
-        logicalName:
+        logical_name:
           type: string
           pattern: "^[\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Han}A-Za-z0-9]+$"
 
-        physicalName:
+        physical_name:
           type: string
           pattern: '^[a-z][A-Za-z0-9]*$'
 
         description:
           type: string
 
-        glossaryTermId:
+        glossary_term_id:
           type: string
           pattern: "^tm-[A-Za-z0-9\\-]+$"
 
-        relatedTerms:
+        related_terms:
           type: array
           items:
             type: string
             pattern: "^tm-[A-Za-z0-9\\-]+$"
 
-        keyFields:
+        key_fields:
           type: array
           minItems: 1
           items:
@@ -88,21 +90,22 @@ properties:
           minItems: 1
           items:
             type: object
+            additionalProperties: false
             required:
-              - logicalName
-              - physicalName
+              - logical_name
+              - physical_name
               - type
 
             properties:
-              logicalName:
+              logical_name:
                 type: string
                 pattern: "^[\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Han}A-Za-z0-9]+$"
 
-              physicalName:
+              physical_name:
                 type: string
                 pattern: '^[a-z][A-Za-z0-9]*$'
 
-              glossaryTermId:
+              glossary_term_id:
                 type: string
                 pattern: "^tm-[A-Za-z0-9\\-]+$"
 
@@ -128,6 +131,7 @@ properties:
 
               constraints:
                 type: object
+                additionalProperties: false
                 properties:
                   required:
                     type: boolean
@@ -140,17 +144,17 @@ properties:
                   pattern:
                     type: string
 
-              # enum (allowedValues or allowedValuesDetailed) の条件付き必須
-              allowedValues:
+              allowed_values:
                 type: array
                 items:
                   type: string
                 uniqueItems: true
 
-              allowedValuesDetailed:
+              allowed_values_detailed:
                 type: array
                 items:
                   type: object
+                  additionalProperties: false
                   required:
                     - value
                     - label
@@ -161,22 +165,22 @@ properties:
                       type: string
                 uniqueItems: true
 
-      # keyFields が fields 内の physicalName に存在することを検証
+      # key_fields が fields 内の physical_name に存在することを検証
       allOf:
-        - $comment: 'keyFields must be included in fields[].physicalName'
+        - $comment: 'key_fields must be included in fields[].physical_name'
         - type: object
           properties:
-            keyFields:
+            key_fields:
               type: array
             fields:
               type: array
-          required: ['keyFields', 'fields']
+          required: ['key_fields', 'fields']
           allOf:
-            # keyFields の各値が fields[].physicalName に存在すること
-            - $comment: 'Check each keyField is present in fields[].physicalName'
+            # key_fields の各値が fields[].physical_name に存在すること
+            - $comment: 'Check each key_field is present in fields[].physical_name'
             - type: object
               properties:
-                keyFields:
+                key_fields:
                   type: array
                   items:
                     type: string
@@ -185,26 +189,26 @@ properties:
                   items:
                     type: object
                     properties:
-                      physicalName:
+                      physical_name:
                         type: string
-              required: ['keyFields', 'fields']
+              required: ['key_fields', 'fields']
               allOf:
-                - $comment: 'Ensure each keyFields item is contained in fields[].physicalName'
+                - $comment: 'Ensure each key_fields item is contained in fields[].physical_name'
                   properties:
-                    keyFields:
+                    key_fields:
                       type: array
                       items:
                         type: string
-                  required: ['keyFields']
+                  required: ['key_fields']
                   allOf:
-                    - $comment: 'for each key in keyFields check membership'
+                    - $comment: 'for each key in key_fields check membership'
                       type: object
                       properties:
-                        keyFields:
+                        key_fields:
                           contains:
                             type: string
                       # membership check is implicit via contains + const matching below
-                  # 各 keyField が fields[].physicalName のいずれかに一致
+                  # 各 key_field が fields[].physical_name のいずれかに一致
                 - type: object
                   properties:
                     fields:
@@ -212,6 +216,6 @@ properties:
                       items:
                         type: object
                         properties:
-                          physicalName:
+                          physical_name:
                             type: string
                   required: ['fields']

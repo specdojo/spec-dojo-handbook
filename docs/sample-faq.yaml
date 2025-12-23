@@ -188,7 +188,7 @@ faqs:
 
       - logicalName: 日本語の単数形
       - physicalName: lowerCamelCase
-      - enum は allowedValues / allowedValuesDetailed で許容値を明示
+      - enum は allowed_values / allowed_values_detailed で許容値を明示
       - created_at など実装都合の技術カラムは原則含めない
 
       BDD はドメインの辞書なので、UI/API の都合で構造体を増やしすぎないのがコツです。

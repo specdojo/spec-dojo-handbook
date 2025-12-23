@@ -26,17 +26,17 @@
 
 - YAML形式で記述する。
 - **業務視点の論理名・説明を重視**し、実装要素は必要最小限とする。
-- **実装都合の属性や技術的カラム（created_at等）は原則含めないが、物理名(physicalName)については業務データ辞書で一元管理する。**
+- **実装都合の属性や技術的カラム（created_at等）は原則含めないが、物理名(physical_name)については業務データ辞書で一元管理する。**
 - データ項目の意味・制約・例値・関連情報や定義・説明を簡潔かつ明確に記載する。
 - 論理名・属性名は**日本語の単数形**で記載する。
-- 物理名（`physicalName`）はentity, fieldとも必ず **lowerCamelCase** を用いる（例：`productCode`, `creditBalance`, `paymentStatus`）。
+- 物理名（`physical_name`）はentity, fieldとも必ず **lowerCamelCase** を用いる（例：`productCode`, `creditBalance`, `paymentStatus`）。
 - エンティティや項目の論理名・説明は、概念クラス図（CCD）や用語集 (glossary) と整合性を保つ。
 - 関連用語や分類は必要に応じて記載する。
-- glossaryTermIdは、用語集（glossary）で定義したIDと一致させる。
+- glossary_term_idは、用語集（glossary）で定義したIDと一致させる。
 - フィールドが `type: enum` の場合、許容値を必ず明示する。
 - 記述方法は以下のいずれかを採用する。
-  - 簡易列挙: `allowedValues: [PENDING, PAID, CANCELED]`
-  - 詳細列挙: `allowedValuesDetailed:` で `value` と `label` を持つ配列。
+  - 簡易列挙: `allowed_values: [PENDING, PAID, CANCELED]`
+  - 詳細列挙: `allowed_values_detailed:` で `value` と `label` を持つ配列。
 - 多言語化対応はファイル名で管理し、エンティティ・フィールド内での言語別記載は行わない。例: `010-業務データ辞書-ja.yaml`, `010-bdd-main-en.yaml`
 
 ## 3. 禁止事項
@@ -57,28 +57,28 @@
 
 ### 4.2 entities フィールド構成
 
-| サブ項目       | 説明                                      | 必須 |
-| -------------- | ----------------------------------------- | ---- |
-| logicalName    | 業務上の論理名（日本語単数形）            | ○    |
-| physicalName   | システム上の物理名 (lowerCamelCase)       | ○    |
-| description    | 業務データの説明                          | 任意 |
-| glossaryTermId | 用語集の用語ID                            | 任意 |
-| relatedTerms   | 関連用語IDリスト                          | 任意 |
-| keyFields      | キー項目 (複合キーも想定し物理名のリスト) | ○    |
-| fields         | 業務データフィールドの一覧                | ○    |
+| サブ項目         | 説明                                      | 必須 |
+| ---------------- | ----------------------------------------- | ---- |
+| logical_name     | 業務上の論理名（日本語単数形）            | ○    |
+| physical_name    | システム上の物理名 (lowerCamelCase)       | ○    |
+| description      | 業務データの説明                          | 任意 |
+| glossary_term_id | 用語集の用語ID                            | 任意 |
+| related_terms    | 関連用語IDリスト                          | 任意 |
+| key_fields       | キー項目 (複合キーも想定し物理名のリスト) | ○    |
+| fields           | 業務データフィールドの一覧                | ○    |
 
 ### 4.3 fields フィールド構成
 
-| サブ項目       | 説明                                                                   | 必須 |
-| -------------- | ---------------------------------------------------------------------- | ---- |
-| logicalName    | 業務上の論理名（日本語単数形）                                         | ○    |
-| physicalName   | システム上の物理名 (lowerCamelCase)                                    | ○    |
-| glossaryTermId | 用語集の用語ID                                                         | 任意 |
-| type           | データ型 (integer / string / boolean / date / datetime / enum / money) | ○    |
-| description    | フィールドの説明                                                       | 任意 |
-| unit           | 単位（該当する場合）                                                   | 任意 |
-| constraints    | フィールドの制約条件                                                   | 任意 |
-| example        | フィールドの例値                                                       | 任意 |
+| サブ項目         | 説明                                                                   | 必須 |
+| ---------------- | ---------------------------------------------------------------------- | ---- |
+| logical_name     | 業務上の論理名（日本語単数形）                                         | ○    |
+| physical_name    | システム上の物理名 (lowerCamelCase)                                    | ○    |
+| glossary_term_id | 用語集の用語ID                                                         | 任意 |
+| type             | データ型 (integer / string / boolean / date / datetime / enum / money) | ○    |
+| description      | フィールドの説明                                                       | 任意 |
+| unit             | 単位（該当する場合）                                                   | 任意 |
+| constraints      | フィールドの制約条件                                                   | 任意 |
+| example          | フィールドの例値                                                       | 任意 |
 
 ### 4.4 constraints サブフィールド構成
 
@@ -103,62 +103,62 @@ tags: []
 supersedes: []
 
 entities:
-  - logicalName: 商品
-    physicalName: product
+  - logical_name: 商品
+    physical_name: product
     description: 駄菓子屋で販売する個々の商品
-    glossaryTermId: tm-product
-    relatedTerms: [tm-price, tm-stock]
-    keyFields: [productCode]
+    glossary_term_id: tm-product
+    related_terms: [tm-price, tm-stock]
+    key_fields: [productCode]
     fields:
-      - logicalName: 商品コード
-        physicalName: productCode
-        glossaryTermId: tm-product-code
+      - logical_name: 商品コード
+        physical_name: productCode
+        glossary_term_id: tm-product-code
         type: string
         description: 各商品を一意に識別するコード
         constraints:
           required: true
           unique: true
         example: 45-14603-32581-2
-      - logicalName: 商品名
-        physicalName: productName
+      - logical_name: 商品名
+        physical_name: productName
         type: string
-        glossaryTermId: tm-product-name
+        glossary_term_id: tm-product-name
         description: おばあちゃんやお客さんが読める商品名
         constraints:
           required: true
         example: うまか棒 たこ焼き味
-      - logicalName: 価格
-        physicalName: price
+      - logical_name: 価格
+        physical_name: price
         type: integer
-        glossaryTermId: tm-price
+        glossary_term_id: tm-price
         description: 商品の販売価格（税抜き）
         unit: 円
         constraints:
           required: true
         example: 100
 
-  - logicalName: 支払い
-    physicalName: payment
+  - logical_name: 支払い
+    physical_name: payment
     description: 顧客からの支払い情報
-    glossaryTermId: tm-payment
-    keyFields: [paymentId]
+    glossary_term_id: tm-payment
+    key_fields: [paymentId]
     fields:
-      - logicalName: 支払いID
-        physicalName: paymentId
+      - logical_name: 支払いID
+        physical_name: paymentId
         type: string
-        glossaryTermId: tm-payment-id
+        glossary_term_id: tm-payment-id
         description: 支払いを一意に識別するID
         constraints:
           required: true
           unique: true
         example: PAY-0001
-      - logicalName: 支払ステータス
-        physicalName: paymentStatus
+      - logical_name: 支払ステータス
+        physical_name: paymentStatus
         type: enum
         description: 支払い処理の現在状態
         constraints:
           required: true
-        allowedValuesDetailed:
+        allowed_values_detailed:
           - value: PENDING
             label: 未処理
           - value: PAID
@@ -196,32 +196,32 @@ entities:
 >
 > ## **3. 記載ルール（遵守）**
 >
-> - **論理名（logicalName）は日本語単数形**で記載すること。
-> - **物理名（physicalName）は lowerCamelCase** で記載すること。
+> - **論理名（logical_name）は日本語単数形**で記載すること。
+> - **物理名（physical_name）は lowerCamelCase** で記載すること。
 > - **実装都合の属性（created_at など）は含めない**こと。
-> - 用語集と連動する場合は **glossaryTermId を対応IDで記載**すること。
-> - **キー項目は keyFields に、物理名の配列**で記載すること。
+> - 用語集と連動する場合は **glossary_term_id を対応IDで記載**すること。
+> - **キー項目は key_fields に、物理名の配列**で記載すること。
 > - フィールドの型は以下から選択：
 >   `integer / string / boolean / date / datetime / enum / money`
 > - enum を使う場合、以下のどちらかの方式で許容値を記述する：
->   - `allowedValues: [A, B, C]`
->   - `allowedValuesDetailed:` 形式で `value` / `label` を列挙
+>   - `allowed_values: [A, B, C]`
+>   - `allowed_values_detailed:` 形式で `value` / `label` を列挙
 >
 > ## **4. エンティティの記述形式（必ずこの構造）**
 >
 > ```yaml
 > entities:
->   - logicalName: 〇〇
->     physicalName: 〇〇
+>   - logical_name: 〇〇
+>     physical_name: 〇〇
 >     description: 〇〇（業務的な説明）
->     glossaryTermId: tm-xxxx # 任意
->     relatedTerms: [tm-xxxx] # 任意
->     keyFields: [primaryKeyField] # 必須。複合キーも可
+>     glossary_term_id: tm-xxxx # 任意
+>     related_terms: [tm-xxxx] # 任意
+>     key_fields: [primaryKeyField] # 必須。複合キーも可
 >     fields:
->       - logicalName: 〇〇
->         physicalName: 〇〇
+>       - logical_name: 〇〇
+>         physical_name: 〇〇
 >         type: string
->         glossaryTermId: tm-xxx # 任意
+>         glossary_term_id: tm-xxx # 任意
 >         description: 〇〇 # 任意
 >         unit: 円 # 任意
 >         constraints:
@@ -237,7 +237,7 @@ entities:
 >
 > ## **6. 参考**
 >
-> - 必要に応じて用語集（glossary）を参照し、glossaryTermId を補完してください。
+> - 必要に応じて用語集（glossary）を参照し、glossary_term_id を補完してください。
 > - BDD 作成ルールはこのファイル **bdd-rules.md** を参照してください。
 >
 > ## **7. 最終出力**
