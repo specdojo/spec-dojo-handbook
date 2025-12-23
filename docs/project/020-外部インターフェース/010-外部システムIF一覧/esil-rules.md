@@ -64,25 +64,25 @@ tags: []
 supersedes: []
 
 interfaces:
-   - name: 発注データ送信
-      source: 受発注管理（コンテナ）
-      target: 仕入先システム
-      direction: source_to_target
-      kind: ファイル
-      format: CSV
-      timing: 発注確定時
-      error_handling: 異常時は再送・管理者通知
-      spec_ref: efes-orders
+  - name: 発注データ送信
+    source: 受発注管理（コンテナ）
+    target: 仕入先システム
+    direction: source_to_target
+    kind: ファイル
+    format: CSV
+    timing: 発注確定時
+    error_handling: 異常時は再送・管理者通知
+    spec_ref: efes-orders
 
-   - name: 決済依頼/結果
-      source: 決済（コンテナ）
-      target: 決済サービス
-      direction: bidirectional
-      kind: API
-      format: JSON
-      timing: 決済時
-      error_handling: 失敗時はリトライ/保留
-      spec_ref: eapis-payment
+  - name: 決済依頼/結果
+    source: 決済（コンテナ）
+    target: 決済サービス
+    direction: bidirectional
+    kind: API
+    format: JSON
+    timing: 決済時
+    error_handling: 失敗時はリトライ/保留
+    spec_ref: eapis-payment
 ```
 
 ## 6. 生成 AI への指示テンプレート
