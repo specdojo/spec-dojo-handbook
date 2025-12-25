@@ -32,3 +32,4 @@ idやファイル名のプレフィックスを定義します。
 | コンテナ図           | Container Diagram                    | cnd-   | cnd-customer        |
 | コンポーネント図     | Component Diagram                    | cpd-   | cpd-inventory       |
 | インフラ構成図       | Infrastructure Diagram               | ifd-   | ifd-main            |
+| 技術スタック一覧     | Technology Stack List                | tsl-   | tsl-main            |
