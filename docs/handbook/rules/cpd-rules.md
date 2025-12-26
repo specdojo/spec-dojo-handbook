@@ -32,7 +32,7 @@ Mermaid 記法そのもののルールは [cpd-mermaid-rules.md](cpd-mermaid-rul
 
 ## 3. 推奨 Frontmatter 項目
 
-Frontmatter の共通ルールは [docs/handbook/guidelines/meta-rules.md](../guidelines/meta-rules.md) に従います。
+Frontmatter の共通ルールは [meta-rules.md](meta-rules.md) に従います。
 
 | 項目       | 説明                                           | 必須 |
 | ---------- | ---------------------------------------------- | ---- |
