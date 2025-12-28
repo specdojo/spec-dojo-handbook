@@ -60,10 +60,12 @@ flowchart TB
     subgraph D2T[開発〜テスト]
       direction LR
       subgraph Product[プロダクト]
-      direction TB
+      direction LR
         BM((ビジネス<br>モデル))
         Data((データ))
         Srv((サービス))
+        BM<-->Data<-->Srv
+        BM<-->Srv
       end
 
       subgraph Development[業務とシステムの設計]
