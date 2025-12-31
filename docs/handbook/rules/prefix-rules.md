@@ -24,7 +24,7 @@ idやファイル名のプレフィックスを定義します。
 | 業務受入条件         | Business Acceptance Criteria         | bac-   | bac-order-approved  |
 | 用語集               | Glossary                             | gl-    | gl-sales            |
 | 用語集の用語         | Glossary Term                        | tm-    | tm-reorder-point    |
-| 外部システムIF一覧   | External System Interface List       | esil-  | esil-supplier       |
+| 外部システムI/F一覧  | External System Interface List       | esil-  | esil-supplier       |
 | 外部API仕様          | External API Specification           | eapis- | eapis-inventory     |
 | 外部ファイル連携仕様 | External File Exchange Specification | efes-  | efes-orders         |
 | 外部メッセージ仕様   | External Message Specification       | ems-   | ems-stock-changed   |
