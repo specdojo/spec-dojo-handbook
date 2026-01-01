@@ -7,4 +7,4 @@
 1. 図を含むドキュメント（Markdown）の作成・更新ルールは [cnd-rules.md](../../../handbook/ja/rules/cnd-rules.md) を参照してください。
 2. 生成AIを活用して Mermaid 図を含むドキュメント(Markdown)を作成する場合は [cnd-instruction.md](../../../handbook/ja/instructions/cnd-instruction.md) をプロンプトのテンプレートとして利用してください。
 3. Mermaid 図の作図ルールは [cnd-mermaid-rules.md](../../../handbook/ja/rules/cnd-mermaid-rules.md) を参照してください。
-4. 生成AIを活用して Mermaid のC4コンテナ図を作成する場合は [cnd-mermaid-instruction.md](../../../handbook/ja/instructions/cnd-mermaid-instruction.md) をプロンプトのテンプレートとして利用してください。
+4. 生成AIを活用して Mermaid 図を作成する場合は [cnd-mermaid-instruction.md](../../../handbook/ja/instructions/cnd-mermaid-instruction.md) をプロンプトのテンプレートとして利用してください。
