@@ -33,3 +33,4 @@ idやファイル名のプレフィックスを定義します。
 | コンポーネント図     | Component Diagram                    | cpd-   | cpd-inventory       |
 | インフラ構成図       | Infrastructure Diagram               | ifd-   | ifd-main            |
 | 技術スタック一覧     | Technology Stack List                | tsl-   | tsl-main            |
+| 非機能要件           | Non-Functional Requirements          | nfr-   | nfr-performance     |
