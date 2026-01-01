@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+// lefthookでドキュメントをビルドするスクリプト（VitePressのビルドの終了が取得できない不具合に対応）
 
 import { spawn } from 'node:child_process'
 import fs from 'node:fs'
