@@ -14,7 +14,6 @@
   type: test
   title: システム受入条件: <対象名>
   status: draft # draft / ready / deprecated
-  version: '1.0.0'
   owners: []
   tags: []
   depends_on: []

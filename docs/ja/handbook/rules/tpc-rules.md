@@ -66,7 +66,6 @@ Frontmatter は共通スキーマに従います。
 | type       | `test` 固定                                     | ○    |
 | title      | ドキュメント名                                  | ○    |
 | status     | `draft` / `ready` / `deprecated`                | ○    |
-| version    | バージョン（SemVer）                            | 任意 |
 | owners     | 担当者                                          | 任意 |
 | tags       | タグ・分類                                      | 任意 |
 | depends_on | 上位仕様（TSP / BAC / NFR / SAC / BPS / BR 等） | 任意 |
@@ -199,7 +198,6 @@ id: tpc-order-process
 type: test
 title: テスト観点・条件: 受注処理
 status: draft
-version: '1.0.0'
 owners: []
 tags: [test, quality]
 depends_on: [tsp-overview, bps-order-flow, bac-order]

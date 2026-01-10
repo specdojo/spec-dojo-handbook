@@ -12,7 +12,6 @@
   type: domain
   title: <分類一覧名> # 例: 商品区分
   status: draft # draft / ready / deprecated のいずれか
-  version: '1.0.0'
   owners: []
   tags: []
   supersedes: []

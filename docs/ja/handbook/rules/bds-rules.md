@@ -38,7 +38,6 @@ Frontmatter は `docs/handbook/shared/schemas/spec-frontmatter.schema.yaml` の�
 | type       | `domain` 固定                           | ○    |
 | title      | 帳票名                                  | ○    |
 | status     | `draft`/`ready`/`deprecated`            | ○    |
-| version    | バージョン（SemVer）                    | 任意 |
 | owners     | 担当者（メールアドレス）                | 任意 |
 | tags       | タグ・分類                              | 任意 |
 | depends_on | 参照する仕様ID（BPS/UI/BR/BEV 等）      | 任意 |
@@ -147,7 +146,6 @@ id: bds-daily-sales-summary
 type: domain
 title: 日次売上サマリ
 status: draft
-version: '1.0.0'
 owners: []
 tags: [sales, daily]
 depends_on: [bps-closing-daily, uis-closing, bev-sale-checkout]
@@ -224,7 +222,6 @@ supersedes: []
 >   type: domain
 >   title: <帳票名> # 例: 日次売上サマリ
 >   status: draft # draft / ready / deprecated のいずれか
->   version: '1.0.0'
 >   owners: []
 >   tags: []
 >   depends_on: []

@@ -22,7 +22,6 @@
   type: domain
   title: <帳票名> # 例: 日次売上サマリ
   status: draft # draft / ready / deprecated のいずれか
-  version: '1.0.0'
   owners: []
   tags: []
   depends_on: []

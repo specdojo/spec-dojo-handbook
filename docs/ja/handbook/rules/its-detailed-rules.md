@@ -95,7 +95,6 @@ TSP（テスト戦略・方針）
 | type       | `test` 固定                              | ○    |
 | title      | 仕様名                                   | ○    |
 | status     | 状態                                     | ○    |
-| version    | SemVer                                   | 任意 |
 | owners     | 担当                                     | 任意 |
 | tags       | 分類                                     | 任意 |
 | depends_on | ITS（全体）、TPC、UIS、EAPIS、BR、ADR 等 | 推奨 |
@@ -229,7 +228,6 @@ id: its-inventory
 type: test
 title: 内部結合テスト仕様: 在庫
 status: draft
-version: '1.0.0'
 depends_on:
   - its-main
   - tpc-order-process

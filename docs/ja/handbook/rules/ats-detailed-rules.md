@@ -88,7 +88,6 @@ ATS-D の作成単位は、次のいずれかです。
 | type       | `test` 固定                      | ○        |
 | title      | 受入テスト仕様: <業務条件名>     | ○        |
 | status     | `draft / ready / deprecated`     | ○        |
-| version    | SemVer                           | 任意     |
 | owners     | 業務側オーナー                   | 任意     |
 | tags       | `acceptance-test`, `business` 等 | 任意     |
 | depends_on | `ats-main`, `bac-*`              | **必須** |
@@ -217,7 +216,6 @@ id: ats-order-complete
 type: test
 title: 受入テスト仕様: 受注完了
 status: draft
-version: '1.0.0'
 depends_on:
   - ats-main
   - bac-order-complete

@@ -31,7 +31,6 @@
 id: gl-XXXX
 title: 用語集: XXXX
 locale: ja
-version: 0.1.0
 status: draft
 
 terms:

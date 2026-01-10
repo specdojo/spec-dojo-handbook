@@ -20,7 +20,6 @@
   type: screen
   title: <画面名> # 例: 商品一覧
   status: draft # draft / ready / deprecated のいずれか
-  version: '1.0.0'
   owners: []
   depends_on: []
   implements: []

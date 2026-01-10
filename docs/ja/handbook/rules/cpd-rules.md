@@ -40,7 +40,6 @@ Frontmatter の共通ルールは [meta-rules.md](meta-rules.md) に従います
 | type       | `architecture` 固定                            | ○    |
 | title      | ドキュメント名                                 | ○    |
 | status     | `draft`/`ready`/`deprecated`                   | ○    |
-| version    | バージョン（SemVer）                           | 任意 |
 | owners     | 担当者                                         | 任意 |
 | tags       | タグ                                           | 任意 |
 | depends_on | 前提となる定義（用語集、外部IF、上位方針など） | 任意 |

@@ -74,7 +74,6 @@ CloudEventsの「属性」は仕様で名前が固定です（snake_caseに変�
 asyncapi: 2.6.0
 info:
   title: 在庫変更イベント仕様
-  version: 0.1.0
   description: |
     在庫が変更されたときに発行されるイベント仕様。
 

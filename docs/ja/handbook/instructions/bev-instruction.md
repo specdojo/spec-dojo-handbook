@@ -14,7 +14,6 @@
   type: domain
   title: 業務イベント: <イベント名>
   status: draft
-  version: '1.0.0'
   owners: []
   tags: []
   depends_on: []

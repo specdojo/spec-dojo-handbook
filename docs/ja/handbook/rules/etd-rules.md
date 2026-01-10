@@ -89,7 +89,6 @@ TSP（テスト戦略・方針）
 | type       | `test` 固定                    | ○        |
 | title      | 設計名                         | ○        |
 | status     | 状態                           | ○        |
-| version    | SemVer                         | 任意     |
 | owners     | 担当                           | 任意     |
 | depends_on | ETS / ETS-D                    | **必須** |
 | tests      | 実装（テストコード・CIジョブ） | 任意     |
@@ -252,7 +251,6 @@ id: etd-main
 type: test
 title: 外部結合テスト設計
 status: draft
-version: '1.0.0'
 depends_on:
   - ets-main
   - ets-payment

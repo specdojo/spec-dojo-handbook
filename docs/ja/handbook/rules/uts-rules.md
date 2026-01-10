@@ -70,7 +70,6 @@ Frontmatter は共通スキーマに従います。
 | type       | `test` 固定                                       | ○    |
 | title      | 仕様名（例: 単体テスト仕様: 在庫）                | ○    |
 | status     | `draft` / `ready` / `deprecated`                  | ○    |
-| version    | バージョン（SemVer）                              | 任意 |
 | owners     | 担当者                                            | 任意 |
 | tags       | タグ・分類                                        | 任意 |
 | depends_on | 根拠となる仕様ID（TPC/NFR/SAC/BAC/BPS/BR/ADR 等） | 任意 |
@@ -238,7 +237,6 @@ id: uts-main
 type: test
 title: 単体テスト仕様: 全体
 status: draft
-version: '1.0.0'
 owners: []
 tags: [test, unit]
 depends_on: [tsp-overview, tpc-order-process, bac-order-approved, br-discount]

@@ -38,7 +38,6 @@ Frontmatter は `docs/handbook/shared/schemas/spec-frontmatter.schema.yaml` の�
 | type       | `test` 固定                              | ○    |
 | title      | 受入条件名（例: 業務受入条件: 商品販売） | ○    |
 | status     | `draft`/`ready`/`deprecated`             | ○    |
-| version    | バージョン（SemVer）                     | 任意 |
 | owners     | 担当者                                   | 任意 |
 | tags       | タグ・分類                               | 任意 |
 | depends_on | 参照する仕様ID（BPS/BR/UI/BEV/BEL 等）   | 任意 |
@@ -140,7 +139,6 @@ id: bac-sale-checkout
 type: test
 title: 業務受入条件: 商品販売
 status: draft
-version: '1.0.0'
 owners: []
 tags: [sale]
 depends_on:
@@ -189,7 +187,6 @@ id: bac-procurement-order-to-payment
 type: test
 title: 業務受入条件: 仕入（発注〜入荷〜支払）
 status: draft
-version: '1.0.0'
 owners: []
 tags: [procurement, inventory, accounting]
 depends_on:
@@ -280,7 +277,6 @@ id: bac-sale-payment-method
 type: test
 title: 業務受入条件: 会計確定（支払方法の記録）
 status: draft
-version: '1.0.0'
 owners: []
 tags: [sale]
 depends_on:
@@ -339,7 +335,6 @@ supersedes: []
 >   type: test
 >   title: 業務受入条件: <受入対象名>
 >   status: draft # draft / ready / deprecated
->   version: '1.0.0'
 >   owners: []
 >   tags: []
 >   depends_on: []

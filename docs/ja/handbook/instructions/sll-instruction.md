@@ -11,7 +11,6 @@
   type: domain
   title: <保管場所一覧名> # 例: 保管場所一覧(main)
   status: draft # draft / ready / deprecated のいずれか
-  version: '1.0.0'
   owners: []
   tags: []
   supersedes: []

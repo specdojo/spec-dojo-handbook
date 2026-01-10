@@ -97,7 +97,6 @@ TSP（テスト戦略・方針）
 | type       | `test` 固定                                 | ○        |
 | title      | 総合テスト仕様: <対象>                      | ○        |
 | status     | `draft / ready / deprecated`                | ○        |
-| version    | SemVer                                      | 任意     |
 | owners     | 担当                                        | 任意     |
 | tags       | 分類                                        | 任意     |
 | depends_on | `tsp-*`, `bac-*`, `nfr-*`, `sac-*`, `adr-*` | **必須** |
@@ -249,7 +248,6 @@ id: sts-main
 type: test
 title: 総合テスト仕様: 全体
 status: draft
-version: '1.0.0'
 depends_on:
   - tsp-overview
   - bac-main

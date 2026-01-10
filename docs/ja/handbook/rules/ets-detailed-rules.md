@@ -94,7 +94,6 @@ TSP（テスト戦略・方針）
 | type       | `test` 固定                                          | ○        |
 | title      | 仕様名                                               | ○        |
 | status     | 状態                                                 | ○        |
-| version    | SemVer                                               | 任意     |
 | owners     | 担当                                                 | 任意     |
 | tags       | 分類                                                 | 任意     |
 | depends_on | ETS（全体）, ESIL, EAPIS / EMS / EFES, NFR, SAC, ADR | **必須** |
@@ -244,7 +243,6 @@ id: ets-payment
 type: test
 title: 外部結合テスト仕様: 決済
 status: draft
-version: '1.0.0'
 depends_on:
   - ets-main
   - esil-payment

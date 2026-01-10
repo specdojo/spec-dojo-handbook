@@ -42,7 +42,6 @@
 | type       | `domain` 固定                    | ○    |
 | title      | 分類一覧名                       | ○    |
 | status     | `draft` / `ready` / `deprecated` | ○    |
-| version    | バージョン                       | 任意 |
 | owners     | 担当者                           | 任意 |
 | tags       | タグ・分類                       | 任意 |
 | supersedes | 置き換え関係（旧仕様→新仕様）    | 任意 |
@@ -164,7 +163,6 @@
 id: cll-product-type
 type: domain
 title: 商品区分
-version: 0.1.0
 status: draft
 owners: []
 tags: []
@@ -205,7 +203,6 @@ supersedes: []
 >   type: domain
 >   title: <分類一覧名> # 例: 商品区分
 >   status: draft # draft / ready / deprecated のいずれか
->   version: '1.0.0'
 >   owners: []
 >   tags: []
 >   supersedes: []

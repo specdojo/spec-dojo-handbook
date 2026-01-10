@@ -29,7 +29,6 @@ Frontmatter は `docs/handbook/shared/schemas/spec-frontmatter.schema.yaml` の�
 | type       | `architecture` 固定                     | ○    |
 | title      | ドキュメント名（例: 技術スタック一覧）  | ○    |
 | status     | `draft`/`ready`/`deprecated`            | ○    |
-| version    | バージョン（SemVer）                    | 任意 |
 | owners     | 担当者（メールアドレス）                | 任意 |
 | tags       | タグ・分類                              | 任意 |
 | depends_on | 参照する仕様ID（ADR/非機能/設計など）   | 任意 |
@@ -64,7 +63,6 @@ id: tsl-main
 type: architecture
 title: 技術スタック一覧
 status: draft
-version: '0.1.0'
 owners: []
 tags: []
 depends_on: []

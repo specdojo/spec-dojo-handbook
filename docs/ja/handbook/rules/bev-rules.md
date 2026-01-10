@@ -46,7 +46,6 @@ Frontmatter は `docs/handbook/shared/schemas/spec-frontmatter.schema.yaml` の�
 | type       | `domain` 固定                                        | ○    |
 | title      | 業務イベント名（例: 業務イベント: 会計確定（販売）） | ○    |
 | status     | `draft`/`ready`/`deprecated`                         | ○    |
-| version    | バージョン（SemVer）                                 | 任意 |
 | owners     | 担当者（メールアドレス）                             | 任意 |
 | tags       | タグ・分類                                           | 任意 |
 | depends_on | 参照する仕様ID（BEL/UI/BPS 等）                      | 任意 |
@@ -91,7 +90,6 @@ id: bev-sale-checkout
 type: domain
 title: 業務イベント: 会計確定（販売）
 status: draft
-version: '1.0.0'
 owners: []
 tags: [sale]
 depends_on:
@@ -143,7 +141,6 @@ supersedes: []
 >   type: domain
 >   title: 業務イベント: <イベント名>
 >   status: draft
->   version: '1.0.0'
 >   owners: []
 >   tags: []
 >   depends_on: []

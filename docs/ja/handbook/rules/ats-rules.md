@@ -85,7 +85,6 @@ ATS の対象は以下です。
 | type       | `test` 固定                  | ○        |
 | title      | 受入テスト仕様               | ○        |
 | status     | `draft / ready / deprecated` | ○        |
-| version    | SemVer                       | 任意     |
 | owners     | 受入主体（業務側）           | 任意     |
 | tags       | `acceptance-test` 等         | 任意     |
 | depends_on | `bac-*`, `sts-*`, `std-*`    | **必須** |
@@ -230,7 +229,6 @@ id: ats-main
 type: test
 title: 受入テスト仕様
 status: draft
-version: '1.0.0'
 depends_on:
   - bac-main
   - sts-main

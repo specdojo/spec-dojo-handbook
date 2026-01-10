@@ -95,7 +95,6 @@ TSP（テスト戦略・方針）
 | type       | `test` 固定                                                                    | ○        |
 | title      | 設計名                                                                         | ○        |
 | status     | 状態                                                                           | ○        |
-| version    | SemVer                                                                         | 任意     |
 | owners     | 担当                                                                           | 任意     |
 | tags       | 分類                                                                           | 任意     |
 | depends_on | `ets-...`（個別仕様）, `etd-main`（全体設計）, `eapis/ems/efes`, `adr/nfr/sac` | **必須** |
@@ -260,7 +259,6 @@ id: etd-payment
 type: test
 title: 外部結合テスト設計: 決済
 status: draft
-version: '1.0.0'
 depends_on:
   - etd-main
   - ets-payment

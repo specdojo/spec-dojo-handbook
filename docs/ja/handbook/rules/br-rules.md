@@ -34,7 +34,6 @@
 | type       | `rule` 固定                                   | ○    |
 | title      | ルール名                                      | ○    |
 | status     | `draft`/`ready`/`deprecated`                  | ○    |
-| version    | バージョン                                    | 任意 |
 | owners     | 担当者                                        | 任意 |
 | depends_on | 前提となる他ルールやデータストア、イベント等  | 任意 |
 | implements | 満たすべき上位ポリシー/コンプライアンス要件等 | 任意 |
@@ -198,7 +197,6 @@ tests: [bac-low-stock-judgment]
 >   type: rule
 >   title: <ビジネスルール名> # 例: 在庫不足判定
 >   status: draft # draft / ready / deprecated のいずれか
->   version: '1.0.0'
 >   owners: []
 >   depends_on: []
 >   implements: []

@@ -27,7 +27,6 @@ ESIL は「どの外部システムと」「何を」「どの方向で」「ど
 | type       | `api` 固定                    | ○    |
 | title      | 外部システムIF一覧名          | ○    |
 | status     | `draft`/`ready`/`deprecated`  | ○    |
-| version    | SemVer                        | 任意 |
 | owners     | 担当者（メールアドレス）      | 任意 |
 | tags       | タグ・分類                    | 任意 |
 | supersedes | 置き換え関係（古仕様→新仕様） | 任意 |
@@ -57,7 +56,6 @@ ESIL は「どの外部システムと」「何を」「どの方向で」「ど
 id: esil-main
 type: api
 title: 外部システムIF一覧(main)
-version: 0.1.0
 status: draft
 owners: []
 tags: []

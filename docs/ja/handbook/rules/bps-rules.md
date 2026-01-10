@@ -37,7 +37,6 @@
 | type       | `domain` 固定                                  | ○    |
 | title      | プロセス名                                     | ○    |
 | status     | `draft`/`ready`/`deprecated`                   | ○    |
-| version    | バージョン                                     | 任意 |
 | owners     | 担当者                                         | 任意 |
 | depends_on | 前提となる他プロセスやデータストア、イベント等 | 任意 |
 | implements | 満たすべきビジネスルール                       | 任意 |
@@ -284,7 +283,6 @@ function 在庫数更新イベントを処理する(イベント: 在庫数更�
 >   type: domain
 >   title: <業務プロセス名> # 例: 在庫不足検知
 >   status: draft # draft / ready / deprecated のいずれか
->   version: '1.0.0'
 >   owners: []
 >   depends_on: [] # 関連する他プロセスIDやイベントIDなど
 >   implements: [] # 参照するビジネスルールID(br-xxx-xxxなど)

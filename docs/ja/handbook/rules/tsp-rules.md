@@ -59,7 +59,6 @@ Frontmatter は `docs/handbook/shared/schemas/spec-frontmatter.schema.yaml` の�
 | type       | `test` 固定                                                           | ○    |
 | title      | 方針名（例: テスト戦略・方針: 全体）                                  | ○    |
 | status     | `draft`/`ready`/`deprecated`                                          | ○    |
-| version    | バージョン（SemVer）                                                  | 任意 |
 | owners     | 担当者                                                                | 任意 |
 | tags       | タグ・分類                                                            | 任意 |
 | depends_on | 参照する仕様ID（BAC/NFR/SAC/ADR/TSL/UIS/EAPIS 等）                    | 任意 |
@@ -212,7 +211,6 @@ id: tsp-overview
 type: test
 title: テスト戦略・方針: 全体
 status: draft
-version: '1.0.0'
 owners: []
 tags: [quality]
 depends_on: []
@@ -271,7 +269,6 @@ supersedes: []
 >   type: test
 >   title: テスト戦略・方針: <対象名>
 >   status: draft # draft / ready / deprecated
->   version: '1.0.0'
 >   owners: []
 >   tags: []
 >   depends_on: []

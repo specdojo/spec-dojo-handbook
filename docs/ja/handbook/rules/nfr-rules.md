@@ -39,7 +39,6 @@ Frontmatter は `docs/handbook/shared/schemas/spec-frontmatter.schema.yaml` の�
 | type       | `architecture` 固定（品質要求の合意文書として扱う）     | ○    |
 | title      | 非機能要件名（例: 非機能要件: 性能）                    | ○    |
 | status     | `draft`/`ready`/`deprecated`                            | ○    |
-| version    | バージョン（SemVer）                                    | 任意 |
 | owners     | 担当者                                                  | 任意 |
 | tags       | タグ・分類                                              | 任意 |
 | depends_on | 参照する仕様ID（BPS/BR/UIS/EAPIS/TSL/ADR 等）           | 任意 |
@@ -150,7 +149,6 @@ id: nfr-performance
 type: architecture
 title: 非機能要件: 性能
 status: draft
-version: '1.0.0'
 owners: []
 tags: [quality]
 depends_on: []
@@ -198,7 +196,6 @@ supersedes: []
 >   type: architecture
 >   title: 非機能要件: <対象名>
 >   status: draft # draft / ready / deprecated
->   version: '1.0.0'
 >   owners: []
 >   tags: []
 >   depends_on: []

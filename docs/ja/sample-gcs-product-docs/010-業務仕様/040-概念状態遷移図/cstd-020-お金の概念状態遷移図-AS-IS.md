@@ -2,7 +2,6 @@
 id: money-cstd-as-is # 一意なID
 type: domain # screen | api | domain | data | test | flow | rule
 title: お金の概念状態遷移図 (AS-IS)
-version: 0.1.0
 status: draft # draft | ready | deprecated
 owners: []
 tags: []

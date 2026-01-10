@@ -35,7 +35,6 @@
 | type       | `screen` 固定                               | ○    |
 | title      | 画面名                                      | ○    |
 | status     | `draft`/`ready`/`deprecated`                | ○    |
-| version    | バージョン（SemVer）                        | 任意 |
 | owners     | 担当者（メールアドレス）                    | 任意 |
 | tags       | タグ                                        | 任意 |
 | depends_on | 参照する仕様ID（API/ドメイン/他画面など）   | 任意 |
@@ -225,7 +224,6 @@ tests: []
 >   type: screen
 >   title: <画面名> # 例: 商品一覧
 >   status: draft # draft / ready / deprecated のいずれか
->   version: '1.0.0'
 >   owners: []
 >   depends_on: []
 >   implements: []

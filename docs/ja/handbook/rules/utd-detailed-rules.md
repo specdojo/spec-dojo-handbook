@@ -85,7 +85,6 @@ UTD-D（単体テスト設計・個別） ← 本ドキュメント
 | type       | `test` 固定                                                       | ○    |
 | title      | 単体テスト設計: <対象名>                                          | ○    |
 | status     | `draft` / `ready` / `deprecated`                                  | ○    |
-| version    | バージョン（SemVer）                                              | 任意 |
 | owners     | 担当者                                                            | 任意 |
 | tags       | タグ（例: unit, design, inventory）                               | 任意 |
 | depends_on | 上位仕様（`utd-main`, `uts-<term>`, `tpc-*`, `br-*`, `bac-*` 等） | ○    |
@@ -262,7 +261,6 @@ id: utd-inventory
 type: test
 title: 単体テスト設計: 在庫
 status: draft
-version: '1.0.0'
 depends_on:
   - utd-main
   - uts-inventory

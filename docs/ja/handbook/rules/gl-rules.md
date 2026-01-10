@@ -7,14 +7,13 @@
 
 用語集 YAML は、以下のメタデータを持つことを推奨します（運用しやすさのため）。
 
-| 項目    | 説明                               | 必須 |
-| ------- | ---------------------------------- | ---- |
-| id      | 用語集ID（`gl-...`）               | 推奨 |
-| title   | 用語集名（例: 用語集: 在庫・調達） | 推奨 |
-| locale  | 言語（例: `ja` / `en`）            | 推奨 |
-| version | バージョン                         | 任意 |
-| status  | `draft`/`ready`/`deprecated`       | 任意 |
-| terms   | 用語の配列                         | ○    |
+| 項目   | 説明                               | 必須 |
+| ------ | ---------------------------------- | ---- |
+| id     | 用語集ID（`gl-...`）               | 推奨 |
+| title  | 用語集名（例: 用語集: 在庫・調達） | 推奨 |
+| locale | 言語（例: `ja` / `en`）            | 推奨 |
+| status | `draft`/`ready`/`deprecated`       | 任意 |
+| terms  | 用語の配列                         | ○    |
 
 ### 1.1 ファイル命名（推奨）
 
@@ -77,7 +76,6 @@
 id: gl-inventory
 title: 用語集: 在庫・調達
 locale: ja
-version: 0.1.0
 status: draft
 
 terms:
@@ -148,7 +146,6 @@ terms:
 > id: gl-XXXX
 > title: 用語集: XXXX
 > locale: ja
-> version: 0.1.0
 > status: draft
 >
 > terms:

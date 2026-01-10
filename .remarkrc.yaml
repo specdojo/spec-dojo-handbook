@@ -15,9 +15,9 @@ plugins:
   - remark-lint
   - - remark-lint-frontmatter-schema
     - schemas:
-        ./docs/handbook/shared/schemas/spec-frontmatter.schema.yaml:
+        ./docs/shared/schemas/spec-frontmatter.schema.yaml:
           - ./docs/**/*.md
-        ./docs/handbook/shared/schemas/bdd.schema.yaml:
+        ./docs/shared/schemas/bdd.schema.yaml:
           - ./docs/**/bdd-*.yaml
-        ./docs/handbook/shared/schemas/esil.schema.yaml:
+        ./docs/shared/schemas/esil.schema.yaml:
           - ./docs/**/esil-*.yaml

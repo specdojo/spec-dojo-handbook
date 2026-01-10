@@ -61,7 +61,6 @@ ITS は「テストコード」ではありません。
 | type       | `test` 固定                                             | ○            |
 | title      | 仕様名（例: 内部結合テスト仕様: 在庫）                  | ○            |
 | status     | `draft` / `ready` / `deprecated`                        | ○            |
-| version    | バージョン（SemVer）                                    | 任意         |
 | owners     | 担当者                                                  | 任意         |
 | tags       | タグ・分類                                              | 任意         |
 | depends_on | 根拠となる仕様ID（TPC/NFR/SAC/BAC/EAPIS/UIS/BR/ADR 等） | 任意（推奨） |
@@ -207,7 +206,6 @@ id: its-main
 type: test
 title: 内部結合テスト仕様: 全体
 status: draft
-version: '1.0.0'
 owners: []
 tags: [test, integration, internal]
 depends_on: [tsp-overview, tpc-order-process]

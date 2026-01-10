@@ -37,7 +37,7 @@ ESIL 側の `spec_ref: eapis-...` は、このEAPISのID（およびファイル
 最低限、以下を必ず含めます。
 
 - `openapi`
-- `info`（`title`, `version` を含む）
+- `info`（`title`を含む）
 - `x-spec-meta`（`id`, `type`, `status` を含む）
 - `servers`（少なくとも1つ）
 - `paths`（少なくとも1つ）
@@ -75,7 +75,6 @@ ESIL 側の `spec_ref: eapis-...` は、このEAPISのID（およびファイル
 openapi: 3.0.3
 info:
   title: 決済サービスAPI
-  version: 0.1.0
   description: |
     決済サービスとの連携API仕様。
 

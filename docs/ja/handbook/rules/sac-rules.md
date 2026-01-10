@@ -48,7 +48,6 @@ Frontmatter は `docs/handbook/shared/schemas/spec-frontmatter.schema.yaml` の�
 | type       | `test` 固定                                   | ○    |
 | title      | 受入条件名（例: システム受入条件: 性能）      | ○    |
 | status     | `draft`/`ready`/`deprecated`                  | ○    |
-| version    | バージョン（SemVer）                          | 任意 |
 | owners     | 担当者（メール）                              | 任意 |
 | tags       | タグ・分類                                    | 任意 |
 | depends_on | 参照する仕様ID（NFR/BAC/BR/BPS/ADR/TSL 等）   | 任意 |
@@ -148,7 +147,6 @@ id: sac-performance
 type: test
 title: システム受入条件: 性能
 status: draft
-version: '1.0.0'
 owners: []
 tags: [quality]
 depends_on:
@@ -213,7 +211,6 @@ supersedes: []
 >   type: test
 >   title: システム受入条件: <対象名>
 >   status: draft # draft / ready / deprecated
->   version: '1.0.0'
 >   owners: []
 >   tags: []
 >   depends_on: []

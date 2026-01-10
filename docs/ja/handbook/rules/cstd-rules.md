@@ -49,7 +49,6 @@ Frontmatter の共通ルールは [meta-rules.md](meta-rules.md) に従います
 | type       | `domain` 固定                               | ○    |
 | title      | ドキュメント名                              | ○    |
 | status     | `draft`/`ready`/`deprecated`                | ○    |
-| version    | バージョン（SemVer）                        | 任意 |
 | owners     | 担当者                                      | 任意 |
 | tags       | タグ                                        | 任意 |
 | depends_on | 前提となる定義（ステータス定義/用語集など） | 任意 |

@@ -87,7 +87,6 @@ UTD（単体テスト設計）
 | type       | `test` 固定                                                  | ○    |
 | title      | 単体テスト仕様: <対象名>                                     | ○    |
 | status     | `draft` / `ready` / `deprecated`                             | ○    |
-| version    | バージョン（SemVer）                                         | 任意 |
 | owners     | 担当者                                                       | 任意 |
 | tags       | タグ（例: unit, domain, inventory）                          | 任意 |
 | depends_on | 上位仕様（`uts-main`, `tpc-*`, `br-*`, `bac-*`, `nfr-*` 等） | 必須 |
@@ -246,7 +245,6 @@ id: uts-inventory
 type: test
 title: 単体テスト仕様: 在庫
 status: draft
-version: '1.0.0'
 owners: []
 tags: [unit, inventory]
 depends_on:

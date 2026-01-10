@@ -93,7 +93,6 @@ TSP（戦略）
 | type       | `test`                  | ○        |
 | title      | 設計名                  | ○        |
 | status     | 状態                    | ○        |
-| version    | SemVer                  | 任意     |
 | owners     | 担当                    | 任意     |
 | depends_on | ITS-D / ITD             | **必須** |
 | tests      | テスト実装ID（JUnit等） | 任意     |
@@ -246,7 +245,6 @@ id: itd-inventory
 type: test
 title: 内部結合テスト設計: 在庫
 status: draft
-version: '1.0.0'
 depends_on:
   - its-inventory
   - itd-main
