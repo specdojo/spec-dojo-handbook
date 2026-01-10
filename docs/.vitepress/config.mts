@@ -105,8 +105,8 @@ const handbookItems = {
             text: 'テスト',
             collapsed: true,
             items: [
-              { text: 'テスト戦略・方針', link: '/ja/handbook/rules/tps-rules' },
-              { text: 'テスト計画', link: '/ja/handbook/rules/tpc-rules' },
+              { text: 'テスト戦略・方針', link: '/ja/handbook/rules/tsp-rules' },
+              { text: 'テスト観点・条件', link: '/ja/handbook/rules/tpc-rules' },
               {
                 text: '単体テスト',
                 collapsed: true,
@@ -259,8 +259,8 @@ const handbookItems = {
             text: 'テスト',
             collapsed: true,
             items: [
-              { text: 'テスト戦略・方針', link: '/ja/handbook/instructions/tps-instruction' },
-              { text: 'テスト計画', link: '/ja/handbook/instructions/tpc-instruction' },
+              { text: 'テスト戦略・方針', link: '/ja/handbook/instructions/tsp-instruction' },
+              { text: 'テスト観点・条件', link: '/ja/handbook/instructions/tpc-instruction' },
               {
                 text: '単体テスト',
                 collapsed: true,
