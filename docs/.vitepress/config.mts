@@ -96,21 +96,48 @@ const transformSidebar = (items: SidebarItem[]): SidebarItem[] => {
   return transformed
 }
 
+// ★ここ重要：言語フォルダを documentRootPath にする
+const makeSidebar = (localeDir: 'ja' | 'en'): SidebarItem[] =>
+  transformSidebar(
+    generateSidebar({
+      documentRootPath: `docs/${localeDir}`,
+      scanStartPath: '.', // localeDir の中をスキャン
+      useTitleFromFileHeading: false,
+      collapseDepth: 2,
+      collapsed: true,
+    }) as SidebarItem[]
+  )
+
 export default defineConfig({
   title: 'Grandma Candy Shop Docs',
   description: 'Documentation for Grandma Candy Shop',
   base,
 
-  themeConfig: {
-    sidebar: transformSidebar(
-      generateSidebar({
-        documentRootPath: 'docs',
-        scanStartPath: '.',
-        useTitleFromFileHeading: false,
-        collapseDepth: 2,
-        collapsed: true,
-      }) as SidebarItem[]
-    ),
+  // ★日本語(ja)フォルダをURL上は root(/) に見せる
+  // rewrites: {
+  //  'ja/:rest*': ':rest*',
+  //},
+
+  locales: {
+    ja: {
+      label: '日本語',
+      lang: 'ja',
+      // 言語メニューで押したときのリンク先（日本語トップ）
+      link: '/ja/',
+      themeConfig: {
+        sidebar: makeSidebar('ja'),
+        langMenuLabel: '言語',
+      },
+    },
+    en: {
+      label: 'English',
+      lang: 'en',
+      link: '/en/',
+      themeConfig: {
+        sidebar: makeSidebar('en'),
+        langMenuLabel: 'Language',
+      },
+    },
   },
 
   markdown: {
