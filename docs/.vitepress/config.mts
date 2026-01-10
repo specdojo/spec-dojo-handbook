@@ -43,12 +43,13 @@ const isInstruction = (item: SidebarItem): boolean => {
 // ソート用のキー：
 // 1) README（最優先）
 // 2) *rules（次）
+// 2) *instruction（次）
 // 3) その他：先頭 xxx- を削除した名前でファイル名順
 const sortKey = (item: SidebarItem): { bucket: number; name: string } => {
   if (isReadme(item)) return { bucket: 0, name: '' }
-  if (isRules(item))
-    return { bucket: 1, name: stripLeadingXxxDash(getBaseFromLink(item.link)).toLowerCase() }
-  return { bucket: 2, name: stripLeadingXxxDash(getBaseFromLink(item.link)).toLowerCase() }
+  if (isRules(item)) return { bucket: 1, name: getBaseFromLink(item.link).toLowerCase() }
+  if (isInstruction(item)) return { bucket: 2, name: getBaseFromLink(item.link).toLowerCase() }
+  return { bucket: 3, name: stripLeadingXxxDash(getBaseFromLink(item.link)).toLowerCase() }
 }
 
 const normalizeLink = (link?: string): string | undefined => {
@@ -62,29 +63,28 @@ const normalizeLink = (link?: string): string | undefined => {
 
 // 再帰的に：instruction除外、表示名整形（xxx-削除）、並び替え
 const transformSidebar = (items: SidebarItem[]): SidebarItem[] => {
-  const transformed = items
-    .filter(it => !isInstruction(it))
-    .map(it => {
-      const next: SidebarItem = { ...it }
+  const transformed = items.map(it => {
+    const next: SidebarItem = { ...it }
 
-      // prev/next 解決
-      if (next.link) next.link = normalizeLink(next.link)
+    // prev/next 解決
+    if (next.link) next.link = normalizeLink(next.link)
 
-      // 子も同じルールで処理
-      if (next.items) next.items = transformSidebar(next.items)
+    // 子も同じルールで処理
+    if (next.items) next.items = transformSidebar(next.items)
 
-      // 表示テキストの先頭 xxx- を削除（README も rules も含めて削除してOKならこのまま）
-      if (
-        typeof next.text === 'string' &&
-        next.text.trim().length > 0 &&
-        !isReadme(next) &&
-        !isRules(next)
-      ) {
-        next.text = stripLeadingXxxDash(next.text)
-      }
+    // 表示テキストの先頭 xxx- を削除（README も rules も含めて削除してOKならこのまま）
+    if (
+      typeof next.text === 'string' &&
+      next.text.trim().length > 0 &&
+      !isReadme(next) &&
+      !isRules(next) &&
+      !isInstruction(next)
+    ) {
+      next.text = stripLeadingXxxDash(next.text)
+    }
 
-      return next
-    })
+    return next
+  })
 
   transformed.sort((a, b) => {
     const ka = sortKey(a)
