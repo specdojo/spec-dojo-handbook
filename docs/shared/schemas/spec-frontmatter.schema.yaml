@@ -18,10 +18,6 @@ definitions:
     items:
       $ref: '#/definitions/idRef'
     uniqueItems: true
-  semver:
-    type: string
-    # SemVer 2.0.0（prerelease / build metadata も許容）
-    pattern: "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z-.]+)?(?:\\+[0-9A-Za-z-.]+)?$"
 
 properties:
   id:
@@ -43,8 +39,6 @@ properties:
   title:
     type: string
     minLength: 1
-  version:
-    $ref: '#/definitions/semver'
   status:
     type: string
     # draft: 作成中
