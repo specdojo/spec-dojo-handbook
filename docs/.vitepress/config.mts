@@ -127,56 +127,72 @@ const handbookItems = {
             text: 'テスト',
             collapsed: true,
             items: [
+              {
+                text: '各ドキュメントのスコープ',
+                link: '/ja/handbook/rules/meta-test-document-scope-rules',
+              },
               { text: 'テスト戦略・方針', link: '/ja/handbook/rules/tsp-rules' },
               { text: 'テスト観点・条件', link: '/ja/handbook/rules/tpc-rules' },
               {
                 text: '単体テスト',
                 collapsed: true,
                 items: [
+                  { text: '単体テスト仕様 全体構成', link: '/ja/handbook/rules/uts-index-rules' },
                   { text: '単体テスト仕様', link: '/ja/handbook/rules/uts-rules' },
-                  { text: '単体テスト個別仕様', link: '/ja/handbook/rules/uts-detailed-rules' },
+                  { text: '単体テスト設計 全体構成', link: '/ja/handbook/rules/utd-index-rules' },
                   { text: '単体テスト設計', link: '/ja/handbook/rules/utd-rules' },
-                  { text: '単体テスト個別設計', link: '/ja/handbook/rules/utd-detailed-rules' },
                 ],
               },
               {
                 text: '内部結合テスト',
                 collapsed: true,
                 items: [
+                  {
+                    text: '内部結合テスト仕様 全体構成',
+                    link: '/ja/handbook/rules/its-index-rules',
+                  },
                   { text: '内部結合テスト仕様', link: '/ja/handbook/rules/its-rules' },
-                  { text: '内部結合テスト個別仕様', link: '/ja/handbook/rules/its-detailed-rules' },
+                  {
+                    text: '内部結合テスト設計 全体構成',
+                    link: '/ja/handbook/rules/itd-index-rules',
+                  },
                   { text: '内部結合テスト設計', link: '/ja/handbook/rules/itd-rules' },
-                  { text: '内部結合テスト個別設計', link: '/ja/handbook/rules/itd-detailed-rules' },
                 ],
               },
               {
                 text: '外部結合テスト',
                 collapsed: true,
                 items: [
+                  {
+                    text: '外部結合テスト仕様 全体構成',
+                    link: '/ja/handbook/rules/ets-index-rules',
+                  },
                   { text: '外部結合テスト仕様', link: '/ja/handbook/rules/ets-rules' },
-                  { text: '外部結合テスト個別仕様', link: '/ja/handbook/rules/ets-detailed-rules' },
+                  {
+                    text: '外部結合テスト設計 全体構成',
+                    link: '/ja/handbook/rules/etd-index-rules',
+                  },
                   { text: '外部結合テスト設計', link: '/ja/handbook/rules/etd-rules' },
-                  { text: '外部結合テスト個別設計', link: '/ja/handbook/rules/etd-detailed-rules' },
                 ],
               },
               {
                 text: '総合テスト',
                 collapsed: true,
                 items: [
+                  { text: '総合テスト仕様 全体構成', link: '/ja/handbook/rules/sts-index-rules' },
                   { text: '総合テスト仕様', link: '/ja/handbook/rules/sts-rules' },
-                  { text: '総合テスト個別仕様', link: '/ja/handbook/rules/sts-detailed-rules' },
+                  { text: '総合テスト設計 全体構成', link: '/ja/handbook/rules/std-index-rules' },
                   { text: '総合テスト設計', link: '/ja/handbook/rules/std-rules' },
-                  { text: '総合テスト個別設計', link: '/ja/handbook/rules/std-detailed-rules' },
                 ],
               },
               {
                 text: '受入テスト',
                 collapsed: true,
                 items: [
+                  { text: '受入テスト仕様 全体構成', link: '/ja/handbook/rules/ats-index-rules' },
                   { text: '受入テスト仕様', link: '/ja/handbook/rules/ats-rules' },
-                  { text: '受入テスト個別仕様', link: '/ja/handbook/rules/ats-detailed-rules' },
+                  { text: '受入テスト設計 全体構成', link: '/ja/handbook/rules/atd-index-rules' },
                   { text: '受入テスト設計', link: '/ja/handbook/rules/atd-rules' },
-                  { text: '受入テスト個別設計', link: '/ja/handbook/rules/atd-detailed-rules' },
                 ],
               },
             ],
