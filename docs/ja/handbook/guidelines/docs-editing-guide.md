@@ -1,5 +1,7 @@
 # ドキュメントの編集ガイド
 
+Document Editing Guide
+
 SpecDojoで扱うドキュメントの編集に役立つ、Visual Studio Code (VS Code) や各種ツールの設定や操作方法について説明します。
 
 ## 1. 見出しに番号を付与

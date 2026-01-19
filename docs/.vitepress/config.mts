@@ -42,10 +42,9 @@ const handbookItems = {
             items: [
               {
                 text: '概念データフロー図',
-                items: [
-                  { text: '全体ルール', link: '/ja/handbook/rules/cdfd-rules' },
-                  { text: '図の記法ルール', link: '/ja/handbook/rules/cdfd-mermaid-rules' },
-                ],
+                link: '/ja/handbook/rules/cdfd-rules',
+                collapsed: true,
+                items: [{ text: '図の記法ルール', link: '/ja/handbook/rules/cdfd-mermaid-rules' }],
               },
               {
                 text: 'データモデル',
@@ -105,15 +104,43 @@ const handbookItems = {
               {
                 text: 'C4',
                 items: [
-                  { text: 'コンテキスト図', link: '/ja/handbook/rules/cxd-rules' },
-                  { text: 'コンテナ図', link: '/ja/handbook/rules/cnd-rules' },
-                  { text: 'コンポーネント図', link: '/ja/handbook/rules/cpd-rules' },
+                  {
+                    text: 'コンテキスト図',
+                    link: '/ja/handbook/rules/cxd-rules',
+                    collapsed: true,
+                    items: [
+                      { text: '図の記法ルール', link: '/ja/handbook/rules/cxd-mermaid-rules' },
+                    ],
+                  },
+                  {
+                    text: 'コンテナ図',
+                    link: '/ja/handbook/rules/cnd-rules',
+                    collapsed: true,
+                    items: [
+                      { text: '図の記法ルール', link: '/ja/handbook/rules/cnd-mermaid-rules' },
+                    ],
+                  },
+                  {
+                    text: 'コンポーネント図',
+                    link: '/ja/handbook/rules/cpd-rules',
+                    collapsed: true,
+                    items: [
+                      { text: '図の記法ルール', link: '/ja/handbook/rules/cpd-mermaid-rules' },
+                    ],
+                  },
                 ],
               },
               {
                 text: 'インフラ・技術選定',
                 items: [
-                  { text: 'インフラ構成図', link: '/ja/handbook/rules/ifd-rules' },
+                  {
+                    text: 'インフラ構成図',
+                    link: '/ja/handbook/rules/ifd-mermaid-rules',
+                    collapsed: true,
+                    items: [
+                      { text: '図の記法ルール', link: '/ja/handbook/rules/ifd-mermaid-rules' },
+                    ],
+                  },
                   { text: '技術スタック一覧', link: '/ja/handbook/rules/tsl-rules' },
                 ],
               },

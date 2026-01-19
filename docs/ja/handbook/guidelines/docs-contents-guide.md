@@ -1,6 +1,6 @@
 # ドキュメントの内容ガイド
 
-(Document Contents Guide)
+Document Contents Guide
 
 SpecDojoで扱うドキュメントの内容について、以下のガイドラインを示します。
 

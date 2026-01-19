@@ -1,6 +1,8 @@
-# Mermaidを用いたインフラ構成図（IFD）作成ルール
+# Mermaidを用いたインフラ構成図 作成ルール
 
-本ドキュメントは、アーキテクチャ検討・合意形成のために **インフラ構成図（Infrastructure Flow Diagram: IFD）** を Mermaid の `flowchart` で記述するための標準ルールを定義します。
+Infrastructure Flow Diagram (IFD) Documentation Rules using Mermaid
+
+本ドキュメントは、アーキテクチャ検討・合意形成のために **インフラ構成図** を Mermaid の `flowchart` で記述するための標準ルールを定義します。
 
 IFD は、インフラの **論理的な境界（環境 / ネットワーク / ゾーン）** と、主要コンポーネント間の **通信の流れ** を示すことを目的とします。
 
@@ -30,9 +32,11 @@ IFD は、インフラの **論理的な境界（環境 / ネットワーク / �
 
 IFD は以下の形式に固定します。
 
+````markdown
 ```mermaid
 flowchart LR
 ```
+````
 
 ### 理由
 

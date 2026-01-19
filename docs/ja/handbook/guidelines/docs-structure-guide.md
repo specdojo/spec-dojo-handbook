@@ -1,6 +1,6 @@
 # ドキュメントの構成ガイド
 
-(Document Structure Guide)
+Document Structure Guide
 
 SpecDojoで扱うドキュメントの全体構成について、以下のガイドラインを示します。
 
