@@ -1,6 +1,8 @@
-# Mermaid を用いたC4コンテナ図（C4 Container Diagram: CND）作成ルール
+# Mermaid を用いたC4コンテナ図 作成ルール
 
-本ドキュメントは、アーキテクチャ設計のために、**Mermaid の `flowchart` 構文を使って C4 コンテナ図（Container Diagram）を描く際の標準ルール**です。
+C4 Container Diagram (CND) Documentation Rules using Mermaid
+
+本ドキュメントは、アーキテクチャ設計のために、**Mermaid の `flowchart` 構文を使って C4 コンテナ図を描く際の標準ルール**です。
 
 C4 コンテナ図は「対象システム」を、**実行/配備単位（コンテナ）** に分割して俯瞰し、利用者（人）・外部システム・データストアとの関係（やり取り）を、概念レベルで合意するために用います。
 

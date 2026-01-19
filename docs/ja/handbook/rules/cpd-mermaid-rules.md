@@ -1,4 +1,6 @@
-# Mermaid を用いたC4コンポーネント図（C4 Component Diagram: CPD）作成ルール
+# Mermaid を用いたC4コンポーネント図 作成ルール
+
+C4 Component Diagram (CPD) Documentation Rules using Mermaid
 
 本ドキュメントは、アーキテクチャ設計のために、**Mermaid の `flowchart` 構文を使って C4 コンポーネント図（Component Diagram）を描く際の標準ルール**です。
 
