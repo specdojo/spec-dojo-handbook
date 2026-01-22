@@ -303,4 +303,4 @@ supersedes: []
 
 ## 9. 生成AIへの指示テンプレート
 
-生成 AI に個別 UTS（`uts-<term>`）を作らせるときの指示テンプレートは [uts-detailed-instruction.md](../instructions/uts-detailed-instruction.md) を参照してください。
+生成 AI に個別 UTS（`uts-<term>`）を作らせるときの指示テンプレートは [uts-instruction.md](../instructions/uts-instruction.md) を参照してください。

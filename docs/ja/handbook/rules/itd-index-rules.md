@@ -367,8 +367,4 @@ supersedes: []
 
 ## 10. 生成 AI への指示テンプレート
 
-> - 以下のルールに従って **内部結合テスト設計（ITD / ITD-D）** を 1 ファイル作成してください。出力は Markdown。
-> - 入力は ITS（`its-index` と必要に応じて主要な `its-<term>`）とします。
-> - `itd-index` は共通方針・共通基準・ナビゲーションのみ（個別の大量ケースや具体値は書かない）。
-> - `itd-<term>`（個別設計）を作る場合も、値の詳細・SQL全文・テストコード全文は書かない（必要なら「境界値」「代表値」レベルで方針のみ）。
-> - YAML Frontmatter の未定義項目は追加しない。
+生成 AI に `itd-index` を作らせるときの指示テンプレートは [itd-index-instruction.md](../instructions/itd-index-instruction.md) を参照してください。
