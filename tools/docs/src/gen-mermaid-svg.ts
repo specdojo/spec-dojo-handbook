@@ -85,14 +85,14 @@ function normalizeSvgSize(svgPath: string): void {
 }
 
 function processMarkdown(mdPath: string, rootDir: string, outDir: string): void {
-  console.log(`🌀 Generating mermaid SVG from: ${path.relative(process.cwd(), mdPath)}`)
-
   const text = fs.readFileSync(mdPath, 'utf8')
 
   const mermaidBlocks = extractMermaidBlocks(text)
   if (mermaidBlocks.length === 0) {
     return
   }
+
+  console.log(`🌀 Generating mermaid SVG from: ${path.relative(process.cwd(), mdPath)}`)
 
   fs.mkdirSync(outDir, { recursive: true })
 

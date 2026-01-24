@@ -3,7 +3,10 @@ import { generateSidebar } from 'vitepress-sidebar'
 import * as crypto from 'crypto'
 import { handbookSidebarItems } from './handbook-sidebar-items'
 import type { Plugin } from 'vite'
-import { generateMermaidSvgs, generateMermaidSvgsForFile } from '../../tools/docs/src/gen-mermaid-svg'
+import {
+  generateMermaidSvgs,
+  generateMermaidSvgsForFile,
+} from '../../tools/docs/src/gen-mermaid-svg'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -37,6 +40,7 @@ const mermaidSvgAutoGenerate = (): Plugin => {
   let running = false
   let pending = false
   const pendingFiles = new Set<string>()
+  let isSsrBuild = false
 
   const run = (reason: string) => {
     if (running) {
@@ -83,7 +87,15 @@ const mermaidSvgAutoGenerate = (): Plugin => {
 
   return {
     name: 'mermaid-svg-auto-generate',
+
+    configResolved(config) {
+      // VitePress build は client build と SSR build を連続実行するため、
+      // buildStart が2回呼ばれる。SVG生成は1回で十分なので SSR 側はスキップする。
+      isSsrBuild = Boolean(config.build?.ssr)
+    },
+
     buildStart() {
+      if (isSsrBuild) return
       run('buildStart')
     },
 
