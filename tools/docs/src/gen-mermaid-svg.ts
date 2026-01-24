@@ -2,9 +2,10 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { execSync } from 'child_process'
 import * as crypto from 'crypto'
+import { fileURLToPath } from 'url'
 
-const ROOT = path.resolve('docs')
-const OUT_DIR = path.join(ROOT, 'public', 'mermaid')
+const DEFAULT_ROOT = path.resolve('docs')
+const DEFAULT_OUT_DIR = path.join(DEFAULT_ROOT, 'public', 'mermaid')
 const PUPPETEER_CONFIG = path.resolve('puppeteer-config.json')
 const MERMAID_CONFIG = path.resolve('mermaid-config.json')
 
@@ -16,7 +17,13 @@ function hashCode(code: string): string {
   return crypto.createHash('md5').update(code).digest('hex').slice(0, 8)
 }
 
-function walk(dir: string): void {
+function extractMermaidBlocks(markdown: string): string[] {
+  // ✅ 行頭の ```mermaid ... ``` だけを拾う
+  const mermaidBlocks = [...markdown.matchAll(/^```mermaid[^\n]*\n([\s\S]*?)^```/gm)]
+  return mermaidBlocks.map(m => m[1]?.trim()).filter((v): v is string => !!v)
+}
+
+function walk(dir: string, rootDir: string, outDir: string): void {
   const entries = fs.readdirSync(dir, { withFileTypes: true })
 
   for (const entry of entries) {
@@ -27,9 +34,9 @@ function walk(dir: string): void {
       if (entry.name === '.vitepress' || entry.name === 'public' || entry.name === 'node_modules') {
         continue
       }
-      walk(full)
+      walk(full, rootDir, outDir)
     } else if (entry.isFile() && entry.name.endsWith('.md')) {
-      processMarkdown(full)
+      processMarkdown(full, rootDir, outDir)
     }
   }
 }
@@ -77,32 +84,30 @@ function normalizeSvgSize(svgPath: string): void {
   fs.writeFileSync(svgPath, svg, 'utf8')
 }
 
-function processMarkdown(mdPath: string): void {
+function processMarkdown(mdPath: string, rootDir: string, outDir: string): void {
   console.log(`🌀 Generating mermaid SVG from: ${path.relative(process.cwd(), mdPath)}`)
 
   const text = fs.readFileSync(mdPath, 'utf8')
 
-  // ✅ 行頭の ```mermaid ... ``` だけを拾う
-  const mermaidBlocks = [...text.matchAll(/^```mermaid[^\n]*\n([\s\S]*?)^```/gm)]
+  const mermaidBlocks = extractMermaidBlocks(text)
   if (mermaidBlocks.length === 0) {
     return
   }
 
-  fs.mkdirSync(OUT_DIR, { recursive: true })
+  fs.mkdirSync(outDir, { recursive: true })
 
-  for (const match of mermaidBlocks) {
-    const code = match[1].trim()
+  for (const code of mermaidBlocks) {
     if (!code) continue
 
     const id = hashCode(code)
-    const svgPath = path.join(OUT_DIR, `${id}.svg`)
+    const svgPath = path.join(outDir, `${id}.svg`)
 
     // 既に同じコードのSVGがあれば再生成しない
     if (fs.existsSync(svgPath)) {
       continue
     }
 
-    const tmpMmd = path.join(ROOT, `.tmp-${id}.mmd`)
+    const tmpMmd = path.join(rootDir, `.tmp-${id}.mmd`)
     fs.writeFileSync(tmpMmd, code, 'utf8')
 
     console.log(`🌀 Generating mermaid SVG: ${path.relative(process.cwd(), svgPath)}`)
@@ -121,8 +126,32 @@ function processMarkdown(mdPath: string): void {
   }
 }
 
-;(function main() {
+export function generateMermaidSvgs(options?: { rootDir?: string; outDir?: string }): void {
+  const rootDir = options?.rootDir ?? DEFAULT_ROOT
+  const outDir = options?.outDir ?? DEFAULT_OUT_DIR
+
   console.log('🔍 Scanning docs for mermaid code blocks...')
-  walk(ROOT)
+  walk(rootDir, rootDir, outDir)
   console.log('✅ Mermaid SVG generation done.')
-})()
+}
+
+export function generateMermaidSvgsForFile(
+  mdPath: string,
+  options?: { rootDir?: string; outDir?: string }
+): void {
+  const rootDir = options?.rootDir ?? DEFAULT_ROOT
+  const outDir = options?.outDir ?? DEFAULT_OUT_DIR
+
+  if (!mdPath.endsWith('.md')) return
+  processMarkdown(mdPath, rootDir, outDir)
+}
+
+function isDirectRun(): boolean {
+  const selfPath = fileURLToPath(import.meta.url)
+  const invoked = process.argv[1] ? path.resolve(process.argv[1]) : ''
+  return invoked === path.resolve(selfPath)
+}
+
+if (isDirectRun()) {
+  generateMermaidSvgs()
+}
