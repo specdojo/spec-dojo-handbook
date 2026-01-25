@@ -28,24 +28,24 @@ flowchart BT
   direction RL
     UTSIndex["uts-index<br>単体テスト仕様-全体構成"]
     UTSDetail["**uts-&lt;term&gt;<br>単体テスト仕様-個別仕様**"]
+    UTSDetail -->|part_of| UTSIndex
   end
 
   subgraph UTD
   direction RL
     UTDIndex["utd-index<br>単体テスト設計-全体構成"]
     UTDDetail["utd-&lt;term&gt;<br>単体テスト設計-個別設計"]
-  end
+    UTDDetail -->|part_of| UTDIndex
+end
 
   TC["テストコード<br>JUnit 等"]
 
   TPC -->|based_on| TSP
-  UTSDetail -->|part_of| UTSIndex
-  UTSIndex -->|based_on| TSP
-  UTSIndex -->|based_on| TPC
-  UTDIndex -->|based_on| UTSIndex
-  UTDDetail -->|based_on| UTSDetail
-  UTDDetail -->|part_of| UTDIndex
-  TC -->|based_on| UTDDetail
+  UTD -->|based_on| UTS
+  TC -->|based_on| UTD
+  UTS -->|based_on| TSP
+  UTS -->|based_on| TPC
+
 
   classDef target stroke-width:4px
   class UTDIndex target
@@ -55,6 +55,7 @@ flowchart BT
 
 - 本ドキュメント（全体構成）の `id` は `utd-index` 固定とします。
 - 個別設計は `utd-<term>` とします（詳細は [utd-rules.md](utd-rules.md)）。
+- ケースIDは個別設計（`utd-<term>`）で `UTC-<観点番号>-<条件番号>`（例: `UTC-01-01`）を推奨します（詳細は [utd-rules.md](utd-rules.md)）。
 - ファイル名は `utd-020-単体テスト設計-全体構成.md` 等、プロジェクト内で一意になるように命名します。
 
 ## 4. 推奨 Frontmatter 項目
