@@ -1,4 +1,4 @@
-# ドキュメントの構成ガイド
+# ドキュメント構成ガイド
 
 Document Structure Guide
 

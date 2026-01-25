@@ -1,4 +1,4 @@
-# ドキュメントの内容ガイド
+# ドキュメント内容ガイド
 
 Document Contents Guide
 

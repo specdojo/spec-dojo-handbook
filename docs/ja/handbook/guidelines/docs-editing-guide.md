@@ -1,4 +1,4 @@
-# ドキュメントの編集ガイド
+# ドキュメント編集ガイド
 
 Document Editing Guide
 
