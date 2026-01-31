@@ -11,7 +11,7 @@ Rulebook Structure Rules
 
 ## 1. 適用範囲
 
-- 対象: `docs/ja/handbook/rules/` 配下のすべての `*-rules.md`
+- 対象: `docs/ja/handbook/rules/` 配下のすべての `*-rules.md`。ただし、`meta-*rules.md`は除く。
 - 目的: 章構成と見出しレベルを統一し、参照・保守を容易にする
 
 ## 2. 見出しレベルと章番号の原則
