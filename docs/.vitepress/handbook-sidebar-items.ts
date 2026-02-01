@@ -4,6 +4,7 @@ export const handbookSidebarItems = [
     collapsed: false,
     items: [
       { text: 'ドキュメントの構成', link: '/ja/handbook/guidelines/docs-structure-guide' },
+      { text: 'ドキュメントのフェーズ概要', link: '/ja/handbook/guidelines/docs-phases-overview' },
       { text: 'ドキュメントの内容', link: '/ja/handbook/guidelines/docs-contents-guide' },
       { text: 'ドキュメントの書き方', link: '/ja/handbook/guidelines/docs-editing-guide' },
     ],
