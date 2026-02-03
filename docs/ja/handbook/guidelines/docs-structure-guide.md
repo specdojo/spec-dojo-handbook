@@ -102,7 +102,7 @@ flowchart TB
 
       subgraph Development[プロダクトの要件〜設計]
       direction TB
-        subgraph BusinessSpec[業務仕様群（要件含む）]
+        subgraph BusinessSpec[業務仕様群<br>（業務要件を内包）]
           BS["業務仕様<br>🧭"]
           EI["外部I/F仕様<br>🧭 / ⚙️"]
         end
