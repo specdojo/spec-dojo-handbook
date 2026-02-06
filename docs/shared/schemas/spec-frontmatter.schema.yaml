@@ -23,9 +23,19 @@ properties:
   id:
     $ref: '#/definitions/idRef'
     description: '一意なID'
+  phase:
+    type: string
+    enum:
+      - need # 要求
+      - requirement # 要件
+      - specification # 仕様
+      - design # 設計
+      - implement # 実装
+    description: '対象フェーズ'
   type:
     type: string
     enum:
+      - project # プロジェクト関連
       - screen # 画面仕様
       - api # API仕様
       - domain # ドメイン仕様
