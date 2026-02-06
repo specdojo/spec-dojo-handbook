@@ -11,7 +11,7 @@ Document Metadata Rules
 
 機械可読性を向上する目的で、各ドキュメントのヘッダー部に属性情報を記述します。
 
-- 参照スキーマ: `docs/handbook/shared/schemas/spec-frontmatter.schema.yaml`
+- 参照スキーマ: [`docs/shared/schemas/spec-frontmatter.schema.yaml`](../../../shared/schemas/spec-frontmatter.schema.yaml)
 - Markdownの場合は、記述は YAML Front Matter を想定（各仕様ドキュメントの先頭）。
 - YAML/JSON や他フォーマットの場合は、同等のメタ情報を持つこと。
 
@@ -42,20 +42,22 @@ Document Metadata Rules
 
 下表の定義済み列挙に限定
 
-| 種類          | 説明                                               |
-| ------------- | -------------------------------------------------- |
-| screen        | 画面仕様                                           |
-| api           | API仕様                                            |
-| domain        | ドメイン仕様                                       |
-| data          | データ仕様                                         |
-| test          | テスト仕様                                         |
-| flow          | 業務フロー仕様                                     |
-| rule          | 業務ルール仕様                                     |
-| architecture  | 構造・構成（C4、配置、統合、ネットワーク境界など） |
-| decision      | 設計判断（ADR的な意思決定記録）                    |
-| rulebook      | ドキュメント記述ルール                             |
-| meta-rulebook | ドキュメント記述ルールのルール                     |
-| instruction   | 生成AIへの指示テンプレート                         |
+| 種類         | 説明                                               |
+| ------------ | -------------------------------------------------- |
+| project      | プロジェクト関連（プロジェクト概要/スコープ等）    |
+| screen       | 画面仕様                                           |
+| api          | API仕様                                            |
+| domain       | ドメイン仕様                                       |
+| data         | データ仕様                                         |
+| test         | テスト仕様                                         |
+| flow         | 業務フロー仕様                                     |
+| rule         | 業務ルール仕様                                     |
+| architecture | 構造・構成（C4、配置、統合、ネットワーク境界など） |
+| decision     | 設計判断（ADR的な意思決定記録）                    |
+| meta         | 共通/横断ルール                                    |
+| rulebook     | ドキュメント記述ルール                             |
+| instruction  | 生成AIへの指示テンプレート                         |
+| guide        | ガイドライン                                       |
 
 ### 3.3. title(ドキュメント名)
 
