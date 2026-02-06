@@ -26,7 +26,24 @@ export const handbookSidebarItems = [
           },
         ],
       },
-      { text: 'プロジェクト' },
+      {
+        text: 'プロジェクト',
+        collapsed: true,
+        items: [
+          {
+            text: 'プロジェクト概要',
+            link: '/ja/handbook/rules/prj-overview-rules',
+          },
+          {
+            text: 'プロジェクトスコープ',
+            link: '/ja/handbook/rules/prj-scope-rules',
+          },
+          {
+            text: 'プロジェクト課題と解決アプローチ',
+            link: '/ja/handbook/rules/prj-issues-and-approach-rules',
+          },
+        ],
+      },
       {
         text: '業務仕様',
         collapsed: true,
@@ -42,10 +59,10 @@ export const handbookSidebarItems = [
             collapsed: true,
             items: [
               { text: '業務データ辞書', link: '/ja/handbook/rules/bdd-rules' },
-              { text: '概念データストア一覧', link: '/ja/handbook/rules/cdsl-rules' },
-              { text: '保管場所一覧', link: '/ja/handbook/rules/sll-rules' },
-              { text: 'ステータス一覧', link: '/ja/handbook/rules/stl-rules' },
-              { text: '分類一覧', link: '/ja/handbook/rules/cll-rules' },
+              { text: '概念データストア定義', link: '/ja/handbook/rules/cdsd-rules' },
+              { text: '保管場所定義', link: '/ja/handbook/rules/sld-rules' },
+              { text: 'ステータス定義', link: '/ja/handbook/rules/stsd-rules' },
+              { text: '分類定義', link: '/ja/handbook/rules/cld-rules' },
               { text: '概念クラス図', link: '/ja/handbook/rules/ccd-mermaid-rules' },
               { text: '概念状態遷移図', link: '/ja/handbook/rules/cstd-rules' },
             ],
