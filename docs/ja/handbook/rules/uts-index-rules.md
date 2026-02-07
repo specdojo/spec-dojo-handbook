@@ -30,7 +30,7 @@ flowchart BT
   TSP["tsp-overview<br>テスト戦略・方針"]
   TPC["**tpc-&lt;term&gt;<br>テスト観点・条件**"]
 
-  subgraph LS["テスト仕様"]
+  subgraph LS["UTS"]
   direction RL
     LSIndex["uts-index<br>単体テスト仕様-全体構成"]
     LSDetail["uts-&lt;term&gt;<br>単体テスト仕様-対象別"]
