@@ -23,7 +23,7 @@ const handbookItems = {
 }
 
 // GitHub Pages の公開パス: https://specdojo.github.io/spec-dojo-handbook/
-const base = '/spec-dojo-handbook/'
+const base = '/'
 
 const hashCode = (code: string): string =>
   crypto.createHash('md5').update(code).digest('hex').slice(0, 8)
