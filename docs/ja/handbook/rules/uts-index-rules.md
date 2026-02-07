@@ -1,4 +1,9 @@
-# 単体テスト仕様 全体構成 作成ルール
+---
+id: uts-index-rules
+title: 単体テスト仕様 全体構成 作成ルール
+type: rulebook
+status: draft
+---
 
 Unit Test Specification Index (UTS Index) Documentation Rules
 
