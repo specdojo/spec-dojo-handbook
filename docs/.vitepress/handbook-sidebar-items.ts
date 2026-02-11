@@ -18,7 +18,7 @@ export const handbookSidebarItems = [
         items: [
           {
             text: 'ドキュメントID命名ルール',
-            link: '/ja/handbook/rules/meta-id-naming-rules',
+            link: '/ja/handbook/rules/meta-id-and-file-naming-rules',
           },
           {
             text: 'メタ情報記述ルール',
