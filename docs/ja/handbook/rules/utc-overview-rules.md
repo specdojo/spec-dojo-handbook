@@ -97,9 +97,8 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 | ---------- | -------------------------------------------------- | ---- |
 | id         | `utc-overview`（固定）                             | ○    |
 | type       | `test` 固定                                        | ○    |
-| title      | 単体テストカタログ: 概要                           | ○    |
+| title      | 単体テストカタログ: 概要（`<システム名>`）         | ○    |
 | status     | `draft` / `ready` / `deprecated`                   | ○    |
-| part_of    | `[]`（`utc-overview` 自身は親なので通常は空配列）  | 任意 |
 | based_on   | 根拠となる仕様ID（ID配列。未指定時は `[]` を許容） | 任意 |
 | supersedes | 置き換え関係（ID配列。未指定時は `[]` を許容）     | 任意 |
 
