@@ -106,7 +106,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 - `based_on` には最低限`tsp-overview`を含めます。
 - BAC/NFR/BR 等は、`utc-overview` の方針判断（境界・分配・共通合格基準）に **直接利用したものだけ**を`based_on`に列挙します。
-- `part_of` / `based_on` / `supersedes` は ID 配列（未指定は `[]` 可）。
+- `based_on` / `supersedes` は ID 配列（未指定は `[]` 可）。
 
 ## 5. 本文構成（標準テンプレ）
 
@@ -300,7 +300,6 @@ id: utc-overview
 type: test
 title: 単体テスト仕様: 概要
 status: draft
-part_of: []
 based_on: [tsp-overview]
 supersedes: []
 ---
