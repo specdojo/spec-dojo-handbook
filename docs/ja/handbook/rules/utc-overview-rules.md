@@ -86,6 +86,7 @@ flowchart BT
 
 - 本ルールの対象ドキュメントの`id` は `utc-overview` 固定。対象別は `utc-<term>`（詳細は [utc-rules.md](utc-rules.md)）。
 - ファイル名は `utc-010-単体テストカタログ-概要.md` 等、プロジェクト内で一意になるように命名します。
+- `<term>` は用語集の論理名キー（英小文字kebab-case） を用いる（表示名は title に日本語で記載してよい）。
 
 ## 4. 推奨 Frontmatter 項目
 
@@ -247,9 +248,9 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 必須カラム：
 
 - `case_id`（ケースID）：対象別に一意なIDで変更しない
-  - `case_id` は `<level>-<term>-<perspective-key>-<nnn>`（nnnは3桁推奨）を推奨
+  - `case_id` は `<level>-<term>-<perspective_key>-<nnn>`（nnnは3桁推奨）を推奨
     - 例: `ut-auth-input-validation-010`
-    - `perspective-key` は kebab-case（英小文字＋数字＋ハイフン）
+    - `perspective_key` は kebab-case のキー文字列（英小文字＋数字＋ハイフン）で、原則変更しない
     - `nnn` を 10刻みで付番（010, 020, 030…）
 
 - `条件`：入力/状態/環境の要点（`入力:` `状態:` `環境:` の形を推奨）
