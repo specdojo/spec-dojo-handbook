@@ -319,7 +319,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 ---
 id: utc-overview
 type: test
-title: 単体テスト仕様: 概要
+title: 単体テストカタログ: 概要
 status: draft
 based_on: [tsp-overview]
 supersedes: []
