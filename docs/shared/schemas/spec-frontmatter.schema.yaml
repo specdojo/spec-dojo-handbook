@@ -49,6 +49,7 @@ properties:
       - rulebook # ドキュメント記述ルール
       - instruction # 生成AIへの指示テンプレート
       - guide # ガイドライン
+      - migration # 移行計画・設計・手順
     description: '仕様の種別'
   title:
     type: string
