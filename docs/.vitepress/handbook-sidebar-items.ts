@@ -218,7 +218,14 @@ export const handbookSidebarItems = [
           { text: '運用切替計画', link: '/ja/handbook/rules/otp-rules' },
         ],
       },
-      { text: '運用', collapsed: true },
+      {
+        text: '運用',
+        collapsed: true,
+        items: [
+          { text: '運用方針・設計', link: '/ja/handbook/rules/opd-rules' },
+          { text: '運用手順', link: '/ja/handbook/rules/opr-rules' },
+        ],
+      },
     ],
   },
   {
