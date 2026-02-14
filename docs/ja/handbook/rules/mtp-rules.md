@@ -26,16 +26,15 @@ Migration Test Plan (MTP) Documentation Rules
 - `mtp-<term>` は、ウェーブ分割・責任分界・対象の独立性が高い場合に限り追加する
 - `mtp-<term>` を追加する場合でも、共通方針・全体日程・GO/NO-GOの基準点は `mtp-index` を正とする
 
-## 2. 位置づけと用語定義（必要に応じて）
+## 2. 位置づけ
 
-`mtp-index` / `mtp-<term>` と他ドキュメントの関係を示します。必要に応じて Mermaid を使用してよい。
+`mtp-index` / `mtp-<term>` と他ドキュメントの関係を示します。必要に応じて Mermaid による図を使用してよい。
 
-- `mip-index`：移行の合意・判断のSSOT（移行計画の入口）
-- `cop-*`：当日実行の詳細手順（Runbook）
-- `dmd-*`：データ移行の詳細設計（マッピング/変換/検証）
-- `mtp-index`：移行テスト計画の入口（全体SSOT）
-- `mtp-*`：移行テスト計画の個別分冊（term固有）
-- `otp-*`：運用切替の詳細（監視設定/運用手順/窓口）
+- `mip-index`：移行の合意・判断のSSOT（成功条件・カットオーバー骨格を含む）
+- `dmd-index` / `dmd-<term>`：データ移行の詳細設計（マッピング/変換/検証）
+- **`mtp-index` / `mtp-<term>`：リハーサル計画・検証設計（観点/手順/証跡）**
+- `cop-index` / `cop-<term>`：当日実行の詳細手順（Runbook）
+- `otp-index` / `otp-<term>`：運用切替の詳細（監視設定/運用手順/窓口）
 
 ## 3. ファイル命名・ID規則
 

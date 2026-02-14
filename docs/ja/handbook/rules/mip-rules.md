@@ -25,15 +25,15 @@ Migration Plan (MIP) Documentation Rules
 - `mip` は `mip-index` のみを作成する（`mip-<term>` は作成しない）
 - `mtp-index`/ `cop-index` / `otp-index` を関連ドキュメントとして参照し、詳細は下位ドキュメントへ委譲する
 
-## 2. 位置づけと用語定義（必要に応じて）
+## 2. 位置づけ
 
 `mip-index` と他ドキュメントの関係を示します。必要に応じて Mermaid による図を使用してよい。
 
-- `mip-index`：移行の合意・判断のSSOT（本体）
-- `dmd-index` / `dmd-*`：データ移行の詳細設計（マッピング/変換/検証）
-- `mtp-index` / `mtp-*`：リハーサル計画・検証設計（観点/手順/証跡）
-- `cop-index` / `cop-*`：当日実行の詳細手順（Runbook）
-- `otp-index` / `otp-*`：運用切替の詳細（監視設定/運用手順/窓口）
+- **`mip-index`：移行の合意・判断のSSOT（成功条件・カットオーバー骨格を含む）**
+- `dmd-index` / `dmd-<term>`：データ移行の詳細設計（マッピング/変換/検証）
+- `mtp-index` / `mtp-<term>`：リハーサル計画・検証設計（観点/手順/証跡）
+- `cop-index` / `cop-<term>`：当日実行の詳細手順（Runbook）
+- `otp-index` / `otp-<term>`：運用切替の詳細（監視設定/運用手順/窓口）
 
 ## 3. ファイル命名・ID規則
 
