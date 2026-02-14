@@ -31,7 +31,7 @@ Operations Policy and Design (OPD) Documentation Rules
 
 `opd-index` / `opd-<term>` と他ドキュメントの関係を示します。必要に応じて Mermaid を使用してよい。
 
-- `opd-index` / `opd-<term>`：恒常運用の方針・統制の SSOT（SLO/SLA・責任分界・統制基準を含む）
+- **`opd-index` / `opd-<term>`：恒常運用の方針・統制の SSOT（SLO/SLA・責任分界・統制基準を含む）**
 - `opr-index` / `opr-<term>`：運用手順・Runbook（実行手順の詳細）
   - OPD は「方針と統制（あるべき姿・判断基準）」、OPR は「手順と証跡（再現可能な作業）」を責務とする
 
