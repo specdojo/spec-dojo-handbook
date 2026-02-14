@@ -207,8 +207,18 @@ export const handbookSidebarItems = [
           },
         ],
       },
-      { text: '移行' },
-      { text: '運用' },
+      {
+        text: '移行',
+        collapsed: true,
+        items: [
+          { text: '移行計画', link: '/ja/handbook/rules/mip-rules' },
+          { text: 'データ移行設計', link: '/ja/handbook/rules/dmd-rules' },
+          { text: '移行テスト計画', link: '/ja/handbook/rules/mtp-rules' },
+          { text: 'カットオーバー計画', link: '/ja/handbook/rules/cop-rules' },
+          { text: '運用切替計画', link: '/ja/handbook/rules/otp-rules' },
+        ],
+      },
+      { text: '運用', collapsed: true },
     ],
   },
   {

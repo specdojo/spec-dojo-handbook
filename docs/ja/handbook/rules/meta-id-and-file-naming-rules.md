@@ -340,6 +340,8 @@ supersedes:
 | 移行テスト計画（リハーサル計画）   | Migration Test Plan                  | mtp-      | mtp-index, mtp-cutover-rehearsal |
 | カットオーバー計画（本番切替手順） | Cutover Plan                         | cop-      | cop-index, cop-cutover-runbook   |
 | 運用切替計画（ハイパーケア含む）   | Operations Transition Plan           | otp-      | otp-index                        |
+| 運用方針・設計                     | Operations Policy and Design         | opd-      | opd-index, opd-monitoring        |
+| 運用手順                           | Operations Runbook                   | opr-      | opr-index, opr-restore           |
 
 ## 15. deprecated: テスト仕様・設計の prefix 対応表
 
