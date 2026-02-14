@@ -45,18 +45,20 @@ ID とファイル名は **一致させてもよいが、必須ではない**。
 
 - 形式：`<prefix>-<body>`
   - 種類がある場合は、`<prefix>-<kind>-<body>`
+
 - `<body>`も含め`kebab-case`: 英小文字 + 数字 + `-`
 - **名詞句**で表現（動詞開始は禁止）
-- 一覧・構造文書：`<prefix>-index`
-- 概説・前提文書：`<prefix>-overview`
+- 系列の入口（SSOT/導線）：`<prefix>-index`
+- 共通定義：`<prefix>-common`
 - `main` は使用しない
 - IDは原則変更不可。変更時は `supersedes` で置換関係を表現
 
 ### 3.2. ファイル名
 
 - **日本語可**
-- 表示用途として「全体構成」「共通」などの語を使用してよい
-- IDとの対応関係はメタ情報で保証する
+- ファイル名は人間向け。IDで機械的に一意性と参照性を保証する
+- 系列入口（`-index`）のファイル名は **suffix無し**を推奨（例：`移行計画.md`）
+- 個別（`-<term>`）は **`<系列名>-<対象名>.md`** を推奨（例：`移行テスト計画-カットオーバーリハーサル.md`）
 
 ---
 
@@ -103,6 +105,7 @@ ID とファイル名は **一致させてもよいが、必須ではない**。
 - `<kind>` は語彙を固定し、同義語の混在を禁止する
   - 例：`api`, `msg`, `file`
   - `message`, `messages`, `files` 等は使用しない
+
 - `<prefix>-<kind>-<body>` 以上の多段 prefix は使用しない
 
 OK
@@ -131,13 +134,24 @@ NG
 - `edit-order`
 - `create-invoice`
 
-### 4.6. index / overview / common の扱い（ID）
+### 4.6. index / common の扱い（ID）
 
-| 種別     | ID suffix   | 役割                             |
-| -------- | ----------- | -------------------------------- |
-| overview | `-overview` | 概念・前提の説明（構造ナビなし） |
-| index    | `-index`    | 系列の全体構成・ナビゲーション   |
-| common   | `-common`   | 横断的・共有定義（系列外）       |
+#### 4.6.1. `-index`（系列の入口・Hub）
+
+`<prefix>-index` は、系列の入口として以下を満たす。
+
+- 系列の **要点（SSOT）** を含む（合意・判断に必要な最小情報）
+- 系列内の個別ドキュメント（`<prefix>-<term>` 等）への **導線** を含む
+- 個別が存在しない場合でも `-index` を使用し、入口IDを固定する（将来分割に耐える）
+
+> `-index` は「リンク集」ではなく「要点（SSOT）＋関連リンク」を持つ Hub とする。
+
+#### 4.6.2. `-common`（横断的・共有定義）
+
+`<prefix>-common` は、系列外も含めて参照される共通定義に用いる。
+
+- 系列の親子関係を持たない（構造の親ではない）
+- 参照元が複数系列にまたがる定義を置く
 
 ## 5. ファイル命名ルール
 
@@ -145,7 +159,7 @@ NG
 
 - ファイル名は **人間向け**
 - 日本語を使用してよい
-- IDと1対1で対応させる
+- 1ファイルは1ドキュメントIDと対応させる（IDはfrontmatterに保持）
 
 ### 5.2. ファイル名の基本構成（推奨）
 
@@ -155,23 +169,50 @@ NG
 
 例：
 
-| ドキュメントID  | ファイル名例                 |
-| --------------- | ---------------------------- |
-| `uts-index`     | `単体テスト仕様-全体構成.md` |
-| `uts-inventory` | `単体テスト仕様-在庫管理.md` |
-| `bdd-common`    | `業務データ辞書-共通.md`     |
-| `tsp-overview`  | `テスト戦略・方針.md`        |
+| ドキュメントID          | ファイル名例                                 |
+| ----------------------- | -------------------------------------------- |
+| `uts-index`             | `単体テスト仕様.md`                          |
+| `uts-inventory`         | `単体テスト仕様-在庫管理.md`                 |
+| `bdd-common`            | `業務データ辞書-共通.md`                     |
+| `tsp-index`             | `テスト戦略・方針.md`                        |
+| `mtp-index`             | `移行テスト計画.md`                          |
+| `mtp-cutover-rehearsal` | `移行テスト計画-カットオーバーリハーサル.md` |
 
 ### 5.3. suffix 表記ルール（ファイル名）
 
-| ID種別      | ファイル名での表現         |
-| ----------- | -------------------------- |
-| `-index`    | `-全体構成`                |
-| `-common`   | `-共通`                    |
-| `-overview` | **原則 suffix を付けない** |
+- `-index` は **ファイル名に suffix を付けない**（自然な日本語タイトルを優先）
+- `-common` は `-共通` を付与してよい（識別性のため推奨）
 
-> overview は「派生がある」ように見せないため、
-> ファイル名そのものに意味語（戦略・方針・概要など）を含める。
+推奨:
+
+| ID種別    | ファイル名での表現 |
+| --------- | ------------------ |
+| `-index`  | **suffix無し**     |
+| `-common` | `-共通`            |
+
+> 入口は `-index` とIDで固定し、ファイル名は人間が読みやすい名称に寄せる。
+
+### 5.4. 個別ドキュメント（`<term>`）の命名ルール（ファイル名）
+
+- 個別は **`<系列名>-<対象名>.md`** を基本とする
+- 対象名は短く具体的にし、重複する語（「全体」「概要」等）は避ける
+
+例：
+
+- `データ移行設計-受注データ.md`
+- `移行テスト計画-ウェーブ1.md`
+- `移行テスト計画-カットオーバーリハーサル.md`
+
+### 5.5. 連番プレフィックス（任意）
+
+- 並び順が重要であれば `010-` 等の連番を付けてよい
+- 付ける場合は系列内で統一し、IDとは独立に運用する
+
+例：
+
+- `010-移行計画.md`
+- `020-移行テスト計画.md`
+- `030-データ移行設計-受注データ.md`
 
 ## 6. IDとファイル名の対応ルール
 
@@ -179,13 +220,18 @@ NG
 - ファイル名変更時も ID は不変
 - 参照・リンク・トレースは **必ずIDで行う**
 
-## 7. 参照構造ルール
+## 7. 参照構造ルール（更新）
 
-| 種別     | 構造的参照                  |
-| -------- | --------------------------- |
-| overview | 下位 → overview             |
-| index    | index ⇄ 下位                |
-| common   | 他 → common（構造親子なし） |
+| 種別   | 構造的参照                  |
+| ------ | --------------------------- |
+| index  | index ⇄ 下位（term）        |
+| common | 他 → common（構造親子なし） |
+
+運用ルール:
+
+- 系列の入口は `-index`（Hub）に集約する
+- `-index` は **関連ドキュメント（導線）** を必ず持つ
+- 個別（term）は、必要に応じて `-index` を参照して共通方針・全体基準の重複を避ける
 
 ## 8. IDの変更・置換ルール
 
@@ -203,14 +249,15 @@ supersedes:
 | ------------------- | ------------------------- |
 | `Order_API_v1`      | 大文字・記号              |
 | `create-order-api`  | 動詞主導                  |
-| `uts-list`          | 一覧は `index`            |
+| `uts-list`          | 一覧は `index`（入口Hub） |
 | `bdd-main`          | 役割が曖昧（非推奨）      |
 | `ifx-inventory-api` | kind は prefix 直後に置く |
 
-## 10. 運用指針
+## 10. 運用指針（更新）
 
 - 迷ったら **「これは何についての文書か？」を名詞で考える**
-- 構造は index、前提説明は overview、横断定義は common
+- 入口（SSOT/導線）は `-index`、横断定義は `-common`
+- `-index` は「要点（SSOT）＋関連リンク」を必ず持つ
 - IDは設計資産、ファイル名は表示資産として扱う
 - lint / CI / 生成AI が ID を正として扱うことを前提にする
 
@@ -224,16 +271,15 @@ supersedes:
 
 日本語の用語と英語の予約語・用語は以下のように対応させてください。
 
-### 12.1. 予約語と日本語名称との対応
+### 12.1. 予約語と日本語名称との対応（更新）
 
-| 予約語          | 日本語名称             | 意味・役割                     |
-| --------------- | ---------------------- | ------------------------------ |
-| **index**       | **全体構成**           | 系列の全体構成・ナビゲーション |
-| **common**      | **共通**               | 横断的・共有定義               |
-| **overview**    | **概要、方針、戦略等** | 概念・前提の説明               |
-| **rules**       | **ルール**             | 強制ルール・規約（逸脱不可）   |
-| **instruction** | **指示テンプレート**   | 作成手順・生成AI向け指示       |
-| **guide**       | **ガイド**             | 案内・読み物・使い方           |
+| 予約語          | 日本語名称           | 意味・役割                         |
+| --------------- | -------------------- | ---------------------------------- |
+| **index**       | **入口（全体）**     | 系列の入口（要点SSOT＋関連リンク） |
+| **common**      | **共通**             | 横断的・共有定義                   |
+| **rules**       | **ルール**           | 強制ルール・規約（逸脱不可）       |
+| **instruction** | **指示テンプレート** | 作成手順・生成AI向け指示           |
+| **guide**       | **ガイド**           | 案内・読み物・使い方               |
 
 ## 13. 主要な英語用語と日本語用語との対応
 
@@ -248,54 +294,54 @@ supersedes:
 | **constraint**          | **制約**     | 設計・実装に課される制限条件                       |
 | **acceptance criteria** | **受入条件** | 利用者視点での合格基準                             |
 
-## 14. ドキュメント種別とプレフィックスの対応表
+## 14. ドキュメント種別とプレフィックスの対応表（更新）
 
-| 種別                               | English                              | prefix    | 例                                |
-| ---------------------------------- | ------------------------------------ | --------- | --------------------------------- |
-| プロジェクト概要                   | Project Overview                     | prj-      | prj-overview                      |
-| プロジェクトスコープ               | Project Scope                        | prj-      | prj-scope                         |
-| プロジェクト課題と解決アプローチ   | Project Issues and Approach          | prj-      | prj-issues-and-approach           |
-| 概念データフロー図                 | Conceptual Data Flow Diagram         | cdfd-     | cdfd-overview                     |
-| 概念クラス図                       | Conceptual Class Diagram             | ccd-      | ccd-customer                      |
-| 業務データ辞書                     | Business Data Dictionary             | bdd-      | bdd-common, bdd-sales             |
-| 概念データストア定義               | Conceptual Data Store Definition     | cdsd-     | cdsd-common, cdsd-sales           |
-| 保管場所定義                       | Storage Location Definition          | sld-      | sld-common, sld-sales             |
-| ステータス定義                     | Status Definition                    | stsd-     | stsd-product                      |
-| 分類定義                           | Classification Definition            | cld-      | cld-product                       |
-| 概念状態遷移図                     | Conceptual State Transition Diagram  | cstd-     | cstd-product                      |
-| 業務プロセス仕様                   | Business Process Specification       | bps-      | bps-order-flow                    |
-| ビジネスルール                     | Business Rule                        | br-       | br-discount                       |
-| 画面仕様                           | UI Specification                     | uis-      | uis-order-edit                    |
-| 帳票仕様                           | Business Document Specification      | bds-      | bds-order-summary                 |
-| システム化機能                     | System Function                      | sf-       | sf-index, sf-product-register     |
-| 業務イベント仕様                   | Business Event Specification         | bes-      | bes-index, bes-order-approved     |
-| 業務受入条件                       | Business Acceptance Criteria         | bac-      | bac-order-approved                |
-| 用語集                             | Glossary                             | gl-       | gl-sales                          |
-| 用語集の用語                       | Glossary Term                        | tm-       | tm-reorder-point                  |
-| 外部システムI/F                    | External System Interface            | ifx-      | ifx-index                         |
-| 外部API仕様                        | External API Specification           | ifx-api-  | ifx-api-inventory                 |
-| 外部ファイル連携仕様               | External File Exchange Specification | ifx-file- | ifx-file-order                    |
-| 外部メッセージ仕様                 | External Message Specification       | ifx-msg-  | ifx-msg-stock-changed             |
-| コンテキスト図                     | Context Diagram                      | cxd-      | cxd-customer                      |
-| コンテナ図                         | Container Diagram                    | cnd-      | cnd-customer                      |
-| コンポーネント図                   | Component Diagram                    | cpd-      | cpd-inventory                     |
-| インフラ構成図                     | Infrastructure Diagram               | ifd-      | ifd-overview                      |
-| 技術スタック定義                   | Technology Stack Definition          | tsd-      | tsd-overview                      |
-| 非機能要件                         | Non-Functional Requirements          | nfr-      | nfr-performance                   |
-| システム受入条件                   | System Acceptance Criteria           | sac-      | sac-performance                   |
-| テスト戦略・方針                   | Test Strategy and Policy             | tsp-      | tsp-overview                      |
-| 単体テストカタログ                 | Unit Test Catalog                    | utc-      | utc-overview, utc-product-service |
-| 内部結合テストカタログ             | Internal Integration Test Catalog    | itc-      | itc-overview, itc-product-service |
-| 外部結合テストカタログ             | External Integration Test Catalog    | etc-      | etc-overview, etc-product-service |
-| 総合テストカタログ                 | System Test Catalog                  | stc-      | stc-overview, stc-product-service |
-| 受入テストカタログ                 | Acceptance Test Catalog              | atc-      | atc-overview, atc-product-service |
-| 移行計画                           | Migration Plan                       | mip-      | mip-overview                      |
-| データ移行設計                     | Data Migration Design                | dmd-      | dmd-overview                      |
-| 移行テスト計画（リハーサル計画）   | Migration Test Plan                  | mtp-      | mtp-overview                      |
-| カットオーバー計画（本番切替手順） | 　Cutover Plan                       | cop-      | cop-overview                      |
-| 運用切替計画（ハイパーケア含む）   | Operations Transition Plan           | otp-      | otp-overview                      |
+| 種別                               | English                              | prefix    | 例                               |
+| ---------------------------------- | ------------------------------------ | --------- | -------------------------------- |
+| プロジェクト概要                   | Project Overview                     | prj-      | prj-overview                     |
+| プロジェクトスコープ               | Project Scope                        | prj-      | prj-scope                        |
+| プロジェクト課題と解決アプローチ   | Project Issues and Approach          | prj-      | prj-issues-and-approach          |
+| 概念データフロー図                 | Conceptual Data Flow Diagram         | cdfd-     | cdfd-index                       |
+| 概念クラス図                       | Conceptual Class Diagram             | ccd-      | ccd-customer                     |
+| 業務データ辞書                     | Business Data Dictionary             | bdd-      | bdd-common, bdd-sales            |
+| 概念データストア定義               | Conceptual Data Store Definition     | cdsd-     | cdsd-common, cdsd-sales          |
+| 保管場所定義                       | Storage Location Definition          | sld-      | sld-common, sld-sales            |
+| ステータス定義                     | Status Definition                    | stsd-     | stsd-product                     |
+| 分類定義                           | Classification Definition            | cld-      | cld-product                      |
+| 概念状態遷移図                     | Conceptual State Transition Diagram  | cstd-     | cstd-product                     |
+| 業務プロセス仕様                   | Business Process Specification       | bps-      | bps-order-flow                   |
+| ビジネスルール                     | Business Rule                        | br-       | br-discount                      |
+| 画面仕様                           | UI Specification                     | uis-      | uis-order-edit                   |
+| 帳票仕様                           | Business Document Specification      | bds-      | bds-order-summary                |
+| システム化機能                     | System Function                      | sf-       | sf-index, sf-product-register    |
+| 業務イベント仕様                   | Business Event Specification         | bes-      | bes-index, bes-order-approved    |
+| 業務受入条件                       | Business Acceptance Criteria         | bac-      | bac-order-approved               |
+| 用語集                             | Glossary                             | gl-       | gl-sales                         |
+| 用語集の用語                       | Glossary Term                        | tm-       | tm-reorder-point                 |
+| 外部システムI/F                    | External System Interface            | ifx-      | ifx-index                        |
+| 外部API仕様                        | External API Specification           | ifx-api-  | ifx-api-inventory                |
+| 外部ファイル連携仕様               | External File Exchange Specification | ifx-file- | ifx-file-order                   |
+| 外部メッセージ仕様                 | External Message Specification       | ifx-msg-  | ifx-msg-stock-changed            |
+| コンテキスト図                     | Context Diagram                      | cxd-      | cxd-customer                     |
+| コンテナ図                         | Container Diagram                    | cnd-      | cnd-customer                     |
+| コンポーネント図                   | Component Diagram                    | cpd-      | cpd-inventory                    |
+| インフラ構成図                     | Infrastructure Diagram               | ifd-      | ifd-index                        |
+| 技術スタック定義                   | Technology Stack Definition          | tsd-      | tsd-index                        |
+| 非機能要件                         | Non-Functional Requirements          | nfr-      | nfr-performance                  |
+| システム受入条件                   | System Acceptance Criteria           | sac-      | sac-performance                  |
+| テスト戦略・方針                   | Test Strategy and Policy             | tsp-      | tsp-index                        |
+| 単体テストカタログ                 | Unit Test Catalog                    | utc-      | utc-index, utc-product-service   |
+| 内部結合テストカタログ             | Internal Integration Test Catalog    | itc-      | itc-index, itc-product-service   |
+| 外部結合テストカタログ             | External Integration Test Catalog    | etc-      | etc-index, etc-product-service   |
+| 総合テストカタログ                 | System Test Catalog                  | stc-      | stc-index, stc-product-service   |
+| 受入テストカタログ                 | Acceptance Test Catalog              | atc-      | atc-index, atc-product-service   |
+| 移行計画                           | Migration Plan                       | mip-      | mip-index                        |
+| データ移行設計                     | Data Migration Design                | dmd-      | dmd-index, dmd-order-data        |
+| 移行テスト計画（リハーサル計画）   | Migration Test Plan                  | mtp-      | mtp-index, mtp-cutover-rehearsal |
+| カットオーバー計画（本番切替手順） | Cutover Plan                         | cop-      | cop-index, cop-cutover-runbook   |
+| 運用切替計画（ハイパーケア含む）   | Operations Transition Plan           | otp-      | otp-index                        |
 
-## deprecated: テスト仕様・設計の prefix 対応表
+## 15. deprecated: テスト仕様・設計の prefix 対応表
 
 | 種別               | English                                 | prefix | 例                             |
 | ------------------ | --------------------------------------- | ------ | ------------------------------ |
