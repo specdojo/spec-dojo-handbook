@@ -1,11 +1,11 @@
 ---
-id: mip-overview-rules
+id: mip-rules
 title: 移行計画 作成ルール
 type: rulebook
 status: draft
 ---
 
-Migration Plan (MIP) Overview Documentation Rules
+Migration Plan (MIP) Documentation Rules
 
 本ドキュメントは、移行計画ドキュメント（`mip-overview`）を統一形式で記述するためのルールです。
 移行全体を「1冊で説明できる状態」にし、関係者の合意と実行の基準点となる内容を定義します。
