@@ -14,6 +14,7 @@
     "efes",
     "esil",
     "HIPO",
+    "hypercare",
     "lefthook",
     "lightbox",
     "mhutchie",
@@ -23,6 +24,7 @@
     "Resellable",
     "rgba",
     "Rulebook",
+    "specdojo",
     "specversion",
     "SSOT",
     "stackable",
@@ -33,8 +35,7 @@
     "systemization",
     "TAXCLASS",
     "vitepress",
-    "xychart",
-    "specdojo"
+    "xychart"
   ],
 
   // ===== ファイル全体の共通設定 =====
