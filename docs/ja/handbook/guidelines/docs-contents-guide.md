@@ -273,34 +273,68 @@ flowchart
 
 ## 5. システム設計
 
+システム設計は **“コードに寄せる（Code as Spec）”** 方針とし、設計ドキュメントは最小限に留める。
+本章では、実装詳細を文章で重複させず、以下のみを扱う。
+
+- **System Design Index**：設計のSSOT（OpenAPI / AsyncAPI / migration / job定義 / config schema 等）への導線
+- **Critical Flows**：事故や仕様誤解の原因になりやすい“重要フロー”だけを少数（最大5件）定義
+- **Cross-cutting Rules**：エラー・冪等・リトライ・監査・トレーシング等の横断ルール（実装の共通前提）
+
+### 5.1. ドキュメント一覧と概要（最小構成）
+
 <!-- prettier-ignore -->
 | ドキュメント | 略称 | 目的 | 主な内容 |
 | --- | --- | --- | --- |
-| 実装データフロー図 || 実装レベルの処理・データの流れを定義 | サービス間、バッチ、キュー、外部IFのデータフロー |
-| 実装クラス図 || 実装クラス構造を定義 | クラス、インターフェース、継承関係、パッケージ構成 |
-| DB設計/論理設計 || 論理テーブル構造を定義 | エンティティ、テーブル名、項目、論理型、主キー・外部キー |
-| DB設計/物理設計 || 物理的なDB仕様を定義 | 物理型、インデックス、パーティション、表領域など |
-| シーケンス図 || 処理の時系列の流れを明確化 | ユースケースごとのコンポーネント間メッセージ |
-| 実装画面仕様 || UI実装の詳細仕様を定義 | 画面ID、ルーティング、コンポーネント構成、バリデーション、API連携 |
-| 内部インターフェース || 内部のコンポーネント間インターフェースを定義 | REST API、メッセージキュー、メッセージ構造など |
-| バッチ・ジョブ設計 || バッチ処理の実装仕様を定義 | ジョブID、実行タイミング、入力・出力、リトライ、エラー動作 |
-| 設定パラメータ一覧 || 変更可能な設定項目を整理 | パラメータ名、説明、既定値、範囲、上書き階層、反映方法 |
+| 全体構成（リンク集） | SDI | システム設計のSSOTへの導線を1箇所に集約し、設計情報を迷子にしない | 内部API定義（OpenAPI等）/イベント定義（AsyncAPI等）/DBスキーマ（migration等）/バッチ定義（workflow/cron等）/設定スキーマ（config schema等）/コード配置規約（モジュール境界） |
+| 重要フロー | SDF | “読まないと事故る”フローだけを可視化し、実装・テスト・運用の共通理解を作る | 最大5フロー（冪等/補償/非同期/順序/整合性/外部I/F障害など）について、境界・永続化点・再実行性・失敗時挙動を図または箇条書きで定義 |
+| 横断ルール | SCR | 実装全体に影響する共通ルールをSSOT化し、各所の実装ブレを防ぐ | エラー形式/例外分類、タイムアウト・リトライ、冪等キー、トランザクション境界、ログ/監査ログ、トレーシング、セキュリティ（認証・認可の実装原則）、バージョニング、設定の上書き階層 |
+
+> 補足：従来の「実装データフロー図／実装クラス図／DB論理・物理／実装画面仕様／内部I/F／バッチ設計／設定一覧」は、
+> **“SSOTをコード（定義ファイル）に寄せる”** 方針により、個別ドキュメントとしては作らない。
+> 必要な場合は **SDI（リンク集）から一次情報へ到達**できる状態を維持する。
+
+### 5.2. 記述方針（Code as Spec）
+
+- **内部I/F**：OpenAPI / AsyncAPI / gRPC proto 等をSSOTとし、本章はリンクと横断ルールのみ記載する
+- **DB**：migration / schema定義をSSOTとし、物理設計は“理由（意図）”のみ横断ルールまたは重要フローに残す
+- **UI詳細**：画面の目的・項目は UIS をSSOTとし、実装構成（コンポーネント分割等）はコード参照とする
+- **クラス図**：追随コストが高いため原則作らず、代わりに **モジュール境界（依存方向のルール）**を横断ルールに記載する
+- **バッチ/ジョブ**：定義ファイル（workflow/cron/IaC）とコードをSSOTとし、運用上の重要事項のみ横断ルールに記載する
+- **設定**：config schema とデフォルト設定をSSOTとし、運用が触る項目のみ一覧化する（SCRに記載 or SDIから参照）
+
+### 5.3. サンプル（抜粋イメージ）
 
 <details>
 <summary>サンプル（抜粋イメージ）</summary>
 
-<!-- prettier-ignore -->
-| ドキュメント | サンプル（抜粋イメージ） | 記述ルールと作成指示 |
-| --- | --- | --- |
-| 実装データフロー図 | 「POS→API『/sales』→SalesService→在庫更新イベント→発注バッチ」 | rules: TBD |
-| 実装クラス図 | 「StockService → StockRepository、OrderService → OrderRepository」 | rules: TBD |
-| DB設計/論理設計 | 「TABLE: INVENTORY（product_id, store_id, qty, reorder_point,…）」 | rules: TBD |
-| DB設計/物理設計 | 「qty: INTEGER／IDX_INV_PRODUCT_STORE(product_id, store_id) 作成」 | rules: TBD |
-| シーケンス図 | 「ユーザー→画面→API→Service→Repository→DB の呼び順」 | rules: TBD |
-| 実装画面仕様 | 「/inventory-list は GET /api/inventories を呼び、レスポンスをテーブル表示。」 | rules: TBD |
-| 内部インターフェース | 「GET /api/inventories?storeId=… → 200: Inventory[]／404: NotFound」 | rules: TBD |
-| バッチ・ジョブ設計 | 「JOB-001 自動発注候補作成：毎日2:00／入力：INVENTORY／出力：ORDER_CANDIDATE」 | rules: TBD |
-| 設定パラメータ一覧 | 「reorder.threshold.default=10／上書き：環境・店舗単位／再起動不要」 | rules: TBD |
+#### 5.3.1 システム設計 / 全体構成（SDI）例
+
+| 種別           | SSOT（一次情報）       | 参照先（例）        | 備考                      |
+| -------------- | ---------------------- | ------------------- | ------------------------- |
+| 内部REST API   | OpenAPI                | `api/openapi.yaml`  | CIでlint/差分検知         |
+| 内部イベント   | AsyncAPI + CloudEvents | `api/asyncapi.yaml` | スキーマ互換性チェック    |
+| DBスキーマ     | migration              | `db/migrations/*`   | schema dumpを自動生成     |
+| ジョブ定義     | workflow/cron          | `ops/workflows/*`   | 失敗時通知も定義          |
+| 設定           | config schema          | `config/schema.*`   | 既定値と範囲を型で担保    |
+| モジュール境界 | ディレクトリ規約       | `src/*` + README    | 依存方向ルールをSCRに記載 |
+
+#### 5.3.2 システム設計 / 重要フロー（SDF）例（1件）
+
+- **SDF-001：売上確定→在庫更新→発注候補生成（非同期）**
+  - 境界：`Sales API` → `Sales Service` → `Inventory Event` → `Reorder Batch`
+  - 永続化点：売上確定（DB commit）、在庫更新イベント発行（outbox等）
+  - 冪等：`sale_id` を冪等キーとし、二重送信時は二重計上しない
+  - 失敗時：イベント発行失敗は再試行、復旧後に再送されること
+  - 観測性：trace_id を全区間で引き回し、監査ログに `sale_id` を残す
+
+#### 5.3.3 システム設計 / 横断ルール（SCR）例（抜粋）
+
+- **エラー形式**：APIは共通エラーJSON（error_code / message / detail / trace_id）
+- **タイムアウト**：外部I/Fは 3s、内部は 1s を基準（例外はADR）
+- **リトライ**：外部I/Fは最大3回、指数バックオフ、冪等キー必須
+- **トランザクション境界**：更新系はサービス層でcommit、跨ぎは非同期＋補償
+- **ログ**：監査対象操作は who/when/what/before/after を必須
+- **依存方向**：domain ← application ← interface（逆依存禁止）
 
 </details>
 

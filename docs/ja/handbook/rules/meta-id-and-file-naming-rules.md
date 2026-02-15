@@ -327,6 +327,9 @@ supersedes:
 | コンポーネント図                   | Component Diagram                    | cpd-      | cpd-inventory                    |
 | インフラ構成図                     | Infrastructure Diagram               | ifd-      | ifd-index                        |
 | 技術スタック定義                   | Technology Stack Definition          | tsd-      | tsd-index                        |
+| システム設計                       | System Design Index                  | sdi-      | sdi-index                        |
+| 重要フロー設計                     | Critical Flows                       | sdf-      | sdf-inventory                    |
+| 横断ルール設計                     | Cross-cutting Rules                  | scr-      | scr-security                     |
 | 非機能要件                         | Non-Functional Requirements          | nfr-      | nfr-performance                  |
 | システム受入条件                   | System Acceptance Criteria           | sac-      | sac-performance                  |
 | テスト戦略・方針                   | Test Strategy and Policy             | tsp-      | tsp-index                        |
