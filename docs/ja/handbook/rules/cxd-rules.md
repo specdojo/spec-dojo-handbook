@@ -239,7 +239,7 @@ flowchart LR
   style 境界 fill:#ffffff,fill-opacity:0,stroke:#868e96,stroke-width:1px,stroke-dasharray: 5 5;
 ```
 
-```palintext
+```plaintext
 flowchart LR
   %% Person
   店員["👤店員"]
