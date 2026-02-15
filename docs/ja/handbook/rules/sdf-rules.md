@@ -83,20 +83,32 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 | 4    | 観測性と運用連携                            | ○    |
 | 5    | 関連ドキュメント導線（SDI/テスト/運用/ADR） | ○    |
 
+`3. フロー詳細` は、フローIDごとに以下の構成で記述する。
+
+- ヘッダ：ID、フロー名、目的、トリガー、範囲（含む/含まない）
+- フロー概要：図（推奨Mermaid）または箇条書き、登場要素、永続化点
+- 整合性・冪等・再実行：整合性モデル、冪等キー、重複時挙動、再実行方針
+- 失敗時：失敗分類、リトライ方針、補償/ロールバック、影響・通知
+- 観測性：trace_id引き回し、必須ログ項目、監査ログ要件
+- 参照：SDI、外部I/F、NFR、OPD/OPR、ADR、ITS/ETS/STS
+
 補足:
 
-- `3. フロー詳細` は各フローで、ヘッダ/フロー概要/整合性・冪等・再実行/失敗時/観測性/参照を含む。
 - フロー数が5件を超える場合は、分割前に統合・重複排除を検討する。
 
 ## 6. 記述ガイド
 
 ### 6.1. 概要（対象・運用方針）
 
+生成する本文の見出しは **## 1. 概要（対象・運用方針）**
+
 - SDFの適用対象と「最大5件運用」の方針を1〜3段落で明記する。
 - SDFが詳細実装書ではなく、事故予防のための重要フロー文書であることを明記する。
 - SSOTはコード/定義ファイル側であること（SDFは導線）を明記する。
 
 ### 6.2. 重要フロー一覧（最大5件）
+
+生成する本文の見出しは **## 2. 重要フロー一覧（最大5件）**
 
 - フローID、フロー名、事故論点、優先度、備考を表形式で記載する。
 - 一覧は最大5件までとし、6件目以降は統合・削減の検討結果を反映してから追加する。
@@ -114,10 +126,13 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.3. フロー詳細（IDごと）
 
+生成する本文の見出しは **## 3. フロー詳細（IDごと）**
+
 各フローは以下を順に記載する。
 
 - ヘッダ：ID、フロー名、目的、トリガー、範囲（含む/含まない）
 - フロー概要：図（推奨Mermaid）または箇条書き、登場要素、永続化点
+  - 図は原則として **C4ダイアグラムのコンポーネント図レベル相当**（コンテナ内の主要コンポーネント間連携）で記述する
 - 整合性・冪等・再実行：整合性モデル、冪等キー、重複時挙動、再実行方針
 - 失敗時：失敗分類、リトライ方針、補償/ロールバック、影響・通知
 - 観測性：trace_id引き回し、必須ログ項目、監査ログ要件
@@ -127,6 +142,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 - Flowchart：境界と流れ（同期/非同期）を表現
 - SequenceDiagram：時系列と呼び出し順（必要時のみ）
+- 概要図の粒度は **C4コンポーネント図レベル相当** とし、実装クラス/メソッド詳細には踏み込まない
 
 ```mermaid
 flowchart LR
@@ -148,12 +164,16 @@ flowchart LR
 
 ### 6.4. 観測性と運用連携
 
+生成する本文の見出しは **## 4. 観測性と運用連携**
+
 - 各フローで trace_id 伝搬範囲を明記する。
 - 必須ログ項目（`flow_id`, `request_id`, `entity_id`, `result` 等）を最低限定義する。
 - 監視条件（アラート閾値）、手動介入条件、OPR手順への導線を明記する。
 - 業務影響の大きい失敗は OPD の停止判断基準に接続する。
 
 ### 6.5. 関連ドキュメント導線
+
+生成する本文の見出しは **## 5. 関連ドキュメント導線**
 
 - 各フローごとに SDI（一次情報）、テスト仕様（ITS/ETS/STS）、運用（OPD/OPR）、ADR を明記する。
 - 参照先は「ID」または「リポジトリ相対パス」で一意に辿れる形にする。
@@ -172,7 +192,7 @@ flowchart LR
 
 ## 8. サンプル
 
-以下は、`sdf-index` 本文を `5. 本文構成` の順で記述する最小例です。
+注：以下はルール文書内の例示です。生成する `sdf-index` では `## 1...` から始まります。
 
 ```yaml
 ---
@@ -206,29 +226,38 @@ supersedes: []
 - **トリガー**：`POST /sales`（内部API）
 - **範囲**：売上確定、在庫更新イベント発行、発注候補生成（外部仕入先送信は別フロー）
 
-##### 8.3.1.2. フロー概要
+##### 8.3.1.1. フロー概要
 
-**概要図（抜粋）**：上記 Flowchart 例参照
+```mermaid
+flowchart LR
+  UI[UI] -->|POST /sales| API[Sales API]
+  API --> SVC[Sales Service]
+  SVC -->|commit| DB[(Sales DB)]
+  SVC -->|outbox enqueue| OB[(Outbox)]
+  OB -->|publish| MQ[(Event Bus)]
+  MQ --> INV[Inventory Service]
+  INV -->|commit| IDB[(Inventory DB)]
+```
 
-##### 8.3.1.3. 整合性・冪等・再実行
+##### 8.3.1.2. 整合性・冪等・再実行
 
 - 整合性：売上確定は同期で確定、在庫更新はイベントで最終的整合性
 - 冪等キー：`sale_id`
 - 重複時：同一 `sale_id` は二重計上しない（既処理判定）
 - 再実行：イベントはリプレイ可能、`event_id` で重複排除
 
-##### 8.3.1.4. 失敗時
+##### 8.3.1.3. 失敗時
 
 - イベント発行失敗：outbox再送（指数バックオフ、最大5回）
 - 在庫更新失敗：メッセージをDLQへ退避し、Ops通知後に手動リプレイ
 
-##### 8.3.1.5. 観測性
+##### 8.3.1.4. 観測性
 
 - trace_id を API→イベント→在庫更新まで継承
 - 必須ログ：`flow_id`, `sale_id`, `event_id`, `result`, `retry_count`
 - 監査：売上確定は who/when/amount/before/after を記録
 
-##### 8.3.1.6. 参照
+##### 8.3.1.5. 参照
 
 - SDI：`api/openapi.yaml`、`api/asyncapi.yaml`、`db/migrations/*`
 - テスト：ITS（内部結合）、STS（E2E）
@@ -240,6 +269,19 @@ supersedes: []
 - **目的**：決済要求の成功率を担保しつつ、二重課金を防止する
 - **トリガー**：`POST /payments`
 - **範囲**：決済要求送信、結果確定、失敗時補償（返金）
+
+##### 8.3.2.1. フロー概要
+
+```mermaid
+flowchart LR
+  UI[Client] -->|POST /payments| API[Payment API]
+  API --> APP[Payment Service]
+  APP -->|idempotency check| IDEM[(Idempotency Store)]
+  APP -->|request| PSP[External PSP]
+  PSP -->|result webhook| API
+  API -->|commit| PDB[(Payment DB)]
+  APP -->|on partial failure| CQ[(Compensation Queue)]
+```
 
 ##### 8.3.2.2. 整合性・冪等・再実行
 
@@ -270,6 +312,19 @@ supersedes: []
 - **目的**：集計失敗時に重複計上なく安全に再実行する
 - **トリガー**：日次スケジュール（`02:00 JST`）
 - **範囲**：集計ジョブ実行、結果反映、失敗時再実行
+
+##### 8.3.3.1. フロー概要
+
+```mermaid
+flowchart LR
+  SCH[Scheduler] -->|daily 02:00| JOB[Aggregation Job]
+  JOB -->|read| SRC[(Sales Source)]
+  JOB -->|calculate| TMP[(Result by run_id)]
+  TMP -->|validate| VAL{valid?}
+  VAL -->|yes| REP[(Aggregated Report)]
+  VAL -->|no| INV[(invalid mark)]
+  JOB -->|notify on failure| OPS[Ops Alert]
+```
 
 ##### 8.3.3.2. 整合性・冪等・再実行
 
