@@ -1,18 +1,18 @@
 ---
-id: sdi-rules
-title: システム設計 / 全体構成（リンク集）作成ルール
+id: sysd-index-rules
+title: システム設計-全体構成 作成ルール
 type: rulebook
 status: draft
 ---
 
-System Design Index (SDI) Documentation Rules
+System Design (SYSD) Index Documentation Rules
 
 本ドキュメントは、システム設計情報を **コード（定義ファイル）へ寄せる運用（Code as Spec）** を前提に、
-「どこに一次情報（SSOT）があるか」を迷わず辿れるようにする **System Design Index（SDI）** の記述ルールを定義する。
+「どこに一次情報（SSOT）があるか」を迷わず辿れるようにする **System Design (SYSD) Index** の記述ルールを定義する。
 
 ## 1. 全体方針
 
-SDI は、実装・運用・テスト・レビューに必要な設計情報の **入口（Index）** を 1 箇所に集約し、
+SYSD Index は、実装・運用・テスト・レビューに必要な設計情報の **入口（Index）** を 1 箇所に集約し、
 
 - 設計情報の迷子（どこが正か分からない）を防ぐ
 - ドキュメントとコードの二重管理を避ける
@@ -22,8 +22,8 @@ SDI は、実装・運用・テスト・レビューに必要な設計情報の 
 
 Code as Spec の原則:
 
-- SDI は「一次情報」ではなく「導線」とし、仕様本文（詳細）は書かない
-- SDI は SSOT（一次情報）へのリンクと最小限の補足のみを記載する
+- SYSD Index は「一次情報」ではなく「導線」とし、仕様本文（詳細）は書かない
+- SYSD Index は SSOT（一次情報）へのリンクと最小限の補足のみを記載する
 - SSOT は機械可読・差分検知可能な定義を優先する（OpenAPI / migration / workflow / schema など）
 - 補足は意図・境界・ルールに限定し、詳細は SSOT に寄せる
 
@@ -31,7 +31,7 @@ Code as Spec の原則:
 
 ### 2.1. 位置づけ
 
-- `sdi-index`：システム設計情報の導線を集約する Index（本書）
+- `sysd-index`：システム設計情報の導線を集約する Index（本書）
 - API仕様、DBスキーマ、ジョブ定義、設定スキーマなど：実体を持つ一次情報（SSOT）
 - C4 / NFR / OPD / ADR：背景・方針・判断記録の関連ドキュメント
 
@@ -39,26 +39,26 @@ Code as Spec の原則:
 
 | 用語         | 定義                                                                          |
 | ------------ | ----------------------------------------------------------------------------- |
-| SDI          | System Design Index。一次情報そのものではなく、設計情報への導線をまとめる文書 |
+| SYSD Index   | System Design Index。一次情報そのものではなく、設計情報への導線をまとめる文書 |
 | SSOT         | Single Source of Truth。仕様の正本となる一次情報                              |
 | Code as Spec | コード/定義ファイルを仕様の正本として扱う運用方針                             |
 
 ## 3. ファイル命名・ID規則
 
-- SDI本体の`id` は `sdi-index` （単一の入口文書を前提）。
+- SYSD本体の`id` は `sysd-index` （単一の入口文書を前提）。
 - ファイル名はプロジェクト内で一意になるよう命名する（例: `システム設計-全体構成リンク集.md`）。
-- 並び順が必要な場合は接頭辞の番号付与（例: `sdi-010-...`）を任意で用いてよい。
+- 並び順が必要な場合は接頭辞の番号付与（例: `sysd-010-...`）を任意で用いてよい。
 - `id`（参照用の不変キー）とファイル名（可読性/並び順）は独立であり、ファイル名変更は許容する。
 
 ## 4. 推奨 Frontmatter 項目
 
 ### 4.1. 設定内容
 
-Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/spec-frontmatter.schema.yaml](../../../shared/schemas/spec-frontmatter.schema.yaml) / [meta-document-metadata-rules.md](meta-document-metadata-rules.md)）。
+Frontmatter は共通スキーマに従います（参照: [shared/schemas/spec-frontmatter.schema.yaml](../../../shared/schemas/spec-frontmatter.schema.yaml) / [meta-document-metadata-rules.md](meta-document-metadata-rules.md)）。
 
 | 項目       | 説明                                                   | 必須 |
 | ---------- | ------------------------------------------------------ | ---- |
-| id         | SDI ID（推奨: `sdi-index`）                            | ○    |
+| id         | SYSD ID（推奨: `sysd-index`）                          | ○    |
 | type       | `architecture` など、共通スキーマで許容される種別      | ○    |
 | title      | システム設計: 全体構成（リンク集）など対象が分かる名称 | ○    |
 | status     | `draft` / `ready` / `deprecated`                       | ○    |
@@ -72,7 +72,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ## 5. 本文構成（標準テンプレ）
 
-`sdi-index` は以下の見出し構成を **順序固定** で配置する。
+`sysd-index` は以下の見出し構成を **順序固定** で配置する。
 
 | 番号 | 見出し                                           | 必須 |
 | ---- | ------------------------------------------------ | ---- |
@@ -171,11 +171,11 @@ SDI の中核は **SSOT 一覧表** とする。
 
 ## 8. サンプル
 
-注：以下はルール文書内の例示です。生成する `sdi-index` では `## 1...` から始まります。
+注：以下はルール文書内の例示です。生成する `sysd-index` では `## 1...` から始まります。
 
 ```yaml
 ---
-id: sdi-index
+id: sysd-index
 type: architecture
 title: システム設計: 全体構成リンク集
 status: draft
@@ -231,4 +231,5 @@ supersedes: []
 
 ## 9. 生成 AI への指示テンプレート
 
-生成 AI に `sdi-index` を作成させるときの指示テンプレートは `sdi-instruction.md` を参照してください。
+生成 AI に `sysd-index` を作成させるときの指示テンプレートは
+[`sysd-index-instruction.md`](../instructions/sysd-index-instruction.md) を参照してください。
