@@ -253,7 +253,7 @@ supersedes:
 | `bdd-main`          | 役割が曖昧（非推奨）      |
 | `ifx-inventory-api` | kind は prefix 直後に置く |
 
-## 10. 運用指針（更新）
+## 10. 運用指針
 
 - 迷ったら **「これは何についての文書か？」を名詞で考える**
 - 入口（SSOT/導線）は `-index`、横断定義は `-common`
