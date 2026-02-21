@@ -8,14 +8,14 @@ status: draft
 External Integration Test Catalog (ETC) Documentation Rules
 
 本ドキュメントは、外部結合テストカタログ（ETC）の対象別 `etc-<term>` を統一形式で記述するためのルールです。
-`etc-overview` を前提に、SSOTの本体として、対象ごとの **外部結合の責務・境界・外部依存/環境、観点 x 条件=ケース、トレース、証跡** を明文化します。
+`etc-index` を前提に、SSOTの本体として、対象ごとの **外部結合の責務・境界・外部依存/環境、観点 x 条件=ケース、トレース、証跡** を明文化します。
 
 ## 1. 全体方針
 
 個別 ETC（`etc-<term>`）は、外部結合テストにおける SSOT の本体として、対象ごとの結合責務と境界を明確化し、
 観点×条件＝ケース（末端表）を最小情報で整理して、テストコード／CI証跡へ確実に接続できる形で記述する。
 
-- `etc-<term>` は **対象固有の情報のみ** を記述し、共通ルールは `etc-overview` を参照する（重複記述しない）
+- `etc-<term>` は **対象固有の情報のみ** を記述し、共通ルールは `etc-index` を参照する（重複記述しない）
 - 外部結合テストの目的は「**外部境界を跨いだ結合の振る舞い**を、実運用に近い前提で検証すること」である
 - ケースは「表の1行＝1テスト」とし、手順と期待値は **判定可能**な粒度で簡潔に書く
 - 直積（全組合せ）を原則避け、代表→境界→重大例外の順で増やす（必要時は理由・範囲を明記）
@@ -28,56 +28,23 @@ External Integration Test Catalog (ETC) Documentation Rules
 
 ```mermaid
 flowchart BT
-  TSP["tsp-overview<br>テスト戦略・方針"]
+  TSP["tsp-index<br>テスト戦略・方針"]
 
-  subgraph UT["単体テスト"]
-  direction BT
-    UTCOverview["utc-overview<br>カタログ<br>概要"]
-    UTC["utc-&lt;term&gt;<br>カタログ<br>対象別"]
-    UTImpl["テストコード<br>証跡 等"]
-    UTImpl -->|based_on| UTC -->|based_on| UTCOverview
+  subgraph TC["テストカタログ"]
+  direction RL
+    TCIndex["etc-index<br>テスト仕様-全体構成"]
+    TCDetail["etc-&lt;term&gt;<br>テスト仕様-対象別"]
+    TCDetail -->|based_on| TCIndex
   end
 
-  subgraph IT["内部結合テスト"]
-  direction BT
-    ITCOverview["itc-overview<br>カタログ<br>概要"]
-    ITC["itc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ITImpl["テストコード<br>証跡 等"]
-    ITImpl -->|based_on| ITC -->|based_on| ITCOverview
-  end
+  Code["テストコード 等"]
 
-  subgraph ET["外部結合テスト"]
-  direction BT
-    ETCOverview["etc-overview<br>カタログ<br>概要"]
-    ETC["etc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ETImpl["テストコード<br>証跡 等"]
-    ETImpl -->|based_on| ETC -->|based_on| ETCOverview
-  end
+  TC -->|based_on| TSP
+  Code -->|based_on| TC
 
-  subgraph ST["総合テスト"]
-  direction BT
-    STOverview["stc-overview<br>カタログ<br>概要"]
-    STC["stc-&lt;term&gt;<br>カタログ<br>対象別"]
-    STImpl["テストコード<br>証跡 等"]
-    STImpl -->|based_on| STC -->|based_on| STOverview
-  end
-
-  subgraph AT["受入テスト"]
-  direction BT
-    ATOverview["atc-overview<br>カタログ<br>概要"]
-    ATC["atc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ATImpl["テストコード<br>証跡 等"]
-    ATImpl -->|based_on| ATC -->|based_on| ATOverview
-  end
-
-  UT -->|based_on| TSP
-  IT -->|based_on| TSP
-  ET -->|based_on| TSP
-  ST -->|based_on| TSP
-  AT -->|based_on| TSP
 
   classDef target stroke-width:4px
-  class ETC target
+  class TCDetail target
 ```
 
 ## 3. ファイル命名・ID規則
@@ -95,20 +62,20 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 - 参照スキーマ: [docs/shared/schemas/spec-frontmatter.schema.yaml](../../../shared/schemas/spec-frontmatter.schema.yaml)
 - メタ情報ルール: [meta-document-metadata-rules.md](meta-document-metadata-rules.md)
 
-| 項目       | 説明                                                                                   | 必須 |
-| ---------- | -------------------------------------------------------------------------------------- | ---- |
-| id         | ETC ID（個別: `etc-<term>`）                                                           | ○    |
-| type       | `test` 固定                                                                            | ○    |
-| title      | 外部結合テストカタログ: <対象名>                                                       | ○    |
-| status     | `draft` / `ready` / `deprecated`                                                       | ○    |
-| based_on   | 根拠仕様（最低限: `tsp-overview`, `etc-overview`。対象固有の根拠は本文トレースに集約） | ○    |
-| part_of    | 集約ドキュメントへの所属（ID配列）                                                     | 任意 |
-| supersedes | 置き換え関係                                                                           | 任意 |
+| 項目       | 説明                                                                             | 必須 |
+| ---------- | -------------------------------------------------------------------------------- | ---- |
+| id         | ETC ID（個別: `etc-<term>`）                                                     | ○    |
+| type       | `test` 固定                                                                      | ○    |
+| title      | 外部結合テストカタログ: <対象名>                                                 | ○    |
+| status     | `draft` / `ready` / `deprecated`                                                 | ○    |
+| based_on   | 根拠仕様（最低限: `tsp-index`, `etc-index`。対象固有の根拠は本文トレースに集約） | ○    |
+| part_of    | 集約ドキュメントへの所属（ID配列）                                               | 任意 |
+| supersedes | 置き換え関係                                                                     | 任意 |
 
 ### 4.2. 推奨ルール
 
 - `based_on` には **本対象の外部結合テスト観点の根拠となる仕様** を列挙します。
-- `based_on` は原則 `[tsp-overview, etc-overview]` を最低限とし、対象固有の根拠（`br-*` / `bac-*` / `spec-*` / `nfr-*` 等）は本文「トレース」に集約します。
+- `based_on` は原則 `[tsp-index, etc-index]` を最低限とし、対象固有の根拠（`br-*` / `bac-*` / `spec-*` / `nfr-*` 等）は本文「トレース」に集約します。
 - 機械処理上の都合で `based_on` にも列挙する場合は、本文トレースと矛盾しないこと。
 - 記述内容が多くなる場合は、ドキュメントを分割し、`part_of` で集約ドキュメントに所属させます。
 - `part_of` / `based_on` / `supersedes` は ID 配列（未指定は `[]` 可）。
@@ -141,7 +108,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 
 - `<term>` の説明（1〜3行）：外部境界・連携対象・主たるユースケースが分かるように書く
 - 期待する利用者：レビューア／実装者／テスト実装者／運用者が前提を把握できる内容にする
-- 対象の粒度：`etc-overview` の分割基準に従い、過分割／肥大化を避ける
+- 対象の粒度：`etc-index` の分割基準に従い、過分割／肥大化を避ける
 - 関連I/F（任意）：主要エンドポイント、イベント、キュー、Webhook、SDK関数名などを列挙してよい
 - 長い背景説明は書かない（根拠はトレースで示す）
 
@@ -164,7 +131,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 生成する `etc-<term>` 本文の見出しは **## 3. 対象外**
 
 本節では、「この対象カタログ（`etc-<term>`）ではやらないこと」を明示します。
-`etc-overview` の「対象外・除外理由（共通）」と矛盾しないことが前提です。
+`etc-index` の「対象外・除外理由（共通）」と矛盾しないことが前提です。
 
 - 対象外は「なぜ除外するか（理由）」とセットで書く
 - 可能なら「代替するレベル」（IT/ST/AT/NFR 等）も併記する
@@ -225,7 +192,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 
 生成する `etc-<term>` 本文の見出しは **### 6.1. 観点:<観点>**
 
-- 観点は `etc-overview` の「観点の立て方（共通）」に従って命名する
+- 観点は `etc-index` の「観点の立て方（共通）」に従って命名する
 - 観点の粒度は「条件が複数ぶら下がる」程度にまとめる（細かすぎる観点の乱立を避ける）
 - 観点名（見出し）は改善のため変更してよいが、`perspective_key` は原則変更しない
 
@@ -240,7 +207,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 生成する `etc-<term>` 本文の見出しは **#### 6.1.2. 条件・ケース表**
 
 - ケース表の 1 行は「1テスト」を表す（条件×期待値が一意）
-- 必須カラムは `etc-overview` の定義に従う
+- 必須カラムは `etc-index` の定義に従う
 - `case_id` は以下を推奨し、変更しない
   - 形式：`<level>-<term>-<perspective_key>-<nnn>`
   - `level`：`et`
@@ -265,16 +232,16 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 
 ## 7. 禁止事項
 
-| 禁止事項                                                                              | 理由                                                          |
-| ------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `etc-overview` の共通方針を `etc-<term>` 側で勝手に上書きする（境界/依存/対象外など） | ET全体の一貫性が崩れ、レビュー・保守が困難になるため          |
-| 外部疎通を無条件に「実」必須にする（再現性・安全性・費用の判断なし）                  | CI不安定化・費用増・情報漏洩リスクで運用不能になるため        |
-| 秘密情報（token/secret）を本文・証跡・ログに平文で残す                                | セキュリティ事故につながるため                                |
-| ケース表にUIクリック手順を大量に列挙する                                              | ETの焦点が外部境界なのにE2E責務と混ざり、保守性が低下するため |
-| 期待値を曖昧に書く（例：「エラーにならないこと」「正常に動くこと」）                  | 合否判定ができず証跡にならないため                            |
-| `case_id` を変更する／再利用する                                                      | トレース・証跡リンクが破壊され、履歴追跡が不能になるため      |
-| 直積（全組合せ）のケースを無条件に作る                                                | ケース爆発で運用不能になるため（必要時は理由・範囲を明記）    |
-| トレースや証跡を持たないケースを恒久的に残す                                          | SSOTとして成立しないため（例外は暫定として明記）              |
+| 禁止事項                                                                           | 理由                                                          |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `etc-index` の共通方針を `etc-<term>` 側で勝手に上書きする（境界/依存/対象外など） | ET全体の一貫性が崩れ、レビュー・保守が困難になるため          |
+| 外部疎通を無条件に「実」必須にする（再現性・安全性・費用の判断なし）               | CI不安定化・費用増・情報漏洩リスクで運用不能になるため        |
+| 秘密情報（token/secret）を本文・証跡・ログに平文で残す                             | セキュリティ事故につながるため                                |
+| ケース表にUIクリック手順を大量に列挙する                                           | ETの焦点が外部境界なのにE2E責務と混ざり、保守性が低下するため |
+| 期待値を曖昧に書く（例：「エラーにならないこと」「正常に動くこと」）               | 合否判定ができず証跡にならないため                            |
+| `case_id` を変更する／再利用する                                                   | トレース・証跡リンクが破壊され、履歴追跡が不能になるため      |
+| 直積（全組合せ）のケースを無条件に作る                                             | ケース爆発で運用不能になるため（必要時は理由・範囲を明記）    |
+| トレースや証跡を持たないケースを恒久的に残す                                       | SSOTとして成立しないため（例外は暫定として明記）              |
 
 ## 8. サンプル（最小）
 
@@ -287,7 +254,7 @@ type: test
 title: 外部結合テストカタログ: 決済ゲートウェイ（payment-gateway）
 status: draft
 part_of: []
-based_on: [tsp-overview, etc-overview]
+based_on: [tsp-index, etc-index]
 supersedes: []
 ---
 ```

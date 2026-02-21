@@ -8,14 +8,14 @@ status: draft
 Internal Integration Test Catalog (ITC) Documentation Rules
 
 本ドキュメントは、内部結合テストカタログ（ITC）の対象別 `itc-<term>` を統一形式で記述するためのルールです。
-`itc-overview` を前提に、SSOTの本体として、対象ごとの **内部結合テストの責務・境界・依存、観点 x 条件=ケース、トレース、証跡** を明文化します。
+`itc-index` を前提に、SSOTの本体として、対象ごとの **内部結合テストの責務・境界・依存、観点 x 条件=ケース、トレース、証跡** を明文化します。
 
 ## 1. 全体方針
 
 個別 ITC（`itc-<term>`）は、内部結合テストにおける SSOT の本体として、対象ごとの責務と結合境界を明確化し、
 観点×条件＝ケース（末端表）を最小情報で整理して、テストコード／CI証跡へ確実に接続できる形で記述する。
 
-- `itc-<term>` は **対象固有の情報のみ**を記述し、共通ルールは `itc-overview` を参照する（重複記述しない）
+- `itc-<term>` は **対象固有の情報のみ**を記述し、共通ルールは `itc-index` を参照する（重複記述しない）
 - 内部結合テストの目的は「**複数コンポーネントの結合としての振る舞い**を決定的に検証すること」であり、外部要因（外部サービス実疎通／実ユーザUI）は原則排除する（例外は根拠を明記）
 - ITでは、UTでMockしていた境界の一部（例：Repository実装、SQL/制約、トランザクション）を **実装に近い形で検証**する（ただし再現性が崩れる要因は制御する）
 - ケースは「表の1行＝1テスト」とし、手順と期待値は **判定可能**な粒度で簡潔に書く
@@ -28,56 +28,23 @@ Internal Integration Test Catalog (ITC) Documentation Rules
 
 ```mermaid
 flowchart BT
-  TSP["tsp-overview<br>テスト戦略・方針"]
+  TSP["tsp-index<br>テスト戦略・方針"]
 
-  subgraph UT["単体テスト"]
-  direction BT
-    UTCOverview["utc-overview<br>カタログ<br>概要"]
-    UTC["utc-&lt;term&gt;<br>カタログ<br>対象別"]
-    UTImpl["テストコード<br>証跡 等"]
-    UTImpl -->|based_on| UTC -->|based_on| UTCOverview
+  subgraph TC["テストカタログ"]
+  direction RL
+    TCIndex["itc-index<br>テスト仕様-全体構成"]
+    TCDetail["itc-&lt;term&gt;<br>テスト仕様-対象別"]
+    TCDetail -->|based_on| TCIndex
   end
 
-  subgraph IT["内部結合テスト"]
-  direction BT
-    ITCOverview["itc-overview<br>カタログ<br>概要"]
-    ITC["itc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ITImpl["テストコード<br>証跡 等"]
-    ITImpl -->|based_on| ITC -->|based_on| ITCOverview
-  end
+  Code["テストコード 等"]
 
-  subgraph ET["外部結合テスト"]
-  direction BT
-    ETCOverview["etc-overview<br>カタログ<br>概要"]
-    ETC["etc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ETImpl["テストコード<br>証跡 等"]
-    ETImpl -->|based_on| ETC -->|based_on| ETCOverview
-  end
+  TC -->|based_on| TSP
+  Code -->|based_on| TC
 
-  subgraph ST["総合テスト"]
-  direction BT
-    STOverview["stc-overview<br>カタログ<br>概要"]
-    STC["stc-&lt;term&gt;<br>カタログ<br>対象別"]
-    STImpl["テストコード<br>証跡 等"]
-    STImpl -->|based_on| STC -->|based_on| STOverview
-  end
-
-  subgraph AT["受入テスト"]
-  direction BT
-    ATOverview["atc-overview<br>カタログ<br>概要"]
-    ATC["atc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ATImpl["テストコード<br>証跡 等"]
-    ATImpl -->|based_on| ATC -->|based_on| ATOverview
-  end
-
-  UT -->|based_on| TSP
-  IT -->|based_on| TSP
-  ET -->|based_on| TSP
-  ST -->|based_on| TSP
-  AT -->|based_on| TSP
 
   classDef target stroke-width:4px
-  class ITC target
+  class TCDetail target
 ```
 
 ## 3. ファイル命名・ID規則
@@ -95,20 +62,20 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 - 参照スキーマ: [docs/shared/schemas/spec-frontmatter.schema.yaml](../../../shared/schemas/spec-frontmatter.schema.yaml)
 - メタ情報ルール: [meta-document-metadata-rules.md](meta-document-metadata-rules.md)
 
-| 項目       | 説明                                                                                   | 必須 |
-| ---------- | -------------------------------------------------------------------------------------- | ---- |
-| id         | ITC ID（個別: `itc-<term>`）                                                           | ○    |
-| type       | `test` 固定                                                                            | ○    |
-| title      | 内部結合テストカタログ: <対象名>                                                       | ○    |
-| status     | `draft` / `ready` / `deprecated`                                                       | ○    |
-| based_on   | 根拠仕様（最低限: `tsp-overview`, `itc-overview`。対象固有の根拠は本文トレースに集約） | ○    |
-| part_of    | 集約ドキュメントへの所属（ID配列）                                                     | 任意 |
-| supersedes | 置き換え関係                                                                           | 任意 |
+| 項目       | 説明                                                                             | 必須 |
+| ---------- | -------------------------------------------------------------------------------- | ---- |
+| id         | ITC ID（個別: `itc-<term>`）                                                     | ○    |
+| type       | `test` 固定                                                                      | ○    |
+| title      | 内部結合テストカタログ: <対象名>                                                 | ○    |
+| status     | `draft` / `ready` / `deprecated`                                                 | ○    |
+| based_on   | 根拠仕様（最低限: `tsp-index`, `itc-index`。対象固有の根拠は本文トレースに集約） | ○    |
+| part_of    | 集約ドキュメントへの所属（ID配列）                                               | 任意 |
+| supersedes | 置き換え関係                                                                     | 任意 |
 
 ### 4.2. 推奨ルール
 
 - `based_on` には **本対象の内部結合テスト観点の根拠となる仕様** を列挙します。
-- `based_on` は原則 `[tsp-overview, itc-overview]` を最低限とし、
+- `based_on` は原則 `[tsp-index, itc-index]` を最低限とし、
   対象固有の根拠（`br-*` / `bac-*` / `spec-*` / `nfr-*` 等）は本文「トレース」に集約する。
   機械処理上の都合で `based_on` にも列挙する場合は、本文トレースと矛盾しないこと。
 - 記述内容が多くなる場合は、ドキュメントを分割し、`part_of` で集約ドキュメントに所属させます。
@@ -141,7 +108,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 
 - `<term>` の説明（1〜3行）：結合のまとまり（ユースケース×主要I/F、サブシステム境界 等）を人が理解できる形で記述する
 - 期待する利用者：レビューア／実装者／テスト実装者が、対象の前提（構成・依存）を把握できる内容にする
-- 対象の粒度：`itc-overview` の分割基準に従い、過分割／肥大化を避ける
+- 対象の粒度：`itc-index` の分割基準に従い、過分割／肥大化を避ける
 - 結合対象（最低限）：結合する主要コンポーネント（例：App層、DB層、Queue、Cache 等）を列挙してよい
 - 詳細な仕様の説明や長い背景は書かない（根拠はトレースで示す）
 
@@ -164,7 +131,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 生成する `itc-<term>` 本文の見出しは **## 3. 対象外**
 
 本節では、「この対象カタログ（`itc-<term>`）ではやらないこと」を明示します。
-`itc-overview` の「対象外・除外理由（共通）」と矛盾しないことが前提です。
+`itc-index` の「対象外・除外理由（共通）」と矛盾しないことが前提です。
 
 - 対象外は「なぜ除外するか（理由）」と「代替レベル/代替手段」とセットで書く
 - 対象固有の対象外（例：別サブシステムの責務、別termの責務）を明確にする
@@ -228,7 +195,7 @@ ITは環境差で揺れやすいため、ここを固定することが重要で
 
 生成する `itc-<term>` 本文の見出しは **### 6.1. 観点:<観点>**
 
-- 観点は `itc-overview` の「観点の立て方（共通）」に従って命名する
+- 観点は `itc-index` の「観点の立て方（共通）」に従って命名する
 - 観点の粒度は「条件が複数ぶら下がる」程度にまとめる（細かすぎる観点の乱立を避ける）
 - 観点名（見出し）は改善のため変更してよいが、`perspective_key` は原則変更しない（変更が必要なら `supersedes` 等で追跡する）
 
@@ -243,7 +210,7 @@ ITは環境差で揺れやすいため、ここを固定することが重要で
 生成する `itc-<term>` 本文の見出しは **#### 6.1.2. 条件・ケース表**
 
 - ケース表の 1 行は「1テスト」を表す（条件×期待値が一意）
-- 必須カラムは `itc-overview` の定義に従う
+- 必須カラムは `itc-index` の定義に従う
 - `case_id` は以下を推奨し、変更しない
   - 形式：`<level>-<term>-<perspective_key>-<nnn>`
   - `level`：`it`
@@ -259,16 +226,16 @@ ITは環境差で揺れやすいため、ここを固定することが重要で
 
 ## 7. 禁止事項
 
-| 禁止事項                                                                                        | 理由                                                          |
-| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `itc-overview` の共通方針を `itc-<term>` 側で勝手に上書きする（環境前提・依存の扱い・対象外等） | IT全体の一貫性が崩れ、CI不安定・レビュー/保守が困難になるため |
-| ケース表にUIクリック手順を大量に列挙する                                                        | ITの責務逸脱になりやすく、意図が読めず変更に弱くなるため      |
-| 外部サービス実疎通を必須ケースとして恒久化する                                                  | 外部要因で結果が揺れ、再現性が低く、ETへ分離すべき責務のため  |
-| 期待値を曖昧に書く（例：「エラーにならないこと」「正常に動くこと」）                            | 合否判定ができず証跡にならないため                            |
-| `case_id` を変更する／再利用する                                                                | トレース・証跡リンクが破壊され、履歴追跡が不能になるため      |
-| `perspective_key` を観点名の修正に合わせて頻繁に変える                                          | ID体系が不安定になり参照が壊れるため                          |
-| 直積（全組合せ）のケースを無条件に作る                                                          | ケース爆発で運用不能になるため（必要時は理由・範囲を明記）    |
-| トレースや証跡を持たないケースを恒久的に残す                                                    | SSOTとして成立しないため（例外は暫定として明記）              |
+| 禁止事項                                                                                     | 理由                                                          |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `itc-index` の共通方針を `itc-<term>` 側で勝手に上書きする（環境前提・依存の扱い・対象外等） | IT全体の一貫性が崩れ、CI不安定・レビュー/保守が困難になるため |
+| ケース表にUIクリック手順を大量に列挙する                                                     | ITの責務逸脱になりやすく、意図が読めず変更に弱くなるため      |
+| 外部サービス実疎通を必須ケースとして恒久化する                                               | 外部要因で結果が揺れ、再現性が低く、ETへ分離すべき責務のため  |
+| 期待値を曖昧に書く（例：「エラーにならないこと」「正常に動くこと」）                         | 合否判定ができず証跡にならないため                            |
+| `case_id` を変更する／再利用する                                                             | トレース・証跡リンクが破壊され、履歴追跡が不能になるため      |
+| `perspective_key` を観点名の修正に合わせて頻繁に変える                                       | ID体系が不安定になり参照が壊れるため                          |
+| 直積（全組合せ）のケースを無条件に作る                                                       | ケース爆発で運用不能になるため（必要時は理由・範囲を明記）    |
+| トレースや証跡を持たないケースを恒久的に残す                                                 | SSOTとして成立しないため（例外は暫定として明記）              |
 
 ## 8. サンプル（最小）
 
@@ -281,7 +248,7 @@ type: test
 title: 内部結合テストカタログ: 受注（order）
 status: draft
 part_of: []
-based_on: [tsp-overview, itc-overview]
+based_on: [tsp-index, itc-index]
 supersedes: []
 ---
 ```

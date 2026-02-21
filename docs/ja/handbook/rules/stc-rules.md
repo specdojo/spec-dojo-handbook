@@ -28,56 +28,23 @@ System Test Catalog (STC) Documentation Rules
 
 ```mermaid
 flowchart BT
-  TSP["tsp-overview<br>テスト戦略・方針"]
+  TSP["tsp-index<br>テスト戦略・方針"]
 
-  subgraph UT["単体テスト"]
-  direction BT
-    UTCOverview["utc-overview<br>カタログ<br>概要"]
-    UTC["utc-&lt;term&gt;<br>カタログ<br>対象別"]
-    UTImpl["テストコード<br>証跡 等"]
-    UTImpl -->|based_on| UTC -->|based_on| UTCOverview
+  subgraph TC["テストカタログ"]
+  direction RL
+    TCIndex["stc-index<br>テスト仕様-全体構成"]
+    TCDetail["stc-&lt;term&gt;<br>テスト仕様-対象別"]
+    TCDetail -->|based_on| TCIndex
   end
 
-  subgraph IT["内部結合テスト"]
-  direction BT
-    ITCOverview["itc-overview<br>カタログ<br>概要"]
-    ITC["itc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ITImpl["テストコード<br>証跡 等"]
-    ITImpl -->|based_on| ITC -->|based_on| ITCOverview
-  end
+  Code["テストコード 等"]
 
-  subgraph ET["外部結合テスト"]
-  direction BT
-    ETCOverview["etc-overview<br>カタログ<br>概要"]
-    ETC["etc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ETImpl["テストコード<br>証跡 等"]
-    ETImpl -->|based_on| ETC -->|based_on| ETCOverview
-  end
+  TC -->|based_on| TSP
+  Code -->|based_on| TC
 
-  subgraph ST["総合テスト"]
-  direction BT
-    STOverview["stc-overview<br>カタログ<br>概要"]
-    STC["stc-&lt;term&gt;<br>カタログ<br>対象別"]
-    STImpl["テストコード/シナリオ<br>証跡(ログ/レポート等)"]
-    STImpl -->|based_on| STC -->|based_on| STOverview
-  end
-
-  subgraph AT["受入テスト"]
-  direction BT
-    ATOverview["atc-overview<br>カタログ<br>概要"]
-    ATC["atc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ATImpl["テストコード<br>証跡 等"]
-    ATImpl -->|based_on| ATC -->|based_on| ATOverview
-  end
-
-  UT -->|based_on| TSP
-  IT -->|based_on| TSP
-  ET -->|based_on| TSP
-  ST -->|based_on| TSP
-  AT -->|based_on| TSP
 
   classDef target stroke-width:4px
-  class STC target
+  class TCDetail target
 ```
 
 ## 3. ファイル命名・ID規則

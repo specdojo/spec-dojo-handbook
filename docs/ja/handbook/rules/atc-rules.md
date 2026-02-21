@@ -8,19 +8,19 @@ status: draft
 Acceptance Test Catalog (ATC) Documentation Rules
 
 本ドキュメントは、受入テストカタログ（ATC）の対象別 `atc-<term>` を統一形式で記述するためのルールです。
-`atc-overview` を前提に、SSOT の本体として、対象ごとの **受入判断に必要な範囲（責務・境界・観点×条件＝ケース、トレース、証跡）** を明文化します。
+`atc-index` を前提に、SSOT の本体として、対象ごとの **受入判断に必要な範囲（責務・境界・観点×条件＝ケース、トレース、証跡）** を明文化します。
 
 ## 1. 全体方針
 
 個別 ATC（`atc-<term>`）は、受入テストにおける SSOT の本体として、対象ごとの受入判断単位と責務を明確化し、
 観点×条件＝ケース（末端表）を最小情報で整理して、実施記録／レポート／ログ等の証跡へ確実に接続できる形で記述する。
 
-- `atc-<term>` は **対象固有の情報のみ** を記述し、共通ルールは `atc-overview` を参照する（重複記述しない）
+- `atc-<term>` は **対象固有の情報のみ** を記述し、共通ルールは `atc-index` を参照する（重複記述しない）
 - 受入テストの目的は「関係者が受け入れ可否を判断できること」であり、内部実装の網羅や詳細分岐の確認は目的外（必要なら別レベルへ）
 - ケースは「表の1行＝1受入シナリオ」とし、手順と期待値は **合否判定可能** な粒度で簡潔に書く
 - クリック列挙・画面要素の細部・大量データ列挙は避け、必要な詳細は **実施手順書／実施記録** 側へ寄せる（証跡で参照可能にする）
 - すべての観点・ケースは、根拠仕様（`based_on` / `トレース`）と、証跡（実施記録／レポート／ログ）に接続されていること
-- 環境・データ・外部依存の前提は受入判断の再現性に直結するため、対象ごとの差分は必ず明記する（共通は `atc-overview`）
+- 環境・データ・外部依存の前提は受入判断の再現性に直結するため、対象ごとの差分は必ず明記する（共通は `atc-index`）
 
 ## 2. 位置づけ（他ドキュメントとの関係）
 
@@ -28,56 +28,23 @@ Acceptance Test Catalog (ATC) Documentation Rules
 
 ```mermaid
 flowchart BT
-  TSP["tsp-overview<br>テスト戦略・方針"]
+  TSP["tsp-index<br>テスト戦略・方針"]
 
-  subgraph UT["単体テスト"]
-  direction BT
-    UTCOverview["utc-overview<br>カタログ<br>概要"]
-    UTC["utc-&lt;term&gt;<br>カタログ<br>対象別"]
-    UTImpl["テストコード<br>証跡 等"]
-    UTImpl -->|based_on| UTC -->|based_on| UTCOverview
+  subgraph TC["テストカタログ"]
+  direction RL
+    TCIndex["atc-index<br>テスト仕様-全体構成"]
+    TCDetail["atc-&lt;term&gt;<br>テスト仕様-対象別"]
+    TCDetail -->|based_on| TCIndex
   end
 
-  subgraph IT["内部結合テスト"]
-  direction BT
-    ITCOverview["itc-overview<br>カタログ<br>概要"]
-    ITC["itc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ITImpl["テストコード<br>証跡 等"]
-    ITImpl -->|based_on| ITC -->|based_on| ITCOverview
-  end
+  Code["テストコード 等"]
 
-  subgraph ET["外部結合テスト"]
-  direction BT
-    ETCOverview["etc-overview<br>カタログ<br>概要"]
-    ETC["etc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ETImpl["テストコード<br>証跡 等"]
-    ETImpl -->|based_on| ETC -->|based_on| ETCOverview
-  end
+  TC -->|based_on| TSP
+  Code -->|based_on| TC
 
-  subgraph ST["総合テスト"]
-  direction BT
-    STOverview["stc-overview<br>カタログ<br>概要"]
-    STC["stc-&lt;term&gt;<br>カタログ<br>対象別"]
-    STImpl["テストコード<br>証跡 等"]
-    STImpl -->|based_on| STC -->|based_on| STOverview
-  end
-
-  subgraph AT["受入テスト"]
-  direction BT
-    ATOverview["atc-overview<br>カタログ<br>概要"]
-    ATC["atc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ATImpl["受入試験 実施記録<br>証跡(レポート/ログ等)"]
-    ATImpl -->|based_on| ATC -->|based_on| ATOverview
-  end
-
-  UT -->|based_on| TSP
-  IT -->|based_on| TSP
-  ET -->|based_on| TSP
-  ST -->|based_on| TSP
-  AT -->|based_on| TSP
 
   classDef target stroke-width:4px
-  class ATC target
+  class TCDetail target
 ```
 
 ## 3. ファイル命名・ID規則
@@ -95,19 +62,19 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 - 参照スキーマ: [docs/shared/schemas/spec-frontmatter.schema.yaml](../../../shared/schemas/spec-frontmatter.schema.yaml)
 - メタ情報ルール: [meta-document-metadata-rules.md](meta-document-metadata-rules.md)
 
-| 項目       | 説明                                                                                   | 必須 |
-| ---------- | -------------------------------------------------------------------------------------- | ---- |
-| id         | ATC ID（個別: `atc-<term>`）                                                           | ○    |
-| type       | `test` 固定                                                                            | ○    |
-| title      | 受入テストカタログ: <対象名>                                                           | ○    |
-| status     | `draft` / `ready` / `deprecated`                                                       | ○    |
-| based_on   | 根拠仕様（最低限: `tsp-overview`, `atc-overview`。対象固有の根拠は本文トレースに集約） | ○    |
-| part_of    | 集約ドキュメントへの所属（ID配列）                                                     | 任意 |
-| supersedes | 置き換え関係                                                                           | 任意 |
+| 項目       | 説明                                                                             | 必須 |
+| ---------- | -------------------------------------------------------------------------------- | ---- |
+| id         | ATC ID（個別: `atc-<term>`）                                                     | ○    |
+| type       | `test` 固定                                                                      | ○    |
+| title      | 受入テストカタログ: <対象名>                                                     | ○    |
+| status     | `draft` / `ready` / `deprecated`                                                 | ○    |
+| based_on   | 根拠仕様（最低限: `tsp-index`, `atc-index`。対象固有の根拠は本文トレースに集約） | ○    |
+| part_of    | 集約ドキュメントへの所属（ID配列）                                               | 任意 |
+| supersedes | 置き換え関係                                                                     | 任意 |
 
 ### 4.2. 推奨ルール
 
-- `based_on` は原則 `[tsp-overview, atc-overview]` を最低限とする。
+- `based_on` は原則 `[tsp-index, atc-index]` を最低限とする。
 - 対象固有の根拠（`br-*` / `bac-*` / `spec-*` / `ac-*` / `nfr-*` 等）は本文「トレース」に集約する。
   機械処理上の都合で `based_on` にも列挙する場合は、本文トレースと矛盾しないこと。
 - 記述内容が多くなる場合はドキュメントを分割し、`part_of` で集約ドキュメントに所属させる。
@@ -139,7 +106,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 
 - `<term>` の説明（1〜3行）：業務成果（ユーザ価値）として説明する
 - 期待する利用者：PO/利用部門/QA/運用が、前提を把握できる内容にする
-- 対象の粒度：`atc-overview` の分割基準に従い、過分割／肥大化を避ける
+- 対象の粒度：`atc-index` の分割基準に従い、過分割／肥大化を避ける
 - 関連する業務フロー名・主要画面/主要I/F（任意）：入口を示すために列挙してよい
 - 詳細な仕様説明や背景は書かない（根拠はトレースで示す）
 
@@ -162,7 +129,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 生成する `atc-<term>` 本文の見出しは **## 3. 対象外**
 
 本節では、「この対象カタログ（`atc-<term>`）ではやらないこと」を明示します。
-`atc-overview` の「対象外・除外理由（共通）」と矛盾しないことが前提です。
+`atc-index` の「対象外・除外理由（共通）」と矛盾しないことが前提です。
 
 - 対象外は「なぜ除外するか（理由）」とセットで書く
 - 可能なら「代替するレベル/手段」（ST/NFR/互換試験/運用検証 等）も併記する
@@ -178,7 +145,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 生成する `atc-<term>` 本文の見出しは **## 4. 環境/データ/外部依存**
 
 本節では、受入シナリオの合否が揺れないよう、対象固有の前提（差分）を明確にします。
-共通方針は `atc-overview` に従い、ここでは **対象固有の追加/例外** を中心に書きます。
+共通方針は `atc-index` に従い、ここでは **対象固有の追加/例外** を中心に書きます。
 
 - 環境：
   - 代表構成（端末/ブラウザ/ロール）に対象固有の追加がある場合は明記
@@ -229,7 +196,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 
 生成する `atc-<term>` 本文の見出しは **### 6.1. 観点:<観点>**
 
-- 観点は `atc-overview` の「受入観点の立て方（共通）」に従って命名する
+- 観点は `atc-index` の「受入観点の立て方（共通）」に従って命名する
 - 観点の粒度は「条件が複数ぶら下がる」程度にまとめる（細かすぎる観点の乱立を避ける）
 - 観点名（見出し）は改善のため変更してよいが、`perspective_key` は原則変更しない（変更が必要なら `supersedes` 等で追跡する）
 
@@ -261,7 +228,7 @@ Frontmatter は共通スキーマに従います（あわせてドキュメン�
 
 | 禁止事項                                                                   | 理由                                                               |
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `atc-overview` の共通方針を `atc-<term>` 側で勝手に上書きする              | 受入判断の一貫性が崩れ、合意・監査・追跡が困難になるため           |
+| `atc-index` の共通方針を `atc-<term>` 側で勝手に上書きする                 | 受入判断の一貫性が崩れ、合意・監査・追跡が困難になるため           |
 | ケース表にUIクリック手順や画面要素の細部を大量に列挙する                   | 変更に弱く、受入の意図が読めなくなるため                           |
 | 期待値を曖昧に書く（例：「問題がないこと」「使えること」「ちゃんと表示」） | 合否判定不能で証跡にならないため                                   |
 | `case_id` を変更する／再利用する                                           | トレース・証跡リンクが破壊され、履歴追跡が不能になるため           |
@@ -281,7 +248,7 @@ type: test
 title: 受入テストカタログ: 会計確定（checkout）
 status: draft
 part_of: []
-based_on: [tsp-overview, atc-overview]
+based_on: [tsp-index, atc-index]
 supersedes: []
 ---
 ```
