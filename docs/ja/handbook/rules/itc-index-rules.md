@@ -449,4 +449,4 @@ CIで再現可能な環境（固定バージョン、固定設定）で実行す
 
 ## 9. 生成 AI への指示テンプレート
 
-生成 AI に `itc-overview` を作らせるときの指示テンプレートは [itc-overview-instruction.md](../instructions/itc-overview-instruction.md) を参照してください。
+生成 AI に `itc-index` を作らせるときの指示テンプレートは [itc-index-instruction.md](../instructions/itc-index-instruction.md) を参照してください。

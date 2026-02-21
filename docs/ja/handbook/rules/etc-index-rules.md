@@ -409,4 +409,4 @@ supersedes: []
 
 ## 9. 生成 AI への指示テンプレート
 
-生成 AI に `etc-overview` を作らせるときの指示テンプレートは `etc-overview-instruction.md` を参照してください。
+生成 AI に `etc-index` を作らせるときの指示テンプレートは `etc-index-instruction.md` を参照してください。
