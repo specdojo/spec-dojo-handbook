@@ -182,4 +182,4 @@ supersedes: []
 
 ## 9. 生成 AI への指示テンプレート
 
-生成 AI に `nfr-reliability` を作成させるときの指示テンプレートは [`nrf-instruction.md`](../instructions/nrf-instruction.md) を参照してください。
+生成 AI に `nfr-reliability` を作成させるときの指示テンプレートは [`nfr-reliability-instruction.md`](../instructions/nfr-reliability-instruction.md) を参照してください。

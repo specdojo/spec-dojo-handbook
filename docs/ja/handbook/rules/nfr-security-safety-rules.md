@@ -181,4 +181,4 @@ supersedes: []
 
 ## 9. 生成 AI への指示テンプレート
 
-生成 AI に `nfr-security-safety` を作成させるときの指示テンプレートは [`nrf-instruction.md`](../instructions/nrf-instruction.md) を参照してください。
+生成 AI に `nfr-security-safety` を作成させるときの指示テンプレートは [`nfr-security-safety-instruction.md`](../instructions/nfr-security-safety-instruction.md) を参照してください。

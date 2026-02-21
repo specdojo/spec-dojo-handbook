@@ -180,4 +180,4 @@ supersedes: []
 
 ## 9. 生成 AI への指示テンプレート
 
-生成 AI に `nfr-availability` を作成させるときの指示テンプレートは [`nrf-instruction.md`](../instructions/nrf-instruction.md) を参照してください。
+生成 AI に `nfr-availability` を作成させるときの指示テンプレートは [`nfr-availability-instruction.md`](../instructions/nfr-availability-instruction.md) を参照してください。

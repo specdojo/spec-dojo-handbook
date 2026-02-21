@@ -179,4 +179,4 @@ supersedes: []
 
 ## 9. 生成 AI への指示テンプレート
 
-生成 AI に `nfr-usability` を作成させるときの指示テンプレートは [`nrf-instruction.md`](../instructions/nrf-instruction.md) を参照してください。
+生成 AI に `nfr-usability` を作成させるときの指示テンプレートは [`nfr-usability-instruction.md`](../instructions/nfr-usability-instruction.md) を参照してください。
