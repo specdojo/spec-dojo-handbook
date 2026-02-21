@@ -360,7 +360,15 @@ flowchart
 <!-- prettier-ignore -->
 | ドキュメント | 略称 | 目的 | 主な内容 |
 | --- | --- | --- | --- |
-| [非機能要件](../rules/nfr-index-rules.md) | NFR | 性能・可用性・セキュリティ等の品質要求を、測定可能・検証可能な形で定義する| 性能、同時接続、可用性、保守性、運用性、セキュリティ |
+| [非機能要件](../rules/nfr-index-rules.md) | NFR Index | 非機能要件を8カテゴリに分冊管理し、測定可能・検証可能な形で一元化する | 信頼性、可用性、保守性、完全性、機密性・安全性、性能、運用、操作性（各カテゴリの目的・代表指標・検証導線） |
+| [非機能要件 / 信頼性](../rules/nfr-reliability-rules.md) | NFR-R | 障害抑止と誤動作防止を定義する | 故障率、平均故障間隔(MTBF)、エラー率、データ検証ルール |
+| [非機能要件 / 可用性](../rules/nfr-availability-rules.md) | NFR-A | システム稼働の継続性を定義する | 稼働率、RTO/RPO、フェイルオーバー、冗長化、バックアップ |
+| [非機能要件 / 保守性](../rules/nfr-maintainability-rules.md) | NFR-M | 変更容易性と復旧容易性を定義する | 平均修復時間(MTTR)、変更リードタイム、ログ粒度 |
+| [非機能要件 / 完全性](../rules/nfr-integrity-rules.md) | NFR-I | データ正確性と改ざん防止を定義する | 整合性検証、監査証跡、トランザクション境界 |
+| [非機能要件 / 機密性・安全性](../rules/nfr-security-safety-rules.md) | NFR-S | 不正利用防止とセキュリティを定義する | 認証・認可、脆弱性対応SLA、暗号化、アクセス制御 |
+| [非機能要件 / 性能](../rules/nfr-performance-rules.md) | NFR-P | 応答性と処理能力を定義する | P95/P99レイテンシ、RPS(吞吐量)、リソース効率 |
+| [非機能要件 / 運用](../rules/nfr-operations-rules.md) | NFR-O | 監視・手順・継続運用を定義する | アラート検知率、復旧達成率、運用手順充実度 |
+| [非機能要件 / 操作性](../rules/nfr-usability-rules.md) | NFR-U | 使いやすさと誤操作防止を定義する | タスク完了率、誤操作率、エラーメッセージ明確性 |
 
 <details>
 <summary>サンプル（抜粋イメージ）</summary>
@@ -368,7 +376,15 @@ flowchart
 <!-- prettier-ignore -->
 | ドキュメント | サンプル（抜粋イメージ） |
 | --- | --- |
-| [非機能要件](../rules/nfr-index-rules.md) | 在庫照会API：平常時P95 500ms以内、ピーク時100 RPSを処理可能とする |
+| [非機能要件](../rules/nfr-index-rules.md) | 在庫照会API：平常時P95 500ms以内、ピーク時100 RPS処理可能 |
+| [非機能要件 / 信頼性](../rules/nfr-reliability-rules.md) | エラー率 0.1%以下、バリデーションエラーは即座に検知・ログ記録 |
+| [非機能要件 / 可用性](../rules/nfr-availability-rules.md) | 稼働率 99.9%（月次）、RTO 1時間、RPO 15分、フェイルオーバー自動化 |
+| [非機能要件 / 保守性](../rules/nfr-maintainability-rules.md) | MTTR 30分以内、変更リードタイム 1週間以内、ログ粒度 DEBUG以上 |
+| [非機能要件 / 完全性](../rules/nfr-integrity-rules.md) | トランザクション境界明確化、監査ログ（who/when/what）7年保持 |
+| [非機能要件 / 機密性・安全性](../rules/nfr-security-safety-rules.md) | OAuth 2.0認証、脆弱性対応SLA 24時間、通信TLS 1.2以上、参照・変更権限分離 |
+| [非機能要件 / 性能](../rules/nfr-performance-rules.md) | P95 500ms、P99 1000ms、スループット 100 RPS、CPU使用率 70%以下 |
+| [非機能要件 / 運用](../rules/nfr-operations-rules.md) | アラート検知率 95%以上、復旧達成率 99%、運用手順充実度 100% |
+| [非機能要件 / 操作性](../rules/nfr-usability-rules.md) | タスク完了率 95%以上、誤操作率 1%以下、エラーメッセージ日本語で次のアクション明示 |
 
 </details>
 
