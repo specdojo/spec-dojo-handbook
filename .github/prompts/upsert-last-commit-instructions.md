@@ -11,12 +11,14 @@
 1. `HEAD~1..HEAD` の変更ファイルを取得する
    - `HEAD~1` が存在しない場合（初回コミット等）は `HEAD` 単体の変更として扱う
 2. `docs/ja/handbook/rules/*-rules.md` に一致するものだけを対象にする
+   - `meta-*-rules.md` は対象外とする
 3. 対象が0件なら「更新不要」と明示して終了する
 
 ## 対応ルール
 
 - 対応先は `rules` と同名の `<name>-instruction.md`
   - 例: `utc-index-rules.md` → `utc-index-instruction.md`
+- `meta-*-rules.md` は `*-instruction.md` 作成/更新の対象外とする
 - 対応する instruction が存在しない場合は新規作成
 - 存在する場合はアップサート（不足項目追記・不整合修正）
 
