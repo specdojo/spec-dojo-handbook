@@ -1,6 +1,5 @@
 # 直近コミット差分の rules から instructions をアップサート
 
-@file:.github/instructions/rules-to-instructions.instructions.md
 @file:.github/skills/rules-to-instructions/SKILL.md
 
 `HEAD~1..HEAD` の差分に含まれる
@@ -10,6 +9,7 @@
 ## 対象抽出
 
 1. `HEAD~1..HEAD` の変更ファイルを取得する
+   - `HEAD~1` が存在しない場合（初回コミット等）は `HEAD` 単体の変更として扱う
 2. `docs/ja/handbook/rules/*-rules.md` に一致するものだけを対象にする
 3. 対象が0件なら「更新不要」と明示して終了する
 

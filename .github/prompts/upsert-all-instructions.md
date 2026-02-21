@@ -1,6 +1,5 @@
 # 全 rules から instructions を一括アップサート
 
-@file:.github/instructions/rules-to-instructions.instructions.md
 @file:.github/skills/rules-to-instructions/SKILL.md
 
 `/docs/ja/handbook/rules` 配下の **すべての `*-rules.md`** を対象に、

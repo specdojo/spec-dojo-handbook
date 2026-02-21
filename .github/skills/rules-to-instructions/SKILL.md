@@ -22,13 +22,6 @@
 4. 命名・章番号・責務境界（index vs term）を整合
 5. `npm run -s lint:md` で検証
 
-## 推奨プロンプト
-
-- 指定対象のみ: `@file:.github/prompts/upsert-test-instructions.md`
-- 全rules一括: `@file:.github/prompts/upsert-all-instructions.md`
-- 変更rulesのみ: `@file:.github/prompts/upsert-changed-instructions.md`
-- 直近コミット差分のみ: `@file:.github/prompts/upsert-last-commit-instructions.md`
-
 ## 注意事項
 
 - rules 本文の丸写しではなく、生成AIへの実行指示として再構成する

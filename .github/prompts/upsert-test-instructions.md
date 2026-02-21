@@ -1,6 +1,5 @@
 # Rules から Instructions をアップサート
 
-@file:.github/instructions/rules-to-instructions.instructions.md
 @file:.github/skills/rules-to-instructions/SKILL.md
 
 以下の対応表に従って、`rules` の内容を要約し、

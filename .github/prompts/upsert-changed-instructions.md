@@ -1,6 +1,5 @@
 # 変更された rules から instructions をアップサート
 
-@file:.github/instructions/rules-to-instructions.instructions.md
 @file:.github/skills/rules-to-instructions/SKILL.md
 
 `git diff`（未コミット差分）で変更がある
