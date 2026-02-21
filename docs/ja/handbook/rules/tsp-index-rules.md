@@ -5,7 +5,7 @@ type: rulebook
 status: draft
 ---
 
-Test Strategy and Policy (TSP) Documentation Rules
+Test Strategy and Policy (TSP) Index Documentation Rules
 
 本ドキュメントは、品質保証・テスト設計のために **テスト戦略・方針を統一形式で記述する標準ルール**です。
 TSP は「全体として、どのようにテストで品質を担保するか」を明文化し、テスト設計・実施・受入判断の認識ズレを防ぎます。
@@ -390,4 +390,4 @@ supersedes: []
 
 ## 9. 生成 AI への指示テンプレート
 
-生成 AI に TSP を作らせるときの指示テンプレートは [tsp-instruction.md](../instructions/tsp-instruction.md) を参照してください。
+生成 AI に TSP を作らせるときの指示テンプレートは [tsp-index-instruction.md](../instructions/tsp-index-instruction.md) を参照してください。
