@@ -1,5 +1,5 @@
 ---
-id: mip-rules
+id: mip-index-rules
 title: 移行計画 作成ルール
 type: rulebook
 status: draft
