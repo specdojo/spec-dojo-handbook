@@ -14,13 +14,19 @@
 
 対象対応表（必要に応じて行を追加）:
 
-| rules                                             | instruction                                                   |
-| ------------------------------------------------- | ------------------------------------------------------------- |
-| /docs/ja/handbook/rules/utc-index-rules.md       | /docs/ja/handbook/instructions/utc-index-instruction.md       |
-| /docs/ja/handbook/rules/itc-index-rules.md       | /docs/ja/handbook/instructions/itc-index-instruction.md       |
-| /docs/ja/handbook/rules/etc-index-rules.md       | /docs/ja/handbook/instructions/etc-index-instruction.md       |
-| /docs/ja/handbook/rules/stc-index-rules.md       | /docs/ja/handbook/instructions/stc-index-instruction.md       |
-| /docs/ja/handbook/rules/atc-index-rules.md       | /docs/ja/handbook/instructions/atc-index-instruction.md       |
+| rules                                      | instruction                                             |
+| ------------------------------------------ | ------------------------------------------------------- |
+| /docs/ja/handbook/rules/tsp-index-rules.md | /docs/ja/handbook/instructions/tsp-index-instruction.md |
+| /docs/ja/handbook/rules/utc-index-rules.md | /docs/ja/handbook/instructions/utc-index-instruction.md |
+| /docs/ja/handbook/rules/itc-index-rules.md | /docs/ja/handbook/instructions/itc-index-instruction.md |
+| /docs/ja/handbook/rules/etc-index-rules.md | /docs/ja/handbook/instructions/etc-index-instruction.md |
+| /docs/ja/handbook/rules/stc-index-rules.md | /docs/ja/handbook/instructions/stc-index-instruction.md |
+| /docs/ja/handbook/rules/atc-index-rules.md | /docs/ja/handbook/instructions/atc-index-instruction.md |
+| /docs/ja/handbook/rules/utc-rules.md       | /docs/ja/handbook/instructions/utc-instruction.md       |
+| /docs/ja/handbook/rules/itc-rules.md       | /docs/ja/handbook/instructions/itc-instruction.md       |
+| /docs/ja/handbook/rules/etc-rules.md       | /docs/ja/handbook/instructions/etc-instruction.md       |
+| /docs/ja/handbook/rules/stc-rules.md       | /docs/ja/handbook/instructions/stc-instruction.md       |
+| /docs/ja/handbook/rules/atc-rules.md       | /docs/ja/handbook/instructions/atc-instruction.md       |
 
 出力:
 

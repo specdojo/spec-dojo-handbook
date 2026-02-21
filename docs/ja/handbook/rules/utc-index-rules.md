@@ -45,7 +45,7 @@ flowchart BT
 
 
   classDef target stroke-width:4px
-  class TSP target
+  class TCIndex target
 ```
 
 ## 3. ファイル命名・ID規則

@@ -1,89 +1,56 @@
 ---
-id: stc-overview-rules
+id: stc-index-rules
 title: 総合テストカタログ 概要 作成ルール
 type: rulebook
 status: draft
 ---
 
-System Test Catalog (STC) Overview Documentation Rules
+System Test Catalog (STC) Index Documentation Rules
 
-本ドキュメントは、総合テストカタログ（STC）の全体概要 `stc-overview` を統一形式で記述するためのルールです。
+本ドキュメントは、総合テストカタログ（STC）の全体概要 `stc-index` を統一形式で記述するためのルールです。
 TSPに基づき、総合テストに共通するルールや方針（対象分割・観点/条件・環境/証跡）を定義します。
 
 個別総合テストカタログ（`stc-<term>`）の記述ルールは [stc-rules.md](stc-rules.md) を参照してください。
 
 ## 1. 全体方針
 
-`stc-overview` は、総合テストカタログ（STC）を **運用可能な最小情報** で統一し、
+`stc-index` は、総合テストカタログ（STC）を **運用可能な最小情報** で統一し、
 対象別カタログ（`stc-<term>`）の品質と一貫性を担保するための **共通ルール（SSOT）** とする。
 
-- `stc-overview` は **「考え方・共通方針・共通定義」** を記述する（個別ケースは持たない）
+- `stc-index` は **「考え方・共通方針・共通定義」** を記述する（個別ケースは持たない）
 - 個別の観点・条件・ケースは **`stc-<term>` に集約**し、詳細は **テストコード／CI／テストレポート等の証跡** に寄せる
 - 記述は **レビュー可能**であることを優先し、長文化を避ける（方針は箇条書き中心）
 - 「例外」や「対象外」を明示し、総合テストの責任境界（何をやらないか）を固定する
-- `tsp-overview` の方針を根拠として、総合テストに共通する **分割基準・観点/条件の立て方・環境/外部依存の扱い・合格基準・証跡** を定義する
+- `tsp-index` の方針を根拠として、総合テストに共通する **分割基準・観点/条件の立て方・環境/外部依存の扱い・合格基準・証跡** を定義する
 
 ## 2. 位置づけ（他ドキュメントとの関係）
 
-`stc-overview` と他ドキュメントの関係を示します。
+`stc-index` と他ドキュメントの関係を示します。
 
 ```mermaid
 flowchart BT
-  TSP["tsp-overview<br>テスト戦略・方針"]
+  TSP["tsp-index<br>テスト戦略・方針"]
 
-  subgraph UT["単体テスト"]
-  direction BT
-    UTCOverview["utc-overview<br>カタログ<br>概要"]
-    UTC["utc-&lt;term&gt;<br>カタログ<br>対象別"]
-    UTImpl["テストコード<br>証跡 等"]
-    UTImpl -->|based_on| UTC -->|based_on| UTCOverview
+  subgraph TC["テストカタログ"]
+  direction RL
+    TCIndex["stc-index<br>テスト仕様-全体構成"]
+    TCDetail["stc-&lt;term&gt;<br>テスト仕様-対象別"]
+    TCDetail -->|based_on| TCIndex
   end
 
-  subgraph IT["内部結合テスト"]
-  direction BT
-    ITCOverview["itc-overview<br>カタログ<br>概要"]
-    ITC["itc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ITImpl["テストコード<br>証跡 等"]
-    ITImpl -->|based_on| ITC -->|based_on| ITCOverview
-  end
+  Code["テストコード 等"]
 
-  subgraph ET["外部結合テスト"]
-  direction BT
-    ETCOverview["etc-overview<br>カタログ<br>概要"]
-    ETC["etc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ETImpl["テストコード<br>証跡 等"]
-    ETImpl -->|based_on| ETC -->|based_on| ETCOverview
-  end
+  TC -->|based_on| TSP
+  Code -->|based_on| TC
 
-  subgraph ST["総合テスト"]
-  direction BT
-    STOverview["stc-overview<br>カタログ<br>概要"]
-    STC["stc-&lt;term&gt;<br>カタログ<br>対象別"]
-    STImpl["テストコード/シナリオ<br>証跡(ログ/レポート等)"]
-    STImpl -->|based_on| STC -->|based_on| STOverview
-  end
-
-  subgraph AT["受入テスト"]
-  direction BT
-    ATOverview["atc-overview<br>カタログ<br>概要"]
-    ATC["atc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ATImpl["テストコード<br>証跡 等"]
-    ATImpl -->|based_on| ATC -->|based_on| ATOverview
-  end
-
-  UT -->|based_on| TSP
-  IT -->|based_on| TSP
-  ET -->|based_on| TSP
-  ST -->|based_on| TSP
-  AT -->|based_on| TSP
 
   classDef target stroke-width:4px
-  class STOverview target
+  class TCIndex target
 ```
 
 ## 3. ファイル命名・ID規則
 
-- 本ルールの対象ドキュメントの `id` は `stc-overview` 固定。対象別は `stc-<term>`（詳細は [stc-rules.md](stc-rules.md)）。
+- 本ルールの対象ドキュメントの `id` は `stc-index` 固定。対象別は `stc-<term>`（詳細は [stc-rules.md](stc-rules.md)）。
 - ファイル名は `stc-010-総合テストカタログ-概要.md` 等、プロジェクト内で一意になるように命名します。
 - `<term>` は用語集の論理名キー（英小文字kebab-case）を用いる（表示名は title に日本語で記載してよい）。
 
@@ -95,7 +62,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 | 項目       | 説明                                               | 必須 |
 | ---------- | -------------------------------------------------- | ---- |
-| id         | `stc-overview`（固定）                             | ○    |
+| id         | `stc-index`（固定）                                | ○    |
 | type       | `test` 固定                                        | ○    |
 | title      | 総合テストカタログ: 概要（`<システム名>`）         | ○    |
 | status     | `draft` / `ready` / `deprecated`                   | ○    |
@@ -104,13 +71,13 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 4.2. 推奨ルール
 
-- `based_on` には最低限 `tsp-overview` を含めます。
-- BAC/NFR/BR 等は、`stc-overview` の方針判断（対象分割・環境前提・共通合格基準）に **直接利用したものだけ** を `based_on` に列挙します。
+- `based_on` には最低限 `tsp-index` を含めます。
+- BAC/NFR/BR 等は、`stc-index` の方針判断（対象分割・環境前提・共通合格基準）に **直接利用したものだけ** を `based_on` に列挙します。
 - `based_on` / `supersedes` は ID 配列（未指定は `[]` 可）。
 
 ## 5. 本文構成（標準テンプレ）
 
-`stc-overview` は以下の見出し構成を **順序固定** で配置します。
+`stc-index` は以下の見出し構成を **順序固定** で配置します。
 
 | 番号 | 見出し                                          | 必須 |
 | ---- | ----------------------------------------------- | ---- |
@@ -125,19 +92,19 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 | 9    | メモ / 将来課題                                 | 任意 |
 
 注意：次章の記述ガイドのMarkdown見出しはルール文章内の参照用であり、
-生成する `stc-overview` 本文の見出しは各章で指定された **番号付き** の形式に置き換えてください。
+生成する `stc-index` 本文の見出しは各章で指定された **番号付き** の形式に置き換えてください。
 
 ## 6. 記述ガイド
 
 ### 6.1. 本ドキュメントの目的と適用対象
 
-生成する `stc-overview` 本文の見出しは **## 1. 本ドキュメントの目的と適用対象**
+生成する `stc-index` 本文の見出しは **## 1. 本ドキュメントの目的と適用対象**
 
 - 目的：`stc-<term>` を同一基準で作成し、品質・粒度・責任範囲を揃える
-- 適用対象：総合テスト（ST）に関するカタログ群（`stc-overview` / `stc-<term>`）
-- 非適用：UT/IT/ET/ATの個別ルールはそれぞれの `*c-overview` / `*c-<term>` で扱う
+- 適用対象：総合テスト（ST）に関するカタログ群（`stc-index` / `stc-<term>`）
+- 非適用：UT/IT/ET/ATの個別ルールはそれぞれの `*c-index` / `*c-<term>` で扱う
 - 成果物の位置づけ：
-  - `stc-overview`：総合テスト共通方針（SSOT）
+  - `stc-index`：総合テスト共通方針（SSOT）
   - `stc-<term>`：対象別の観点・条件・ケース表（SSOT）
   - テストコード／CI／レポート：実装と実行証跡（Evidence）
 
@@ -145,7 +112,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.2. テスト対象の括り方と分割基準
 
-生成する `stc-overview` 本文の見出しは **## 2. テスト対象の括り方と分割基準**
+生成する `stc-index` 本文の見出しは **## 2. テスト対象の括り方と分割基準**
 
 本節では、`stc-<term>` の `<term>` をどう切るか（対象単位の設計）を定義します。
 
@@ -163,7 +130,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.3. 対象外・除外理由（共通）
 
-生成する `stc-overview` 本文の見出しは **## 3. 対象外・除外理由（共通）**
+生成する `stc-index` 本文の見出しは **## 3. 対象外・除外理由（共通）**
 
 総合テストで **やらないこと** と、その **理由**、および **例外条件** を明確にします。
 
@@ -187,7 +154,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.4. 観点の立て方（共通）
 
-生成する `stc-overview` 本文の見出しは **## 4. 観点の立て方（共通）**
+生成する `stc-index` 本文の見出しは **## 4. 観点の立て方（共通）**
 
 総合テストの観点は「ユーザ/業務視点で、システム全体として何を保証するか」の切り口です。
 
@@ -207,7 +174,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.5. 条件の立て方（共通）
 
-生成する `stc-overview` 本文の見出しは **## 5. 条件の立て方（共通）**
+生成する `stc-index` 本文の見出しは **## 5. 条件の立て方（共通）**
 
 条件は「入力」「状態（データ/権限）」「環境（設定/外部）」「経路（分岐）」に分解して作成します。
 
@@ -225,7 +192,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.6. 観点/条件の採用基準と対象別への分配方針（共通）
 
-生成する `stc-overview` 本文の見出しは **## 6. 観点/条件の採用基準と対象別への分配方針（共通）**
+生成する `stc-index` 本文の見出しは **## 6. 観点/条件の採用基準と対象別への分配方針（共通）**
 
 本節では、観点/条件を「採用する判断」と「`stc-<term>` へ割り当てる判断」を共通ルールとして定義します。
 
@@ -253,7 +220,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.7. 総合テスト共通の境界/環境の扱い
 
-生成する `stc-overview` 本文の見出しは **## 7. 総合テスト共通の境界/環境の扱い**
+生成する `stc-index` 本文の見出しは **## 7. 総合テスト共通の境界/環境の扱い**
 
 総合テストでは「実運用に近い経路」を確認しつつ、運用可能性（再現性・安全性・費用）を優先して境界と環境前提を固定します。
 
@@ -277,7 +244,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.8. ケース表の共通カラム
 
-生成する `stc-overview` 本文の見出しは **## 8. ケース表の共通カラム**
+生成する `stc-index` 本文の見出しは **## 8. ケース表の共通カラム**
 
 `stc-<term>` の末端（条件・ケース表）は、検索性・比較性・自動化移行の容易さを確保するため、
 全termで同一カラム順を採用します。
@@ -310,7 +277,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.9. メモ / 将来課題
 
-生成する `stc-overview` 本文の見出しは **## 9. メモ / 将来課題**
+生成する `stc-index` 本文の見出しは **## 9. メモ / 将来課題**
 
 - 将来検討（例）：
   - 実行時間短縮（スモーク/回帰の分離）
@@ -320,32 +287,32 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ## 7. 禁止事項
 
-| 項目                                                              | 理由                                                                      |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `stc-overview` に個別ケース（条件・手順・期待値）を大量に列挙する | `stc-overview` は共通方針のSSOTであり、個別は `stc-<term>` に集約するため |
-| 環境前提（データ/設定/外部依存）を対象ごとに無根拠に変更する      | 再現性が崩れ、CI/運用が不安定になるため                                   |
-| 手順にUI操作のクリック列挙を書く                                  | 保守性が低く、変更に弱く、意図が見えなくなるため                          |
-| 期待値を曖昧に書く（例：「正常に動くこと」）                      | 判定不能で合否が揺れ、証跡として機能しないため                            |
-| `case_id` を後から変更する（参照があるのに変更する）              | トレース・証跡リンクが壊れ、履歴追跡が不能になるため                      |
+| 項目                                                           | 理由                                                                   |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `stc-index` に個別ケース（条件・手順・期待値）を大量に列挙する | `stc-index` は共通方針のSSOTであり、個別は `stc-<term>` に集約するため |
+| 環境前提（データ/設定/外部依存）を対象ごとに無根拠に変更する   | 再現性が崩れ、CI/運用が不安定になるため                                |
+| 手順にUI操作のクリック列挙を書く                               | 保守性が低く、変更に弱く、意図が見えなくなるため                       |
+| 期待値を曖昧に書く（例：「正常に動くこと」）                   | 判定不能で合否が揺れ、証跡として機能しないため                         |
+| `case_id` を後から変更する（参照があるのに変更する）           | トレース・証跡リンクが壊れ、履歴追跡が不能になるため                   |
 
 ## 8. サンプル（最小）
 
-注：以下はルール文書内の例示です。生成する `stc-overview` では `## 1...` から始まります。
+注：以下はルール文書内の例示です。生成する `stc-index` では `## 1...` から始まります。
 
 ```yaml
 ---
-id: stc-overview
+id: stc-index
 type: test
 title: 総合テストカタログ: 概要
 status: draft
-based_on: [tsp-overview]
+based_on: [tsp-index]
 supersedes: []
 ---
 ```
 
 ### 8.1. 本ドキュメントの目的と適用対象
 
-`stc-overview` は、総合テストに共通する「対象単位の切り方」「観点/条件の立て方」「環境/外部依存」「合格基準」「証跡方針」を定義し、
+`stc-index` は、総合テストに共通する「対象単位の切り方」「観点/条件の立て方」「環境/外部依存」「合格基準」「証跡方針」を定義し、
 対象別カタログ `stc-<term>` の作成と運用の基盤とする。
 
 ### 8.2. テスト対象の括り方と分割基準
@@ -355,4 +322,4 @@ supersedes: []
 
 ## 9. 生成 AI への指示テンプレート
 
-生成 AI に `stc-overview` を作らせるときの指示テンプレートは `stc-overview-instruction.md` を参照してください。
+生成 AI に `stc-index` を作らせるときの指示テンプレートは [`stc-index-instruction.md`](../instructions/stc-index-instruction.md) を参照してください。

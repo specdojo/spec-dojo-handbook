@@ -1,91 +1,58 @@
 ---
-id: etc-overview-rules
+id: etc-index-rules
 title: 外部結合テストカタログ概要 作成ルール
 type: rulebook
 status: draft
 ---
 
-External Integration Test Catalog (ETC) Overview Documentation Rules
+External Integration Test Catalog (ETC) Index Documentation Rules
 
-本ドキュメントは、外部結合テストカタログ（ETC）の全体概要 `etc-overview` を統一形式で記述するためのルールです。
+本ドキュメントは、外部結合テストカタログ（ETC）の全体概要 `etc-index` を統一形式で記述するためのルールです。
 TSPに基づき、外部結合テストに共通するルールや方針を定義します。
 
 個別 外部結合テストカタログ（`etc-<term>`）の記述ルールは `etc-rules.md` を参照してください。
 
 ## 1. 全体方針
 
-`etc-overview` は、外部結合テストカタログ（ETC）を **運用可能な最小情報**で統一し、
+`etc-index` は、外部結合テストカタログ（ETC）を **運用可能な最小情報**で統一し、
 対象別カタログ（`etc-<term>`）の品質と一貫性を担保するための **共通ルール（SSOT）** とする。
 
-- `etc-overview` は **「考え方・共通方針・共通定義」** を記述する（個別ケースは持たない）
+- `etc-index` は **「考え方・共通方針・共通定義」** を記述する（個別ケースは持たない）
 - 個別の観点・条件・ケースは **`etc-<term>` に集約**し、詳細は **テストコード／CI証跡** に寄せる
 - 記述は **レビュー可能**であることを優先し、長文化を避ける（方針は箇条書き中心）
 - 「例外」や「対象外」を明示し、外部結合テストの責任境界（何をやらないか）を固定する
-- `tsp-overview` の方針を根拠として、外部結合テストに共通する **分割基準・観点/条件の立て方・外部依存境界・合格基準・証跡** を定義する
+- `tsp-index` の方針を根拠として、外部結合テストに共通する **分割基準・観点/条件の立て方・外部依存境界・合格基準・証跡** を定義する
 - 外部結合テストの目的は「**システム境界を跨ぐ結合（外部サービス/外部端末/外部環境）を含む振る舞い**を、実運用に近い前提で検証すること」である
   （ただし、再現性・コスト・安全性の観点で「実疎通」を必須化しない領域は明確に除外する）
 
 ## 2. 位置づけ（他ドキュメントとの関係）
 
-`etc-overview` と他ドキュメントの関係を示します。
+`etc-index` と他ドキュメントの関係を示します。
 
 ```mermaid
 flowchart BT
-  TSP["tsp-overview<br>テスト戦略・方針"]
+  TSP["tsp-index<br>テスト戦略・方針"]
 
-  subgraph UT["単体テスト"]
-  direction BT
-    UTCOverview["utc-overview<br>カタログ<br>概要"]
-    UTC["utc-&lt;term&gt;<br>カタログ<br>対象別"]
-    UTImpl["テストコード<br>証跡 等"]
-    UTImpl -->|based_on| UTC -->|based_on| UTCOverview
+  subgraph TC["テストカタログ"]
+  direction RL
+    TCIndex["etc-index<br>テスト仕様-全体構成"]
+    TCDetail["etc-&lt;term&gt;<br>テスト仕様-対象別"]
+    TCDetail -->|based_on| TCIndex
   end
 
-  subgraph IT["内部結合テスト"]
-  direction BT
-    ITCOverview["itc-overview<br>カタログ<br>概要"]
-    ITC["itc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ITImpl["テストコード<br>証跡 等"]
-    ITImpl -->|based_on| ITC -->|based_on| ITCOverview
-  end
+  Code["テストコード 等"]
 
-  subgraph ET["外部結合テスト"]
-  direction BT
-    ETCOverview["etc-overview<br>カタログ<br>概要"]
-    ETC["etc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ETImpl["テストコード<br>証跡 等"]
-    ETImpl -->|based_on| ETC -->|based_on| ETCOverview
-  end
+  TC -->|based_on| TSP
+  Code -->|based_on| TC
 
-  subgraph ST["総合テスト"]
-  direction BT
-    STOverview["stc-overview<br>カタログ<br>概要"]
-    STC["stc-&lt;term&gt;<br>カタログ<br>対象別"]
-    STImpl["テストコード<br>証跡 等"]
-    STImpl -->|based_on| STC -->|based_on| STOverview
-  end
-
-  subgraph AT["受入テスト"]
-  direction BT
-    ATOverview["atc-overview<br>カタログ<br>概要"]
-    ATC["atc-&lt;term&gt;<br>カタログ<br>対象別"]
-    ATImpl["テストコード<br>証跡 等"]
-    ATImpl -->|based_on| ATC -->|based_on| ATOverview
-  end
-
-  UT -->|based_on| TSP
-  IT -->|based_on| TSP
-  ET -->|based_on| TSP
-  ST -->|based_on| TSP
-  AT -->|based_on| TSP
 
   classDef target stroke-width:4px
-  class ETCOverview target
+  class TCIndex target
 ```
 
 ## 3. ファイル命名・ID規則
 
-- 本ルールの対象ドキュメントの `id` は `etc-overview` 固定。対象別は `etc-<term>`（詳細は `etc-rules.md`）。
+- 本ルールの対象ドキュメントの `id` は `etc-index` 固定。対象別は `etc-<term>`（詳細は `etc-rules.md`）。
 - ファイル名は `etc-010-外部結合テストカタログ-概要.md` 等、プロジェクト内で一意になるように命名します。
 - `<term>` は用語集(GL)の論理名キー（英小文字kebab-case）を用いる（表示名は title に日本語で記載してよい）。
 
@@ -97,7 +64,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 | 項目       | 説明                                               | 必須 |
 | ---------- | -------------------------------------------------- | ---- |
-| id         | `etc-overview`（固定）                             | ○    |
+| id         | `etc-index`（固定）                                | ○    |
 | type       | `test` 固定                                        | ○    |
 | title      | 外部結合テストカタログ: 概要（`<システム名>`）     | ○    |
 | status     | `draft` / `ready` / `deprecated`                   | ○    |
@@ -106,13 +73,13 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 4.2. 推奨ルール
 
-- `based_on` には最低限 `tsp-overview` を含めます。
-- BAC/NFR/BR 等は、`etc-overview` の方針判断（外部依存境界・共通合格基準・環境前提）に **直接利用したものだけ**を `based_on` に列挙します。
+- `based_on` には最低限 `tsp-index` を含めます。
+- BAC/NFR/BR 等は、`etc-index` の方針判断（外部依存境界・共通合格基準・環境前提）に **直接利用したものだけ**を `based_on` に列挙します。
 - `based_on` / `supersedes` は ID 配列（未指定は `[]` 可）。
 
 ## 5. 本文構成（標準テンプレ）
 
-`etc-overview` は以下の見出し構成を **順序固定** で配置します。
+`etc-index` は以下の見出し構成を **順序固定** で配置します。
 
 | 番号 | 見出し                                          | 必須 |
 | ---- | ----------------------------------------------- | ---- |
@@ -127,31 +94,31 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 | 9    | メモ / 将来課題                                 | 任意 |
 
 注意：次章の記述ガイドのMarkdown見出しはルール文章内の参照用であり、
-生成する `etc-overview` 本文の見出しは各章で指定された **番号付き** の形式
+生成する `etc-index` 本文の見出しは各章で指定された **番号付き** の形式
 （例: `## 6.`, `### 6.1.` / `#### 6.1.1.` / `#### 6.1.2.`）に置き換えてください。
 
 ## 6. 記述ガイド
 
 ### 6.1. 本ドキュメントの目的と適用対象
 
-生成する `etc-overview` 本文の見出しは **## 1. 本ドキュメントの目的と適用対象**
+生成する `etc-index` 本文の見出しは **## 1. 本ドキュメントの目的と適用対象**
 
-本節では、`etc-overview` が **何のために存在し、何に適用されるか** を明確にします。
+本節では、`etc-index` が **何のために存在し、何に適用されるか** を明確にします。
 
 - 目的：`etc-<term>` を同一基準で作成し、品質・粒度・責任範囲を揃える
-- 適用対象：外部結合テスト（ET）に関するカタログ群（`etc-overview` / `etc-<term>`）
-- 非適用：総合/受入（ST/AT）のルールはそれぞれの `stc-overview` / `atc-overview` で扱う
+- 適用対象：外部結合テスト（ET）に関するカタログ群（`etc-index` / `etc-<term>`）
+- 非適用：総合/受入（ST/AT）のルールはそれぞれの `stc-index` / `atc-index` で扱う
 - 成果物の位置づけ：
-  - `etc-overview`：外部結合テスト共通方針（SSOT）
+  - `etc-index`：外部結合テスト共通方針（SSOT）
   - `etc-<term>`：対象別の観点・条件・ケース表（SSOT）
   - テストコード／CI：実装と実行証跡（Evidence）
 
-- SSOTの一次情報は `etc-overview` / `etc-<term>` とし、テストコード／CIは **実装と実行結果の証跡** として扱う
+- SSOTの一次情報は `etc-index` / `etc-<term>` とし、テストコード／CIは **実装と実行結果の証跡** として扱う
 - 本書が扱う粒度：**判断基準・共通ルールまで**（個別ケースの列挙は禁止）
 
 ### 6.2. テスト対象の括り方と分割基準
 
-生成する `etc-overview` 本文の見出しは **## 2. テスト対象の括り方と分割基準**
+生成する `etc-index` 本文の見出しは **## 2. テスト対象の括り方と分割基準**
 
 本節では、`etc-<term>` の `<term>` をどう切るか（対象単位の設計）を定義します。
 
@@ -172,7 +139,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.3. 対象外・除外理由（共通）
 
-生成する `etc-overview` 本文の見出しは **## 3. 対象外・除外理由（共通）**
+生成する `etc-index` 本文の見出しは **## 3. 対象外・除外理由（共通）**
 
 本節では、外部結合テスト（ET）で **やらないこと** と、その **理由**、および **例外条件** を明確にします。
 
@@ -197,7 +164,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.4. 観点の立て方（共通）
 
-生成する `etc-overview` 本文の見出しは **## 4. 観点の立て方（共通）**
+生成する `etc-index` 本文の見出しは **## 4. 観点の立て方（共通）**
 
 観点（Perspective）は「外部境界を跨いだときに何を保証するか」の切り口であり、対象別カタログの章立てとして用います。
 
@@ -215,7 +182,7 @@ Frontmatter は共通スキーマに従います（参照: [docs/shared/schemas/
 
 ### 6.5. 条件の立て方（共通）
 
-生成する `etc-overview` 本文の見出しは **## 5. 条件の立て方（共通）**
+生成する `etc-index` 本文の見出しは **## 5. 条件の立て方（共通）**
 
 条件（Condition）は、観点を確認するための前提状態・入力状態・環境条件のバリエーションです。
 ETでは「外部のふるまい」や「環境差」が条件になりやすいため、以下の分解で作成します。
@@ -233,7 +200,7 @@ ETでは「外部のふるまい」や「環境差」が条件になりやすい
 
 ### 6.6. 観点/条件の採用基準と対象別への分配方針（共通）
 
-生成する `etc-overview` 本文の見出しは **## 6. 観点/条件の採用基準と対象別への分配方針（共通）**
+生成する `etc-index` 本文の見出しは **## 6. 観点/条件の採用基準と対象別への分配方針（共通）**
 
 本節では、観点/条件を「採用する判断」と「`etc-<term>` へ割り当てる判断」を共通ルールとして定義します。
 
@@ -261,7 +228,7 @@ ETでは「外部のふるまい」や「環境差」が条件になりやすい
 
 ### 6.7. 外部結合テスト共通の境界/依存/環境の扱い
 
-生成する `etc-overview` 本文の見出しは **## 7. 外部結合テスト共通の境界/依存/環境の扱い**
+生成する `etc-index` 本文の見出しは **## 7. 外部結合テスト共通の境界/依存/環境の扱い**
 
 外部結合テストでは「外部依存がある前提」で、再現性と安全性を両立する必要があります。
 本節で共通方針（どこまで実、どこから疑似）を定めます。
@@ -287,7 +254,7 @@ ETでは「外部のふるまい」や「環境差」が条件になりやすい
 
 ### 6.8. ケース表の共通カラム
 
-生成する `etc-overview` 本文の見出しは **## 8. ケース表の共通カラム**
+生成する `etc-index` 本文の見出しは **## 8. ケース表の共通カラム**
 
 `etc-<term>` の末端（条件・ケース表）は、検索性・比較性・自動化移行の容易さを確保するため、
 全termで同一カラム順を採用します。
@@ -313,7 +280,7 @@ ETでは「外部のふるまい」や「環境差」が条件になりやすい
 
 ### 6.9. メモ / 将来課題
 
-生成する `etc-overview` 本文の見出しは **## 9. メモ / 将来課題**
+生成する `etc-index` 本文の見出しは **## 9. メモ / 将来課題**
 
 本節は、現時点で決めきれない事項や将来の改善点を記録します。
 ただし、運用ルールとして必須な内容は本節に置かず、本文（1〜8章）へ反映します。
@@ -328,7 +295,7 @@ ETでは「外部のふるまい」や「環境差」が条件になりやすい
 
 | 項目                                                                   | 理由                                                                         |
 | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `etc-overview` に個別ケース（条件・手順・期待値）を大量に列挙する      | `etc-overview` は共通方針のSSOTであり、個別は `etc-<term>` に集約するため    |
+| `etc-index` に個別ケース（条件・手順・期待値）を大量に列挙する         | `etc-index` は共通方針のSSOTであり、個別は `etc-<term>` に集約するため       |
 | 外部サービス実疎通を無条件に必須化し、再現性・コスト・安全性を無視する | CI不安定・費用増・情報漏洩リスクになり、運用不能になるため（例外基準が必要） |
 | 秘密情報（token/secret）を本文や証跡に平文で残す                       | セキュリティ事故につながるため                                               |
 | 手順にUI操作のクリック列挙を書く（末端表でも過剰な操作手順を書く）     | ETの焦点が外部境界なのに、E2E/UIの責務と混ざり保守性が低下するため           |
@@ -338,23 +305,23 @@ ETでは「外部のふるまい」や「環境差」が条件になりやすい
 
 ## 8. サンプル（最小）
 
-注：以下はルール文書内の例示です。生成する `etc-overview` では `## 1...` から始まります。
+注：以下はルール文書内の例示です。生成する `etc-index` では `## 1...` から始まります。
 
 ```yaml
 ---
-id: etc-overview
+id: etc-index
 type: test
 title: 外部結合テストカタログ: 概要
 status: draft
-based_on: [tsp-overview]
+based_on: [tsp-index]
 supersedes: []
 ---
 ```
 
 ### 8.1. 本ドキュメントの目的と適用対象
 
-本ドキュメントは、外部結合テストカタログ（ETC）の全体概要 `etc-overview` を統一形式で記述するためのルールである。
-`etc-overview` は外部結合テストに共通する「対象単位の切り方」「観点/条件の立て方」「外部依存境界」「合格基準」「証跡方針」を定義し、
+本ドキュメントは、外部結合テストカタログ（ETC）の全体概要 `etc-index` を統一形式で記述するためのルールである。
+`etc-index` は外部結合テストに共通する「対象単位の切り方」「観点/条件の立て方」「外部依存境界」「合格基準」「証跡方針」を定義し、
 対象別カタログ `etc-<term>` の作成と運用の基盤とする。
 
 ### 8.2. テスト対象の括り方と分割基準
@@ -409,4 +376,4 @@ supersedes: []
 
 ## 9. 生成 AI への指示テンプレート
 
-生成 AI に `etc-index` を作らせるときの指示テンプレートは `etc-index-instruction.md` を参照してください。
+生成 AI に `etc-index` を作らせるときの指示テンプレートは [`etc-index-instruction.md`](../instructions/etc-index-instruction.md) を参照してください。
