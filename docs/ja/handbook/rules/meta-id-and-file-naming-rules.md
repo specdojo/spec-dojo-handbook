@@ -296,68 +296,70 @@ supersedes:
 
 ## 14. ドキュメント種別とプレフィックスの対応表（更新）
 
-| 種別                               | English                              | prefix       | 例                               |
-| ---------------------------------- | ------------------------------------ | ------------ | -------------------------------- |
-| プロジェクト概要                   | Project Overview                     | prj-         | prj-overview                     |
-| プロジェクトスコープ               | Project Scope                        | prj-         | prj-scope                        |
-| プロジェクト課題と解決アプローチ   | Project Issues and Approach          | prj-         | prj-issues-and-approach          |
-| 概念データフロー図                 | Conceptual Data Flow Diagram         | cdfd-        | cdfd-index                       |
-| 概念クラス図                       | Conceptual Class Diagram             | ccd-         | ccd-customer                     |
-| 業務データ辞書                     | Business Data Dictionary             | bdd-         | bdd-common, bdd-sales            |
-| 概念データストア定義               | Conceptual Data Store Definition     | cdsd-        | cdsd-common, cdsd-sales          |
-| 保管場所定義                       | Storage Location Definition          | sld-         | sld-common, sld-sales            |
-| ステータス定義                     | Status Definition                    | stsd-        | stsd-product                     |
-| 分類定義                           | Classification Definition            | cld-         | cld-product                      |
-| 概念状態遷移図                     | Conceptual State Transition Diagram  | cstd-        | cstd-product                     |
-| 業務プロセス仕様                   | Business Process Specification       | bps-         | bps-order-flow                   |
-| ビジネスルール                     | Business Rule                        | br-          | br-discount                      |
-| 画面仕様                           | UI Specification                     | uis-         | uis-order-edit                   |
-| 帳票仕様                           | Business Document Specification      | bds-         | bds-order-summary                |
-| システム化機能                     | System Function                      | sf-          | sf-index, sf-product-register    |
-| 業務イベント仕様                   | Business Event Specification         | bes-         | bes-index, bes-order-approved    |
-| 業務受入条件                       | Business Acceptance Criteria         | bac-         | bac-order-approved               |
-| 用語集                             | Glossary                             | gl-          | gl-sales                         |
-| 用語集の用語                       | Glossary Term                        | tm-          | tm-reorder-point                 |
-| 外部システムI/F                    | External System Interface            | ifx-         | ifx-index                        |
-| 外部API仕様                        | External API Specification           | ifx-api-     | ifx-api-inventory                |
-| 外部ファイル連携仕様               | External File Exchange Specification | ifx-file-    | ifx-file-order                   |
-| 外部メッセージ仕様                 | External Message Specification       | ifx-msg-     | ifx-msg-stock-changed            |
-| コンテキスト図                     | Context Diagram                      | cxd-         | cxd-customer                     |
-| コンテナ図                         | Container Diagram                    | cnd-         | cnd-customer                     |
-| コンポーネント図                   | Component Diagram                    | cpd-         | cpd-inventory                    |
-| インフラ構成図                     | Infrastructure Diagram               | ifd-         | ifd-index                        |
-| 技術スタック定義                   | Technology Stack Definition          | tsd-         | tsd-index                        |
-| システム設計-全体構成              | System Design Index                  | sysd-        | sysd-index                       |
-| システム設計-重要フロー            | System Design Critical Flows         | sysd- / scf- | sysd-critical-flows              |
-| システム設計-横断ルール            | System Design Cross-cutting Policy   | sysd- / scp- | sysd-cross-cutting-policy        |
-| 非機能要件                         | Non-Functional Requirements          | nfr-         | nfr-performance                  |
-| システム受入条件                   | System Acceptance Criteria           | sac-         | sac-performance                  |
-| テスト戦略・方針                   | Test Strategy and Policy             | tsp-         | tsp-index                        |
-| 単体テストカタログ                 | Unit Test Catalog                    | utc-         | utc-index, utc-product-service   |
-| 内部結合テストカタログ             | Internal Integration Test Catalog    | itc-         | itc-index, itc-product-service   |
-| 外部結合テストカタログ             | External Integration Test Catalog    | etc-         | etc-index, etc-product-service   |
-| 総合テストカタログ                 | System Test Catalog                  | stc-         | stc-index, stc-product-service   |
-| 受入テストカタログ                 | Acceptance Test Catalog              | atc-         | atc-index, atc-product-service   |
-| 移行計画                           | Migration Plan                       | mip-         | mip-index                        |
-| データ移行設計                     | Data Migration Design                | dmd-         | dmd-index, dmd-order-data        |
-| 移行テスト計画（リハーサル計画）   | Migration Test Plan                  | mtp-         | mtp-index, mtp-cutover-rehearsal |
-| カットオーバー計画（本番切替手順） | Cutover Plan                         | cop-         | cop-index, cop-cutover-runbook   |
-| 運用切替計画（ハイパーケア含む）   | Operations Transition Plan           | otp-         | otp-index                        |
-| 運用方針・設計                     | Operations Policy and Design         | opd-         | opd-index, opd-monitoring        |
-| 運用手順                           | Operations Runbook                   | opr-         | opr-index, opr-restore           |
-
-## 15. deprecated: テスト仕様・設計の prefix 対応表
-
-| 種別               | English                                 | prefix | 例                             |
-| ------------------ | --------------------------------------- | ------ | ------------------------------ |
-| テスト観点・条件   | Test Perspectives and Conditions        | tpc-   | tpc-order-process              |
-| 単体テスト仕様     | Unit Test Specification                 | uts-   | uts-index, uts-product-service |
-| 単体テスト設計     | Unit Test Design                        | utd-   | utd-index, utd-product-service |
-| 内部結合テスト仕様 | Internal Integration Test Specification | its-   | its-index, its-order-api       |
-| 内部結合テスト設計 | Internal Integration Test Design        | itd-   | itd-index, itd-order-api       |
-| 外部結合テスト仕様 | External Integration Test Specification | ets-   | ets-index, ets-order-process   |
-| 外部結合テスト設計 | External Integration Test Design        | etd-   | etd-index, etd-order-process   |
-| 総合テスト仕様     | System Test Specification               | sts-   | sts-index, sts-order-flow      |
-| 総合テスト設計     | System Test Design                      | std-   | std-index, std-order-flow      |
-| 受入テスト仕様     | Acceptance Test Specification           | ats-   | ats-index, ats-order-payment   |
-| 受入テスト設計     | Acceptance Test Design                  | atd-   | atd-index, atd-order-payment   |
+| 種別                               | English                                    | prefix       | 例                                       |
+| ---------------------------------- | ------------------------------------------ | ------------ | ---------------------------------------- |
+| プロジェクト概要                   | Project Overview                           | prj-         | prj-overview                             |
+| プロジェクト憲章                   | Project Charter                            | prj-         | prj-charter                              |
+| ステークホルダー登録簿             | Stakeholder Register                       | prj-         | prj-stakeholder-register                 |
+| プロジェクトスコープ               | Project Scope                              | prj-         | prj-scope                                |
+| 成功条件・受入条件                 | Success Criteria and Acceptance Criteria   | prj-         | prj-success-and-acceptance-criteria      |
+| 成果物カタログ                     | Deliverables Catalog                       | prj-         | prj-deliverables-catalog                 |
+| WBS                                | Work Breakdown Structure                   | prj-         | prj-wbs                                  |
+| プロジェクト課題と解決アプローチ   | Project Issues and Approach                | prj-         | prj-issues-and-approach                  |
+| 前提・制約・依存                   | Assumptions, Constraints, and Dependencies | prj-         | prj-assumptions-constraints-dependencies |
+| 代替案の比較                       | Comparison of Alternatives                 | prj-         | prj-comparison-of-alternatives           |
+| プロジェクトマネジメント計画       | Project Management Plan                    | prj-         | prj-project-management-plan              |
+| スケジュール                       | Schedule                                   | prj-         | prj-schedule                             |
+| コミュニケーション計画             | Communication Plan                         | prj-         | prj-communication-plan                   |
+| 品質管理計画                       | Quality Management Plan                    | prj-         | prj-quality-management-plan              |
+| リスク登録簿                       | Risk Register                              | prj-         | prj-risk-register                        |
+| 課題ログ                           | Issue Log                                  | prj-         | prj-issue-log                            |
+| 変更要求ログ                       | Change Request Log                         | prj-         | prj-change-request-log                   |
+| 進捗レポート                       | Progress Report                            | prj-         | prj-progress-report                      |
+| 議事録                             | Meeting Minutes                            | prj-         | prj-meeting-minutes                      |
+| 体制・RACI                         | Organization and RACI                      | prj-         | prj-organization-and-raci                |
+| 決定記録                           | Decision Log                               | prj-         | prj-decision-log                         |
+| 概念データフロー図                 | Conceptual Data Flow Diagram               | cdfd-        | cdfd-index                               |
+| 概念クラス図                       | Conceptual Class Diagram                   | ccd-         | ccd-customer                             |
+| 業務データ辞書                     | Business Data Dictionary                   | bdd-         | bdd-common, bdd-sales                    |
+| 概念データストア定義               | Conceptual Data Store Definition           | cdsd-        | cdsd-common, cdsd-sales                  |
+| 保管場所定義                       | Storage Location Definition                | sld-         | sld-common, sld-sales                    |
+| ステータス定義                     | Status Definition                          | stsd-        | stsd-product                             |
+| 分類定義                           | Classification Definition                  | cld-         | cld-product                              |
+| 概念状態遷移図                     | Conceptual State Transition Diagram        | cstd-        | cstd-product                             |
+| 業務プロセス仕様                   | Business Process Specification             | bps-         | bps-order-flow                           |
+| ビジネスルール                     | Business Rule                              | br-          | br-discount                              |
+| 画面仕様                           | UI Specification                           | uis-         | uis-order-edit                           |
+| 帳票仕様                           | Business Document Specification            | bds-         | bds-order-summary                        |
+| システム化機能                     | System Function                            | sf-          | sf-index, sf-product-register            |
+| 業務イベント仕様                   | Business Event Specification               | bes-         | bes-index, bes-order-approved            |
+| 業務受入条件                       | Business Acceptance Criteria               | bac-         | bac-order-approved                       |
+| 用語集                             | Glossary                                   | gl-          | gl-sales                                 |
+| 用語集の用語                       | Glossary Term                              | tm-          | tm-reorder-point                         |
+| 外部システムI/F                    | External System Interface                  | ifx-         | ifx-index                                |
+| 外部API仕様                        | External API Specification                 | ifx-api-     | ifx-api-inventory                        |
+| 外部ファイル連携仕様               | External File Exchange Specification       | ifx-file-    | ifx-file-order                           |
+| 外部メッセージ仕様                 | External Message Specification             | ifx-msg-     | ifx-msg-stock-changed                    |
+| コンテキスト図                     | Context Diagram                            | cxd-         | cxd-customer                             |
+| コンテナ図                         | Container Diagram                          | cnd-         | cnd-customer                             |
+| コンポーネント図                   | Component Diagram                          | cpd-         | cpd-inventory                            |
+| インフラ構成図                     | Infrastructure Diagram                     | ifd-         | ifd-index                                |
+| 技術スタック定義                   | Technology Stack Definition                | tsd-         | tsd-index                                |
+| システム設計-全体構成              | System Design Index                        | sysd-        | sysd-index                               |
+| システム設計-重要フロー            | System Design Critical Flows               | sysd- / scf- | sysd-critical-flows                      |
+| システム設計-横断ルール            | System Design Cross-cutting Policy         | sysd- / scp- | sysd-cross-cutting-policy                |
+| 非機能要件                         | Non-Functional Requirements                | nfr-         | nfr-performance                          |
+| システム受入条件                   | System Acceptance Criteria                 | sac-         | sac-performance                          |
+| テスト戦略・方針                   | Test Strategy and Policy                   | tsp-         | tsp-index                                |
+| 単体テストカタログ                 | Unit Test Catalog                          | utc-         | utc-index, utc-product-service           |
+| 内部結合テストカタログ             | Internal Integration Test Catalog          | itc-         | itc-index, itc-product-service           |
+| 外部結合テストカタログ             | External Integration Test Catalog          | etc-         | etc-index, etc-product-service           |
+| 総合テストカタログ                 | System Test Catalog                        | stc-         | stc-index, stc-product-service           |
+| 受入テストカタログ                 | Acceptance Test Catalog                    | atc-         | atc-index, atc-product-service           |
+| 移行計画                           | Migration Plan                             | mip-         | mip-index                                |
+| データ移行設計                     | Data Migration Design                      | dmd-         | dmd-index, dmd-order-data                |
+| 移行テスト計画（リハーサル計画）   | Migration Test Plan                        | mtp-         | mtp-index, mtp-cutover-rehearsal         |
+| カットオーバー計画（本番切替手順） | Cutover Plan                               | cop-         | cop-index, cop-cutover-runbook           |
+| 運用切替計画（ハイパーケア含む）   | Operations Transition Plan                 | otp-         | otp-index                                |
+| 運用方針・設計                     | Operations Policy and Design               | opd-         | opd-index, opd-monitoring                |
+| 運用手順                           | Operations Runbook                         | opr-         | opr-index, opr-restore                   |
