@@ -1,22 +1,23 @@
 # sch.schema.yaml
 $schema: 'https://json-schema.org/draft/2020-12/schema'
-$title: 'SpecDojo Schedule (domain) schema'
+$title: 'SpecDojo Schedule schema (level-discriminated)'
 $type: object
 $comment: >
-  Schema for domain-scoped schedule SSOT files:
-  docs/ja/project-docs/<project_id>/040-プロジェクトマネジメント/020-スケジュール/sch-<domain>.yaml
-  Used for CPM (critical path) calculation across merged domain schedules.
-  Tasks + milestones form a DAG (no cycles). Cross-domain dependencies are allowed via depends_on IDs.
+  Schema for schedule SSOT files.
+  File name is NOT used to infer domain/container.
+  Instead, schedule_level discriminates required fields:
+    - milestones: organization-wide milestone plan
+    - domain: domain-level summary plan
+    - container: container/component-level detailed plan
 
 additionalProperties: false
 
 required:
   - version
   - project_id
-  - domain
+  - schedule_level
   - calendar
   - settings
-  - tasks
 
 properties:
   version:
@@ -29,17 +30,29 @@ properties:
     minLength: 1
     description: 'Project identifier (e.g., prj-sdh-ja-0001).'
 
+  schedule_level:
+    type: string
+    description: 'Schedule granularity level.'
+    enum: ['milestones', 'domain', 'container']
+
   domain:
     type: string
-    minLength: 1
-    description: 'Stable ownership boundary used in file name sch-<domain>.yaml (e.g., auth, billing, infra).'
+    description: >
+      Stable ownership boundary (required for domain/container schedules).
+      Not inferred from file name.
+    pattern: '^[a-z0-9][a-z0-9-]{0,62}$'
+
+  container:
+    type: string
+    description: >
+      Sub-scope inside a domain (required for container schedules).
+      Use a stable slug (service/component/module).
     pattern: '^[a-z0-9][a-z0-9-]{0,62}$'
 
   assigned_team:
     type: string
     description: >
-      Optional current team/org label responsible for this domain (may change).
-      Keep for readability/reporting; do not use as a stable key.
+      Optional current team/org label (may change). For readability/reporting only.
     pattern: "^[^\\s].{0,127}$"
 
   calendar:
@@ -50,17 +63,21 @@ properties:
 
   tasks:
     type: array
-    minItems: 0
-    description: 'Scheduled tasks. Duration-based (no fixed dates) for CPM friendliness.'
+    description: 'Scheduled tasks (duration-based).'
     items:
       $ref: '#/$defs/Task'
 
   milestones:
     type: array
-    minItems: 0
-    description: 'Milestones (duration=0). Typically gates/approvals. Optional.'
+    description: 'Milestones (duration=0) typically representing gates/approvals.'
     items:
       $ref: '#/$defs/Milestone'
+
+# Level-specific requirements
+oneOf:
+  - $ref: '#/$defs/MilestonesLevel'
+  - $ref: '#/$defs/DomainLevel'
+  - $ref: '#/$defs/ContainerLevel'
 
 $defs:
   Owner:
@@ -71,8 +88,7 @@ $defs:
   Id:
     type: string
     minLength: 1
-    description: 'Globally unique identifier across all sch-*.yaml files.'
-    # Allow flexible IDs; recommended conventions are enforced in tooling, not schema.
+    description: 'Globally unique identifier across ALL schedule files in the project.'
     pattern: '^[A-Za-z0-9][A-Za-z0-9_-]{1,63}$'
 
   Date:
@@ -122,7 +138,7 @@ $defs:
   DependencyIds:
     type: array
     description: >
-      List of predecessor IDs. These IDs may refer to tasks or milestones in ANY domain schedule file.
+      List of predecessor IDs. These IDs may refer to tasks or milestones in ANY schedule file.
       The merged graph is validated by tooling (existence, no cycles).
     items:
       $ref: '#/$defs/Id'
@@ -153,7 +169,7 @@ $defs:
       duration_days:
         type: integer
         minimum: 0
-        description: 'Task duration in working days. 0 is allowed but prefer milestones for 0.'
+        description: 'Task duration in working days. Prefer milestones for 0.'
       depends_on:
         $ref: '#/$defs/DependencyIds'
       owner:
@@ -194,3 +210,34 @@ $defs:
       notes:
         type: string
         description: 'Optional notes.'
+
+  # Discriminated variants
+  MilestonesLevel:
+    type: object
+    required: ['schedule_level', 'milestones']
+    properties:
+      schedule_level:
+        const: 'milestones'
+    $comment: >
+      Milestones plan: require milestones.
+      Tasks are optional; if used, keep them coarse and treat as summary tasks.
+    # Allow tasks but not required; no domain/container required.
+
+  DomainLevel:
+    type: object
+    required: ['schedule_level', 'domain', 'tasks']
+    properties:
+      schedule_level:
+        const: 'domain'
+    $comment: >
+      Domain summary plan: require domain + tasks.
+      container should be omitted here (use container schedule for that).
+
+  ContainerLevel:
+    type: object
+    required: ['schedule_level', 'domain', 'container', 'tasks']
+    properties:
+      schedule_level:
+        const: 'container'
+    $comment: >
+      Container-level detailed plan: require domain + container + tasks.
