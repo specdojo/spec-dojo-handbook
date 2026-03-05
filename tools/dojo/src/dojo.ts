@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
+import { registerConfigCommands, registerProjectCommands } from './dojo-config.js'
 import { registerExecCommands } from './exec.js'
 
-const program = new Command()
+function main(): void {
+  const program = new Command()
 
-program.name('dojo').description('SpecDojo helper CLI').version('0.1.0')
+  program.name('dojo').description('SpecDojo helper CLI').version('0.4.0')
 
-registerExecCommands(program)
+  registerConfigCommands(program)
+  registerProjectCommands(program)
+  registerExecCommands(program)
 
-program.parse(process.argv)
+  program.parse(process.argv)
+}
+
+main()
