@@ -2,6 +2,7 @@
   "cSpell.words": [
     "analyzability",
     "Backorder",
+    "bcmd",
     "bierner",
     "cdfd",
     "cdsd",
@@ -25,9 +26,11 @@
     "MTTR",
     "openspec",
     "RACI",
+    "rcmd",
     "Resellable",
     "rgba",
     "Rulebook",
+    "scmd",
     "specdojo",
     "specversion",
     "SSOT",
@@ -39,6 +42,7 @@
     "sysd",
     "systemization",
     "TAXCLASS",
+    "vcmd",
     "vitepress",
     "wcmd",
     "xychart"
