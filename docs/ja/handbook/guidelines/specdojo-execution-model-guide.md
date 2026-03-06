@@ -4,118 +4,127 @@ type: guide
 status: draft
 ---
 
-# SpecDojo実行モデル
+# SpecDojo実行モデル（6層アーキテクチャ）
 
-SpecDojo実行モデルは、以下を統合した **AI時代のプロジェクト実行モデル**である。
+SpecDojoは **Git・構造化ドキュメント・イベントログ・AI Agent** を統合した
+**AI時代のプロジェクト実行モデル**である。
 
-- PMBOK
-- Git
-- Event Sourcing
-- AI Agent
+従来のプロジェクト管理ツール（Jira / Redmine / Backlog 等）は
+**Issue管理中心**であるのに対し、
 
-SpecDojoでは、プロジェクトの実行状態を **すべてGit上の構造化データとして管理する**。
+SpecDojoは
+
+```text
+Spec → Plan → Deliverables → Execution → Analytics → Automation
+```
+
+という **プロダクト生成プロセス全体**を扱う。
+
+---
 
 ## 1. 設計思想
 
 SpecDojoは次の原則に基づく。
 
-### 1.1. Gitを唯一の真実（SSOT）とする
+### 1.1. Gitを唯一の真実（SSOT）
 
 すべての情報はGitに保存する。
 
-対象：
+対象
 
 - 仕様
+- 設計
 - スケジュール
 - 実行履歴
 - 意思決定
-- 進捗状態
+- 成果物
 
 外部ツールへの依存は最小化する。
 
-### 1.2. 実行状態はイベントソーシング
+---
 
-タスクの状態は **イベントログから再構築**する。
+### 1.2. 構造化ドキュメント
+
+仕様・計画は **構造化Markdown / YAML** で管理する。
+
+理由
+
+- AIが解析しやすい
+- diff可能
+- バージョン管理可能
+
+---
+
+### 1.3. 実行履歴はイベントソーシング
+
+作業状態は **イベントログから再構築**する。
 
 ```text
 exec/events/*.json
 ```
 
-例
-
-```bash
-claim
-block
-complete
-cancel
-```
-
-これにより
-
-- 完全履歴
-- 再現性
-- AI解析
-
-が可能になる。
-
-### 1.3. スケジュールは宣言的
-
-スケジュールは **YAMLで宣言**する。
-
-```bash
-sch-*.yaml
-```
-
-例
-
-```bash
-sch-milestones.yaml
-sch-auth.yaml
-sch-auth-api.yaml
-```
-
-ここには
-
-- タスク
-- 依存関係
-- duration
-
-を記述する。
+---
 
 ### 1.4. 実行状態は生成物
 
-実行状態は **生成物**であり、直接編集しない。
+現在の状態は **生成物**として生成する。
 
-生成物：
-
-```bash
+```text
 generated/
 ```
 
+---
+
+## 2. SpecDojo 6層アーキテクチャ
+
+SpecDojoは次の **6層モデル**で構成される。
+
+```text
+1 Spec Layer
+2 Plan Layer
+3 Deliverable Layer
+4 Event Layer
+5 Derived Layer
+6 Automation Layer
+```
+
+---
+
+## 3. Spec Layer
+
+Spec Layerは **プロダクト仕様**を定義する。
+
+対象
+
+- プロダクト仕様
+- システム設計
+- API仕様
+- UX仕様
+
 例
 
-```bash
-state.json
-ready.md
-cpm.md
-critical-path.md
+```text
+docs/ja/product-docs/
 ```
 
-## 2. データモデル
+代表ドキュメント
 
-SpecDojoは **3層モデル**を採用する。
-
-```bash
-Plan Layer
-Event Layer
-Derived Layer
+```text
+prd-*
+sysd-*
+sdf-*
+scr-*
 ```
 
-## 3. Plan Layer
+Spec Layerは **人間が編集する最上位の情報**である。
 
-Plan Layer は **計画情報**である。
+---
 
-```bash
+## 4. Plan Layer
+
+Plan Layerは **実行計画**である。
+
+```text
 sch-*.yaml
 ```
 
@@ -123,7 +132,7 @@ sch-*.yaml
 
 - タスク
 - milestone
-- 依存関係
+- dependency
 - duration
 
 例
@@ -137,13 +146,62 @@ tasks:
       - T-AUTH-API-010
 ```
 
-Plan Layerは **人間が編集する唯一の構造データ**である。
+Plan Layerは **Specから生成される可能性がある**。
 
-## 4. Event Layer
+---
+
+## 5. Deliverable Layer
+
+Deliverable Layerは **成果物（プロダクト本体）**である。
+
+例
+
+```text
+src/
+docs/
+infra/
+assets/
+```
+
+例
+
+```text
+src/auth/login-api.ts
+docs/api/auth.md
+infra/terraform/auth.tf
+```
+
+---
+
+### 5.1. TaskとDeliverableの関係
+
+タスクは **成果物を生成するためのもの**である。
+
+例
+
+```yaml
+tasks:
+  - id: T-AUTH-API-020
+    produces:
+      - src/auth/login-api.ts
+      - tests/auth/login-api.test.ts
+```
+
+これにより
+
+- タスク目的が明確
+- AIが理解可能
+- 完了判定が明確
+
+になる。
+
+---
+
+## 6. Event Layer
 
 Event Layerは **実行履歴**である。
 
-```bash
+```text
 exec/events/*.json
 ```
 
@@ -153,13 +211,15 @@ exec/events/*.json
 
 ```json
 {
+  "v": 1,
+  "ts": "2026-03-05T03:10:00Z",
   "type": "claim",
   "task_id": "T-AUTH-API-020",
   "by": "agent-backend"
 }
 ```
 
-イベント種類
+イベント種別
 
 | type     | 意味       |
 | -------- | ---------- |
@@ -172,17 +232,21 @@ exec/events/*.json
 | link     | 外部リンク |
 | estimate | 見積       |
 
-## 5. Derived Layer
+---
 
-Derived Layerは **生成物**である。
+## 7. Derived Layer
 
-```bash
+Derived Layerは **生成される分析情報**である。
+
+生成場所
+
+```text
 generated/
 ```
 
-生成例
+例
 
-```bash
+```text
 state.json
 ready.md
 cpm.md
@@ -190,19 +254,53 @@ critical-path.md
 schedule-diff.md
 ```
 
-これは
+Derived Layerは
 
-```bash
+```text
 Plan + Events
 ```
 
 から生成される。
 
-## 6. 状態モデル
+---
 
-タスクは次の状態を持つ。
+## 8. Automation Layer
 
-```bash
+Automation Layerは **AI AgentやCIによる自動実行**である。
+
+例
+
+- AI Agent
+- CI/CD
+- scheduler
+- replanning
+
+Agentの基本動作
+
+```text
+scheduler
+↓
+claim
+↓
+work
+↓
+complete
+```
+
+Agentは次を読み取る
+
+```text
+generated/ready.md
+generated/state.json
+```
+
+---
+
+## 9. 状態モデル
+
+タスク状態
+
+```text
 todo
 doing
 blocked
@@ -210,7 +308,9 @@ done
 cancelled
 ```
 
-### 6.1. 状態遷移
+---
+
+### 9.1. 状態遷移
 
 | current | command  | next      |
 | ------- | -------- | --------- |
@@ -222,27 +322,31 @@ cancelled
 | doing   | cancel   | cancelled |
 | blocked | cancel   | cancelled |
 
-## 7. Readyタスク
+---
+
+## 10. Readyタスク
 
 Readyタスクとは
 
-```plainText
+```text
 依存タスクがすべてdone
 ```
 
-のタスクである。
+であるタスク。
 
 生成物
 
-```bash
+```text
 generated/ready.md
 ```
 
-## 8. CPM（Critical Path Method）
+---
 
-SpecDojoはスケジュールから
+## 11. CPM（Critical Path Method）
 
-```bash
+スケジュールから
+
+```text
 ES
 EF
 LS
@@ -254,68 +358,53 @@ Slack
 
 生成物
 
-```bash
+```text
 generated/cpm.md
 generated/critical-path.md
 ```
 
-## 9. スケジュール差分
+---
+
+## 12. スケジュール差分
 
 スケジュール変更はハッシュ比較で検出する。
 
-```bash
+```text
 generated/schedule-diff.md
 ```
 
-これにより
+---
 
-- scope creep
-- 変更履歴
+## 13. Scheduler
 
-を追跡できる。
-
-## 10. 実行コマンド
-
-主要コマンド
-
-```bash
-dojo exec validate
-dojo exec build
-dojo exec claim
-dojo exec complete
-dojo exec block
-dojo exec cancel
-dojo exec scheduler
-```
-
-## 11. Scheduler
-
-Schedulerは **次に実行すべきタスクを決定する**。
+Schedulerは **次に実行すべきタスク**を決定する。
 
 戦略
 
-```bash
+```text
 critical-first
 fifo
 ```
 
 通常は
 
-```bash
+```text
 critical-first
 ```
 
 を使用する。
 
-## 12. 排他制御
+---
 
-複数Agentが同時実行できるように
+## 14. 排他制御
 
-```bash
+複数Agentが安全に実行できるよう
+
+```text
 exec/.locks/
 ```
 
-でロック管理する。
+でロックを管理する。
 
 対象コマンド
 
@@ -325,43 +414,22 @@ exec/.locks/
 - cancel
 - scheduler
 
-## 13. AI Agent統合
+---
 
-SpecDojoはAI Agentと自然に統合できる。
+## 15. PMBOKとの対応
 
-Agentの基本動作
+| PMBOK             | SpecDojo          |
+| ----------------- | ----------------- |
+| Product Scope     | Spec Layer        |
+| WBS               | Plan Layer        |
+| Deliverables      | Deliverable Layer |
+| Progress          | Event Layer       |
+| Status Report     | Derived Layer     |
+| Project Execution | Automation Layer  |
 
-```plainText
-scheduler
-↓
-claim
-↓
-work
-↓
-complete
-```
+---
 
-Agentは
-
-```bash
-ready.md
-state.json
-```
-
-を読み取り判断する。
-
-## 14. PMBOKとの対応
-
-| PMBOK         | SpecDojo      |
-| ------------- | ------------- |
-| WBS           | sch-\*.yaml   |
-| Schedule      | sch-\*.yaml   |
-| Progress      | exec/events   |
-| Issue log     | block         |
-| Change log    | schedule diff |
-| Status report | generated     |
-
-## 15. 従来ツールとの違い
+## 16. 従来ツールとの違い
 
 | 従来ツール   | SpecDojo        |
 | ------------ | --------------- |
@@ -369,34 +437,17 @@ state.json
 | Issue        | Task YAML       |
 | Activity log | Event log       |
 | Dashboard    | Generated files |
+| PM操作       | AI Agent        |
 
-## 16. 利点
-
-SpecDojoは以下を実現する。
-
-### 16.1. 再現性
-
-すべてGitにある。
-
-### 16.2. AI適合
-
-AIが読みやすい。
-
-### 16.3. 自動分析
-
-CPM計算可能。
-
-### 16.4. 分散開発
-
-Git mergeで統合可能。
+---
 
 ## 17. 典型的ワークフロー
 
-```bash
+```text
 dojo exec validate
 dojo exec build
 
-dojo exec scheduler --by agent-1
+dojo exec scheduler --by agent-backend
 dojo exec claim ...
 
 work
@@ -406,26 +457,39 @@ dojo exec complete ...
 dojo exec build
 ```
 
+---
+
 ## 18. 将来拡張
 
-予定している拡張
+SpecDojoは次の拡張が可能である。
 
 - burn-down生成
-- velocity計算
+- velocity分析
 - AI planning
 - risk detection
 - auto replanning
+- spec→task自動生成
+
+---
 
 ## 19. まとめ
 
 SpecDojoは
 
-```plainText
-Git + Event Sourcing + CPM + AI Agent
+```text
+Spec + Plan + Deliverables + Events + Analytics + Automation
 ```
 
 を統合した
 
-**AI時代のプロジェクト実行モデル**
+**AIネイティブなプロジェクト実行モデル**
 
 である。
+
+これは
+
+```text
+Git + Event Sourcing + CPM + AI Agent
+```
+
+を統合した **新しいプロジェクトOS**と言える。
