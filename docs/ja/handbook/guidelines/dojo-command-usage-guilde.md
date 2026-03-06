@@ -170,6 +170,21 @@ generated/
 
 ## 7. 初期セットアップ
 
+`npm link` は使いません。
+
+このリポジトリでは `npm install` 後に `tools/dojo` がビルドされ、VS Code 統合ターミナルでは `node_modules/.bin` が `PATH` に追加されます。新しいターミナルを開けば、以降は `npx` なしで `dojo` を直接実行できます。
+
+```bash
+npm install
+dojo config init
+```
+
+VS Code 統合ターミナル以外では `PATH` が通らないため、必要に応じて以下を使ってください。
+
+```bash
+./node_modules/.bin/dojo config init
+```
+
 ### config作成
 
 ```bash
@@ -381,12 +396,12 @@ dojo exec build
 pre-commit:
   commands:
     validate:
-      run: npx dojo exec validate --project prj-0001
+      run: ./node_modules/.bin/dojo exec validate --project prj-0001
 
 pre-push:
   commands:
     build:
-      run: npx dojo exec build --project prj-0001
+      run: ./node_modules/.bin/dojo exec build --project prj-0001
 ```
 
 ## 17. Agent利用ガイド
@@ -404,7 +419,6 @@ actor例:
 agent-backend
 agent-docs
 agent-test
-naoto
 ```
 
 ## 18. まとめ
