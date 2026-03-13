@@ -11,7 +11,12 @@ import {
 } from 'node:fs'
 import { join, extname, basename, resolve } from 'node:path'
 import yaml from 'js-yaml'
-import { loadConfig, loadEnv } from './dojo-config.js'
+import {
+  getProjectExecutionPath,
+  getProjectSchedulePath,
+  loadConfig,
+  loadEnv,
+} from './dojo-config.js'
 
 /* =========================
    Types
@@ -28,6 +33,8 @@ type ExecEventType =
   | 'estimate'
 
 type ExecState = 'todo' | 'doing' | 'blocked' | 'done' | 'cancelled'
+
+type SchedulerStrategy = 'critical-first' | 'fifo'
 
 type ExecEventV1 = {
   v: 1
@@ -127,6 +134,58 @@ type SchedulerLockOptions = {
   lockStaleMs: number
 }
 
+type ReadyTaskView = {
+  id: string
+  name?: string
+  schedule_file: string
+  fifo_rank: number
+  critical_first_rank: number
+  cpm?: {
+    es: number
+    ef: number
+    ls: number
+    lf: number
+    slack: number
+  }
+}
+
+type ReadySnapshot = {
+  generated_at_utc: string
+  project_path: string
+  execution_path: string
+  generated_dir: string
+  ready_count: number
+  default_strategy: SchedulerStrategy
+  strategies: Record<
+    SchedulerStrategy,
+    {
+      next_task_id: string | null
+      ordered_task_ids: string[]
+    }
+  >
+  tasks: ReadyTaskView[]
+}
+
+type ClaimNextSnapshot = {
+  generated_at_utc: string
+  project_path: string
+  execution_path: string
+  generated_dir: string
+  default_strategy: SchedulerStrategy
+  strategies: Record<
+    SchedulerStrategy,
+    {
+      next_task_id: string | null
+      ordered_task_ids: string[]
+    }
+  >
+}
+
+type ResolvedProjectPaths = {
+  schedulePath: string
+  executionPath: string
+}
+
 /* =========================
    Small utils
 ========================= */
@@ -212,81 +271,115 @@ function sleepMs(ms: number): void {
   Atomics.wait(int32, 0, 0, ms)
 }
 
+function activateResolvedProjectPaths(paths: ResolvedProjectPaths): void {
+  process.env.DOJO_SCHEDULE_PATH = paths.schedulePath
+  process.env.DOJO_EXECUTION_PATH = paths.executionPath
+}
+
+function executionRootForProject(projectPath: string): string {
+  loadEnv()
+
+  const envSchedulePath = process.env.DOJO_SCHEDULE_PATH
+  const envExecutionPath = process.env.DOJO_EXECUTION_PATH
+  if (
+    envSchedulePath &&
+    envSchedulePath.trim() &&
+    envExecutionPath &&
+    envExecutionPath.trim() &&
+    resolve(process.cwd(), envSchedulePath.trim()) === projectPath
+  ) {
+    return resolve(process.cwd(), envExecutionPath.trim())
+  }
+
+  const { config } = loadConfig()
+  if (config) {
+    for (const project of Object.values(config.projects)) {
+      const schedulePath = resolve(process.cwd(), getProjectSchedulePath(project))
+      if (schedulePath !== projectPath) continue
+
+      return resolve(process.cwd(), getProjectExecutionPath(project).trim())
+    }
+  }
+
+  throw new Error(
+    `Execution path not specified for schedule path: ${projectPath}\n` +
+      `Provide --project <id>, or DOJO_PROJECT, or DOJO_SCHEDULE_PATH together with DOJO_EXECUTION_PATH.`
+  )
+}
+
+function generatedDirForProject(projectPath: string): string {
+  return join(executionRootForProject(projectPath), 'generated')
+}
+
+function eventsDirForProject(projectPath: string): string {
+  return join(executionRootForProject(projectPath), 'exec', 'events')
+}
+
 /* =========================
    Project path resolution
 ========================= */
 
-function detectProjectPaths(repoRoot: string): string[] {
-  const all = listFilesRecursive(repoRoot)
-  const schFiles = all.filter(p => isSchYamlFilename(p))
-
-  const candidates = new Map<string, { hasSch: boolean; hasExecEvents: boolean }>()
-
-  for (const sch of schFiles) {
-    const dir = resolve(sch, '..')
-    const cur = candidates.get(dir) ?? { hasSch: false, hasExecEvents: false }
-    cur.hasSch = true
-    const eventsDir = join(dir, 'exec', 'events')
-    if (existsSync(eventsDir)) cur.hasExecEvents = true
-    candidates.set(dir, cur)
-  }
-
-  return Array.from(candidates.entries())
-    .filter(([, v]) => v.hasSch && v.hasExecEvents)
-    .map(([k]) => k)
-    .sort()
-}
-
-function resolveProjectPath(opts: { projectPath?: string; project?: string }): string {
+function resolveProjectPaths(opts: { project?: string }): ResolvedProjectPaths {
   loadEnv()
 
-  if (opts.projectPath && opts.projectPath.trim()) {
-    return resolve(process.cwd(), opts.projectPath.trim())
-  }
-
-  const envPath = process.env.DOJO_PROJECT_PATH
+  const envSchedulePath = process.env.DOJO_SCHEDULE_PATH
+  const envExecutionPath = process.env.DOJO_EXECUTION_PATH
   const envProject = process.env.DOJO_PROJECT
 
   const { config, configPath } = loadConfig()
 
-  function fromProjectId(projectId: string): string | null {
-    if (!config) return null
-    const rel = config.projects[projectId]
-    if (!rel) return null
-    return resolve(process.cwd(), rel)
+  function fromProjectId(
+    projectId: string,
+    source: '--project' | 'DOJO_PROJECT'
+  ): ResolvedProjectPaths {
+    if (!config) {
+      throw new Error(
+        `${source} requires dojo.config.json: ${configPath}\n` +
+          `Define the project id there, or use DOJO_SCHEDULE_PATH/DOJO_EXECUTION_PATH.`
+      )
+    }
+    const project = config.projects[projectId]
+    if (!project) {
+      throw new Error(`Unknown ${source} value: ${projectId} (check ${configPath})`)
+    }
+    return {
+      schedulePath: resolve(process.cwd(), getProjectSchedulePath(project)),
+      executionPath: resolve(process.cwd(), getProjectExecutionPath(project)),
+    }
   }
 
   if (opts.project && opts.project.trim()) {
-    const p = fromProjectId(opts.project.trim())
-    if (!p) throw new Error(`Unknown project id: ${opts.project} (check ${configPath})`)
-    return p
+    return fromProjectId(opts.project.trim(), '--project')
   }
 
-  if (envPath && envPath.trim()) {
-    return resolve(process.cwd(), envPath.trim())
+  if (
+    (envSchedulePath && envSchedulePath.trim()) ||
+    (envExecutionPath && envExecutionPath.trim())
+  ) {
+    if (
+      !envSchedulePath ||
+      !envSchedulePath.trim() ||
+      !envExecutionPath ||
+      !envExecutionPath.trim()
+    ) {
+      throw new Error(
+        `DOJO_SCHEDULE_PATH and DOJO_EXECUTION_PATH must be specified together when using direct environment path overrides.`
+      )
+    }
+    return {
+      schedulePath: resolve(process.cwd(), envSchedulePath.trim()),
+      executionPath: resolve(process.cwd(), envExecutionPath.trim()),
+    }
   }
 
   if (envProject && envProject.trim()) {
-    const p = fromProjectId(envProject.trim())
-    if (!p) throw new Error(`Unknown DOJO_PROJECT: ${envProject} (check ${configPath})`)
-    return p
+    return fromProjectId(envProject.trim(), 'DOJO_PROJECT')
   }
 
-  const repoRoot = process.cwd()
-  const candidates = detectProjectPaths(repoRoot)
-  if (candidates.length === 1) return candidates[0]
-  if (candidates.length === 0) {
-    throw new Error(
-      `Project path not specified.\n` +
-        `Provide --project-path, or --project, or DOJO_PROJECT_PATH/DOJO_PROJECT.\n` +
-        `Auto-detect found no candidates.`
-    )
-  }
   throw new Error(
-    `Project path not specified and auto-detect is ambiguous.\n` +
-      `Candidates:\n` +
-      candidates.map(c => `- ${c}`).join('\n') +
-      `\nUse --project-path or --project.`
+    `Project path not specified.\n` +
+      `Provide --project <id>, or DOJO_PROJECT, or DOJO_SCHEDULE_PATH together with DOJO_EXECUTION_PATH.\n` +
+      `DOJO_PROJECT must match a project id in ${configPath}.`
   )
 }
 
@@ -391,7 +484,7 @@ function validateEventShape(obj: any, source: string): string[] {
 }
 
 function readAllEventFiles(projectPath: string): { path: string; event: ExecEventV1 }[] {
-  const dir = join(projectPath, 'exec', 'events')
+  const dir = eventsDirForProject(projectPath)
   const files = listFilesRecursive(dir).filter(p => extname(p).toLowerCase() === '.json')
 
   const items: { path: string; event: ExecEventV1 }[] = []
@@ -470,7 +563,7 @@ function validateAll(projectPath: string): ValidateResult {
     errors.push(`schedule dependency cycle detected (nodes involved): ${topo.cycle.join(', ')}`)
   }
 
-  const eventsDir = join(projectPath, 'exec', 'events')
+  const eventsDir = eventsDirForProject(projectPath)
   if (!existsSync(eventsDir)) warnings.push(`No exec/events directory: ${eventsDir}`)
 
   const files = listFilesRecursive(eventsDir).filter(p => extname(p).toLowerCase() === '.json')
@@ -545,7 +638,7 @@ function buildEvent(type: ExecEventType, o: any): ExecEventV1 {
 }
 
 function writeEventFile(projectPath: string, event: ExecEventV1): string {
-  const execDir = join(projectPath, 'exec', 'events')
+  const execDir = eventsDirForProject(projectPath)
   ensureDir(execDir)
 
   const tsPart = tsForFilenameUtc(event.ts)
@@ -601,12 +694,29 @@ function foldEventsToState(
   }
 }
 
+function isDependencySatisfied(
+  schedule: ScheduleIndex,
+  snapshot: StateSnapshot,
+  nodeId: string,
+  visiting = new Set<string>()
+): boolean {
+  const node = schedule.nodes.get(nodeId)
+  if (!node) return false
+
+  if (node.kind === 'task') {
+    return (snapshot.tasks[nodeId]?.state ?? 'todo') === 'done'
+  }
+
+  if (visiting.has(nodeId)) return false
+  visiting.add(nodeId)
+  const ok = node.depends_on.every(dep => isDependencySatisfied(schedule, snapshot, dep, visiting))
+  visiting.delete(nodeId)
+  return ok
+}
+
 function computeReadyIds(schedule: ScheduleIndex, snapshot: StateSnapshot): string[] {
   function stateOf(id: string): ExecState {
     return snapshot.tasks[id]?.state ?? 'todo'
-  }
-  function isDone(id: string): boolean {
-    return stateOf(id) === 'done'
   }
 
   const ready: string[] = []
@@ -614,7 +724,7 @@ function computeReadyIds(schedule: ScheduleIndex, snapshot: StateSnapshot): stri
     if (n.kind !== 'task') continue
     const st = stateOf(n.id)
     if (st === 'done' || st === 'cancelled' || st === 'doing' || st === 'blocked') continue
-    if (n.depends_on.every(d => isDone(d))) ready.push(n.id)
+    if (n.depends_on.every(d => isDependencySatisfied(schedule, snapshot, d))) ready.push(n.id)
   }
   ready.sort()
   return ready
@@ -645,8 +755,9 @@ function canClaimTask(
   if (state === 'blocked') return { ok: false, reason: `task blocked: ${taskId}` }
 
   for (const dep of node.depends_on) {
-    const depState = snapshot.tasks[dep]?.state ?? 'todo'
-    if (depState !== 'done') return { ok: false, reason: `dependency not done: ${dep}` }
+    if (!isDependencySatisfied(schedule, snapshot, dep)) {
+      return { ok: false, reason: `dependency not satisfied: ${dep}` }
+    }
   }
 
   return { ok: true }
@@ -841,7 +952,7 @@ function computeCpm(schedule: ScheduleIndex, projectPath: string): CpmResult {
 }
 
 function writeCpmFiles(projectPath: string, cpm: CpmResult): void {
-  const genDir = join(projectPath, 'generated')
+  const genDir = generatedDirForProject(projectPath)
   ensureDir(genDir)
 
   writeJson(join(genDir, 'cpm.json'), cpm)
@@ -941,7 +1052,7 @@ function computeScheduleDiff(prev: ScheduleHash | null, cur: ScheduleHash): Sche
 }
 
 function writeScheduleHashAndDiff(projectPath: string, schedule: ScheduleIndex): void {
-  const genDir = join(projectPath, 'generated')
+  const genDir = generatedDirForProject(projectPath)
   ensureDir(genDir)
 
   const cur = buildScheduleHash(schedule, projectPath)
@@ -980,12 +1091,157 @@ function writeScheduleHashAndDiff(projectPath: string, schedule: ScheduleIndex):
    Generated core
 ========================= */
 
+function orderReadyIds(
+  ready: string[],
+  cpm: CpmResult | null,
+  strategy: SchedulerStrategy
+): string[] {
+  const ordered = [...ready]
+  if (ordered.length === 0) return ordered
+
+  if (strategy === 'fifo' || !cpm) {
+    ordered.sort((a, b) => a.localeCompare(b))
+    return ordered
+  }
+
+  ordered.sort((a, b) => {
+    const an = cpm.nodes[a]
+    const bn = cpm.nodes[b]
+    if (an && bn) {
+      if (an.slack !== bn.slack) return an.slack - bn.slack
+      if (an.es !== bn.es) return an.es - bn.es
+      return a.localeCompare(b)
+    }
+    if (an && !bn) return -1
+    if (!an && bn) return 1
+    return a.localeCompare(b)
+  })
+
+  return ordered
+}
+
+function buildReadySnapshot(
+  projectPath: string,
+  schedule: ScheduleIndex,
+  ready: string[],
+  cpm: CpmResult | null
+): ReadySnapshot {
+  const fifo = orderReadyIds(ready, cpm, 'fifo')
+  const criticalFirst = orderReadyIds(ready, cpm, 'critical-first')
+  const fifoRank = new Map(fifo.map((id, idx) => [id, idx + 1]))
+  const criticalRank = new Map(criticalFirst.map((id, idx) => [id, idx + 1]))
+  const executionPath = executionRootForProject(projectPath)
+  const generatedDir = generatedDirForProject(projectPath)
+
+  const tasks = criticalFirst.map(id => {
+    const node = schedule.nodes.get(id)
+    const cpmNode = cpm?.nodes[id]
+    return {
+      id,
+      name: node?.name,
+      schedule_file: basename(node?.schedule_file ?? ''),
+      fifo_rank: fifoRank.get(id) ?? 0,
+      critical_first_rank: criticalRank.get(id) ?? 0,
+      cpm: cpmNode
+        ? {
+            es: cpmNode.es,
+            ef: cpmNode.ef,
+            ls: cpmNode.ls,
+            lf: cpmNode.lf,
+            slack: cpmNode.slack,
+          }
+        : undefined,
+    }
+  })
+
+  return {
+    generated_at_utc: nowUtcIsoSeconds(),
+    project_path: projectPath,
+    execution_path: executionPath,
+    generated_dir: generatedDir,
+    ready_count: ready.length,
+    default_strategy: 'critical-first',
+    strategies: {
+      'critical-first': {
+        next_task_id: criticalFirst[0] ?? null,
+        ordered_task_ids: criticalFirst,
+      },
+      fifo: {
+        next_task_id: fifo[0] ?? null,
+        ordered_task_ids: fifo,
+      },
+    },
+    tasks,
+  }
+}
+
+function writeReadyFiles(projectPath: string, readySnapshot: ReadySnapshot): void {
+  const genDir = generatedDirForProject(projectPath)
+  ensureDir(genDir)
+
+  writeJson(join(genDir, 'ready.json'), readySnapshot)
+
+  const claimNext: ClaimNextSnapshot = {
+    generated_at_utc: readySnapshot.generated_at_utc,
+    project_path: readySnapshot.project_path,
+    execution_path: readySnapshot.execution_path,
+    generated_dir: readySnapshot.generated_dir,
+    default_strategy: readySnapshot.default_strategy,
+    strategies: readySnapshot.strategies,
+  }
+  writeJson(join(genDir, 'claim-next.json'), claimNext)
+
+  const lines: string[] = []
+  lines.push(`# Ready Tasks`)
+  lines.push('')
+  lines.push(`- generated_at_utc: \`${readySnapshot.generated_at_utc}\``)
+  lines.push(`- project_path: \`${readySnapshot.project_path}\``)
+  lines.push(`- execution_path: \`${readySnapshot.execution_path}\``)
+  lines.push(`- ready_count: \`${readySnapshot.ready_count}\``)
+  lines.push(`- default_strategy: \`${readySnapshot.default_strategy}\``)
+  lines.push('')
+  lines.push(`## Claim Targets`)
+  lines.push('')
+  lines.push(`| strategy | next_task_id |`)
+  lines.push(`|---|---|`)
+  lines.push(
+    `| critical-first | ${readySnapshot.strategies['critical-first'].next_task_id ? `\`${readySnapshot.strategies['critical-first'].next_task_id}\`` : '_none_'} |`
+  )
+  lines.push(
+    `| fifo | ${readySnapshot.strategies.fifo.next_task_id ? `\`${readySnapshot.strategies.fifo.next_task_id}\`` : '_none_'} |`
+  )
+  lines.push('')
+
+  if (!readySnapshot.tasks.length) {
+    lines.push('_No ready tasks._')
+    lines.push('')
+  } else {
+    lines.push(`## Ready Order (critical-first)`)
+    lines.push('')
+    lines.push(`| rank | id | slack | ES | schedule_file |`)
+    lines.push(`|---:|---|---:|---:|---|`)
+    for (const task of readySnapshot.tasks) {
+      lines.push(
+        `| ${task.critical_first_rank} | \`${task.id}\` | ${task.cpm?.slack ?? '-'} | ${task.cpm?.es ?? '-'} | ${task.schedule_file || '-'} |`
+      )
+    }
+    lines.push('')
+    lines.push(`## FIFO Order`)
+    lines.push('')
+    for (const id of readySnapshot.strategies.fifo.ordered_task_ids) lines.push(`- \`${id}\``)
+    lines.push('')
+  }
+
+  writeFileSync(join(genDir, 'ready.md'), lines.join('\n'), 'utf8')
+}
+
 function writeGeneratedCore(
   projectPath: string,
   events: { path: string; event: ExecEventV1 }[],
-  schedule: ScheduleIndex
+  schedule: ScheduleIndex,
+  cpm: CpmResult | null
 ): StateSnapshot {
-  const genDir = join(projectPath, 'generated')
+  const genDir = generatedDirForProject(projectPath)
   ensureDir(genDir)
 
   const jsonl = events.map(x => JSON.stringify(x.event)).join('\n') + (events.length ? '\n' : '')
@@ -995,23 +1251,30 @@ function writeGeneratedCore(
   writeJson(join(genDir, 'state.json'), snapshot)
 
   const ready = computeReadyIds(schedule, snapshot)
-  const lines: string[] = []
-  lines.push(`# Ready Tasks`)
-  lines.push('')
-  lines.push(`- generated_at_utc: \`${nowUtcIsoSeconds()}\``)
-  lines.push(`- project_path: \`${projectPath}\``)
-  lines.push(`- ready_count: \`${ready.length}\``)
-  lines.push('')
-  if (!ready.length) lines.push('_No ready tasks._')
-  else for (const id of ready) lines.push(`- \`${id}\``)
-  lines.push('')
-  writeFileSync(join(genDir, 'ready.md'), lines.join('\n'), 'utf8')
+  const readySnapshot = buildReadySnapshot(projectPath, schedule, ready, cpm)
+  writeReadyFiles(projectPath, readySnapshot)
 
   writeJson(join(genDir, 'metadata.json'), {
     generated_at_utc: nowUtcIsoSeconds(),
     project_path: projectPath,
+    execution_path: executionRootForProject(projectPath),
+    generated_dir: genDir,
     schedule_files: schedule.files.map(p => basename(p)).sort(),
     event_files_count: events.length,
+    default_scheduler_strategy: 'critical-first',
+    derived_files: [
+      'claim-next.json',
+      'cpm.json',
+      'cpm.md',
+      'critical-path.md',
+      'exec.jsonl',
+      'metadata.json',
+      'ready.json',
+      'ready.md',
+      'schedule-diff.md',
+      'schedule-hash.json',
+      'state.json',
+    ],
   })
 
   return snapshot
@@ -1022,7 +1285,7 @@ function writeGeneratedCore(
 ========================= */
 
 function schedulerLockDir(projectPath: string): string {
-  return join(projectPath, 'exec', '.locks', 'scheduler.lock')
+  return join(executionRootForProject(projectPath), 'exec', '.locks', 'scheduler.lock')
 }
 
 function acquireSchedulerLock(projectPath: string, opts: SchedulerLockOptions): string {
@@ -1085,20 +1348,9 @@ function releaseSchedulerLock(lockDir: string): void {
 function selectNextTask(
   ready: string[],
   cpm: CpmResult | null,
-  strategy: 'critical-first' | 'fifo'
+  strategy: SchedulerStrategy
 ): string | null {
-  if (ready.length === 0) return null
-  if (strategy === 'fifo' || !cpm) return ready[0]
-
-  const candidates = ready.map(id => ({ id, n: cpm.nodes[id] })).filter(x => !!x.n)
-
-  candidates.sort((a, b) => {
-    if (a.n.slack !== b.n.slack) return a.n.slack - b.n.slack
-    if (a.n.es !== b.n.es) return a.n.es - b.n.es
-    return a.id.localeCompare(b.id)
-  })
-
-  return candidates[0]?.id ?? ready[0]
+  return orderReadyIds(ready, cpm, strategy)[0] ?? null
 }
 
 /* =========================
@@ -1106,9 +1358,7 @@ function selectNextTask(
 ========================= */
 
 function addProjectOptions(cmd: Command): Command {
-  return cmd
-    .option('--project <projectId>', 'Project id in dojo.config.json (e.g. prj-0001)')
-    .option('--project-path <path>', 'Direct path to schedule dir. Overrides --project/env.')
+  return cmd.option('--project <projectId>', 'Project id in dojo.config.json (e.g. shj-0001)')
 }
 
 function addLockOptions(cmd: Command): Command {
@@ -1155,7 +1405,9 @@ export function registerExecCommands(program: Command): void {
         let projectPath = ''
         let lockDir = ''
         try {
-          projectPath = resolveProjectPath({ projectPath: opts.projectPath, project: opts.project })
+          const resolvedPaths = resolveProjectPaths({ project: opts.project })
+          activateResolvedProjectPaths(resolvedPaths)
+          projectPath = resolvedPaths.schedulePath
           const actor = requireNonEmpty('by', opts.by)
           const taskId = requireNonEmpty('task', opts.task)
           const allowMultipleDoing = !!opts.allowMultipleDoing
@@ -1212,7 +1464,9 @@ export function registerExecCommands(program: Command): void {
         let projectPath = ''
         let lockDir = ''
         try {
-          projectPath = resolveProjectPath({ projectPath: opts.projectPath, project: opts.project })
+          const resolvedPaths = resolveProjectPaths({ project: opts.project })
+          activateResolvedProjectPaths(resolvedPaths)
+          projectPath = resolvedPaths.schedulePath
           const actor = requireNonEmpty('by', opts.by)
           const taskId = requireNonEmpty('task', opts.task)
           const lockTimeoutMs = Number(opts.lockTimeoutMs)
@@ -1258,7 +1512,9 @@ export function registerExecCommands(program: Command): void {
         let projectPath = ''
         let lockDir = ''
         try {
-          projectPath = resolveProjectPath({ projectPath: opts.projectPath, project: opts.project })
+          const resolvedPaths = resolveProjectPaths({ project: opts.project })
+          activateResolvedProjectPaths(resolvedPaths)
+          projectPath = resolvedPaths.schedulePath
           const actor = requireNonEmpty('by', opts.by)
           const taskId = requireNonEmpty('task', opts.task)
           const lockTimeoutMs = Number(opts.lockTimeoutMs)
@@ -1304,7 +1560,9 @@ export function registerExecCommands(program: Command): void {
         let projectPath = ''
         let lockDir = ''
         try {
-          projectPath = resolveProjectPath({ projectPath: opts.projectPath, project: opts.project })
+          const resolvedPaths = resolveProjectPaths({ project: opts.project })
+          activateResolvedProjectPaths(resolvedPaths)
+          projectPath = resolvedPaths.schedulePath
           const actor = requireNonEmpty('by', opts.by)
           const taskId = requireNonEmpty('task', opts.task)
           const lockTimeoutMs = Number(opts.lockTimeoutMs)
@@ -1350,7 +1608,9 @@ export function registerExecCommands(program: Command): void {
         let projectPath = ''
         let lockDir = ''
         try {
-          projectPath = resolveProjectPath({ projectPath: opts.projectPath, project: opts.project })
+          const resolvedPaths = resolveProjectPaths({ project: opts.project })
+          activateResolvedProjectPaths(resolvedPaths)
+          projectPath = resolvedPaths.schedulePath
           const actor = requireNonEmpty('by', opts.by)
           const taskId = requireNonEmpty('task', opts.task)
           const lockTimeoutMs = Number(opts.lockTimeoutMs)
@@ -1395,7 +1655,9 @@ export function registerExecCommands(program: Command): void {
       cmd.action(opts => {
         let projectPath = ''
         try {
-          projectPath = resolveProjectPath({ projectPath: opts.projectPath, project: opts.project })
+          const resolvedPaths = resolveProjectPaths({ project: opts.project })
+          activateResolvedProjectPaths(resolvedPaths)
+          projectPath = resolvedPaths.schedulePath
         } catch (e: any) {
           process.stdout.write(String(e?.message ?? e) + '\n')
           process.exitCode = 1
@@ -1413,7 +1675,9 @@ export function registerExecCommands(program: Command): void {
   vcmd.action(opts => {
     let projectPath = ''
     try {
-      projectPath = resolveProjectPath({ projectPath: opts.projectPath, project: opts.project })
+      const resolvedPaths = resolveProjectPaths({ project: opts.project })
+      activateResolvedProjectPaths(resolvedPaths)
+      projectPath = resolvedPaths.schedulePath
     } catch (e: any) {
       process.stdout.write(String(e?.message ?? e) + '\n')
       process.exitCode = 1
@@ -1429,7 +1693,9 @@ export function registerExecCommands(program: Command): void {
   bcmd.action(opts => {
     let projectPath = ''
     try {
-      projectPath = resolveProjectPath({ projectPath: opts.projectPath, project: opts.project })
+      const resolvedPaths = resolveProjectPaths({ project: opts.project })
+      activateResolvedProjectPaths(resolvedPaths)
+      projectPath = resolvedPaths.schedulePath
     } catch (e: any) {
       process.stdout.write(String(e?.message ?? e) + '\n')
       process.exitCode = 1
@@ -1446,13 +1712,12 @@ export function registerExecCommands(program: Command): void {
     const schedule = buildScheduleIndex(projectPath)
     const events = readAllEventFiles(projectPath)
 
-    writeGeneratedCore(projectPath, events, schedule)
-    writeScheduleHashAndDiff(projectPath, schedule)
-
     const cpm = computeCpm(schedule, projectPath)
+    writeGeneratedCore(projectPath, events, schedule, cpm)
+    writeScheduleHashAndDiff(projectPath, schedule)
     writeCpmFiles(projectPath, cpm)
 
-    process.stdout.write(`\nGenerated: ${join(projectPath, 'generated')}\n`)
+    process.stdout.write(`\nGenerated: ${generatedDirForProject(projectPath)}\n`)
     exitWithCode(true)
   })
 
@@ -1470,10 +1735,12 @@ export function registerExecCommands(program: Command): void {
     let projectPath = ''
     let lockDir = ''
     try {
-      projectPath = resolveProjectPath({ projectPath: opts.projectPath, project: opts.project })
+      const resolvedPaths = resolveProjectPaths({ project: opts.project })
+      activateResolvedProjectPaths(resolvedPaths)
+      projectPath = resolvedPaths.schedulePath
 
       const actor = requireNonEmpty('by', opts.by)
-      const strategy = String(opts.strategy) as 'critical-first' | 'fifo'
+      const strategy = String(opts.strategy) as SchedulerStrategy
       const dryRun = !!opts.dryRun
       const msg = String(opts.msg ?? 'auto-claim')
       const allowMultipleDoing = !!opts.allowMultipleDoing
@@ -1562,10 +1829,18 @@ export function registerExecCommands(program: Command): void {
   const wcmd = exec.command('where').description('Print resolved paths')
   addProjectOptions(wcmd)
   wcmd.action(opts => {
-    const projectPath = resolveProjectPath({ projectPath: opts.projectPath, project: opts.project })
-    process.stdout.write(`project-path: ${projectPath}\n`)
-    process.stdout.write(`exec/events : ${join(projectPath, 'exec', 'events')}\n`)
-    process.stdout.write(`generated   : ${join(projectPath, 'generated')}\n`)
-    process.stdout.write(`scheduler-lock: ${schedulerLockDir(projectPath)}\n`)
+    try {
+      const resolvedPaths = resolveProjectPaths({ project: opts.project })
+      activateResolvedProjectPaths(resolvedPaths)
+      process.stdout.write(`schedule-path: ${resolvedPaths.schedulePath}\n`)
+      process.stdout.write(`execution-path: ${resolvedPaths.executionPath}\n`)
+      const projectPath = resolvedPaths.schedulePath
+      process.stdout.write(`exec/events : ${eventsDirForProject(projectPath)}\n`)
+      process.stdout.write(`generated   : ${generatedDirForProject(projectPath)}\n`)
+      process.stdout.write(`scheduler-lock: ${schedulerLockDir(projectPath)}\n`)
+    } catch (e: any) {
+      process.stdout.write(String(e?.message ?? e) + '\n')
+      process.exitCode = 1
+    }
   })
 }

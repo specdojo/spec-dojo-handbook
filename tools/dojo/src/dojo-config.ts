@@ -3,9 +3,14 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import dotenv from 'dotenv'
 
+export type DojoProjectConfig = {
+  schedule_path: string
+  execution_path: string
+}
+
 export type DojoConfig = {
   version: 1
-  projects: Record<string, string>
+  projects: Record<string, DojoProjectConfig>
 }
 
 export type ConfigLoadResult = {
@@ -23,6 +28,30 @@ export function defaultConfigPath(): string {
   return resolve(process.cwd(), 'dojo.config.json')
 }
 
+export function getProjectSchedulePath(project: DojoProjectConfig): string {
+  return project.schedule_path
+}
+
+export function getProjectExecutionPath(project: DojoProjectConfig): string {
+  return project.execution_path
+}
+
+function isValidProjectConfig(project: unknown): project is DojoProjectConfig {
+  if (!project || typeof project !== 'object' || Array.isArray(project)) return false
+
+  const candidate = project as { schedule_path?: unknown; execution_path?: unknown }
+  if (typeof candidate.schedule_path !== 'string' || candidate.schedule_path.trim().length === 0) {
+    return false
+  }
+  if (
+    typeof candidate.execution_path !== 'string' ||
+    candidate.execution_path.trim().length === 0
+  ) {
+    return false
+  }
+  return true
+}
+
 export function loadConfig(): ConfigLoadResult {
   loadEnv()
 
@@ -36,6 +65,14 @@ export function loadConfig(): ConfigLoadResult {
 
   if (!parsed || parsed.version !== 1 || typeof parsed.projects !== 'object') {
     throw new Error(`Invalid dojo.config.json: expected { version: 1, projects: { ... } }`)
+  }
+
+  for (const [projectId, project] of Object.entries(parsed.projects)) {
+    if (!isValidProjectConfig(project)) {
+      throw new Error(
+        `Invalid dojo.config.json: projects.${projectId} must be { schedule_path, execution_path }`
+      )
+    }
   }
 
   return { configPath, config: parsed }
@@ -61,7 +98,10 @@ export function registerConfigCommands(program: Command): void {
       const template: DojoConfig = {
         version: 1,
         projects: {
-          'prj-0001': 'docs/ja/project/prj-0001/040-project-management/020-schedule',
+          'shj-0001': {
+            schedule_path: 'docs/ja/sdh-ja-projects/prj-0001/060-schedule',
+            execution_path: 'docs/ja/sdh-ja-projects/prj-0001/070-execution',
+          },
         },
       }
       writeConfig(template)
@@ -89,8 +129,11 @@ export function registerProjectCommands(program: Command): void {
         return
       }
 
-      for (const [id, path] of entries) {
-        process.stdout.write(`${id}\t${path}\n`)
+      for (const [id, project] of entries) {
+        const schedulePath = getProjectSchedulePath(project)
+        const executionPath = getProjectExecutionPath(project)
+        const suffix = executionPath ? `\t${executionPath}` : ''
+        process.stdout.write(`${id}\t${schedulePath}${suffix}\n`)
       }
     })
 }

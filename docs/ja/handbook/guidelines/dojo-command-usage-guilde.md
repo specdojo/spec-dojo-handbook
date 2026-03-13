@@ -37,19 +37,20 @@ repo-root/
 ├─ .env
 ├─ docs/
 │  └─ ja/
-│     └─ project/
+│     └─ sdh-ja-projects/
 │        └─ prj-0001/
-│           └─ 040-project-management/
-│              └─ 020-schedule/
-│                 ├─ sch-milestones.yaml
-│                 ├─ sch-auth.yaml
-│                 ├─ sch-auth-api.yaml
-│                 │
-│                 ├─ exec/
-│                 │  ├─ events/
-│                 │  └─ .locks/
-│                 │
-│                 └─ generated/
+│           ├─ 060-schedule/
+│           │  ├─ sch-milestones.yaml
+│           │  ├─ sch-governance.yaml
+│           │  ├─ sch-design.yaml
+│           │  └─ sch-design-structure.yaml
+│           │
+│           └─ 070-execution/
+│              ├─ exec/
+│              │  ├─ events/
+│              │  └─ .locks/
+│              │
+│              └─ generated/
 │
 └─ tools/
    └─ dojo/
@@ -67,11 +68,17 @@ repo-root/
 {
   "version": 1,
   "projects": {
-    "prj-0001": "docs/ja/project/prj-0001/040-project-management/020-schedule",
-    "prj-0002": "docs/ja/project/prj-0002/040-project-management/020-schedule"
+    "shj-0001": {
+      "schedule_path": "docs/ja/sdh-ja-projects/prj-0001/060-schedule",
+      "execution_path": "docs/ja/sdh-ja-projects/prj-0001/070-execution"
+    }
   }
 }
 ```
+
+`projects.<id>` には `schedule_path` と `execution_path` を必ず指定する。
+
+`execution_path` は必須であり、`exec/events` / `generated` / `exec/.locks` の出力先を表す。
 
 ---
 
@@ -80,26 +87,31 @@ repo-root/
 ローカル開発者用の簡易設定。
 
 ```bash
-DOJO_PROJECT=prj-0001
+DOJO_PROJECT=shj-0001
 ```
 
 または
 
 ```bash
-DOJO_PROJECT_PATH=docs/ja/project/prj-0001/040-project-management/020-schedule
+DOJO_SCHEDULE_PATH=docs/ja/sdh-ja-projects/prj-0001/060-schedule
+DOJO_EXECUTION_PATH=docs/ja/sdh-ja-projects/prj-0001/070-execution
 ```
 
 ---
 
 ### 3.3. プロジェクトパス解決順序
 
-`dojo` は以下の順序でプロジェクトを解決します。
+`dojo` は schedule path と execution path を同じ入力元から解決します。
 
-1. `--project-path`
-2. `--project`
-3. `DOJO_PROJECT_PATH`
-4. `DOJO_PROJECT`
-5. 自動検出
+1. `--project` で指定したプロジェクト ID を `dojo.config.json` から解決
+2. `DOJO_SCHEDULE_PATH` と `DOJO_EXECUTION_PATH` をセットで解決
+3. `DOJO_PROJECT` で指定したプロジェクト ID を `dojo.config.json` から解決
+
+- `--project` を使う場合は、`dojo.config.json` の `projects.<id>.schedule_path` と `projects.<id>.execution_path` を使う。
+- `DOJO_PROJECT` を使う場合も、`dojo.config.json` に定義済みのプロジェクト ID から両方を解決する。
+- 直接環境変数で指定する場合は、`DOJO_SCHEDULE_PATH` と `DOJO_EXECUTION_PATH` を両方指定する。
+
+片方だけでは解決しない。
 
 ---
 
@@ -160,6 +172,8 @@ generated/
 ├─ exec.jsonl
 ├─ state.json
 ├─ ready.md
+├─ ready.json
+├─ claim-next.json
 ├─ cpm.json
 ├─ cpm.md
 ├─ critical-path.md
@@ -200,8 +214,7 @@ dojo project list
 例:
 
 ```bash
-prj-0001    docs/ja/project/prj-0001/040-project-management/020-schedule
-prj-0002    docs/ja/project/prj-0002/040-project-management/020-schedule
+shj-0001    docs/ja/sdh-ja-projects/prj-0001/060-schedule    docs/ja/sdh-ja-projects/prj-0001/070-execution
 ```
 
 ---
@@ -209,16 +222,17 @@ prj-0002    docs/ja/project/prj-0002/040-project-management/020-schedule
 ## 8. パス確認
 
 ```bash
-dojo exec where --project prj-0001
+dojo exec where --project shj-0001
 ```
 
 出力例:
 
 ```bash
-project-path: /repo/.../020-schedule
-exec/events : .../exec/events
-generated   : .../generated
-scheduler-lock: .../.locks/scheduler.lock
+schedule-path: /repo/.../060-schedule
+execution-path: /repo/.../070-execution
+exec/events : .../070-execution/exec/events
+generated   : .../070-execution/generated
+scheduler-lock: .../070-execution/exec/.locks/scheduler.lock
 ```
 
 ---
@@ -226,7 +240,7 @@ scheduler-lock: .../.locks/scheduler.lock
 ## 9. 検証
 
 ```bash
-dojo exec validate --project prj-0001
+dojo exec validate --project shj-0001
 ```
 
 検証内容:
@@ -239,15 +253,23 @@ dojo exec validate --project prj-0001
 ## 10. 生成
 
 ```bash
-dojo exec build --project prj-0001
+dojo exec build --project shj-0001
 ```
 
 生成:
 
 - state snapshot
 - ready list
+- ordered ready queue JSON
+- next claim target JSON
 - CPM
 - schedule diff
+
+`ready.md` は人間向けの ready 一覧で、`critical-first` の順序と `fifo` の順序を併記する。
+
+`ready.json` は機械向けの ready キューで、strategy ごとの順序付き task ID と CPM 情報を持つ。
+
+`claim-next.json` は strategy ごとの次の claim 対象を持つ。
 
 ## 11. 実行イベントコマンド
 
@@ -257,7 +279,7 @@ dojo exec build --project prj-0001
 
 ```bash
 dojo exec claim \
-  --project prj-0001 \
+  --project shj-0001 \
   --task T-AUTH-API-020 \
   --by agent-1 \
   --msg "start implementation"
@@ -269,7 +291,7 @@ dojo exec claim \
 
 ```bash
 dojo exec complete \
-  --project prj-0001 \
+  --project shj-0001 \
   --task T-AUTH-API-020 \
   --by agent-1 \
   --msg "done"
@@ -281,7 +303,7 @@ dojo exec complete \
 
 ```bash
 dojo exec block \
-  --project prj-0001 \
+  --project shj-0001 \
   --task T-AUTH-API-020 \
   --by agent-1 \
   --msg "waiting for spec"
@@ -293,7 +315,7 @@ dojo exec block \
 
 ```bash
 dojo exec unblock \
-  --project prj-0001 \
+  --project shj-0001 \
   --task T-AUTH-API-020 \
   --by agent-2 \
   --msg "spec clarified"
@@ -305,7 +327,7 @@ dojo exec unblock \
 
 ```bash
 dojo exec cancel \
-  --project prj-0001 \
+  --project shj-0001 \
   --task T-AUTH-API-020 \
   --by agent-1 \
   --msg "scope removed"
@@ -316,8 +338,10 @@ dojo exec cancel \
 自動タスク取得。
 
 ```bash
-dojo exec scheduler --project prj-0001 --by agent-1
+dojo exec scheduler --project shj-0001 --by agent-1
 ```
+
+`dojo exec scheduler` は `critical-first` または `fifo` の戦略で `ready.json` / `claim-next.json` と同じ順序規則を使って claim 対象を選ぶ。
 
 Dry-run:
 
@@ -396,12 +420,12 @@ dojo exec build
 pre-commit:
   commands:
     validate:
-      run: ./node_modules/.bin/dojo exec validate --project prj-0001
+      run: ./node_modules/.bin/dojo exec validate --project shj-0001
 
 pre-push:
   commands:
     build:
-      run: ./node_modules/.bin/dojo exec build --project prj-0001
+      run: ./node_modules/.bin/dojo exec build --project shj-0001
 ```
 
 ## 17. Agent利用ガイド

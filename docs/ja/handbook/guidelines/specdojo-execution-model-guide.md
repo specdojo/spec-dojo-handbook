@@ -260,6 +260,8 @@ generated/
 ```text
 state.json
 ready.md
+ready.json
+claim-next.json
 cpm.md
 critical-path.md
 schedule-diff.md
@@ -349,7 +351,11 @@ Readyタスクとは
 
 ```text
 generated/ready.md
+generated/ready.json
+generated/claim-next.json
 ```
+
+`ready.md` は人間向けの一覧、`ready.json` は strategy ごとの順序付き ready キュー、`claim-next.json` は次の claim 対象である。
 
 ---
 
@@ -404,6 +410,15 @@ critical-first
 ```
 
 を使用する。
+
+生成物としては
+
+```text
+generated/ready.json
+generated/claim-next.json
+```
+
+を参照し、`critical-first` では slack 最小、次に ES 最小、最後に ID 昇順で claim 対象を選ぶ。
 
 ---
 
