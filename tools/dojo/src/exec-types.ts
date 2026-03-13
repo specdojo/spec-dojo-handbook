@@ -71,6 +71,7 @@ export type ScheduleIndex = {
   files: string[]
   start_date: string | null
   calendar: ScheduleCalendar
+  section_labels: Record<string, string>
 }
 
 export type CpmNode = {

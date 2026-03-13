@@ -208,12 +208,40 @@ function toMermaidTaskId(id: string): string {
   return `task_${id.replace(/[^A-Za-z0-9._-]/g, '_')}`
 }
 
+function nonEmptyString(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+function scheduleSectionLabelForDoc(doc: any, fallback: string): string {
+  const scheduleLevel = nonEmptyString(doc?.schedule_level)
+  if (!scheduleLevel) return fallback
+
+  if (scheduleLevel === 'milestones') return scheduleLevel
+
+  if (scheduleLevel === 'domain') {
+    const domain = nonEmptyString(doc?.domain)
+    return domain ?? fallback
+  }
+
+  if (scheduleLevel === 'container') {
+    const domain = nonEmptyString(doc?.domain)
+    const container = nonEmptyString(doc?.container)
+    if (domain && container) return `${domain} / ${container}`
+    return domain ?? container ?? fallback
+  }
+
+  return fallback
+}
+
 export function buildScheduleIndex(projectPath: string): ScheduleIndex {
   const all = listFilesRecursive(projectPath)
   const files = all.filter(p => isSchYamlFilename(p))
   const defaultsPath = join(projectPath, 'schedule-defaults.yaml')
 
   const nodes = new Map<string, ScheduleNode>()
+  const sectionLabels: Record<string, string> = {}
   let startDate: string | null = null
   let calendar = defaultScheduleCalendar()
   let hasCalendar = false
@@ -245,6 +273,9 @@ export function buildScheduleIndex(projectPath: string): ScheduleIndex {
       continue
     }
     if (!doc || typeof doc !== 'object') continue
+
+    const scheduleFile = toScheduleFilePath(projectPath, f)
+    sectionLabels[scheduleFile] = scheduleSectionLabelForDoc(doc, scheduleFile)
 
     startDate = minDateOnly(startDate, extractScheduleStartDate(doc))
 
@@ -290,7 +321,7 @@ export function buildScheduleIndex(projectPath: string): ScheduleIndex {
     }
   }
 
-  return { nodes, files, start_date: startDate, calendar }
+  return { nodes, files, start_date: startDate, calendar, section_labels: sectionLabels }
 }
 
 function topoSort(schedule: ScheduleIndex): { order: string[]; cycle?: string[] } {
@@ -702,7 +733,8 @@ export function writeCpmFiles(projectPath: string, cpm: CpmResult): void {
   }
 
   for (const [scheduleFile, fileRows] of rowsByFile.entries()) {
-    ganttLines.push(`  section ${escapeMermaidText(scheduleFile)}`)
+    const sectionLabel = schedule.section_labels[scheduleFile] ?? scheduleFile
+    ganttLines.push(`  section ${escapeMermaidText(sectionLabel)}`)
     for (const row of fileRows) {
       const flags: string[] = []
       if (criticalSet.has(row.id)) flags.push('crit')
