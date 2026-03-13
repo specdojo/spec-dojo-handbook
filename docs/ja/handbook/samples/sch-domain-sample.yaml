@@ -6,13 +6,7 @@ domain: auth
 container: api
 assigned_team: "Backend Team A" # 任意
 
-calendar:
-  timezone: "Asia/Tokyo"
-  workdays: [Mon, Tue, Wed, Thu, Fri]
-  holidays: []
-
 settings:
-  start_date: 2026-03-01
   notes: >
     container（サービス/コンポーネント）単位の小日程。
     CPM/CP算出の主対象。依存は他domain/containerのTask/Milestone IDを参照可能。

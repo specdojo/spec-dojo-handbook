@@ -265,7 +265,9 @@ function readYaml(path: string): any {
 }
 
 function isSchYamlFilename(path: string): boolean {
-  return /^sch-.*\.(yaml|yml)$/.test(basename(path))
+  const name = basename(path)
+  if (/^sch-defaults\.(yaml|yml)$/.test(name)) return false
+  return /^sch-.*\.(yaml|yml)$/.test(name)
 }
 
 function sleepMs(ms: number): void {
