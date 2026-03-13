@@ -7,6 +7,22 @@ export const handbookSidebarItems = [
       { text: 'ドキュメントのフェーズ概要', link: '/ja/handbook/guidelines/docs-phases-overview' },
       { text: 'ドキュメントの内容', link: '/ja/handbook/guidelines/docs-contents-guide' },
       { text: 'ドキュメントの書き方', link: '/ja/handbook/guidelines/docs-editing-guide' },
+      {
+        text: 'プロジェクトマネジメント',
+        collapsed: false,
+        items: [
+          { text: '実行モデル', link: '/ja/handbook/guidelines/specdojo-execution-model-guide' },
+          {
+            text: 'プロジェクトドキュメント',
+            link: '/ja/handbook/guidelines/specdojo-project-docs-guide',
+          },
+          { text: 'WBS設計', link: '/ja/handbook/guidelines/specdojo-wbs-design-guide' },
+          {
+            text: '仕様からタスクの生成アルゴリズム',
+            link: '/ja/handbook/guidelines/specdojo-spec-to-task-algorithm-guide',
+          },
+        ],
+      },
     ],
   },
   {

@@ -1,4 +1,10 @@
-# SpecDojoプロジェクトドキュメントガイド
+---
+id: specdojo-project-docs-guide
+type: guide
+status: draft
+---
+
+# SpecDojo プロジェクトドキュメントガイド
 
 ## ディレクトリ・ファイル構成
 

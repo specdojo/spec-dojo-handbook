@@ -4,28 +4,28 @@ type: guide
 status: draft
 ---
 
-# SpecDojo Spec→Task生成アルゴリズム
+# SpecDojo 要求・要件・仕様からタスクを生成するアルゴリズムガイド
 
-本ドキュメントは、SpecDojo において **仕様書群から AI が実行可能なタスク群を生成するアルゴリズム**を定義する。
+本ドキュメントは、SpecDojo において **要求・要件・仕様書群から AI が実行可能なタスク群を生成するアルゴリズム**を定義する。
 
-SpecDojo では、仕様から直接コード生成するのではなく、原則として
+SpecDojo では、要求・要件・仕様から直接コード生成するのではなく、原則として
 
 ```text
-Spec → Deliverables → Tasks → Schedule → Execution
+Needs / Requirements / Specs → Deliverables → Tasks → Schedule → Execution
 ```
 
 の順で分解する。
 
 これにより、
 
-- 仕様と実装の対応関係を保持できる
+- 要求・要件・仕様と実装の対応関係を保持できる
 - AI Agent が安全に自律実行できる
 - タスクの完了条件を明確にできる
 - 進捗・差分・影響分析が可能になる
 
 ## 1. 目的
 
-本アルゴリズムの目的は、仕様書から次を機械的に導出することである。
+本アルゴリズムの目的は、要求・要件・仕様書から次を機械的に導出することである。
 
 - 実装対象の成果物
 - 成果物ごとの作業単位
@@ -42,9 +42,9 @@ Spec → Deliverables → Tasks → Schedule → Execution
 
 ## 2. 基本原則
 
-### 2.1 仕様をそのままタスクにしない
+### 2.1 要求・要件・仕様をそのままタスクにしない
 
-仕様の見出しや章立てを、そのまま task に変換してはならない。
+要求・要件・仕様の見出しや章立てを、そのまま task に変換してはならない。
 
 悪い例:
 
@@ -59,7 +59,7 @@ Spec → Deliverables → Tasks → Schedule → Execution
 ```text
 業務仕様
 ↓
-仕様要素抽出
+定義要素抽出
 ↓
 成果物抽出
 ↓
@@ -109,10 +109,11 @@ Produces:
 
 ## 3. 入力
 
-本アルゴリズムの入力は、以下の Spec Layer / Product Layer の文書群である。
+本アルゴリズムの入力は、以下の Definition Layer / Product Layer の文書群である。
 
 例:
 
+- `docs/ja/projects/...`
 - `docs/ja/product-docs/010-business-spec/...`
 - `docs/ja/product-docs/020-external-if-spec/...`
 - `docs/ja/product-docs/030-architecture/...`
@@ -156,8 +157,8 @@ Produces:
 全体フローは以下の通り。
 
 ```text
-Step 1 仕様要素抽出
-Step 2 仕様要素分類
+Step 1 定義要素抽出
+Step 2 定義要素分類
 Step 3 Deliverable候補抽出
 Step 4 Deliverable正規化
 Step 5 Task生成
@@ -169,9 +170,9 @@ Step 10 Schedule出力
 Step 11 Human review
 ```
 
-## 6. Step 1: 仕様要素抽出
+## 6. Step 1: 定義要素抽出
 
-仕様文書から、実装対象になりうる要素を抽出する。
+要求・要件・仕様文書から、実装対象になりうる要素を抽出する。
 
 抽出対象:
 
@@ -186,13 +187,14 @@ Step 11 Human review
 - エラー条件
 - 外部連携
 - 非機能要件の実装要素
+- 受入条件・制約・前提条件に由来する実装要素
 
-抽出単位は「文書」ではなく **仕様要素** とする。
+抽出単位は「文書」ではなく **定義要素** とする。
 
 例:
 
 ```text
-仕様:
+定義:
 ログインAPIは email/password を受け取り JWT を返す
 
 抽出:
@@ -203,7 +205,7 @@ Step 11 Human review
 - auth test
 ```
 
-## 7. Step 2: 仕様要素分類
+## 7. Step 2: 定義要素分類
 
 抽出した要素をカテゴリに分類する。
 
@@ -232,12 +234,12 @@ login history table -> data
 
 ## 8. Step 3: Deliverable候補抽出
 
-各仕様要素に対し、どの成果物が必要かを推定する。
+各定義要素に対し、どの成果物が必要かを推定する。
 
 例:
 
 ```text
-仕様要素:
+定義要素:
 login API endpoint
 
 Deliverable候補:
@@ -440,7 +442,7 @@ tasks:
 
 レビュー観点:
 
-- 仕様漏れがないか
+- 要求・要件・仕様の漏れがないか
 - task が大きすぎないか
 - dependency が過剰でないか
 - deliverable が妥当か
@@ -452,11 +454,11 @@ AI は task を生成できるが、最終責任は人間が持つ。
 ## 17. 生成アルゴリズムの疑似コード
 
 ```text
-for each spec_document:
-  extract spec_elements
+for each definition_document:
+  extract definition_elements
 
-for each spec_element:
-  classify spec_element
+for each definition_element:
+  classify definition_element
   derive deliverable_candidates
 
 normalize deliverables
@@ -488,7 +490,7 @@ output sch-*.yaml
 
 ## 19. Anti-pattern
 
-### 19.1 仕様見出しをそのまま task にする
+### 19.1 要求・要件・仕様見出しをそのまま task にする
 
 悪い例:
 
@@ -525,9 +527,9 @@ output sch-*.yaml
 SpecDojo の理想フローは以下である。
 
 ```text
-Spec
+Needs / Requirements / Specs
 ↓
-Spec element extraction
+Definition element extraction
 ↓
 Deliverable derivation
 ↓
@@ -540,23 +542,23 @@ Execution
 
 つまり、AI は単にコードを書くのではなく、
 
-**仕様から実行可能な計画を生成する**
+**要求・要件・仕様から実行可能な計画を生成する**
 
 役割を持つ。
 
 ## 21. まとめ
 
-SpecDojo の Spec→Task 生成アルゴリズムは、仕様を直接タスクに変換するのではなく、
+SpecDojo の Spec→Task 生成アルゴリズムは、要求・要件・仕様を直接タスクに変換するのではなく、
 
 ```text
-Spec → Deliverables → Tasks
+Needs / Requirements / Specs → Deliverables → Tasks
 ```
 
 という中間層を必ず通す。
 
 これにより、
 
-- 仕様と実装の対応が取れる
+- 要求・要件・仕様と実装の対応が取れる
 - AI Agent が実行しやすい
 - CPM や ready 判定が安定する
 - プロジェクト全体を Git 上で再現可能にできる

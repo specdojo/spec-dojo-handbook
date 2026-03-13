@@ -1,10 +1,10 @@
 ---
-id: specdojo-schedule-design
+id: specdojo-schedule-design-guide
 type: guide
 status: draft
 ---
 
-# SpecDojo Schedule設計ガイド
+# SpecDojo スケジュール設計ガイド
 
 本ドキュメントは SpecDojo における **Schedule（実行計画）の設計原則**を定義する。
 

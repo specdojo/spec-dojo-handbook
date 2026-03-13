@@ -1,10 +1,10 @@
 ---
-id: specdojo-execution-model
+id: specdojo-execution-model-guide
 type: guide
 status: draft
 ---
 
-# SpecDojo実行モデル（6層アーキテクチャ）
+# SpecDojo 実行モデル（6層アーキテクチャ）ガイド
 
 SpecDojoは **Git・構造化ドキュメント・イベントログ・AI Agent** を統合した
 **AI時代のプロジェクト実行モデル**である。
@@ -15,7 +15,7 @@ SpecDojoは **Git・構造化ドキュメント・イベントログ・AI Agent*
 SpecDojoは
 
 ```text
-Spec → Plan → Deliverables → Execution → Analytics → Automation
+Needs / Requirements / Spec → Plan → Deliverables → Execution → Analytics → Automation
 ```
 
 という **プロダクト生成プロセス全体**を扱う。
@@ -32,6 +32,8 @@ SpecDojoは次の原則に基づく。
 
 対象
 
+- 要求
+- 要件
 - 仕様
 - 設計
 - スケジュール
@@ -45,7 +47,7 @@ SpecDojoは次の原則に基づく。
 
 ### 1.2. 構造化ドキュメント
 
-仕様・計画は **構造化Markdown / YAML** で管理する。
+要求・要件・仕様・計画は **構造化Markdown / YAML / JSON** で管理する。
 
 理由
 
@@ -80,7 +82,7 @@ generated/
 SpecDojoは次の **6層モデル**で構成される。
 
 ```text
-1 Spec Layer
+1 Definition Layer
 2 Plan Layer
 3 Deliverable Layer
 4 Event Layer
@@ -90,12 +92,14 @@ SpecDojoは次の **6層モデル**で構成される。
 
 ---
 
-## 3. Spec Layer
+## 3. Definition Layer
 
-Spec Layerは **プロダクト仕様**を定義する。
+Definition Layerは **要求・要件・仕様** を定義する。
 
 対象
 
+- 要求
+- 要件
 - プロダクト仕様
 - システム設計
 - API仕様
@@ -105,18 +109,25 @@ Spec Layerは **プロダクト仕様**を定義する。
 
 ```text
 docs/ja/product-docs/
+docs/ja/projects/
 ```
 
 代表ドキュメント
 
 ```text
+prj-*
+req-*
+nfr-*
 prd-*
 sysd-*
 sdf-*
 scr-*
 ```
 
-Spec Layerは **人間が編集する最上位の情報**である。
+Definition Layerは **人間が編集する最上位の情報**である。
+
+要求は「なぜ作るか」、要件は「何を満たすべきか」、仕様は「どう定義するか」を担う。
+SpecDojoではこれらを分離せず、Git上の構造化ドキュメント群として一貫管理する。
 
 ---
 
@@ -146,7 +157,7 @@ tasks:
       - T-AUTH-API-010
 ```
 
-Plan Layerは **Specから生成される可能性がある**。
+Plan Layerは **要求・要件・仕様から生成される可能性がある**。
 
 ---
 
@@ -420,7 +431,7 @@ exec/.locks/
 
 | PMBOK             | SpecDojo          |
 | ----------------- | ----------------- |
-| Product Scope     | Spec Layer        |
+| Product Scope     | Definition Layer  |
 | WBS               | Plan Layer        |
 | Deliverables      | Deliverable Layer |
 | Progress          | Event Layer       |
@@ -468,7 +479,7 @@ SpecDojoは次の拡張が可能である。
 - AI planning
 - risk detection
 - auto replanning
-- spec→task自動生成
+- needs/requirements/specs→task自動生成
 
 ---
 
@@ -477,7 +488,7 @@ SpecDojoは次の拡張が可能である。
 SpecDojoは
 
 ```text
-Spec + Plan + Deliverables + Events + Analytics + Automation
+Needs/Requirements/Specs + Plan + Deliverables + Events + Analytics + Automation
 ```
 
 を統合した
@@ -489,7 +500,7 @@ Spec + Plan + Deliverables + Events + Analytics + Automation
 これは
 
 ```text
-Git + Event Sourcing + CPM + AI Agent
+Git + Structured Definitions + Event Sourcing + CPM + AI Agent
 ```
 
 を統合した **新しいプロジェクトOS**と言える。

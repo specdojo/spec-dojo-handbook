@@ -1,5 +1,5 @@
 ---
-id: specdojo-wbs-design
+id: specdojo-wbs-design-guide
 type: guide
 status: draft
 ---
@@ -8,7 +8,7 @@ status: draft
 
 本ドキュメントは SpecDojo における **WBS（Work Breakdown Structure）の設計原則**を定義する。
 
-SpecDojoでは、WBSは
+SpecDojoでは、WBSは要求・要件・仕様で定義された
 
 ```text
 WHAT（何を作るか）
@@ -200,6 +200,12 @@ update login logic
 
 ## 10. WBSとScheduleの関係
 
+要求・要件・仕様
+
+```text
+WHY / WHAT / RULES
+```
+
 WBS
 
 ```text
@@ -216,7 +222,7 @@ ORDER
 関係
 
 ```text
-WBS → Schedule
+Requirements / Specs → WBS → Schedule
 ```
 
 Schedule Task は **必ず WBS を参照する**。
@@ -229,21 +235,23 @@ tasks:
     wbs: WBS-AUTH-API-010
 ```
 
-## 11. Spec→WBS生成
+## 11. 要求・要件・仕様→WBS生成
 
 将来的にAIは
 
 ```text
-Spec → Deliverables → WBS
+Needs / Requirements / Specs → Deliverables → WBS
 ```
 
 を生成できる。
 
-Spec例
+入力例
 
 ```text
 login API returns JWT
 ```
+
+この入力には、背景・受入条件・非機能要件・仕様詳細を含んでよい。
 
 WBS
 
