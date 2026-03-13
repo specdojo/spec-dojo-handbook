@@ -7,11 +7,12 @@
 - critical_path_task_count: `19`
 
 ```mermaid
-%%{init: {'themeCSS': '.taskText, .sectionTitle { font-size: 14px; }'}}%%
+%%{init: {'gantt': {'leftPadding': 180, 'sectionFontSize': 11, 'fontSize': 12}}}%%
 gantt
   title Project Schedule
   dateFormat YYYY-MM-DD HH:mm
   axisFormat %m/%d
+  excludes sunday, saturday
   section sch-milestones.yaml
   M-SDH-100 schedule kickoff : crit, milestone, task_M-SDH-100, 2026-03-16 00:00, 0d
   M-SDH-200 governance baseline ready : crit, milestone, task_M-SDH-200, 2026-03-18 12:00, 0d

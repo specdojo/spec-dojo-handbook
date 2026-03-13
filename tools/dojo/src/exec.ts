@@ -328,6 +328,30 @@ function parseWorkdayToken(value: string): number | null {
   return key in map ? map[key] : null
 }
 
+function weekdayName(day: number): string {
+  const names = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+  return names[day] ?? 'sunday'
+}
+
+function mermaidGanttCalendarLines(calendar: ScheduleCalendar): string[] {
+  const lines: string[] = []
+  const nonWorkingDays = [0, 1, 2, 3, 4, 5, 6].filter(day => !calendar.workdays.has(day))
+
+  if (nonWorkingDays.length === 2 && nonWorkingDays[0] === 6 && nonWorkingDays[1] === 0) {
+    lines.push('  excludes weekends')
+  } else if (nonWorkingDays.length === 2 && nonWorkingDays[0] === 5 && nonWorkingDays[1] === 6) {
+    lines.push('  excludes weekends')
+    lines.push('  weekend friday')
+  } else if (nonWorkingDays.length > 0) {
+    lines.push(`  excludes ${nonWorkingDays.map(weekdayName).join(', ')}`)
+  }
+
+  const holidays = [...calendar.holidays].sort()
+  if (holidays.length > 0) lines.push(`  excludes ${holidays.join(', ')}`)
+
+  return lines
+}
+
 function extractScheduleCalendar(doc: any): ScheduleCalendar | null {
   const calendar = doc?.calendar
   if (!calendar || typeof calendar !== 'object') return null
@@ -1176,11 +1200,14 @@ function writeCpmFiles(projectPath: string, cpm: CpmResult): void {
   ganttLines.push(`- critical_path_task_count: \`${criticalSet.size}\``)
   ganttLines.push('')
   ganttLines.push('```mermaid')
-  ganttLines.push("%%{init: {'themeCSS': '.taskText, .sectionTitle { font-size: 14px; }'}}%%")
+  ganttLines.push(
+    "%%{init: {'gantt': {'leftPadding': 180, 'sectionFontSize': 11, 'fontSize': 12}}}%%"
+  )
   ganttLines.push('gantt')
   ganttLines.push('  title Project Schedule')
   ganttLines.push('  dateFormat YYYY-MM-DD HH:mm')
   ganttLines.push('  axisFormat %m/%d')
+  ganttLines.push(...mermaidGanttCalendarLines(schedule.calendar))
 
   const rowsByFile = new Map<string, CpmNode[]>()
   for (const row of rows) {

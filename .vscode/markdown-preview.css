@@ -1,0 +1,13 @@
+.markdown-body .mermaid {
+  display: block;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto;
+}
+
+.markdown-body .mermaid svg {
+  display: block;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+}
