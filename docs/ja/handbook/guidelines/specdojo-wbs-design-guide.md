@@ -72,13 +72,13 @@ wbs:
 
 良いWBS Itemは次の条件を満たす。
 
-| 条件            | 内容                 |
-| --------------- | -------------------- |
-| Deliverable明確 | producesが明確       |
+| 条件            | 内容                      |
+| --------------- | ------------------------- |
+| Deliverable明確 | producesが明確            |
 | Scope明確       | descriptionで対象が分かる |
-| Done Criteria   | 完了条件が明確       |
-| Deterministic   | 成功条件が曖昧でない |
-| Scope Unit      | スコープ単位         |
+| Done Criteria   | 完了条件が明確            |
+| Deterministic   | 成功条件が曖昧でない      |
+| Scope Unit      | スコープ単位              |
 
 ## 4. WBS粒度
 
@@ -188,12 +188,12 @@ login API を実装する
 
 整理すると次の通りである。
 
-| 属性 | 役割 |
-| ---- | ---- |
-| name | 短い識別ラベル |
-| description | スコープ説明 |
-| done_criteria | 完了条件 |
-| notes | 補足メモ |
+| 属性          | 役割           |
+| ------------- | -------------- |
+| name          | 短い識別ラベル |
+| description   | スコープ説明   |
+| done_criteria | 完了条件       |
+| notes         | 補足メモ       |
 
 例
 

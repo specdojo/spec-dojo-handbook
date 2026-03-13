@@ -1,14 +1,15 @@
 {
-  "name": "grandma-candy-shop devcontainer",
+  "name": "specdojo handbook devcontainer",
   "build": {
     "dockerfile": "Dockerfile",
     "context": "."
   },
   "remoteUser": "root",
   "features": {
-    "ghcr.io/devcontainers-extra/features/yamllint:2": {}
+    "ghcr.io/devcontainers-extra/features/yamllint:2": {},
+    "ghcr.io/devcontainers/features/copilot-cli:1": {}
   },
-  "postCreateCommand": "npm install -g @github/copilot @fission-ai/openspec@latest",
+  "postCreateCommand": "npm install -g @fission-ai/openspec@latest",
 
   "customizations": {
     "vscode": {

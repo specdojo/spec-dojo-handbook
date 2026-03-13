@@ -41,6 +41,7 @@ next-env.d.ts
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+!.vscode/schemas
 
 # env files
 # because this project is public and template, don't include .env.* files

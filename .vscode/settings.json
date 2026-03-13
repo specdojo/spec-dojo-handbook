@@ -99,7 +99,6 @@
   "yaml.hover": true,
   "yaml.completion": true,
   "yaml.format.enable": true,
-
   "yaml.schemas": {
     "./docs/shared/schemas/spec-frontmatter.schema.yaml": ["docs/**/*.md"],
     "./docs/shared/schemas/bdd.schema.yaml": ["docs/**/bdd-*.yaml"],
@@ -116,5 +115,6 @@
 
   "files.associations": {
     "*.schema.yaml": "yaml"
-  }
+  },
+  "json.schemaDownload.enable": false
 }

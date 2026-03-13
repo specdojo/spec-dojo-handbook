@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=./.vscode/schemas/markdownlint-config-schema.json
 MD013: false # 行の長さ
 MD033: false # インライン HTML を許可
 MD036: false # 強調表示行の許可
