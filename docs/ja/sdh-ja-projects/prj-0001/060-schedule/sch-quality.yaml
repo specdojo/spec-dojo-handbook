@@ -4,13 +4,7 @@ schedule_level: domain
 domain: quality
 assigned_team: specdojo-handbook
 
-calendar:
-  timezone: Asia/Tokyo
-  workdays: [Mon, Tue, Wed, Thu, Fri]
-  holidays: []
-
 settings:
-  start_date: 2026-03-16
   finish_milestone_id: M-SDH-999
   notes: >
     Quality domain summary schedule.

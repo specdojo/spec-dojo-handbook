@@ -85,6 +85,7 @@ type ScheduleNode = {
 }
 
 type ScheduleCalendar = {
+  timezone: string
   workdays: Set<number>
   holidays: Set<string>
 }
@@ -309,6 +310,7 @@ function normalizeDateOnly(value: unknown): string | null {
 
 function defaultScheduleCalendar(): ScheduleCalendar {
   return {
+    timezone: 'UTC',
     workdays: new Set([1, 2, 3, 4, 5]),
     holidays: new Set<string>(),
   }
@@ -336,27 +338,32 @@ function weekdayName(day: number): string {
 function mermaidGanttCalendarLines(calendar: ScheduleCalendar): string[] {
   const lines: string[] = []
   const nonWorkingDays = [0, 1, 2, 3, 4, 5, 6].filter(day => !calendar.workdays.has(day))
+  const excludeTokens: string[] = []
 
   if (nonWorkingDays.length === 2 && nonWorkingDays[0] === 6 && nonWorkingDays[1] === 0) {
-    lines.push('  excludes weekends')
+    excludeTokens.push('weekends')
   } else if (nonWorkingDays.length === 2 && nonWorkingDays[0] === 5 && nonWorkingDays[1] === 6) {
-    lines.push('  excludes weekends')
+    excludeTokens.push('weekends')
     lines.push('  weekend friday')
   } else if (nonWorkingDays.length > 0) {
-    lines.push(`  excludes ${nonWorkingDays.map(weekdayName).join(', ')}`)
+    excludeTokens.push(...nonWorkingDays.map(weekdayName))
   }
 
   const holidays = [...calendar.holidays].sort()
-  if (holidays.length > 0) lines.push(`  excludes ${holidays.join(', ')}`)
+  excludeTokens.push(...holidays)
+
+  if (excludeTokens.length > 0) lines.push(`  excludes ${excludeTokens.join(', ')}`)
 
   return lines
 }
 
-function extractScheduleCalendar(doc: any): ScheduleCalendar | null {
-  const calendar = doc?.calendar
+function applyScheduleCalendar(base: ScheduleCalendar, calendar: any): ScheduleCalendar | null {
   if (!calendar || typeof calendar !== 'object') return null
 
-  const parsed = defaultScheduleCalendar()
+  const parsed = cloneScheduleCalendar(base)
+  if (typeof calendar.timezone === 'string' && calendar.timezone.trim()) {
+    parsed.timezone = calendar.timezone.trim()
+  }
   if (Array.isArray(calendar.workdays) && calendar.workdays.length) {
     const workdays = new Set<number>()
     for (const token of calendar.workdays) {
@@ -368,14 +375,30 @@ function extractScheduleCalendar(doc: any): ScheduleCalendar | null {
   }
 
   if (Array.isArray(calendar.holidays) && calendar.holidays.length) {
-    parsed.holidays = new Set(
-      calendar.holidays
-        .map((value: unknown) => normalizeDateOnly(value))
-        .filter(Boolean) as string[]
-    )
+    for (const holiday of calendar.holidays
+      .map((value: unknown) => normalizeDateOnly(value))
+      .filter(Boolean) as string[]) {
+      parsed.holidays.add(holiday)
+    }
   }
 
   return parsed
+}
+
+function cloneScheduleCalendar(calendar: ScheduleCalendar): ScheduleCalendar {
+  return {
+    timezone: calendar.timezone,
+    workdays: new Set(calendar.workdays),
+    holidays: new Set(calendar.holidays),
+  }
+}
+
+function mergeScheduleCalendar(base: ScheduleCalendar, extra: ScheduleCalendar): ScheduleCalendar {
+  const merged = cloneScheduleCalendar(base)
+  merged.timezone = extra.timezone
+  merged.workdays = new Set(extra.workdays)
+  for (const holiday of extra.holidays) merged.holidays.add(holiday)
+  return merged
 }
 
 function extractScheduleStartDate(doc: any): string | null {
@@ -576,11 +599,31 @@ function resolveProjectPaths(opts: { project?: string }): ResolvedProjectPaths {
 function buildScheduleIndex(projectPath: string): ScheduleIndex {
   const all = listFilesRecursive(projectPath)
   const files = all.filter(p => isSchYamlFilename(p))
+  const defaultsPath = join(projectPath, 'schedule-defaults.yaml')
 
   const nodes = new Map<string, ScheduleNode>()
   let startDate: string | null = null
   let calendar = defaultScheduleCalendar()
   let hasCalendar = false
+
+  if (existsSync(defaultsPath)) {
+    try {
+      const defaultsDoc = readYaml(defaultsPath)
+      if (defaultsDoc && typeof defaultsDoc === 'object') {
+        startDate = minDateOnly(startDate, extractScheduleStartDate(defaultsDoc))
+        const defaultCalendar = applyScheduleCalendar(
+          defaultScheduleCalendar(),
+          defaultsDoc.calendar
+        )
+        if (defaultCalendar) {
+          calendar = defaultCalendar
+          hasCalendar = true
+        }
+      }
+    } catch {
+      // Ignore malformed defaults here; schema/editor validation should catch it.
+    }
+  }
 
   for (const f of files) {
     let doc: any
@@ -593,11 +636,13 @@ function buildScheduleIndex(projectPath: string): ScheduleIndex {
 
     startDate = minDateOnly(startDate, extractScheduleStartDate(doc))
 
-    if (!hasCalendar) {
-      const docCalendar = extractScheduleCalendar(doc)
-      if (docCalendar) {
-        calendar = docCalendar
+    const docCalendar = applyScheduleCalendar(calendar, doc.calendar)
+    if (docCalendar && doc.calendar && typeof doc.calendar === 'object') {
+      if (!hasCalendar) {
+        calendar = cloneScheduleCalendar(docCalendar)
         hasCalendar = true
+      } else {
+        calendar = mergeScheduleCalendar(calendar, docCalendar)
       }
     }
 

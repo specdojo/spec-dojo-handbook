@@ -1,0 +1,49 @@
+# schedule-defaults.schema.yaml
+$schema: "https://json-schema.org/draft/2020-12/schema"
+title: "SpecDojo Schedule Defaults schema"
+type: object
+additionalProperties: false
+required:
+  - version
+  - calendar
+  - settings
+
+properties:
+  version:
+    type: integer
+    minimum: 1
+
+  calendar:
+    type: object
+    additionalProperties: false
+    required:
+      - timezone
+      - workdays
+    properties:
+      timezone:
+        type: string
+        minLength: 1
+      workdays:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+          enum: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+      holidays:
+        type: array
+        items:
+          type: string
+          format: date
+
+  settings:
+    type: object
+    additionalProperties: false
+    required:
+      - start_date
+    properties:
+      start_date:
+        type: string
+        format: date
+      notes:
+        type: string

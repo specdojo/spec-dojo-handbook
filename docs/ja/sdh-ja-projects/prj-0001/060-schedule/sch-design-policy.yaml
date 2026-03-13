@@ -5,13 +5,7 @@ domain: design
 container: policy
 assigned_team: specdojo-handbook
 
-calendar:
-  timezone: Asia/Tokyo
-  workdays: [Mon, Tue, Wed, Thu, Fri]
-  holidays: []
-
 settings:
-  start_date: 2026-03-16
   finish_milestone_id: M-SDH-DES-POL-900
   notes: Container schedule for design policy rule families.
 

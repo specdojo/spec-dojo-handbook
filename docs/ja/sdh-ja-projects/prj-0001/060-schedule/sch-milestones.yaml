@@ -3,13 +3,7 @@ project_id: prj-0001
 schedule_level: milestones
 assigned_team: specdojo-handbook
 
-calendar:
-  timezone: Asia/Tokyo
-  workdays: [Mon, Tue, Wed, Thu, Fri]
-  holidays: []
-
 settings:
-  start_date: 2026-03-16
   finish_milestone_id: M-SDH-999
   notes: Handbook rules and instructions maintenance plan derived from domain WBS files.
 

@@ -5,13 +5,7 @@ domain: quality
 container: governance
 assigned_team: specdojo-handbook
 
-calendar:
-  timezone: Asia/Tokyo
-  workdays: [Mon, Tue, Wed, Thu, Fri]
-  holidays: []
-
 settings:
-  start_date: 2026-03-16
   finish_milestone_id: M-SDH-QLT-GOV-900
   notes: Container schedule for traceability and test-planning governance artifacts.
 
