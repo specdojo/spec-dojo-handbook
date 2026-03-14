@@ -1,6 +1,6 @@
 # wbs.schema.yaml
-$schema: 'https://json-schema.org/draft/2020-12/schema'
-$title: 'SpecDojo WBS (domain) schema'
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$title: "SpecDojo WBS (domain) schema"
 $type: object
 $comment: >
   Schema for domain-scoped WBS SSOT files:
@@ -22,18 +22,18 @@ properties:
   version:
     type: integer
     minimum: 1
-    description: 'Schema/data version.'
+    description: "Schema/data version."
 
   project_id:
     type: string
     minLength: 1
-    description: 'Project identifier (e.g., prj-sdh-ja-0001).'
+    description: "Project identifier (e.g., prj-sdh-ja-0001)."
 
   domain:
     type: string
     minLength: 1
-    description: 'Stable ownership boundary used in file name wbs-<domain>.yaml (e.g., auth, billing, infra).'
-    pattern: '^[a-z0-9][a-z0-9-]{0,62}$'
+    description: "Stable ownership boundary used in file name wbs-<domain>.yaml (e.g., auth, billing, infra)."
+    pattern: "^[a-z0-9][a-z0-9-]{0,62}$"
 
   assigned_team:
     type: string
@@ -45,15 +45,15 @@ properties:
   wbs:
     type: array
     minItems: 1
-    description: 'List of leaf-level WBS elements under this domain.'
+    description: "List of leaf-level WBS elements under this domain."
     items:
-      $ref: '#/$defs/WbsItem'
+      $ref: "#/$defs/WbsItem"
 
 $defs:
   Owner:
     type: string
-    description: 'Document owner role. Extendable.'
-    enum: ['BO', 'EN']
+    description: "Document owner role. PO=Project Owner, BA=Business Analyst, ARC=Architect, QE=Quality Engineer."
+    enum: ["PO", "BA", "ARC", "QE"]
 
   Deliverable:
     type: object
@@ -76,10 +76,10 @@ $defs:
           create: new file/artifact
           modify: existing file/artifact to change
           reference: referenced artifact, not directly changed by this WBS item
-        enum: ['create', 'modify', 'reference']
+        enum: ["create", "modify", "reference"]
       note:
         type: string
-        description: 'Optional note about the deliverable.'
+        description: "Optional note about the deliverable."
 
   RefId:
     type: string
@@ -87,7 +87,7 @@ $defs:
     description: >
       Cross-reference identifier to acceptance criteria, specs, tests, decisions, etc.
       Examples: BAC-AUTH-010, SAC-AUTH-020, DEC-0007.
-    pattern: '^[A-Z][A-Z0-9-]{1,127}$'
+    pattern: "^[A-Z][A-Z0-9-]{1,127}$"
 
   WbsItem:
     type: object
@@ -105,12 +105,12 @@ $defs:
         description: >
           Globally unique WBS ID.
           Recommended format: WBS-<DOMAIN>-<NNN>, e.g. WBS-AUTH-010.
-        pattern: '^WBS-[A-Z0-9-]+-[0-9]{2,4}$'
+        pattern: "^WBS-[A-Z0-9-]+-[0-9]{2,4}$"
 
       name:
         type: string
         minLength: 1
-        description: 'Leaf-level WBS element name. Prefer verb-led, concrete names.'
+        description: "Leaf-level WBS element name. Prefer verb-led, concrete names."
 
       description:
         type: string
@@ -121,21 +121,21 @@ $defs:
           do not duplicate done criteria or free-form notes.
 
       owner:
-        $ref: '#/$defs/Owner'
+        $ref: "#/$defs/Owner"
 
       component:
         type: string
         description: >
           Optional stable sub-area/component within the domain. Useful when deriving
           schedule files or grouping execution work (e.g., api, ui, db, batch).
-        pattern: '^[a-z0-9][a-z0-9-]{0,62}$'
+        pattern: "^[a-z0-9][a-z0-9-]{0,62}$"
 
       deliverables:
         type: array
         minItems: 1
-        description: 'Deliverables produced, modified, or referenced by this WBS element.'
+        description: "Deliverables produced, modified, or referenced by this WBS element."
         items:
-          $ref: '#/$defs/Deliverable'
+          $ref: "#/$defs/Deliverable"
 
       done_criteria:
         type: string
@@ -150,12 +150,12 @@ $defs:
           Optional references to formal acceptance criteria / specs / decisions that
           ground the done criteria.
         items:
-          $ref: '#/$defs/RefId'
+          $ref: "#/$defs/RefId"
         uniqueItems: true
 
       tags:
         type: array
-        description: 'Optional tags for filtering/grouping.'
+        description: "Optional tags for filtering/grouping."
         items:
           type: string
           minLength: 1
@@ -163,4 +163,4 @@ $defs:
 
       notes:
         type: string
-        description: 'Optional free-form notes. Keep concise; avoid duplicating SSOT content.'
+        description: "Optional free-form notes. Keep concise; avoid duplicating SSOT content."
