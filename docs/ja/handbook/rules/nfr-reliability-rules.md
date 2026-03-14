@@ -1,9 +1,11 @@
 ---
 id: nfr-reliability-rules
-title: 非機能要件 / 信頼性 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 非機能要件 / 信頼性 作成ルール
 
 Non-Functional Requirements Reliability Documentation Rules
 

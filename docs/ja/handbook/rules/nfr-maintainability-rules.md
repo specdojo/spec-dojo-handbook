@@ -1,9 +1,11 @@
 ---
 id: nfr-maintainability-rules
-title: 非機能要件 / 保守性 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 非機能要件 / 保守性 作成ルール
 
 Non-Functional Requirements Maintainability Documentation Rules
 

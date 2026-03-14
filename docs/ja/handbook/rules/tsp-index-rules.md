@@ -1,9 +1,11 @@
 ---
 id: tsp-index-rules
-title: テスト戦略・方針 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# テスト戦略・方針 作成ルール
 
 Test Strategy and Policy (TSP) Index Documentation Rules
 

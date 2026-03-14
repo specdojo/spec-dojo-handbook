@@ -1,9 +1,11 @@
 ---
 id: nfr-operations-rules
-title: 非機能要件 / 運用 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 非機能要件 / 運用 作成ルール
 
 Non-Functional Requirements Operations Documentation Rules
 

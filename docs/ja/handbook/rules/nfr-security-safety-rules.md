@@ -1,9 +1,11 @@
 ---
 id: nfr-security-safety-rules
-title: 非機能要件 / 機密性・安全性 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 非機能要件 / 機密性・安全性 作成ルール
 
 Non-Functional Requirements Security and Safety Documentation Rules
 

@@ -1,9 +1,11 @@
 ---
 id: opr-rules
-title: 運用手順 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 運用手順 作成ルール
 
 Operations Procedure Runbook (OPR) Documentation Rules
 

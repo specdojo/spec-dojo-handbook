@@ -7,23 +7,25 @@
 
 ## 0. ドキュメント基本情報（Frontmatter入力）
 
-| 項目        | 入力値  | 備考                                       |
-| ----------- | ------- | ------------------------------------------ |
-| projectNo   |         | 例: `0001`                                 |
-| projectName |         | 例: 駄菓子屋きぬや 店頭販売システムの構築  |
-| id          |         | 例: `prj-0001-overview`                    |
-| type        | project | 固定                                       |
-| title       |         | 形式: `プロジェクト概要: <プロジェクト名>` |
-| status      | draft   | `draft` / `ready` / `deprecated`           |
-| based_on    |         | 参照元がなければ `[]`                      |
-| supersedes  |         | 置き換え元がなければ `[]`                  |
+| 項目        | 入力値  | 備考                                      |
+| ----------- | ------- | ----------------------------------------- |
+| projectNo   |         | 例: `0001`                                |
+| projectName |         | 例: 駄菓子屋きぬや 店頭販売システムの構築 |
+| id          |         | 例: `prj-0001-overview`                   |
+| type        | project | 固定                                      |
+| status      | draft   | `draft` / `ready` / `deprecated`          |
+| based_on    |         | 参照元がなければ `[]`                     |
+| supersedes  |         | 置き換え元がなければ `[]`                 |
+
+### 0.0. 本文H1（タイトル）入力
+
+- H1タイトル: `# プロジェクト概要: <projectName>`
 
 ### 0.1. 出力Frontmatter（確認用）
 
 ```yaml
 id: prj-<projectNo>-overview
 type: project
-title: プロジェクト概要: <projectName>
 status: draft
 based_on: []
 supersedes: []

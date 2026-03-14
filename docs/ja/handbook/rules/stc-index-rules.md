@@ -1,9 +1,11 @@
 ---
 id: stc-index-rules
-title: 総合テストカタログ 概要 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 総合テストカタログ 概要 作成ルール
 
 System Test Catalog (STC) Index Documentation Rules
 

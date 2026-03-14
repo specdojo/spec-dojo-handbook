@@ -1,9 +1,11 @@
 ---
 id: sysd-cross-cutting-policy-rules
-title: システム設計 / 横断ルール 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# システム設計 / 横断ルール 作成ルール
 
 System Design Cross-cutting Policy (SYSD-CCP) Documentation Rules
 

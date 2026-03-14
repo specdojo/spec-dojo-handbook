@@ -1,9 +1,11 @@
 ---
 id: nfr-availability-rules
-title: 非機能要件 / 可用性 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 非機能要件 / 可用性 作成ルール
 
 Non-Functional Requirements Availability Documentation Rules
 

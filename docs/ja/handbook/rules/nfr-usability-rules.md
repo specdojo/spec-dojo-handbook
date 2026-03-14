@@ -1,9 +1,11 @@
 ---
 id: nfr-usability-rules
-title: 非機能要件 / 操作性 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 非機能要件 / 操作性 作成ルール
 
 Non-Functional Requirements Usability Documentation Rules
 

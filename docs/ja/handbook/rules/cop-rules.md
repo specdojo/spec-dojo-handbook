@@ -1,9 +1,11 @@
 ---
 id: cop-rules
-title: カットオーバー計画 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# カットオーバー計画 作成ルール
 
 Cutover Plan (COP) Documentation Rules
 

@@ -1,9 +1,11 @@
 ---
 id: itc-index-rules
-title: 内部結合テストカタログ概要 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 内部結合テストカタログ概要 作成ルール
 
 Internal Integration Test Catalog (ITC) Index Documentation Rules
 

@@ -1,9 +1,11 @@
 ---
 id: meta-test-document-scope-rules
 type: meta
-title: テストドキュメントスコープ定義ルール
 status: draft
+
 ---
+
+# テストドキュメントスコープ定義ルール
 
 ## 1. 目的
 

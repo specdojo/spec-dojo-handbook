@@ -1,9 +1,11 @@
 ---
 id: etc-rules
-title: 外部結合テストカタログ 対象別 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 外部結合テストカタログ 対象別 作成ルール
 
 External Integration Test Catalog (ETC) Documentation Rules
 

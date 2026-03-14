@@ -1,9 +1,11 @@
 ---
 id: atc-index-rules
-title: 受入テストカタログ 概要 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 受入テストカタログ 概要 作成ルール
 
 Acceptance Test Catalog (ATC) Index Documentation Rules
 

@@ -1,9 +1,11 @@
 ---
 id: sysd-index-rules
-title: システム設計-全体構成 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# システム設計-全体構成 作成ルール
 
 System Design (SYSD) Index Documentation Rules
 

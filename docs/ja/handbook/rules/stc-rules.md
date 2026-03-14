@@ -1,9 +1,11 @@
 ---
 id: stc-rules
-title: 総合テストカタログ 対象別 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 総合テストカタログ 対象別 作成ルール
 
 System Test Catalog (STC) Documentation Rules
 
