@@ -16,7 +16,7 @@ tasks:
     name: quality criteria families summary
     duration_days: 2.5
     depends_on: [M-SDH-300]
-    owner: BO
+    owner: BA
     tags: [quality, summary, criteria]
     notes: Detailed execution is in sch-quality-criteria.yaml.
 
@@ -25,7 +25,7 @@ tasks:
     name: quality verification and acceptance summary
     duration_days: 2
     depends_on: [M-SDH-350, T-SDH-QLT-100]
-    owner: EN
+    owner: QE
     tags: [quality, summary, verification]
     notes: Detailed execution is in sch-quality-verification.yaml.
 
@@ -34,7 +34,7 @@ tasks:
     name: quality traceability and planning summary
     duration_days: 1.5
     depends_on: [T-SDH-QLT-200]
-    owner: EN
+    owner: QE
     tags: [quality, summary, traceability-planning]
     notes: Detailed execution is in sch-quality-governance.yaml.
 
@@ -42,5 +42,5 @@ milestones:
   - id: M-SDH-QLT-900
     name: quality domain complete
     depends_on: [T-SDH-QLT-300]
-    owner: EN
+    owner: QE
     date_hint: 2026-04-07

@@ -6,7 +6,7 @@ wbs:
   - id: WBS-NFR-INDEX-010
     name: maintain non-functional requirements index pair
     description: Maintain the NFR index rule and instruction pair that defines the common structure for non-functional requirement document sets.
-    owner: EN
+    owner: QE
     component: index
     deliverables:
       - path: docs/ja/handbook/rules/nfr-index-rules.md
@@ -18,7 +18,7 @@ wbs:
   - id: WBS-NFR-AVAILABILITY-020
     name: maintain availability requirement pair
     description: Maintain the availability NFR rule and instruction pair for availability-focused non-functional requirement documents.
-    owner: EN
+    owner: QE
     component: availability
     deliverables:
       - path: docs/ja/handbook/rules/nfr-availability-rules.md
@@ -30,7 +30,7 @@ wbs:
   - id: WBS-NFR-INTEGRITY-030
     name: maintain integrity requirement pair
     description: Maintain the integrity NFR rule and instruction pair for integrity-focused non-functional requirement documents.
-    owner: EN
+    owner: QE
     component: integrity
     deliverables:
       - path: docs/ja/handbook/rules/nfr-integrity-rules.md
@@ -42,7 +42,7 @@ wbs:
   - id: WBS-NFR-MAINTAINABILITY-040
     name: maintain maintainability requirement pair
     description: Maintain the maintainability NFR rule and instruction pair for maintainability requirement documents.
-    owner: EN
+    owner: QE
     component: maintainability
     deliverables:
       - path: docs/ja/handbook/rules/nfr-maintainability-rules.md
@@ -54,7 +54,7 @@ wbs:
   - id: WBS-NFR-OPERATIONS-050
     name: maintain operations requirement pair
     description: Maintain the operations NFR rule and instruction pair for operations and observability-focused non-functional requirements.
-    owner: EN
+    owner: QE
     component: operations
     deliverables:
       - path: docs/ja/handbook/rules/nfr-operations-rules.md
@@ -66,7 +66,7 @@ wbs:
   - id: WBS-NFR-PERFORMANCE-060
     name: maintain performance requirement pair
     description: Maintain the performance NFR rule and instruction pair for measurable performance requirement documents.
-    owner: EN
+    owner: QE
     component: performance
     deliverables:
       - path: docs/ja/handbook/rules/nfr-performance-rules.md
@@ -78,7 +78,7 @@ wbs:
   - id: WBS-NFR-RELIABILITY-070
     name: maintain reliability requirement pair
     description: Maintain the reliability NFR rule and instruction pair for failure-handling and resilience requirement documents.
-    owner: EN
+    owner: QE
     component: reliability
     deliverables:
       - path: docs/ja/handbook/rules/nfr-reliability-rules.md
@@ -90,7 +90,7 @@ wbs:
   - id: WBS-NFR-SECURITY-080
     name: maintain security and safety requirement pair
     description: Maintain the security and safety NFR rule and instruction pair for threat, control, and safety-focused requirement documents.
-    owner: EN
+    owner: QE
     component: security-safety
     deliverables:
       - path: docs/ja/handbook/rules/nfr-security-safety-rules.md
@@ -102,7 +102,7 @@ wbs:
   - id: WBS-NFR-USABILITY-090
     name: maintain usability requirement pair
     description: Maintain the usability NFR rule and instruction pair for user-centered non-functional requirement documents.
-    owner: BO
+    owner: BA
     component: usability
     deliverables:
       - path: docs/ja/handbook/rules/nfr-usability-rules.md

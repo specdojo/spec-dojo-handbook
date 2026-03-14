@@ -16,7 +16,7 @@ tasks:
     name: design context and policy updates summary
     duration_days: 2
     depends_on: [M-SDH-300]
-    owner: EN
+    owner: ARC
     tags: [design, summary, context-policy]
     notes: Detailed execution is in sch-design-context.yaml and sch-design-policy.yaml.
 
@@ -25,7 +25,7 @@ tasks:
     name: design flow and interaction updates summary
     duration_days: 2.5
     depends_on: [T-SDH-DES-100]
-    owner: EN
+    owner: ARC
     tags: [design, summary, flow]
     notes: Detailed execution is in sch-design-flow.yaml.
 
@@ -34,7 +34,7 @@ tasks:
     name: design structure and engineering updates summary
     duration_days: 3
     depends_on: [T-SDH-DES-200]
-    owner: EN
+    owner: ARC
     tags: [design, summary, structure-engineering]
     notes: Detailed execution is in sch-design-structure.yaml.
 
@@ -42,5 +42,5 @@ milestones:
   - id: M-SDH-DES-900
     name: design domain complete
     depends_on: [T-SDH-DES-300]
-    owner: EN
+    owner: ARC
     date_hint: 2026-04-01

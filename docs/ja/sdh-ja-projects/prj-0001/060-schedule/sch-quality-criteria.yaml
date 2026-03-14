@@ -15,7 +15,7 @@ tasks:
     name: update acceptance test criteria family
     duration_days: 1
     depends_on: [M-SDH-300]
-    owner: BO
+    owner: BA
     tags: [quality, criteria, acceptance-tests]
 
   - id: T-SDH-QLT-CRT-020
@@ -23,7 +23,7 @@ tasks:
     name: update external test criteria family
     duration_days: 1
     depends_on: [M-SDH-300]
-    owner: BO
+    owner: BA
     tags: [quality, criteria, external-tests]
 
   - id: T-SDH-QLT-CRT-030
@@ -31,12 +31,12 @@ tasks:
     name: update user test criteria family
     duration_days: 0.75
     depends_on: [M-SDH-300, T-SDH-BIZ-010]
-    owner: BO
+    owner: BA
     tags: [quality, criteria, user-tests]
 
 milestones:
   - id: M-SDH-QLT-CRT-900
     name: quality criteria container complete
     depends_on: [T-SDH-QLT-CRT-010, T-SDH-QLT-CRT-020, T-SDH-QLT-CRT-030]
-    owner: BO
+    owner: BA
     date_hint: 2026-03-27

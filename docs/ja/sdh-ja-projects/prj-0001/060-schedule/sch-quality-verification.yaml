@@ -15,7 +15,7 @@ tasks:
     name: update integration test documentation family
     duration_days: 0.75
     depends_on: [M-SDH-350]
-    owner: EN
+    owner: QE
     tags: [quality, verification, integration-tests]
 
   - id: T-SDH-QLT-VRF-020
@@ -23,7 +23,7 @@ tasks:
     name: update system test documentation family
     duration_days: 0.75
     depends_on: [T-SDH-QLT-VRF-010]
-    owner: EN
+    owner: QE
     tags: [quality, verification, system-tests]
 
   - id: T-SDH-QLT-VRF-030
@@ -31,12 +31,12 @@ tasks:
     name: update system acceptance condition pair
     duration_days: 0.5
     depends_on: [T-SDH-QLT-VRF-020, M-SDH-QLT-CRT-900]
-    owner: BO
+    owner: BA
     tags: [quality, verification, acceptance]
 
 milestones:
   - id: M-SDH-QLT-VRF-900
     name: quality verification container complete
     depends_on: [T-SDH-QLT-VRF-030]
-    owner: EN
+    owner: QE
     date_hint: 2026-04-04

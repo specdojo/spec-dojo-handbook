@@ -15,7 +15,7 @@ tasks:
     name: update context landscape pair
     duration_days: 0.5
     depends_on: [M-SDH-300]
-    owner: EN
+    owner: ARC
     tags: [design, context, landscape]
 
   - id: T-SDH-DES-CTX-020
@@ -23,12 +23,12 @@ tasks:
     name: update context narrative and mermaid family
     duration_days: 0.75
     depends_on: [T-SDH-DES-CTX-010]
-    owner: EN
+    owner: ARC
     tags: [design, context, narrative]
 
 milestones:
   - id: M-SDH-DES-CTX-900
     name: design context container complete
     depends_on: [T-SDH-DES-CTX-020]
-    owner: EN
+    owner: ARC
     date_hint: 2026-03-26

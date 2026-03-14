@@ -11,7 +11,7 @@ milestones:
   - id: M-SDH-100
     name: schedule kickoff
     depends_on: []
-    owner: BO
+    owner: PO
     date_hint: 2026-03-16
     tags: [kickoff]
 
@@ -22,7 +22,7 @@ milestones:
       - T-SDH-GOV-030
       - T-SDH-GOV-040
       - T-SDH-GOV-050
-    owner: BO
+    owner: PO
     date_hint: 2026-03-19
     tags: [governance]
 
@@ -37,7 +37,7 @@ milestones:
       - T-SDH-NFR-070
       - T-SDH-NFR-080
       - T-SDH-NFR-090
-    owner: EN
+    owner: QE
     date_hint: 2026-03-25
     tags: [definition]
 
@@ -45,7 +45,7 @@ milestones:
     name: design baseline ready
     depends_on:
       - M-SDH-DES-900
-    owner: EN
+    owner: ARC
     date_hint: 2026-04-01
     tags: [design]
 
@@ -53,7 +53,7 @@ milestones:
     name: quality and traceability baseline ready
     depends_on:
       - M-SDH-QLT-900
-    owner: BO
+    owner: PO
     date_hint: 2026-04-07
     tags: [quality]
 
@@ -61,6 +61,6 @@ milestones:
     name: prj-0001 schedule scope completed
     depends_on:
       - M-SDH-400
-    owner: BO
+    owner: PO
     date_hint: 2026-04-08
     tags: [finish]

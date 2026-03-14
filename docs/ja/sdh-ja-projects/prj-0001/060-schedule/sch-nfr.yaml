@@ -14,7 +14,7 @@ tasks:
     name: update nfr index pair
     duration_days: 0.5
     depends_on: [M-SDH-200]
-    owner: EN
+    owner: QE
     tags: [nfr, index]
 
   - id: T-SDH-NFR-020
@@ -22,7 +22,7 @@ tasks:
     name: update availability requirement pair
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
-    owner: EN
+    owner: QE
     tags: [nfr, availability]
 
   - id: T-SDH-NFR-030
@@ -30,7 +30,7 @@ tasks:
     name: update integrity requirement pair
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
-    owner: EN
+    owner: QE
     tags: [nfr, integrity]
 
   - id: T-SDH-NFR-040
@@ -38,7 +38,7 @@ tasks:
     name: update maintainability requirement pair
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
-    owner: EN
+    owner: QE
     tags: [nfr, maintainability]
 
   - id: T-SDH-NFR-050
@@ -46,7 +46,7 @@ tasks:
     name: update operations requirement pair
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
-    owner: EN
+    owner: QE
     tags: [nfr, operations]
 
   - id: T-SDH-NFR-060
@@ -54,7 +54,7 @@ tasks:
     name: update performance requirement pair
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
-    owner: EN
+    owner: QE
     tags: [nfr, performance]
 
   - id: T-SDH-NFR-070
@@ -62,7 +62,7 @@ tasks:
     name: update reliability requirement pair
     duration_days: 0.5
     depends_on: [T-SDH-NFR-060]
-    owner: EN
+    owner: QE
     tags: [nfr, reliability]
 
   - id: T-SDH-NFR-080
@@ -70,7 +70,7 @@ tasks:
     name: update security and safety requirement pair
     duration_days: 0.75
     depends_on: [T-SDH-NFR-030]
-    owner: EN
+    owner: QE
     tags: [nfr, security-safety]
 
   - id: T-SDH-NFR-090
@@ -78,5 +78,5 @@ tasks:
     name: update usability requirement pair
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
-    owner: BO
+    owner: BA
     tags: [nfr, usability]

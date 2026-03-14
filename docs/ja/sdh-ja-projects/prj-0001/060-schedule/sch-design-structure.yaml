@@ -15,7 +15,7 @@ tasks:
     name: update shared diagram rule sets
     duration_days: 0.5
     depends_on: [M-SDH-DES-CTX-900, M-SDH-DES-POL-900]
-    owner: EN
+    owner: ARC
     tags: [design, structure, diagrams]
 
   - id: T-SDH-DES-STR-020
@@ -23,7 +23,7 @@ tasks:
     name: update component design summary pair
     duration_days: 0.5
     depends_on: [M-SDH-DES-POL-900]
-    owner: EN
+    owner: ARC
     tags: [design, structure, summary]
 
   - id: T-SDH-DES-STR-030
@@ -31,7 +31,7 @@ tasks:
     name: update domain model pair
     duration_days: 0.5
     depends_on: [M-SDH-300]
-    owner: EN
+    owner: ARC
     tags: [design, structure, domain-model]
 
   - id: T-SDH-DES-STR-040
@@ -39,7 +39,7 @@ tasks:
     name: update engineering support documentation set
     duration_days: 1
     depends_on: [M-SDH-DES-FLOW-900, T-SDH-DES-STR-030]
-    owner: EN
+    owner: ARC
     tags: [design, structure, engineering-support]
 
   - id: T-SDH-DES-STR-050
@@ -47,7 +47,7 @@ tasks:
     name: update logical structure and ui specification pairs
     duration_days: 0.75
     depends_on: [T-SDH-DES-STR-010, T-SDH-DES-STR-030]
-    owner: EN
+    owner: ARC
     tags: [design, structure, logical-ui]
 
   - id: T-SDH-DES-STR-060
@@ -55,12 +55,12 @@ tasks:
     name: update system design index and policy family
     duration_days: 1
     depends_on: [T-SDH-DES-STR-020, T-SDH-DES-STR-040, T-SDH-DES-STR-050]
-    owner: EN
+    owner: ARC
     tags: [design, structure, system-design]
 
 milestones:
   - id: M-SDH-DES-STR-900
     name: design structure container complete
     depends_on: [T-SDH-DES-STR-060]
-    owner: EN
+    owner: ARC
     date_hint: 2026-04-01

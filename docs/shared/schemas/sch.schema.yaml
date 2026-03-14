@@ -80,8 +80,8 @@ oneOf:
 $defs:
   Owner:
     type: string
-    description: "Document owner role. Extendable."
-    enum: ["BO", "EN"]
+    description: "Document owner role. PO=Project Owner, BA=Business Analyst, ARC=Architect, QE=Quality Engineer."
+    enum: ["PO", "BA", "ARC", "QE"]
 
   Id:
     type: string

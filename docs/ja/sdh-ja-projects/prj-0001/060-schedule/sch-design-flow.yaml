@@ -15,7 +15,7 @@ tasks:
     name: update data flow documentation family
     duration_days: 0.75
     depends_on: [M-SDH-DES-CTX-900, M-SDH-DES-POL-900]
-    owner: EN
+    owner: ARC
     tags: [design, flow, data-flow]
 
   - id: T-SDH-DES-FLOW-020
@@ -23,7 +23,7 @@ tasks:
     name: update state transition documentation family
     duration_days: 0.75
     depends_on: [M-SDH-DES-CTX-900]
-    owner: EN
+    owner: ARC
     tags: [design, flow, state-transition]
 
   - id: T-SDH-DES-FLOW-030
@@ -31,12 +31,12 @@ tasks:
     name: update cross-system design family
     duration_days: 0.75
     depends_on: [T-SDH-DES-FLOW-010]
-    owner: EN
+    owner: ARC
     tags: [design, flow, cross-system]
 
 milestones:
   - id: M-SDH-DES-FLOW-900
     name: design flow container complete
     depends_on: [T-SDH-DES-FLOW-020, T-SDH-DES-FLOW-030]
-    owner: EN
+    owner: ARC
     date_hint: 2026-03-28

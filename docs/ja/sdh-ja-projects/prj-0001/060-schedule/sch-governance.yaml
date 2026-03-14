@@ -14,7 +14,7 @@ tasks:
     name: align project overview and scope rule pairs
     duration_days: 1
     depends_on: [M-SDH-100]
-    owner: BO
+    owner: PO
     tags: [governance, project-docs]
 
   - id: T-SDH-GOV-020
@@ -22,7 +22,7 @@ tasks:
     name: update glossary rule and instruction pair
     duration_days: 0.5
     depends_on: [T-SDH-GOV-010]
-    owner: BO
+    owner: PO
     tags: [governance, glossary]
 
   - id: T-SDH-GOV-030
@@ -30,7 +30,7 @@ tasks:
     name: update handbook operation and planning rule sets
     duration_days: 1
     depends_on: [T-SDH-GOV-010]
-    owner: BO
+    owner: PO
     tags: [governance, operations]
 
   - id: T-SDH-GOV-040
@@ -38,7 +38,7 @@ tasks:
     name: update migration index rule and instruction pair
     duration_days: 0.5
     depends_on: [T-SDH-GOV-030]
-    owner: BO
+    owner: PO
     tags: [governance, migration]
 
   - id: T-SDH-GOV-050
@@ -46,5 +46,5 @@ tasks:
     name: align shared metadata and naming constraints
     duration_days: 0.75
     depends_on: [M-SDH-100]
-    owner: EN
+    owner: ARC
     tags: [governance, meta]

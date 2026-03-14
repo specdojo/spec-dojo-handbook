@@ -15,7 +15,7 @@ tasks:
     name: update specification traceability link pair
     duration_days: 0.5
     depends_on: [M-SDH-350, T-SDH-NFR-010]
-    owner: EN
+    owner: QE
     tags: [quality, governance, traceability]
 
   - id: T-SDH-QLT-GOV-020
@@ -23,12 +23,12 @@ tasks:
     name: update test planning and strategy family
     duration_days: 0.75
     depends_on: [M-SDH-QLT-CRT-900, M-SDH-QLT-VRF-900, T-SDH-QLT-GOV-010]
-    owner: EN
+    owner: QE
     tags: [quality, governance, test-planning]
 
 milestones:
   - id: M-SDH-QLT-GOV-900
     name: quality governance container complete
     depends_on: [T-SDH-QLT-GOV-020]
-    owner: EN
+    owner: QE
     date_hint: 2026-04-07

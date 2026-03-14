@@ -14,7 +14,7 @@ tasks:
     name: update business acceptance criteria pair
     duration_days: 0.5
     depends_on: [M-SDH-200]
-    owner: BO
+    owner: BA
     tags: [business, acceptance]
 
   - id: T-SDH-BIZ-020
@@ -22,7 +22,7 @@ tasks:
     name: update business data definition pair
     duration_days: 0.5
     depends_on: [M-SDH-200]
-    owner: BO
+    owner: BA
     tags: [business, data]
 
   - id: T-SDH-BIZ-030
@@ -30,7 +30,7 @@ tasks:
     name: update business data schema pair
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-020]
-    owner: BO
+    owner: BA
     tags: [business, data]
 
   - id: T-SDH-BIZ-040
@@ -38,7 +38,7 @@ tasks:
     name: update business process specification pair
     duration_days: 0.75
     depends_on: [M-SDH-200]
-    owner: BO
+    owner: BA
     tags: [business, process]
 
   - id: T-SDH-BIZ-050
@@ -46,7 +46,7 @@ tasks:
     name: update business rule pair
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-040]
-    owner: BO
+    owner: BA
     tags: [business, rules]
 
   - id: T-SDH-BIZ-060
@@ -54,5 +54,5 @@ tasks:
     name: update business event specification family
     duration_days: 0.75
     depends_on: [T-SDH-BIZ-040, T-SDH-BIZ-050]
-    owner: BO
+    owner: BA
     tags: [business, events]

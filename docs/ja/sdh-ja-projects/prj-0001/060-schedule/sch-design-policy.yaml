@@ -15,7 +15,7 @@ tasks:
     name: update cross-cutting policy pair
     duration_days: 0.5
     depends_on: [M-SDH-300]
-    owner: EN
+    owner: ARC
     tags: [design, policy, cross-cutting]
 
   - id: T-SDH-DES-POL-020
@@ -23,12 +23,12 @@ tasks:
     name: update component policy family
     duration_days: 0.75
     depends_on: [T-SDH-DES-POL-010]
-    owner: EN
+    owner: ARC
     tags: [design, policy, component]
 
 milestones:
   - id: M-SDH-DES-POL-900
     name: design policy container complete
     depends_on: [T-SDH-DES-POL-020]
-    owner: EN
+    owner: ARC
     date_hint: 2026-03-26
