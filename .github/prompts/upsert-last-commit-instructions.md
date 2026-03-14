@@ -1,6 +1,6 @@
 # 直近コミット差分の rules から instructions をアップサート
 
-@file:.github/skills/rules-to-instructions/SKILL.md
+@file:.github/skills/rules-to-instruction/SKILL.md
 
 `HEAD~1..HEAD` の差分に含まれる
 `/docs/ja/handbook/rules/*-rules.md` のみを対象に、

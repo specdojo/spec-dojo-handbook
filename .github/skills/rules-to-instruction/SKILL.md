@@ -1,4 +1,4 @@
-# SKILL: rules-to-instructions
+# SKILL: rules-to-instruction
 
 `docs/ja/handbook/rules` の更新内容を、
 `docs/ja/handbook/instructions` の `*-instruction.md` へ反映するための Skill です。
@@ -11,7 +11,7 @@
 
 ## 前提
 
-- 共通運用ルール: `@file:.github/instructions/rules-to-instructions.instructions.md`
+- 共通運用ルール: `@file:.github/instructions/rules-to-instruction.instructions.md`
 - 命名対応: `<name>-rules.md` → `<name>-instruction.md`
 - 対象除外: `meta-*-rules.md` は instruction 同期対象外
 

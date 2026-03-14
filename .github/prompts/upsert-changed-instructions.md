@@ -1,6 +1,6 @@
 # 変更された rules から instructions をアップサート
 
-@file:.github/skills/rules-to-instructions/SKILL.md
+@file:.github/skills/rules-to-instruction/SKILL.md
 
 `git diff`（未コミット差分）で変更がある
 `/docs/ja/handbook/rules/*-rules.md` のみを対象に、

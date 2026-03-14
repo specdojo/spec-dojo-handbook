@@ -1,4 +1,4 @@
-# Rules→Instructions 変換運用ルール
+# Rules→Instruction 変換運用ルール
 
 このファイルは、`docs/ja/handbook/rules` 配下の `*-rules.md` を要約し、
 対応する `docs/ja/handbook/instructions/*-instruction.md` を作成/更新するための共通運用ルールです。
