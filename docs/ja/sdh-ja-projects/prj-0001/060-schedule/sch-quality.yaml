@@ -5,42 +5,148 @@ domain: quality
 assigned_team: specdojo-handbook
 
 settings:
-  finish_milestone_id: M-SDH-999
+  finish_milestone_id: M-SDH-QLT-900
   notes: >
-    Quality domain summary schedule.
-    Execution-granularity tasks are split into container schedules.
+    Quality domain schedule.
+    TSP and SAC form the foundation; test-level families follow.
+    ETC and ATC include extra derivative instructions (etd/ets, atd/ats).
 
 tasks:
-  - id: T-SDH-QLT-100
-    wbs: WBS-QLTY-ATC-010
-    name: quality criteria families summary
-    duration_days: 2.5
+  # --- WBS-QLTY-SAC-010: system acceptance condition (1 pair) ---
+  - id: T-SDH-QLT-010
+    wbs: WBS-QLTY-SAC-010
+    name: draft and review system acceptance condition rules
+    duration_days: 0.5
     depends_on: [M-SDH-300]
+    owner: QE
+    tags: [quality, rules-lifecycle, acceptance]
+
+  - id: T-SDH-QLT-011
+    wbs: WBS-QLTY-SAC-010
+    name: draft and review system acceptance condition derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-QLT-010]
+    owner: QE
+    tags: [quality, derivatives-lifecycle, acceptance]
+
+  # --- WBS-QLTY-TSP-020: test strategy and planning (1 pair) ---
+  - id: T-SDH-QLT-020
+    wbs: WBS-QLTY-TSP-020
+    name: draft and review test strategy and planning rules
+    duration_days: 0.5
+    depends_on: [M-SDH-300]
+    owner: QE
+    tags: [quality, rules-lifecycle, test-planning]
+
+  - id: T-SDH-QLT-021
+    wbs: WBS-QLTY-TSP-020
+    name: draft and review test strategy and planning derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-QLT-020]
+    owner: QE
+    tags: [quality, derivatives-lifecycle, test-planning]
+
+  # --- WBS-QLTY-UTC-030: unit test family (2 pairs) ---
+  - id: T-SDH-QLT-030
+    wbs: WBS-QLTY-UTC-030
+    name: draft and review unit test documentation rules
+    duration_days: 0.75
+    depends_on: [T-SDH-QLT-021]
+    owner: QE
+    tags: [quality, rules-lifecycle, unit-tests]
+    notes: "Covers utc-index and utc (detail) rules."
+
+  - id: T-SDH-QLT-031
+    wbs: WBS-QLTY-UTC-030
+    name: draft and review unit test documentation derivatives
+    duration_days: 0.5
+    depends_on: [T-SDH-QLT-030]
+    owner: QE
+    tags: [quality, derivatives-lifecycle, unit-tests]
+
+  # --- WBS-QLTY-ITC-040: integration test family (2 pairs) ---
+  - id: T-SDH-QLT-040
+    wbs: WBS-QLTY-ITC-040
+    name: draft and review integration test documentation rules
+    duration_days: 0.75
+    depends_on: [T-SDH-QLT-021]
+    owner: QE
+    tags: [quality, rules-lifecycle, integration-tests]
+    notes: "Covers itc-index and itc (detail) rules."
+
+  - id: T-SDH-QLT-041
+    wbs: WBS-QLTY-ITC-040
+    name: draft and review integration test documentation derivatives
+    duration_days: 0.5
+    depends_on: [T-SDH-QLT-040]
+    owner: QE
+    tags: [quality, derivatives-lifecycle, integration-tests]
+
+  # --- WBS-QLTY-ETC-050: external integration test family (2 rules + 6 instructions) ---
+  - id: T-SDH-QLT-050
+    wbs: WBS-QLTY-ETC-050
+    name: draft and review external integration test rules
+    duration_days: 1.0
+    depends_on: [T-SDH-QLT-021]
+    owner: QE
+    tags: [quality, rules-lifecycle, external-tests]
+    notes: "Covers etc-index and etc (detail) rules."
+
+  - id: T-SDH-QLT-051
+    wbs: WBS-QLTY-ETC-050
+    name: draft and review external integration test derivatives
+    duration_days: 0.75
+    depends_on: [T-SDH-QLT-050]
+    owner: QE
+    tags: [quality, derivatives-lifecycle, external-tests]
+    notes: "Instructions: etc-index, etc, etd-index, etd, ets-index, ets."
+
+  # --- WBS-QLTY-STC-060: system test family (2 pairs) ---
+  - id: T-SDH-QLT-060
+    wbs: WBS-QLTY-STC-060
+    name: draft and review system test documentation rules
+    duration_days: 0.75
+    depends_on: [T-SDH-QLT-021]
+    owner: QE
+    tags: [quality, rules-lifecycle, system-tests]
+    notes: "Covers stc-index and stc (detail) rules."
+
+  - id: T-SDH-QLT-061
+    wbs: WBS-QLTY-STC-060
+    name: draft and review system test documentation derivatives
+    duration_days: 0.5
+    depends_on: [T-SDH-QLT-060]
+    owner: QE
+    tags: [quality, derivatives-lifecycle, system-tests]
+
+  # --- WBS-QLTY-ATC-070: acceptance test family (2 rules + 6 instructions) ---
+  - id: T-SDH-QLT-070
+    wbs: WBS-QLTY-ATC-070
+    name: draft and review acceptance test documentation rules
+    duration_days: 1.0
+    depends_on: [T-SDH-QLT-021]
     owner: BA
-    tags: [quality, summary, criteria]
-    notes: Detailed execution is in sch-quality-criteria.yaml.
+    tags: [quality, rules-lifecycle, acceptance-tests]
+    notes: "Covers atc-index and atc (detail) rules."
 
-  - id: T-SDH-QLT-200
-    wbs: WBS-QLTY-ITC-030
-    name: quality verification and acceptance summary
-    duration_days: 2
-    depends_on: [M-SDH-350, T-SDH-QLT-100]
-    owner: QE
-    tags: [quality, summary, verification]
-    notes: Detailed execution is in sch-quality-verification.yaml.
-
-  - id: T-SDH-QLT-300
-    wbs: WBS-QLTY-TESTPLAN-080
-    name: quality traceability and planning summary
-    duration_days: 1.5
-    depends_on: [T-SDH-QLT-200]
-    owner: QE
-    tags: [quality, summary, traceability-planning]
-    notes: Detailed execution is in sch-quality-governance.yaml.
+  - id: T-SDH-QLT-071
+    wbs: WBS-QLTY-ATC-070
+    name: draft and review acceptance test documentation derivatives
+    duration_days: 0.75
+    depends_on: [T-SDH-QLT-070]
+    owner: BA
+    tags: [quality, derivatives-lifecycle, acceptance-tests]
+    notes: "Instructions: atc-index, atc, atd-index, atd, ats-index, ats."
 
 milestones:
   - id: M-SDH-QLT-900
     name: quality domain complete
-    depends_on: [T-SDH-QLT-300]
+    depends_on:
+      - T-SDH-QLT-011
+      - T-SDH-QLT-021
+      - T-SDH-QLT-031
+      - T-SDH-QLT-041
+      - T-SDH-QLT-051
+      - T-SDH-QLT-061
+      - T-SDH-QLT-071
     owner: QE
-    date_hint: 2026-04-07

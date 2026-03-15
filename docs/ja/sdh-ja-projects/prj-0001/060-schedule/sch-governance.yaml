@@ -5,46 +5,88 @@ domain: governance
 assigned_team: specdojo-handbook
 
 settings:
-  finish_milestone_id: M-SDH-999
-  notes: Governance domain schedule derived from governance WBS families.
+  finish_milestone_id: M-SDH-GOV-900
+  notes: >
+    Governance domain schedule.
+    Each WBS item splits into Phase 1 (rules lifecycle) and Phase 2 (derivatives lifecycle).
+    meta-* rules have Phase 1 only (no derivatives).
 
 tasks:
+  # --- WBS-GOV-PRJ-010: project documentation (3 rules pairs) ---
   - id: T-SDH-GOV-010
-    wbs: WBS-GOV-PROJECT-010
-    name: align project overview and scope rule pairs
-    duration_days: 1
+    wbs: WBS-GOV-PRJ-010
+    name: draft and review project documentation rules
+    duration_days: 1.0
     depends_on: [M-SDH-100]
     owner: PO
-    tags: [governance, project-docs]
+    tags: [governance, rules-lifecycle]
+    notes: >
+      Phase 1: agent draft → human modify → agent review → human approve (status: ready).
+      Covers prj-overview, prj-scope, prj-issues-and-approach rules.
 
-  - id: T-SDH-GOV-020
-    wbs: WBS-GOV-GLOSSARY-020
-    name: update glossary rule and instruction pair
-    duration_days: 0.5
+  - id: T-SDH-GOV-011
+    wbs: WBS-GOV-PRJ-010
+    name: draft and review project documentation derivatives
+    duration_days: 0.75
     depends_on: [T-SDH-GOV-010]
     owner: PO
-    tags: [governance, glossary]
+    tags: [governance, derivatives-lifecycle]
+    notes: >
+      Phase 2: agent draft instruction + input-template → agent review → human approve (status: ready).
 
+  # --- WBS-GOV-MIG-020: migration family (5 rules pairs) ---
+  - id: T-SDH-GOV-020
+    wbs: WBS-GOV-MIG-020
+    name: draft and review migration rules
+    duration_days: 1.25
+    depends_on: [T-SDH-GOV-010]
+    owner: PO
+    tags: [governance, rules-lifecycle]
+    notes: >
+      Phase 1: covers mip-index, mtp, dmd, cop, otp rules.
+
+  - id: T-SDH-GOV-021
+    wbs: WBS-GOV-MIG-020
+    name: draft and review migration derivatives
+    duration_days: 1.0
+    depends_on: [T-SDH-GOV-020]
+    owner: PO
+    tags: [governance, derivatives-lifecycle]
+
+  # --- WBS-GOV-OPS-030: operations (2 rules pairs) ---
   - id: T-SDH-GOV-030
     wbs: WBS-GOV-OPS-030
-    name: update handbook operation and planning rule sets
-    duration_days: 1
+    name: draft and review operations rules
+    duration_days: 0.75
     depends_on: [T-SDH-GOV-010]
     owner: PO
-    tags: [governance, operations]
+    tags: [governance, rules-lifecycle]
+    notes: >
+      Phase 1: covers opd, opr rules.
 
-  - id: T-SDH-GOV-040
-    wbs: WBS-GOV-MIGRATION-040
-    name: update migration index rule and instruction pair
+  - id: T-SDH-GOV-031
+    wbs: WBS-GOV-OPS-030
+    name: draft and review operations derivatives
     duration_days: 0.5
     depends_on: [T-SDH-GOV-030]
     owner: PO
-    tags: [governance, migration]
+    tags: [governance, derivatives-lifecycle]
 
-  - id: T-SDH-GOV-050
-    wbs: WBS-GOV-META-050
-    name: align shared metadata and naming constraints
+  # --- WBS-GOV-META-040: meta rules (no derivatives) ---
+  - id: T-SDH-GOV-040
+    wbs: WBS-GOV-META-040
+    name: align shared meta rulebook governance set
     duration_days: 0.75
     depends_on: [M-SDH-100]
     owner: ARC
-    tags: [governance, meta]
+    tags: [governance, rules-lifecycle, meta]
+    notes: >
+      Phase 1 only (meta rules have no derivatives).
+      Covers meta-document-metadata, meta-id-and-file-naming,
+      meta-rulebook-structure, meta-test-document-scope.
+
+milestones:
+  - id: M-SDH-GOV-900
+    name: governance domain complete
+    depends_on: [T-SDH-GOV-011, T-SDH-GOV-021, T-SDH-GOV-031, T-SDH-GOV-040]
+    owner: PO

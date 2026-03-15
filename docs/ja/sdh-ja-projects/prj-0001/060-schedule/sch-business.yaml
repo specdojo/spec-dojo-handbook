@@ -5,54 +5,276 @@ domain: business
 assigned_team: specdojo-handbook
 
 settings:
-  finish_milestone_id: M-SDH-999
-  notes: Business domain schedule derived from business WBS families.
+  finish_milestone_id: M-SDH-BIZ-900
+  notes: >
+    Business domain schedule.
+    Each WBS item splits into Phase 1 (rules lifecycle) and Phase 2 (derivatives lifecycle).
+    Dependency groups: foundational (BPS→BR→BES), data (BDD→BDS), reference (GL, REFDATA),
+    models (CDFD, CDSD, CSTD, CCD), system (UIS, SF), acceptance (BAC).
 
 tasks:
+  # --- WBS-BIZ-BPS-010: business process specification (1 pair) ---
   - id: T-SDH-BIZ-010
-    wbs: WBS-BIZ-BAC-010
-    name: update business acceptance criteria pair
+    wbs: WBS-BIZ-BPS-010
+    name: draft and review business process specification rules
     duration_days: 0.5
     depends_on: [M-SDH-200]
     owner: BA
-    tags: [business, acceptance]
+    tags: [business, rules-lifecycle]
+    notes: "Phase 1: agent draft → human modify → agent review → human approve."
 
+  - id: T-SDH-BIZ-011
+    wbs: WBS-BIZ-BPS-010
+    name: draft and review business process specification derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-BIZ-010]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+    notes: "Phase 2: agent draft instruction + input-template → agent review → human approve."
+
+  # --- WBS-BIZ-BR-020: business rule (1 pair) ---
   - id: T-SDH-BIZ-020
-    wbs: WBS-BIZ-BDD-020
-    name: update business data definition pair
+    wbs: WBS-BIZ-BR-020
+    name: draft and review business rule rules
     duration_days: 0.5
-    depends_on: [M-SDH-200]
+    depends_on: [T-SDH-BIZ-010]
     owner: BA
-    tags: [business, data]
+    tags: [business, rules-lifecycle]
 
-  - id: T-SDH-BIZ-030
-    wbs: WBS-BIZ-BDS-030
-    name: update business data schema pair
-    duration_days: 0.5
+  - id: T-SDH-BIZ-021
+    wbs: WBS-BIZ-BR-020
+    name: draft and review business rule derivatives
+    duration_days: 0.25
     depends_on: [T-SDH-BIZ-020]
     owner: BA
-    tags: [business, data]
+    tags: [business, derivatives-lifecycle]
 
-  - id: T-SDH-BIZ-040
-    wbs: WBS-BIZ-BPS-040
-    name: update business process specification pair
-    duration_days: 0.75
+  # --- WBS-BIZ-BDD-030: business data dictionary (1 pair) ---
+  - id: T-SDH-BIZ-030
+    wbs: WBS-BIZ-BDD-030
+    name: draft and review business data dictionary rules
+    duration_days: 0.5
     depends_on: [M-SDH-200]
     owner: BA
-    tags: [business, process]
+    tags: [business, rules-lifecycle]
 
-  - id: T-SDH-BIZ-050
-    wbs: WBS-BIZ-BR-050
-    name: update business rule pair
+  - id: T-SDH-BIZ-031
+    wbs: WBS-BIZ-BDD-030
+    name: draft and review business data dictionary derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-BIZ-030]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+  # --- WBS-BIZ-BDS-040: form specification (1 pair) ---
+  - id: T-SDH-BIZ-040
+    wbs: WBS-BIZ-BDS-040
+    name: draft and review form specification rules
     duration_days: 0.5
+    depends_on: [T-SDH-BIZ-030]
+    owner: BA
+    tags: [business, rules-lifecycle]
+
+  - id: T-SDH-BIZ-041
+    wbs: WBS-BIZ-BDS-040
+    name: draft and review form specification derivatives
+    duration_days: 0.25
     depends_on: [T-SDH-BIZ-040]
     owner: BA
-    tags: [business, rules]
+    tags: [business, derivatives-lifecycle]
 
-  - id: T-SDH-BIZ-060
-    wbs: WBS-BIZ-BES-060
-    name: update business event specification family
-    duration_days: 0.75
-    depends_on: [T-SDH-BIZ-040, T-SDH-BIZ-050]
+  # --- WBS-BIZ-UIS-050: screen specification (1 pair) ---
+  - id: T-SDH-BIZ-050
+    wbs: WBS-BIZ-UIS-050
+    name: draft and review screen specification rules
+    duration_days: 0.5
+    depends_on: [T-SDH-BIZ-010]
     owner: BA
-    tags: [business, events]
+    tags: [business, rules-lifecycle]
+
+  - id: T-SDH-BIZ-051
+    wbs: WBS-BIZ-UIS-050
+    name: draft and review screen specification derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-BIZ-050]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+  # --- WBS-BIZ-GL-060: glossary (1 pair) ---
+  - id: T-SDH-BIZ-060
+    wbs: WBS-BIZ-GL-060
+    name: draft and review glossary rules
+    duration_days: 0.5
+    depends_on: [M-SDH-200]
+    owner: BA
+    tags: [business, rules-lifecycle]
+
+  - id: T-SDH-BIZ-061
+    wbs: WBS-BIZ-GL-060
+    name: draft and review glossary derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-BIZ-060]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+  # --- WBS-BIZ-REFDATA-070: reference data (3 pairs: cld, stsd, sld) ---
+  - id: T-SDH-BIZ-070
+    wbs: WBS-BIZ-REFDATA-070
+    name: draft and review reference data rules
+    duration_days: 1.0
+    depends_on: [M-SDH-200]
+    owner: BA
+    tags: [business, rules-lifecycle]
+    notes: "Covers cld, stsd, sld rules."
+
+  - id: T-SDH-BIZ-071
+    wbs: WBS-BIZ-REFDATA-070
+    name: draft and review reference data derivatives
+    duration_days: 0.75
+    depends_on: [T-SDH-BIZ-070]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+  # --- WBS-BIZ-BES-080: business event specification (index + detail) ---
+  - id: T-SDH-BIZ-080
+    wbs: WBS-BIZ-BES-080
+    name: draft and review business event specification rules
+    duration_days: 0.75
+    depends_on: [T-SDH-BIZ-020]
+    owner: BA
+    tags: [business, rules-lifecycle]
+    notes: "Covers bes-index and bes rules."
+
+  - id: T-SDH-BIZ-081
+    wbs: WBS-BIZ-BES-080
+    name: draft and review business event specification derivatives
+    duration_days: 0.5
+    depends_on: [T-SDH-BIZ-080]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+  # --- WBS-BIZ-CDFD-090: conceptual data flow (cdfd + cdfd-mermaid) ---
+  - id: T-SDH-BIZ-090
+    wbs: WBS-BIZ-CDFD-090
+    name: draft and review conceptual data flow rules
+    duration_days: 0.75
+    depends_on: [T-SDH-BIZ-080]
+    owner: BA
+    tags: [business, rules-lifecycle]
+    notes: "Covers cdfd and cdfd-mermaid rules."
+
+  - id: T-SDH-BIZ-091
+    wbs: WBS-BIZ-CDFD-090
+    name: draft and review conceptual data flow derivatives
+    duration_days: 0.5
+    depends_on: [T-SDH-BIZ-090]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+  # --- WBS-BIZ-CDSD-100: conceptual data store (1 pair) ---
+  - id: T-SDH-BIZ-100
+    wbs: WBS-BIZ-CDSD-100
+    name: draft and review conceptual data store rules
+    duration_days: 0.5
+    depends_on: [T-SDH-BIZ-030]
+    owner: BA
+    tags: [business, rules-lifecycle]
+
+  - id: T-SDH-BIZ-101
+    wbs: WBS-BIZ-CDSD-100
+    name: draft and review conceptual data store derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-BIZ-100]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+  # --- WBS-BIZ-CSTD-110: conceptual state transition (cstd + cstd-mermaid) ---
+  - id: T-SDH-BIZ-110
+    wbs: WBS-BIZ-CSTD-110
+    name: draft and review conceptual state transition rules
+    duration_days: 0.75
+    depends_on: [T-SDH-BIZ-030]
+    owner: BA
+    tags: [business, rules-lifecycle]
+    notes: "Covers cstd and cstd-mermaid rules."
+
+  - id: T-SDH-BIZ-111
+    wbs: WBS-BIZ-CSTD-110
+    name: draft and review conceptual state transition derivatives
+    duration_days: 0.5
+    depends_on: [T-SDH-BIZ-110]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+  # --- WBS-BIZ-CCD-120: conceptual class diagram mermaid (1 pair) ---
+  - id: T-SDH-BIZ-120
+    wbs: WBS-BIZ-CCD-120
+    name: draft and review conceptual class diagram rules
+    duration_days: 0.5
+    depends_on: [T-SDH-BIZ-030]
+    owner: BA
+    tags: [business, rules-lifecycle]
+
+  - id: T-SDH-BIZ-121
+    wbs: WBS-BIZ-CCD-120
+    name: draft and review conceptual class diagram derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-BIZ-120]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+  # --- WBS-BIZ-SF-130: system function list (index + detail, includes create) ---
+  - id: T-SDH-BIZ-130
+    wbs: WBS-BIZ-SF-130
+    name: draft and review system function list rules
+    duration_days: 0.75
+    depends_on: [T-SDH-BIZ-080]
+    owner: BA
+    tags: [business, rules-lifecycle]
+    notes: "Covers sf-index (create) and sf rules."
+
+  - id: T-SDH-BIZ-131
+    wbs: WBS-BIZ-SF-130
+    name: draft and review system function list derivatives
+    duration_days: 0.5
+    depends_on: [T-SDH-BIZ-130]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+  # --- WBS-BIZ-BAC-140: business acceptance criteria (1 pair) ---
+  - id: T-SDH-BIZ-140
+    wbs: WBS-BIZ-BAC-140
+    name: draft and review business acceptance criteria rules
+    duration_days: 0.5
+    depends_on: [T-SDH-BIZ-081, T-SDH-BIZ-091, T-SDH-BIZ-131]
+    owner: BA
+    tags: [business, rules-lifecycle]
+    notes: "Depends on BES, CDFD, SF derivatives completion."
+
+  - id: T-SDH-BIZ-141
+    wbs: WBS-BIZ-BAC-140
+    name: draft and review business acceptance criteria derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-BIZ-140]
+    owner: BA
+    tags: [business, derivatives-lifecycle]
+
+milestones:
+  - id: M-SDH-BIZ-900
+    name: business domain complete
+    depends_on:
+      - T-SDH-BIZ-011
+      - T-SDH-BIZ-021
+      - T-SDH-BIZ-031
+      - T-SDH-BIZ-041
+      - T-SDH-BIZ-051
+      - T-SDH-BIZ-061
+      - T-SDH-BIZ-071
+      - T-SDH-BIZ-081
+      - T-SDH-BIZ-091
+      - T-SDH-BIZ-101
+      - T-SDH-BIZ-111
+      - T-SDH-BIZ-121
+      - T-SDH-BIZ-131
+      - T-SDH-BIZ-141
+    owner: BA

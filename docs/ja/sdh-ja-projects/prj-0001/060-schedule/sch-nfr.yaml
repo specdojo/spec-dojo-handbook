@@ -5,78 +5,176 @@ domain: nfr
 assigned_team: specdojo-handbook
 
 settings:
-  finish_milestone_id: M-SDH-999
-  notes: Non-functional requirements schedule derived from NFR WBS families.
+  finish_milestone_id: M-SDH-NFR-900
+  notes: >
+    Non-functional requirements domain schedule.
+    NFR index is prerequisite for all individual NFR rules.
 
 tasks:
+  # --- WBS-NFR-INDEX-010: nfr index (1 pair) ---
   - id: T-SDH-NFR-010
     wbs: WBS-NFR-INDEX-010
-    name: update nfr index pair
+    name: draft and review nfr index rules
     duration_days: 0.5
     depends_on: [M-SDH-200]
     owner: QE
-    tags: [nfr, index]
+    tags: [nfr, rules-lifecycle, index]
 
+  - id: T-SDH-NFR-011
+    wbs: WBS-NFR-INDEX-010
+    name: draft and review nfr index derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-NFR-010]
+    owner: QE
+    tags: [nfr, derivatives-lifecycle, index]
+
+  # --- WBS-NFR-AVAIL-020: availability (1 pair) ---
   - id: T-SDH-NFR-020
-    wbs: WBS-NFR-AVAILABILITY-020
-    name: update availability requirement pair
+    wbs: WBS-NFR-AVAIL-020
+    name: draft and review availability requirement rules
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: QE
-    tags: [nfr, availability]
+    tags: [nfr, rules-lifecycle]
 
+  - id: T-SDH-NFR-021
+    wbs: WBS-NFR-AVAIL-020
+    name: draft and review availability requirement derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-NFR-020]
+    owner: QE
+    tags: [nfr, derivatives-lifecycle]
+
+  # --- WBS-NFR-INTEG-030: integrity (1 pair) ---
   - id: T-SDH-NFR-030
-    wbs: WBS-NFR-INTEGRITY-030
-    name: update integrity requirement pair
+    wbs: WBS-NFR-INTEG-030
+    name: draft and review integrity requirement rules
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: QE
-    tags: [nfr, integrity]
+    tags: [nfr, rules-lifecycle]
 
+  - id: T-SDH-NFR-031
+    wbs: WBS-NFR-INTEG-030
+    name: draft and review integrity requirement derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-NFR-030]
+    owner: QE
+    tags: [nfr, derivatives-lifecycle]
+
+  # --- WBS-NFR-MAINT-040: maintainability (1 pair) ---
   - id: T-SDH-NFR-040
-    wbs: WBS-NFR-MAINTAINABILITY-040
-    name: update maintainability requirement pair
+    wbs: WBS-NFR-MAINT-040
+    name: draft and review maintainability requirement rules
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: QE
-    tags: [nfr, maintainability]
+    tags: [nfr, rules-lifecycle]
 
+  - id: T-SDH-NFR-041
+    wbs: WBS-NFR-MAINT-040
+    name: draft and review maintainability requirement derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-NFR-040]
+    owner: QE
+    tags: [nfr, derivatives-lifecycle]
+
+  # --- WBS-NFR-OPS-050: operations (1 pair) ---
   - id: T-SDH-NFR-050
-    wbs: WBS-NFR-OPERATIONS-050
-    name: update operations requirement pair
+    wbs: WBS-NFR-OPS-050
+    name: draft and review operations requirement rules
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: QE
-    tags: [nfr, operations]
+    tags: [nfr, rules-lifecycle]
 
+  - id: T-SDH-NFR-051
+    wbs: WBS-NFR-OPS-050
+    name: draft and review operations requirement derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-NFR-050]
+    owner: QE
+    tags: [nfr, derivatives-lifecycle]
+
+  # --- WBS-NFR-PERF-060: performance (1 pair) ---
   - id: T-SDH-NFR-060
-    wbs: WBS-NFR-PERFORMANCE-060
-    name: update performance requirement pair
+    wbs: WBS-NFR-PERF-060
+    name: draft and review performance requirement rules
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: QE
-    tags: [nfr, performance]
+    tags: [nfr, rules-lifecycle]
 
+  - id: T-SDH-NFR-061
+    wbs: WBS-NFR-PERF-060
+    name: draft and review performance requirement derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-NFR-060]
+    owner: QE
+    tags: [nfr, derivatives-lifecycle]
+
+  # --- WBS-NFR-RELY-070: reliability (1 pair) ---
   - id: T-SDH-NFR-070
-    wbs: WBS-NFR-RELIABILITY-070
-    name: update reliability requirement pair
+    wbs: WBS-NFR-RELY-070
+    name: draft and review reliability requirement rules
     duration_days: 0.5
     depends_on: [T-SDH-NFR-060]
     owner: QE
-    tags: [nfr, reliability]
+    tags: [nfr, rules-lifecycle]
 
+  - id: T-SDH-NFR-071
+    wbs: WBS-NFR-RELY-070
+    name: draft and review reliability requirement derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-NFR-070]
+    owner: QE
+    tags: [nfr, derivatives-lifecycle]
+
+  # --- WBS-NFR-SEC-080: security and safety (1 pair) ---
   - id: T-SDH-NFR-080
-    wbs: WBS-NFR-SECURITY-080
-    name: update security and safety requirement pair
-    duration_days: 0.75
+    wbs: WBS-NFR-SEC-080
+    name: draft and review security and safety requirement rules
+    duration_days: 0.5
     depends_on: [T-SDH-NFR-030]
     owner: QE
-    tags: [nfr, security-safety]
+    tags: [nfr, rules-lifecycle]
 
+  - id: T-SDH-NFR-081
+    wbs: WBS-NFR-SEC-080
+    name: draft and review security and safety requirement derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-NFR-080]
+    owner: QE
+    tags: [nfr, derivatives-lifecycle]
+
+  # --- WBS-NFR-USAB-090: usability (1 pair) ---
   - id: T-SDH-NFR-090
-    wbs: WBS-NFR-USABILITY-090
-    name: update usability requirement pair
+    wbs: WBS-NFR-USAB-090
+    name: draft and review usability requirement rules
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: BA
-    tags: [nfr, usability]
+    tags: [nfr, rules-lifecycle]
+
+  - id: T-SDH-NFR-091
+    wbs: WBS-NFR-USAB-090
+    name: draft and review usability requirement derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-NFR-090]
+    owner: BA
+    tags: [nfr, derivatives-lifecycle]
+
+milestones:
+  - id: M-SDH-NFR-900
+    name: nfr domain complete
+    depends_on:
+      - T-SDH-NFR-011
+      - T-SDH-NFR-021
+      - T-SDH-NFR-031
+      - T-SDH-NFR-041
+      - T-SDH-NFR-051
+      - T-SDH-NFR-061
+      - T-SDH-NFR-071
+      - T-SDH-NFR-081
+      - T-SDH-NFR-091
+    owner: QE

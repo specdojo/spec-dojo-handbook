@@ -5,42 +5,146 @@ domain: design
 assigned_team: specdojo-handbook
 
 settings:
-  finish_milestone_id: M-SDH-999
+  finish_milestone_id: M-SDH-DES-900
   notes: >
-    Design domain summary schedule.
-    Execution-granularity tasks are split into container schedules.
+    Design domain schedule.
+    Each WBS item splits into Phase 1 (rules lifecycle) and Phase 2 (derivatives lifecycle).
+    C4 chain: CXD → CND → CPD. SYSD depends on all others.
 
 tasks:
-  - id: T-SDH-DES-100
-    wbs: WBS-DES-CLD-010
-    name: design context and policy updates summary
-    duration_days: 2
+  # --- WBS-DES-IFX-010: external interface family (4 pairs) ---
+  - id: T-SDH-DES-010
+    wbs: WBS-DES-IFX-010
+    name: draft and review external interface rules
+    duration_days: 1.25
     depends_on: [M-SDH-300]
     owner: ARC
-    tags: [design, summary, context-policy]
-    notes: Detailed execution is in sch-design-context.yaml and sch-design-policy.yaml.
+    tags: [design, rules-lifecycle]
+    notes: "Covers ifx, ifx-api, ifx-file, ifx-msg rules."
 
-  - id: T-SDH-DES-200
-    wbs: WBS-DES-CDFD-050
-    name: design flow and interaction updates summary
-    duration_days: 2.5
-    depends_on: [T-SDH-DES-100]
+  - id: T-SDH-DES-011
+    wbs: WBS-DES-IFX-010
+    name: draft and review external interface derivatives
+    duration_days: 1.0
+    depends_on: [T-SDH-DES-010]
     owner: ARC
-    tags: [design, summary, flow]
-    notes: Detailed execution is in sch-design-flow.yaml.
+    tags: [design, derivatives-lifecycle]
 
-  - id: T-SDH-DES-300
-    wbs: WBS-DES-SYSD-130
-    name: design structure and engineering updates summary
-    duration_days: 3
-    depends_on: [T-SDH-DES-200]
+  # --- WBS-DES-CXD-020: C4 context diagram (2 pairs) ---
+  - id: T-SDH-DES-020
+    wbs: WBS-DES-CXD-020
+    name: draft and review C4 context diagram rules
+    duration_days: 0.75
+    depends_on: [M-SDH-300]
     owner: ARC
-    tags: [design, summary, structure-engineering]
-    notes: Detailed execution is in sch-design-structure.yaml.
+    tags: [design, rules-lifecycle, c4]
+    notes: "Covers cxd and cxd-mermaid rules."
+
+  - id: T-SDH-DES-021
+    wbs: WBS-DES-CXD-020
+    name: draft and review C4 context diagram derivatives
+    duration_days: 0.5
+    depends_on: [T-SDH-DES-020]
+    owner: ARC
+    tags: [design, derivatives-lifecycle, c4]
+
+  # --- WBS-DES-CND-030: C4 container diagram (2 pairs) ---
+  - id: T-SDH-DES-030
+    wbs: WBS-DES-CND-030
+    name: draft and review C4 container diagram rules
+    duration_days: 0.75
+    depends_on: [T-SDH-DES-020]
+    owner: ARC
+    tags: [design, rules-lifecycle, c4]
+    notes: "Covers cnd and cnd-mermaid rules."
+
+  - id: T-SDH-DES-031
+    wbs: WBS-DES-CND-030
+    name: draft and review C4 container diagram derivatives
+    duration_days: 0.5
+    depends_on: [T-SDH-DES-030]
+    owner: ARC
+    tags: [design, derivatives-lifecycle, c4]
+
+  # --- WBS-DES-CPD-040: C4 component diagram (2 pairs) ---
+  - id: T-SDH-DES-040
+    wbs: WBS-DES-CPD-040
+    name: draft and review C4 component diagram rules
+    duration_days: 0.75
+    depends_on: [T-SDH-DES-030]
+    owner: ARC
+    tags: [design, rules-lifecycle, c4]
+    notes: "Covers cpd and cpd-mermaid rules."
+
+  - id: T-SDH-DES-041
+    wbs: WBS-DES-CPD-040
+    name: draft and review C4 component diagram derivatives
+    duration_days: 0.5
+    depends_on: [T-SDH-DES-040]
+    owner: ARC
+    tags: [design, derivatives-lifecycle, c4]
+
+  # --- WBS-DES-IFD-050: infrastructure diagram mermaid (1 pair) ---
+  - id: T-SDH-DES-050
+    wbs: WBS-DES-IFD-050
+    name: draft and review infrastructure diagram rules
+    duration_days: 0.5
+    depends_on: [T-SDH-DES-020]
+    owner: ARC
+    tags: [design, rules-lifecycle]
+
+  - id: T-SDH-DES-051
+    wbs: WBS-DES-IFD-050
+    name: draft and review infrastructure diagram derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-DES-050]
+    owner: ARC
+    tags: [design, derivatives-lifecycle]
+
+  # --- WBS-DES-TSD-060: technology stack definition (1 pair) ---
+  - id: T-SDH-DES-060
+    wbs: WBS-DES-TSD-060
+    name: draft and review technology stack definition rules
+    duration_days: 0.5
+    depends_on: [M-SDH-300]
+    owner: ARC
+    tags: [design, rules-lifecycle]
+
+  - id: T-SDH-DES-061
+    wbs: WBS-DES-TSD-060
+    name: draft and review technology stack definition derivatives
+    duration_days: 0.25
+    depends_on: [T-SDH-DES-060]
+    owner: ARC
+    tags: [design, derivatives-lifecycle]
+
+  # --- WBS-DES-SYSD-070: system design family (3 pairs) ---
+  - id: T-SDH-DES-070
+    wbs: WBS-DES-SYSD-070
+    name: draft and review system design rules
+    duration_days: 1.0
+    depends_on: [T-SDH-DES-011, T-SDH-DES-041, T-SDH-DES-051, T-SDH-DES-061]
+    owner: ARC
+    tags: [design, rules-lifecycle]
+    notes: "Covers sysd-index, sysd-critical-flows, sysd-cross-cutting-policy rules."
+
+  - id: T-SDH-DES-071
+    wbs: WBS-DES-SYSD-070
+    name: draft and review system design derivatives
+    duration_days: 0.75
+    depends_on: [T-SDH-DES-070]
+    owner: ARC
+    tags: [design, derivatives-lifecycle]
 
 milestones:
   - id: M-SDH-DES-900
     name: design domain complete
-    depends_on: [T-SDH-DES-300]
+    depends_on:
+      - T-SDH-DES-011
+      - T-SDH-DES-021
+      - T-SDH-DES-031
+      - T-SDH-DES-041
+      - T-SDH-DES-051
+      - T-SDH-DES-061
+      - T-SDH-DES-071
     owner: ARC
-    date_hint: 2026-04-01
