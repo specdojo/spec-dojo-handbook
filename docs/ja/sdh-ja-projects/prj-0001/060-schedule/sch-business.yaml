@@ -7,35 +7,35 @@ assigned_team: specdojo-handbook
 settings:
   finish_milestone_id: M-SDH-BIZ-900
   notes: >
-    Business domain schedule.
-    Each WBS item splits into Phase 1 (rules lifecycle) and Phase 2 (derivatives lifecycle).
-    Dependency groups: foundational (BPS→BR→BES), data (BDD→BDS), reference (GL, REFDATA),
-    models (CDFD, CDSD, CSTD, CCD), system (UIS, SF), acceptance (BAC).
+    業務ドメインスケジュール。
+    各 WBS アイテムを Phase 1（ルールライフサイクル）と Phase 2（派生成果物ライフサイクル）に分割。
+    依存グループ: 基盤（BPS→BR→BES）、データ（BDD→BDS）、リファレンス（GL, REFDATA）、
+    モデル（CDFD, CDSD, CSTD, CCD）、システム（UIS, SF）、受入（BAC）。
 
 tasks:
   # --- WBS-BIZ-BPS-010: business process specification (1 pair) ---
   - id: T-SDH-BIZ-010
     wbs: WBS-BIZ-BPS-010
-    name: draft and review business process specification rules
+    name: 業務プロセス仕様ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [M-SDH-200]
     owner: BA
     tags: [business, rules-lifecycle]
-    notes: "Phase 1: agent draft → human modify → agent review → human approve."
+    notes: "Phase 1: エージェント起草 → 人間修正 → エージェントレビュー → 人間承認。"
 
   - id: T-SDH-BIZ-011
     wbs: WBS-BIZ-BPS-010
-    name: draft and review business process specification derivatives
+    name: 業務プロセス仕様派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-BIZ-010]
     owner: BA
     tags: [business, derivatives-lifecycle]
-    notes: "Phase 2: agent draft instruction + input-template → agent review → human approve."
+    notes: "Phase 2: エージェントが instruction + input-template を起草 → レビュー → 人間承認。"
 
   # --- WBS-BIZ-BR-020: business rule (1 pair) ---
   - id: T-SDH-BIZ-020
     wbs: WBS-BIZ-BR-020
-    name: draft and review business rule rules
+    name: ビジネスルールのルール起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-010]
     owner: BA
@@ -43,7 +43,7 @@ tasks:
 
   - id: T-SDH-BIZ-021
     wbs: WBS-BIZ-BR-020
-    name: draft and review business rule derivatives
+    name: ビジネスルール派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-BIZ-020]
     owner: BA
@@ -52,7 +52,7 @@ tasks:
   # --- WBS-BIZ-BDD-030: business data dictionary (1 pair) ---
   - id: T-SDH-BIZ-030
     wbs: WBS-BIZ-BDD-030
-    name: draft and review business data dictionary rules
+    name: 業務データディクショナリルールの起草・レビュー
     duration_days: 0.5
     depends_on: [M-SDH-200]
     owner: BA
@@ -60,7 +60,7 @@ tasks:
 
   - id: T-SDH-BIZ-031
     wbs: WBS-BIZ-BDD-030
-    name: draft and review business data dictionary derivatives
+    name: 業務データディクショナリ派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-BIZ-030]
     owner: BA
@@ -69,7 +69,7 @@ tasks:
   # --- WBS-BIZ-BDS-040: form specification (1 pair) ---
   - id: T-SDH-BIZ-040
     wbs: WBS-BIZ-BDS-040
-    name: draft and review form specification rules
+    name: 帳票仕様ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-030]
     owner: BA
@@ -77,7 +77,7 @@ tasks:
 
   - id: T-SDH-BIZ-041
     wbs: WBS-BIZ-BDS-040
-    name: draft and review form specification derivatives
+    name: 帳票仕様派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-BIZ-040]
     owner: BA
@@ -86,7 +86,7 @@ tasks:
   # --- WBS-BIZ-UIS-050: screen specification (1 pair) ---
   - id: T-SDH-BIZ-050
     wbs: WBS-BIZ-UIS-050
-    name: draft and review screen specification rules
+    name: 画面仕様ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-010]
     owner: BA
@@ -94,7 +94,7 @@ tasks:
 
   - id: T-SDH-BIZ-051
     wbs: WBS-BIZ-UIS-050
-    name: draft and review screen specification derivatives
+    name: 画面仕様派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-BIZ-050]
     owner: BA
@@ -103,7 +103,7 @@ tasks:
   # --- WBS-BIZ-GL-060: glossary (1 pair) ---
   - id: T-SDH-BIZ-060
     wbs: WBS-BIZ-GL-060
-    name: draft and review glossary rules
+    name: 用語集ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [M-SDH-200]
     owner: BA
@@ -111,7 +111,7 @@ tasks:
 
   - id: T-SDH-BIZ-061
     wbs: WBS-BIZ-GL-060
-    name: draft and review glossary derivatives
+    name: 用語集派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-BIZ-060]
     owner: BA
@@ -120,16 +120,16 @@ tasks:
   # --- WBS-BIZ-REFDATA-070: reference data (3 pairs: cld, stsd, sld) ---
   - id: T-SDH-BIZ-070
     wbs: WBS-BIZ-REFDATA-070
-    name: draft and review reference data rules
+    name: リファレンスデータルールの起草・レビュー
     duration_days: 1.0
     depends_on: [M-SDH-200]
     owner: BA
     tags: [business, rules-lifecycle]
-    notes: "Covers cld, stsd, sld rules."
+    notes: "対象: cld, stsd, sld ルール。"
 
   - id: T-SDH-BIZ-071
     wbs: WBS-BIZ-REFDATA-070
-    name: draft and review reference data derivatives
+    name: リファレンスデータ派生成果物の起草・レビュー
     duration_days: 0.75
     depends_on: [T-SDH-BIZ-070]
     owner: BA
@@ -138,16 +138,16 @@ tasks:
   # --- WBS-BIZ-BES-080: business event specification (index + detail) ---
   - id: T-SDH-BIZ-080
     wbs: WBS-BIZ-BES-080
-    name: draft and review business event specification rules
+    name: 業務イベント仕様ルールの起草・レビュー
     duration_days: 0.75
     depends_on: [T-SDH-BIZ-020]
     owner: BA
     tags: [business, rules-lifecycle]
-    notes: "Covers bes-index and bes rules."
+    notes: "対象: bes-index, bes ルール。"
 
   - id: T-SDH-BIZ-081
     wbs: WBS-BIZ-BES-080
-    name: draft and review business event specification derivatives
+    name: 業務イベント仕様派生成果物の起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-080]
     owner: BA
@@ -156,16 +156,16 @@ tasks:
   # --- WBS-BIZ-CDFD-090: conceptual data flow (cdfd + cdfd-mermaid) ---
   - id: T-SDH-BIZ-090
     wbs: WBS-BIZ-CDFD-090
-    name: draft and review conceptual data flow rules
+    name: 概念データフロールールの起草・レビュー
     duration_days: 0.75
     depends_on: [T-SDH-BIZ-080]
     owner: BA
     tags: [business, rules-lifecycle]
-    notes: "Covers cdfd and cdfd-mermaid rules."
+    notes: "対象: cdfd, cdfd-mermaid ルール。"
 
   - id: T-SDH-BIZ-091
     wbs: WBS-BIZ-CDFD-090
-    name: draft and review conceptual data flow derivatives
+    name: 概念データフロー派生成果物の起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-090]
     owner: BA
@@ -174,7 +174,7 @@ tasks:
   # --- WBS-BIZ-CDSD-100: conceptual data store (1 pair) ---
   - id: T-SDH-BIZ-100
     wbs: WBS-BIZ-CDSD-100
-    name: draft and review conceptual data store rules
+    name: 概念データストアルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-030]
     owner: BA
@@ -182,7 +182,7 @@ tasks:
 
   - id: T-SDH-BIZ-101
     wbs: WBS-BIZ-CDSD-100
-    name: draft and review conceptual data store derivatives
+    name: 概念データストア派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-BIZ-100]
     owner: BA
@@ -191,16 +191,16 @@ tasks:
   # --- WBS-BIZ-CSTD-110: conceptual state transition (cstd + cstd-mermaid) ---
   - id: T-SDH-BIZ-110
     wbs: WBS-BIZ-CSTD-110
-    name: draft and review conceptual state transition rules
+    name: 概念状態遷移ルールの起草・レビュー
     duration_days: 0.75
     depends_on: [T-SDH-BIZ-030]
     owner: BA
     tags: [business, rules-lifecycle]
-    notes: "Covers cstd and cstd-mermaid rules."
+    notes: "対象: cstd, cstd-mermaid ルール。"
 
   - id: T-SDH-BIZ-111
     wbs: WBS-BIZ-CSTD-110
-    name: draft and review conceptual state transition derivatives
+    name: 概念状態遷移派生成果物の起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-110]
     owner: BA
@@ -209,7 +209,7 @@ tasks:
   # --- WBS-BIZ-CCD-120: conceptual class diagram mermaid (1 pair) ---
   - id: T-SDH-BIZ-120
     wbs: WBS-BIZ-CCD-120
-    name: draft and review conceptual class diagram rules
+    name: 概念クラス図ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-030]
     owner: BA
@@ -217,7 +217,7 @@ tasks:
 
   - id: T-SDH-BIZ-121
     wbs: WBS-BIZ-CCD-120
-    name: draft and review conceptual class diagram derivatives
+    name: 概念クラス図派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-BIZ-120]
     owner: BA
@@ -226,16 +226,16 @@ tasks:
   # --- WBS-BIZ-SF-130: system function list (index + detail, includes create) ---
   - id: T-SDH-BIZ-130
     wbs: WBS-BIZ-SF-130
-    name: draft and review system function list rules
+    name: システム機能一覧ルールの起草・レビュー
     duration_days: 0.75
     depends_on: [T-SDH-BIZ-080]
     owner: BA
     tags: [business, rules-lifecycle]
-    notes: "Covers sf-index (create) and sf rules."
+    notes: "対象: sf-index（新規作成）, sf ルール。"
 
   - id: T-SDH-BIZ-131
     wbs: WBS-BIZ-SF-130
-    name: draft and review system function list derivatives
+    name: システム機能一覧派生成果物の起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-130]
     owner: BA
@@ -244,16 +244,16 @@ tasks:
   # --- WBS-BIZ-BAC-140: business acceptance criteria (1 pair) ---
   - id: T-SDH-BIZ-140
     wbs: WBS-BIZ-BAC-140
-    name: draft and review business acceptance criteria rules
+    name: 業務受入条件ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-BIZ-081, T-SDH-BIZ-091, T-SDH-BIZ-131]
     owner: BA
     tags: [business, rules-lifecycle]
-    notes: "Depends on BES, CDFD, SF derivatives completion."
+    notes: "BES・CDFD・SF の派生成果物完了後に開始。"
 
   - id: T-SDH-BIZ-141
     wbs: WBS-BIZ-BAC-140
-    name: draft and review business acceptance criteria derivatives
+    name: 業務受入条件派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-BIZ-140]
     owner: BA
@@ -261,7 +261,7 @@ tasks:
 
 milestones:
   - id: M-SDH-BIZ-900
-    name: business domain complete
+    name: 業務ドメイン完了
     depends_on:
       - T-SDH-BIZ-011
       - T-SDH-BIZ-021

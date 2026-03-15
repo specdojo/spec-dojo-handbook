@@ -4,10 +4,10 @@ domain: quality
 assigned_team: specdojo-handbook
 wbs:
   - id: WBS-QLTY-SAC-010
-    name: maintain system acceptance condition pair
+    name: システム受入条件ペアの整備
     description: >
-      Maintain the SAC rule and instruction pair for system acceptance condition
-      documents and their boundary definitions (catalog §9).
+      システム受入条件ドキュメントとその境界定義の
+      SAC ルール・指示ペアを整備する（カタログ §9）。
     owner: QE
     component: acceptance
     deliverables:
@@ -16,14 +16,14 @@ wbs:
       - path: docs/ja/handbook/instructions/sac-instruction.md
         kind: modify
     done_criteria: >
-      The SAC rule and instruction pair defines the mandatory system-acceptance content,
-      acceptance boundaries, and AI guidance needed for acceptance condition documents.
+      SAC ルール・指示ペアが、システム受入の必須コンテンツ・
+      受入境界・AIガイダンスを定義していること。
 
   - id: WBS-QLTY-TSP-020
-    name: maintain test strategy and planning pair
+    name: テスト戦略・計画ペアの整備
     description: >
-      Maintain the TSP index rule and instruction pair that defines
-      test strategy, levels, and overall planning structure (catalog §10.1).
+      テスト戦略・レベル・全体計画構造を定義する
+      TSP インデックスルール・指示ペアを整備する（カタログ §10.1）。
     owner: QE
     component: test-planning
     deliverables:
@@ -32,14 +32,14 @@ wbs:
       - path: docs/ja/handbook/instructions/tsp-index-instruction.md
         kind: modify
     done_criteria: >
-      The TSP index rule and instruction pair defines test strategy content,
-      level definitions, and AI guidance for test planning documents.
+      TSP インデックスルール・指示ペアが、テスト戦略コンテンツ・
+      レベル定義・AIガイダンスを定義していること。
 
   - id: WBS-QLTY-UTC-030
-    name: maintain unit test documentation family
+    name: 単体テストドキュメントファミリーの整備
     description: >
-      Maintain the UTC index and detail-document rule and instruction files
-      for unit test catalog documents (catalog §10.2).
+      単体テストカタログドキュメントの UTC インデックスおよび
+      詳細ドキュメントのルール・指示ファイルを整備する（カタログ §10.2）。
     owner: QE
     component: unit-tests
     deliverables:
@@ -52,14 +52,14 @@ wbs:
       - path: docs/ja/handbook/instructions/utc-instruction.md
         kind: modify
     done_criteria: >
-      The UTC family defines unit-test index and detail requirements with fixed headings,
-      test expectations, and AI guidance for authoring unit test catalogs.
+      UTC ファミリーが、単体テストのインデックスと詳細の要件を固定見出し・
+      テスト期待・AIガイダンスで定義していること。
 
   - id: WBS-QLTY-ITC-040
-    name: maintain integration test documentation family
+    name: 結合テストドキュメントファミリーの整備
     description: >
-      Maintain the ITC index and detail-document rule and instruction files
-      for internal integration test catalog documents (catalog §10.3).
+      内部結合テストカタログドキュメントの ITC インデックスおよび
+      詳細ドキュメントのルール・指示ファイルを整備する（カタログ §10.3）。
     owner: QE
     component: integration-tests
     deliverables:
@@ -72,14 +72,14 @@ wbs:
       - path: docs/ja/handbook/instructions/itc-instruction.md
         kind: modify
     done_criteria: >
-      The ITC family defines index, criteria, and detail-document expectations
-      with explicit required content and AI instructions for integration test artifacts.
+      ITC ファミリーが、インデックス・基準・詳細ドキュメントの期待を
+      明示的な必須コンテンツとAI指示で定義していること。
 
   - id: WBS-QLTY-ETC-050
-    name: maintain external integration test documentation family
+    name: 外部結合テストドキュメントファミリーの整備
     description: >
-      Maintain the ETC index and detail-document rule and instruction files,
-      plus derivative test design and scenario instructions (catalog §10.4).
+      ETC インデックス・詳細ドキュメントのルール・指示ファイル、
+      および派生テスト設計・シナリオ指示を整備する（カタログ §10.4）。
     owner: QE
     component: external-tests
     deliverables:
@@ -100,14 +100,14 @@ wbs:
       - path: docs/ja/handbook/instructions/ets-instruction.md
         kind: modify
     done_criteria: >
-      The ETC family defines the external-test rule set and all derivative instruction
-      templates with aligned structure, scope allocation, and AI authoring guidance.
+      ETC ファミリーが、外部テストのルールセットとすべての派生指示テンプレートを
+      整合した構造・スコープ配分・AI執筆ガイダンスで定義していること。
 
   - id: WBS-QLTY-STC-060
-    name: maintain system test documentation family
+    name: システムテストドキュメントファミリーの整備
     description: >
-      Maintain the STC index and detail-document rule and instruction files
-      for system test catalog documents (catalog §10.5).
+      システムテストカタログドキュメントの STC インデックスおよび
+      詳細ドキュメントのルール・指示ファイルを整備する（カタログ §10.5）。
     owner: QE
     component: system-tests
     deliverables:
@@ -120,14 +120,14 @@ wbs:
       - path: docs/ja/handbook/instructions/stc-instruction.md
         kind: modify
     done_criteria: >
-      The STC family defines index and detail-document structures with aligned
-      terminology and AI generation guidance for system test artifacts.
+      STC ファミリーが、インデックスと詳細ドキュメントの構造を統一用語と
+      AI生成ガイダンスで定義していること。
 
   - id: WBS-QLTY-ATC-070
-    name: maintain acceptance test documentation family
+    name: 受入テストドキュメントファミリーの整備
     description: >
-      Maintain the ATC index and detail-document rule and instruction files,
-      plus derivative test design and scenario instructions (catalog §10.6).
+      ATC インデックス・詳細ドキュメントのルール・指示ファイル、
+      および派生テスト設計・シナリオ指示を整備する（カタログ §10.6）。
     owner: BA
     component: acceptance-tests
     deliverables:
@@ -148,5 +148,5 @@ wbs:
       - path: docs/ja/handbook/instructions/ats-instruction.md
         kind: modify
     done_criteria: >
-      The ATC family defines the acceptance-test rule set and all derivative instruction
-      templates with consistent scope partitioning, required sections, and AI guidance.
+      ATC ファミリーが、受入テストのルールセットとすべての派生指示テンプレートを
+      一貫したスコープ分割・必須セクション・AIガイダンスで定義していること。

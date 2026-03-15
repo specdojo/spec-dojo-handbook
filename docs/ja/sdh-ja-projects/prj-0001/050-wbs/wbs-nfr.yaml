@@ -4,10 +4,10 @@ domain: nfr
 assigned_team: specdojo-handbook
 wbs:
   - id: WBS-NFR-INDEX-010
-    name: maintain non-functional requirements index pair
+    name: 非機能要件インデックスペアの整備
     description: >
-      Maintain the NFR index rule and instruction pair that defines
-      the common structure for non-functional requirement document sets (catalog §8).
+      非機能要件ドキュメントセットの共通構造を定義する
+      NFR インデックスルール・指示ペアを整備する（カタログ §8）。
     owner: QE
     component: index
     deliverables:
@@ -16,14 +16,14 @@ wbs:
       - path: docs/ja/handbook/instructions/nfr-index-instruction.md
         kind: modify
     done_criteria: >
-      The NFR index rule and instruction pair defines the common index structure,
-      selection logic, and AI guidance for non-functional requirement document sets.
+      NFR インデックスルール・指示ペアが、共通インデックス構造・
+      選定ロジック・AIガイダンスを定義していること。
 
   - id: WBS-NFR-AVAIL-020
-    name: maintain availability requirement pair
+    name: 可用性要件ペアの整備
     description: >
-      Maintain the availability NFR rule and instruction pair
-      for availability-focused non-functional requirement documents (catalog §8).
+      可用性に特化した非機能要件ドキュメントの
+      可用性 NFR ルール・指示ペアを整備する（カタログ §8）。
     owner: QE
     component: availability
     deliverables:
@@ -32,14 +32,14 @@ wbs:
       - path: docs/ja/handbook/instructions/nfr-availability-instruction.md
         kind: modify
     done_criteria: >
-      The availability NFR rule and instruction pair defines mandatory availability
-      criteria, evidence expectations, and AI guidance without ambiguous thresholds.
+      可用性 NFR ルール・指示ペアが、必須の可用性基準・エビデンス期待・
+      AIガイダンスを曖昧な閾値なく定義していること。
 
   - id: WBS-NFR-INTEG-030
-    name: maintain integrity requirement pair
+    name: 完全性要件ペアの整備
     description: >
-      Maintain the integrity NFR rule and instruction pair
-      for integrity-focused non-functional requirement documents (catalog §8).
+      完全性に特化した非機能要件ドキュメントの
+      完全性 NFR ルール・指示ペアを整備する（カタログ §8）。
     owner: QE
     component: integrity
     deliverables:
@@ -48,14 +48,14 @@ wbs:
       - path: docs/ja/handbook/instructions/nfr-integrity-instruction.md
         kind: modify
     done_criteria: >
-      The integrity NFR rule and instruction pair defines required integrity controls,
-      document sections, and AI guidance for integrity-focused non-functional specifications.
+      完全性 NFR ルール・指示ペアが、必須の完全性統制・
+      ドキュメントセクション・AIガイダンスを定義していること。
 
   - id: WBS-NFR-MAINT-040
-    name: maintain maintainability requirement pair
+    name: 保守性要件ペアの整備
     description: >
-      Maintain the maintainability NFR rule and instruction pair
-      for maintainability requirement documents (catalog §8).
+      保守性要件ドキュメントの
+      保守性 NFR ルール・指示ペアを整備する（カタログ §8）。
     owner: QE
     component: maintainability
     deliverables:
@@ -64,14 +64,14 @@ wbs:
       - path: docs/ja/handbook/instructions/nfr-maintainability-instruction.md
         kind: modify
     done_criteria: >
-      The maintainability NFR rule and instruction pair defines measurable maintainability
-      expectations, required sections, and AI guidance for maintainability documents.
+      保守性 NFR ルール・指示ペアが、測定可能な保守性期待・
+      必須セクション・AIガイダンスを定義していること。
 
   - id: WBS-NFR-OPS-050
-    name: maintain operations requirement pair
+    name: 運用性要件ペアの整備
     description: >
-      Maintain the operations NFR rule and instruction pair
-      for operations and observability-focused non-functional requirements (catalog §8).
+      運用・可観測性に特化した非機能要件の
+      運用性 NFR ルール・指示ペアを整備する（カタログ §8）。
     owner: QE
     component: operations
     deliverables:
@@ -80,14 +80,14 @@ wbs:
       - path: docs/ja/handbook/instructions/nfr-operations-instruction.md
         kind: modify
     done_criteria: >
-      The operations NFR rule and instruction pair defines operational constraints,
-      observability expectations, and AI guidance for operations-focused non-functional requirements.
+      運用性 NFR ルール・指示ペアが、運用制約・可観測性期待・
+      AIガイダンスを定義していること。
 
   - id: WBS-NFR-PERF-060
-    name: maintain performance requirement pair
+    name: 性能要件ペアの整備
     description: >
-      Maintain the performance NFR rule and instruction pair
-      for measurable performance requirement documents (catalog §8).
+      測定可能な性能要件ドキュメントの
+      性能 NFR ルール・指示ペアを整備する（カタログ §8）。
     owner: QE
     component: performance
     deliverables:
@@ -96,14 +96,14 @@ wbs:
       - path: docs/ja/handbook/instructions/nfr-performance-instruction.md
         kind: modify
     done_criteria: >
-      The performance NFR rule and instruction pair defines measurable performance
-      targets, workload assumptions, and AI guidance for performance requirement documents.
+      性能 NFR ルール・指示ペアが、測定可能な性能目標・
+      ワークロード前提・AIガイダンスを定義していること。
 
   - id: WBS-NFR-RELY-070
-    name: maintain reliability requirement pair
+    name: 信頼性要件ペアの整備
     description: >
-      Maintain the reliability NFR rule and instruction pair
-      for failure-handling and resilience requirement documents (catalog §8).
+      障害対応・レジリエンス要件ドキュメントの
+      信頼性 NFR ルール・指示ペアを整備する（カタログ §8）。
     owner: QE
     component: reliability
     deliverables:
@@ -112,14 +112,14 @@ wbs:
       - path: docs/ja/handbook/instructions/nfr-reliability-instruction.md
         kind: modify
     done_criteria: >
-      The reliability NFR rule and instruction pair defines failure-handling expectations,
-      evidence needs, and AI guidance for reliability requirements.
+      信頼性 NFR ルール・指示ペアが、障害対応期待・エビデンス要件・
+      AIガイダンスを定義していること。
 
   - id: WBS-NFR-SEC-080
-    name: maintain security and safety requirement pair
+    name: セキュリティ・安全性要件ペアの整備
     description: >
-      Maintain the security and safety NFR rule and instruction pair
-      for threat, control, and safety-focused requirement documents (catalog §8).
+      脅威・統制・安全性に特化した要件ドキュメントの
+      セキュリティ・安全性 NFR ルール・指示ペアを整備する（カタログ §8）。
     owner: QE
     component: security-safety
     deliverables:
@@ -128,14 +128,14 @@ wbs:
       - path: docs/ja/handbook/instructions/nfr-security-safety-instruction.md
         kind: modify
     done_criteria: >
-      The security and safety NFR rule and instruction pair defines mandatory threat,
-      control, and safety coverage with AI guidance that remains concrete and auditable.
+      セキュリティ・安全性 NFR ルール・指示ペアが、必須の脅威・
+      統制・安全性カバレッジを具体的かつ監査可能なAIガイダンスで定義していること。
 
   - id: WBS-NFR-USAB-090
-    name: maintain usability requirement pair
+    name: ユーザビリティ要件ペアの整備
     description: >
-      Maintain the usability NFR rule and instruction pair
-      for user-centered non-functional requirement documents (catalog §8).
+      ユーザー中心の非機能要件ドキュメントの
+      ユーザビリティ NFR ルール・指示ペアを整備する（カタログ §8）。
     owner: BA
     component: usability
     deliverables:
@@ -144,5 +144,5 @@ wbs:
       - path: docs/ja/handbook/instructions/nfr-usability-instruction.md
         kind: modify
     done_criteria: >
-      The usability NFR rule and instruction pair defines user-centered criteria,
-      measurement expectations, and AI guidance for usability requirement documents.
+      ユーザビリティ NFR ルール・指示ペアが、ユーザー中心の基準・
+      測定期待・AIガイダンスを定義していること。

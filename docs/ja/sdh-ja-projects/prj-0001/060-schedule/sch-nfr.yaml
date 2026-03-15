@@ -7,14 +7,14 @@ assigned_team: specdojo-handbook
 settings:
   finish_milestone_id: M-SDH-NFR-900
   notes: >
-    Non-functional requirements domain schedule.
-    NFR index is prerequisite for all individual NFR rules.
+    非機能要件ドメインスケジュール。
+    NFR インデックスが全個別 NFR ルールの前提。
 
 tasks:
   # --- WBS-NFR-INDEX-010: nfr index (1 pair) ---
   - id: T-SDH-NFR-010
     wbs: WBS-NFR-INDEX-010
-    name: draft and review nfr index rules
+    name: NFR インデックスルールの起草・レビュー
     duration_days: 0.5
     depends_on: [M-SDH-200]
     owner: QE
@@ -22,7 +22,7 @@ tasks:
 
   - id: T-SDH-NFR-011
     wbs: WBS-NFR-INDEX-010
-    name: draft and review nfr index derivatives
+    name: NFR インデックス派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-NFR-010]
     owner: QE
@@ -31,7 +31,7 @@ tasks:
   # --- WBS-NFR-AVAIL-020: availability (1 pair) ---
   - id: T-SDH-NFR-020
     wbs: WBS-NFR-AVAIL-020
-    name: draft and review availability requirement rules
+    name: 可用性要件ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: QE
@@ -39,7 +39,7 @@ tasks:
 
   - id: T-SDH-NFR-021
     wbs: WBS-NFR-AVAIL-020
-    name: draft and review availability requirement derivatives
+    name: 可用性要件派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-NFR-020]
     owner: QE
@@ -48,7 +48,7 @@ tasks:
   # --- WBS-NFR-INTEG-030: integrity (1 pair) ---
   - id: T-SDH-NFR-030
     wbs: WBS-NFR-INTEG-030
-    name: draft and review integrity requirement rules
+    name: 完全性要件ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: QE
@@ -56,7 +56,7 @@ tasks:
 
   - id: T-SDH-NFR-031
     wbs: WBS-NFR-INTEG-030
-    name: draft and review integrity requirement derivatives
+    name: 完全性要件派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-NFR-030]
     owner: QE
@@ -65,7 +65,7 @@ tasks:
   # --- WBS-NFR-MAINT-040: maintainability (1 pair) ---
   - id: T-SDH-NFR-040
     wbs: WBS-NFR-MAINT-040
-    name: draft and review maintainability requirement rules
+    name: 保守性要件ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: QE
@@ -73,7 +73,7 @@ tasks:
 
   - id: T-SDH-NFR-041
     wbs: WBS-NFR-MAINT-040
-    name: draft and review maintainability requirement derivatives
+    name: 保守性要件派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-NFR-040]
     owner: QE
@@ -82,7 +82,7 @@ tasks:
   # --- WBS-NFR-OPS-050: operations (1 pair) ---
   - id: T-SDH-NFR-050
     wbs: WBS-NFR-OPS-050
-    name: draft and review operations requirement rules
+    name: 運用性要件ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: QE
@@ -90,7 +90,7 @@ tasks:
 
   - id: T-SDH-NFR-051
     wbs: WBS-NFR-OPS-050
-    name: draft and review operations requirement derivatives
+    name: 運用性要件派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-NFR-050]
     owner: QE
@@ -99,7 +99,7 @@ tasks:
   # --- WBS-NFR-PERF-060: performance (1 pair) ---
   - id: T-SDH-NFR-060
     wbs: WBS-NFR-PERF-060
-    name: draft and review performance requirement rules
+    name: 性能要件ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: QE
@@ -107,7 +107,7 @@ tasks:
 
   - id: T-SDH-NFR-061
     wbs: WBS-NFR-PERF-060
-    name: draft and review performance requirement derivatives
+    name: 性能要件派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-NFR-060]
     owner: QE
@@ -116,7 +116,7 @@ tasks:
   # --- WBS-NFR-RELY-070: reliability (1 pair) ---
   - id: T-SDH-NFR-070
     wbs: WBS-NFR-RELY-070
-    name: draft and review reliability requirement rules
+    name: 信頼性要件ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-NFR-060]
     owner: QE
@@ -124,7 +124,7 @@ tasks:
 
   - id: T-SDH-NFR-071
     wbs: WBS-NFR-RELY-070
-    name: draft and review reliability requirement derivatives
+    name: 信頼性要件派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-NFR-070]
     owner: QE
@@ -133,7 +133,7 @@ tasks:
   # --- WBS-NFR-SEC-080: security and safety (1 pair) ---
   - id: T-SDH-NFR-080
     wbs: WBS-NFR-SEC-080
-    name: draft and review security and safety requirement rules
+    name: セキュリティ・安全性要件ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-NFR-030]
     owner: QE
@@ -141,7 +141,7 @@ tasks:
 
   - id: T-SDH-NFR-081
     wbs: WBS-NFR-SEC-080
-    name: draft and review security and safety requirement derivatives
+    name: セキュリティ・安全性要件派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-NFR-080]
     owner: QE
@@ -150,7 +150,7 @@ tasks:
   # --- WBS-NFR-USAB-090: usability (1 pair) ---
   - id: T-SDH-NFR-090
     wbs: WBS-NFR-USAB-090
-    name: draft and review usability requirement rules
+    name: ユーザビリティ要件ルールの起草・レビュー
     duration_days: 0.5
     depends_on: [T-SDH-NFR-010]
     owner: BA
@@ -158,7 +158,7 @@ tasks:
 
   - id: T-SDH-NFR-091
     wbs: WBS-NFR-USAB-090
-    name: draft and review usability requirement derivatives
+    name: ユーザビリティ要件派生成果物の起草・レビュー
     duration_days: 0.25
     depends_on: [T-SDH-NFR-090]
     owner: BA
@@ -166,7 +166,7 @@ tasks:
 
 milestones:
   - id: M-SDH-NFR-900
-    name: nfr domain complete
+    name: 非機能要件ドメイン完了
     depends_on:
       - T-SDH-NFR-011
       - T-SDH-NFR-021
