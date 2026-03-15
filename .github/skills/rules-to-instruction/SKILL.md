@@ -5,6 +5,7 @@
 
 ## 使いどころ
 
+- 新しい `*-instruction.md` を単一ファイルで新規作成したいとき
 - `*-rules.md` 更新後に instruction を同期したいとき
 - 差分アップサートで既存 instruction を保守したいとき
 - 全 rules を一括で同期したいとき
