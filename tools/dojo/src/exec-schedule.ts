@@ -19,7 +19,6 @@ import {
 import { computeReadyIds, foldEventsToState, validateEventShape } from './exec-events.js'
 import {
   ensureDir,
-  formatDateOnlyUtc,
   isSchYamlFilename,
   listFilesRecursive,
   normalizeDateOnly,
@@ -35,12 +34,18 @@ import {
   generatedDirForProject,
   executionRootForProject,
 } from './exec-project.js'
+import {
+  buildProgressSummaryLines,
+  buildTimelineMarkdown,
+  buildTimelineSvg,
+} from './exec-schedule-timeline.js'
 
 function defaultScheduleCalendar(): ScheduleCalendar {
   return {
     timezone: 'UTC',
     workdays: new Set([1, 2, 3, 4, 5]),
     holidays: new Set<string>(),
+    work_hours_per_day: 24,
   }
 }
 
@@ -56,33 +61,6 @@ function parseWorkdayToken(value: string): number | null {
     sat: 6,
   }
   return key in map ? map[key] : null
-}
-
-function weekdayName(day: number): string {
-  const names = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-  return names[day] ?? 'sunday'
-}
-
-function mermaidGanttCalendarLines(calendar: ScheduleCalendar): string[] {
-  const lines: string[] = []
-  const nonWorkingDays = [0, 1, 2, 3, 4, 5, 6].filter(day => !calendar.workdays.has(day))
-  const excludeTokens: string[] = []
-
-  if (nonWorkingDays.length === 2 && nonWorkingDays[0] === 6 && nonWorkingDays[1] === 0) {
-    excludeTokens.push('weekends')
-  } else if (nonWorkingDays.length === 2 && nonWorkingDays[0] === 5 && nonWorkingDays[1] === 6) {
-    excludeTokens.push('weekends')
-    lines.push('  weekend friday')
-  } else if (nonWorkingDays.length > 0) {
-    excludeTokens.push(...nonWorkingDays.map(weekdayName))
-  }
-
-  const holidays = [...calendar.holidays].sort()
-  excludeTokens.push(...holidays)
-
-  if (excludeTokens.length > 0) lines.push(`  excludes ${excludeTokens.join(', ')}`)
-
-  return lines
 }
 
 function applyScheduleCalendar(base: ScheduleCalendar, calendar: any): ScheduleCalendar | null {
@@ -110,6 +88,15 @@ function applyScheduleCalendar(base: ScheduleCalendar, calendar: any): ScheduleC
     }
   }
 
+  if (
+    typeof calendar.work_hours_per_day === 'number' &&
+    Number.isFinite(calendar.work_hours_per_day) &&
+    calendar.work_hours_per_day > 0 &&
+    calendar.work_hours_per_day <= 24
+  ) {
+    parsed.work_hours_per_day = calendar.work_hours_per_day
+  }
+
   return parsed
 }
 
@@ -118,6 +105,7 @@ function cloneScheduleCalendar(calendar: ScheduleCalendar): ScheduleCalendar {
     timezone: calendar.timezone,
     workdays: new Set(calendar.workdays),
     holidays: new Set(calendar.holidays),
+    work_hours_per_day: calendar.work_hours_per_day,
   }
 }
 
@@ -125,6 +113,7 @@ function mergeScheduleCalendar(base: ScheduleCalendar, extra: ScheduleCalendar):
   const merged = cloneScheduleCalendar(base)
   merged.timezone = extra.timezone
   merged.workdays = new Set(extra.workdays)
+  merged.work_hours_per_day = extra.work_hours_per_day
   for (const holiday of extra.holidays) merged.holidays.add(holiday)
   return merged
 }
@@ -137,75 +126,6 @@ function minDateOnly(a: string | null, b: string | null): string | null {
   if (!a) return b
   if (!b) return a
   return a <= b ? a : b
-}
-
-function ganttAnchorDateUtc(): number {
-  return Date.UTC(2000, 0, 1, 0, 0, 0, 0)
-}
-
-function isWorkingDateUtc(dt: Date, calendar: ScheduleCalendar): boolean {
-  const dateOnly = formatDateOnlyUtc(dt)
-  return calendar.workdays.has(dt.getUTCDay()) && !calendar.holidays.has(dateOnly)
-}
-
-function addWorkingDayOffset(
-  startDate: string,
-  dayOffset: number,
-  calendar: ScheduleCalendar
-): Date {
-  const [year, month, day] = startDate.split('-').map(Number)
-  const dt = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
-
-  while (!isWorkingDateUtc(dt, calendar)) dt.setUTCDate(dt.getUTCDate() + 1)
-
-  const wholeDays = Math.floor(dayOffset)
-  const fractionalDays = dayOffset - wholeDays
-
-  for (let i = 0; i < wholeDays; i += 1) {
-    do {
-      dt.setUTCDate(dt.getUTCDate() + 1)
-    } while (!isWorkingDateUtc(dt, calendar))
-  }
-
-  const minutes = Math.round(fractionalDays * 24 * 60)
-  dt.setUTCMinutes(dt.getUTCMinutes() + minutes)
-  return dt
-}
-
-function formatGanttDate(
-  dayOffset: number,
-  startDate: string | null,
-  calendar: ScheduleCalendar
-): string {
-  const dt = startDate
-    ? addWorkingDayOffset(startDate, dayOffset, calendar)
-    : new Date(ganttAnchorDateUtc() + Math.round(dayOffset * 24 * 60) * 60 * 1000)
-  const yyyy = dt.getUTCFullYear().toString().padStart(4, '0')
-  const mm = (dt.getUTCMonth() + 1).toString().padStart(2, '0')
-  const dd = dt.getUTCDate().toString().padStart(2, '0')
-  const hh = dt.getUTCHours().toString().padStart(2, '0')
-  const mi = dt.getUTCMinutes().toString().padStart(2, '0')
-  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`
-}
-
-function formatGanttDuration(durationDays: number): string {
-  if (durationDays === 0) return '0d'
-
-  const minutes = Math.round(durationDays * 24 * 60)
-  if (minutes % (24 * 60) === 0) return `${minutes / (24 * 60)}d`
-  if (minutes % 60 === 0) return `${minutes / 60}h`
-  return `${minutes}m`
-}
-
-function escapeMermaidText(text: string): string {
-  return text
-    .replace(/[\r\n]+/g, ' ')
-    .replace(/:/g, ' -')
-    .trim()
-}
-
-function toMermaidTaskId(id: string): string {
-  return `task_${id.replace(/[^A-Za-z0-9._-]/g, '_')}`
 }
 
 function nonEmptyString(value: unknown): string | null {
@@ -732,65 +652,40 @@ export function writeCpmFiles(
   const totalTaskCount = taskRows.length
   const progressPercent =
     totalTaskCount > 0 ? ((doneCount / totalTaskCount) * 100).toFixed(1) : '0.0'
+  const ready = computeReadyIds(schedule, {
+    schedule_path: cpm.schedule_path,
+    tasks: stateSnapshot?.tasks ?? {},
+  })
+  const readyOrdered = orderReadyIds(ready, cpm, 'critical-first')
+  const criticalDoingCount = taskRows.filter(
+    row => criticalSet.has(row.id) && (stateSnapshot?.tasks[row.id]?.state ?? 'todo') === 'doing'
+  ).length
+  const progressSummaryLines = buildProgressSummaryLines({
+    cpm,
+    schedule,
+    stateCounts,
+    totalTaskCount,
+    readyCount: ready.length,
+    nextTaskId: readyOrdered[0] ?? null,
+    criticalDoingCount,
+  })
 
-  const ganttLines: string[] = []
-  ganttLines.push(`# Gantt Chart`)
-  ganttLines.push('')
-  ganttLines.push(`- schedule_path: \`${cpm.schedule_path}\``)
-  if (cpm.project_start_date) ganttLines.push(`- project_start_date: \`${cpm.project_start_date}\``)
-  ganttLines.push(`- project_duration_days: \`${cpm.project_duration_days}\``)
-  ganttLines.push(`- scope: \`full_schedule\``)
-  ganttLines.push(`- critical_path_task_count: \`${criticalSet.size}\``)
-  ganttLines.push(`- progress_percent: \`${progressPercent}%\``)
-  ganttLines.push(`- done_tasks: \`${doneCount}/${totalTaskCount}\``)
-  ganttLines.push(
-    `- task_state_counts: \`todo=${stateCounts.todo}, doing=${stateCounts.doing}, blocked=${stateCounts.blocked}, done=${stateCounts.done}, cancelled=${stateCounts.cancelled}\``
+  writeFileSync(
+    join(genDir, 'timeline.svg'),
+    buildTimelineSvg(cpm, schedule, stateSnapshot),
+    'utf8'
   )
-  ganttLines.push('')
-  ganttLines.push('```mermaid')
-  ganttLines.push(
-    "%%{init: {'gantt': {'leftPadding': 180, 'sectionFontSize': 11, 'fontSize': 12}}}%%"
+  writeFileSync(
+    join(genDir, 'timeline.md'),
+    buildTimelineMarkdown(cpm, {
+      criticalPathTaskCount: criticalSet.size,
+      progressPercent,
+      doneTasks: `${doneCount}/${totalTaskCount}`,
+      taskStateCounts: `todo=${stateCounts.todo}, doing=${stateCounts.doing}, blocked=${stateCounts.blocked}, done=${stateCounts.done}, cancelled=${stateCounts.cancelled}`,
+      progressSummaryLines,
+    }),
+    'utf8'
   )
-  ganttLines.push('gantt')
-  ganttLines.push('  title Project Schedule')
-  ganttLines.push('  dateFormat YYYY-MM-DD HH:mm')
-  ganttLines.push('  axisFormat %m/%d')
-  ganttLines.push(...mermaidGanttCalendarLines(schedule.calendar))
-
-  const rowsByFile = new Map<string, CpmNode[]>()
-  for (const row of rows) {
-    const group = rowsByFile.get(row.schedule_file)
-    if (group) group.push(row)
-    else rowsByFile.set(row.schedule_file, [row])
-  }
-
-  for (const [scheduleFile, fileRows] of rowsByFile.entries()) {
-    const sectionLabel = schedule.section_labels[scheduleFile] ?? scheduleFile
-    ganttLines.push(`  section ${escapeMermaidText(sectionLabel)}`)
-    for (const row of fileRows) {
-      const flags: string[] = []
-      if (criticalSet.has(row.id)) flags.push('crit')
-      if (row.kind === 'milestone') flags.push('milestone')
-
-      const taskState = row.kind === 'task' ? (stateSnapshot?.tasks[row.id]?.state ?? 'todo') : null
-      if (taskState === 'done' || taskState === 'cancelled') flags.push('done')
-      if (taskState === 'doing') flags.push('active')
-
-      const stateSuffix =
-        taskState === 'blocked' ? ' [blocked]' : taskState === 'cancelled' ? ' [cancelled]' : ''
-      const label = escapeMermaidText(
-        row.name ? `${row.id} ${row.name}${stateSuffix}` : `${row.id}${stateSuffix}`
-      )
-      const attrs = flags.length ? `${flags.join(', ')}, ` : ''
-      ganttLines.push(
-        `  ${label} : ${attrs}${toMermaidTaskId(row.id)}, ${formatGanttDate(row.es, cpm.project_start_date, schedule.calendar)}, ${formatGanttDuration(row.duration_days)}`
-      )
-    }
-  }
-
-  ganttLines.push('```')
-  ganttLines.push('')
-  writeFileSync(join(genDir, 'gantt.md'), ganttLines.join('\n'), 'utf8')
 }
 
 function normalizeNodeForHash(n: ScheduleNode): any {
@@ -916,13 +811,14 @@ export function writeGeneratedCore(
       'cpm.md',
       'critical-path.md',
       'exec.jsonl',
-      'gantt.md',
       'metadata.json',
       'ready.json',
       'ready.md',
       'schedule-diff.md',
       'schedule-hash.json',
       'state.json',
+      'timeline.md',
+      'timeline.svg',
     ],
   })
 

@@ -1,9 +1,11 @@
 ---
 id: dmd-rules
-title: データ移行設計 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# データ移行設計 作成ルール
 
 Data Migration Design (DMD) Documentation Rules
 

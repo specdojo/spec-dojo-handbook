@@ -1,9 +1,11 @@
 ---
 id: sysd-critical-flows-rules
-title: システム設計 重要フロー 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# システム設計 重要フロー 作成ルール
 
 System Design Critical Flows (SYSD-CF) Documentation Rules
 

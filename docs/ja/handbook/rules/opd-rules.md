@@ -1,9 +1,11 @@
 ---
 id: opd-rules
-title: 運用方針・設計 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 運用方針・設計 作成ルール
 
 Operations Policy and Design (OPD) Documentation Rules
 

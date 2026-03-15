@@ -5,42 +5,146 @@ domain: design
 assigned_team: specdojo-handbook
 
 settings:
-  finish_milestone_id: M-SDH-999
+  finish_milestone_id: M-SDH-DES-900
   notes: >
-    Design domain summary schedule.
-    Execution-granularity tasks are split into container schedules.
+    設計ドメインスケジュール。
+    各 WBS アイテムを Phase 1（ルールライフサイクル）と Phase 2（派生成果物ライフサイクル）に分割。
+    C4 チェーン: CXD → CND → CPD。SYSD は他の全タスクに依存。
 
 tasks:
-  - id: T-SDH-DES-100
-    wbs: WBS-DES-CLD-010
-    name: design context and policy updates summary
-    duration_days: 2
+  # --- WBS-DES-IFX-010: external interface family (4 pairs) ---
+  - id: T-SDH-DES-010
+    wbs: WBS-DES-IFX-010
+    name: 外部インターフェースルールの起草・レビュー
+    duration_days: 1.25
     depends_on: [M-SDH-300]
     owner: ARC
-    tags: [design, summary, context-policy]
-    notes: Detailed execution is in sch-design-context.yaml and sch-design-policy.yaml.
+    tags: [design, rules-lifecycle]
+    notes: "対象: ifx, ifx-api, ifx-file, ifx-msg ルール。"
 
-  - id: T-SDH-DES-200
-    wbs: WBS-DES-CDFD-050
-    name: design flow and interaction updates summary
-    duration_days: 2.5
-    depends_on: [T-SDH-DES-100]
+  - id: T-SDH-DES-011
+    wbs: WBS-DES-IFX-010
+    name: 外部インターフェース派生成果物の起草・レビュー
+    duration_days: 1.0
+    depends_on: [T-SDH-DES-010]
     owner: ARC
-    tags: [design, summary, flow]
-    notes: Detailed execution is in sch-design-flow.yaml.
+    tags: [design, derivatives-lifecycle]
 
-  - id: T-SDH-DES-300
-    wbs: WBS-DES-SYSD-130
-    name: design structure and engineering updates summary
-    duration_days: 3
-    depends_on: [T-SDH-DES-200]
+  # --- WBS-DES-CXD-020: C4 context diagram (2 pairs) ---
+  - id: T-SDH-DES-020
+    wbs: WBS-DES-CXD-020
+    name: C4 コンテキスト図ルールの起草・レビュー
+    duration_days: 0.75
+    depends_on: [M-SDH-300]
     owner: ARC
-    tags: [design, summary, structure-engineering]
-    notes: Detailed execution is in sch-design-structure.yaml.
+    tags: [design, rules-lifecycle, c4]
+    notes: "対象: cxd, cxd-mermaid ルール。"
+
+  - id: T-SDH-DES-021
+    wbs: WBS-DES-CXD-020
+    name: C4 コンテキスト図派生成果物の起草・レビュー
+    duration_days: 0.5
+    depends_on: [T-SDH-DES-020]
+    owner: ARC
+    tags: [design, derivatives-lifecycle, c4]
+
+  # --- WBS-DES-CND-030: C4 container diagram (2 pairs) ---
+  - id: T-SDH-DES-030
+    wbs: WBS-DES-CND-030
+    name: C4 コンテナ図ルールの起草・レビュー
+    duration_days: 0.75
+    depends_on: [T-SDH-DES-020]
+    owner: ARC
+    tags: [design, rules-lifecycle, c4]
+    notes: "対象: cnd, cnd-mermaid ルール。"
+
+  - id: T-SDH-DES-031
+    wbs: WBS-DES-CND-030
+    name: C4 コンテナ図派生成果物の起草・レビュー
+    duration_days: 0.5
+    depends_on: [T-SDH-DES-030]
+    owner: ARC
+    tags: [design, derivatives-lifecycle, c4]
+
+  # --- WBS-DES-CPD-040: C4 component diagram (2 pairs) ---
+  - id: T-SDH-DES-040
+    wbs: WBS-DES-CPD-040
+    name: C4 コンポーネント図ルールの起草・レビュー
+    duration_days: 0.75
+    depends_on: [T-SDH-DES-030]
+    owner: ARC
+    tags: [design, rules-lifecycle, c4]
+    notes: "対象: cpd, cpd-mermaid ルール。"
+
+  - id: T-SDH-DES-041
+    wbs: WBS-DES-CPD-040
+    name: C4 コンポーネント図派生成果物の起草・レビュー
+    duration_days: 0.5
+    depends_on: [T-SDH-DES-040]
+    owner: ARC
+    tags: [design, derivatives-lifecycle, c4]
+
+  # --- WBS-DES-IFD-050: infrastructure diagram mermaid (1 pair) ---
+  - id: T-SDH-DES-050
+    wbs: WBS-DES-IFD-050
+    name: インフラ構成図ルールの起草・レビュー
+    duration_days: 0.5
+    depends_on: [T-SDH-DES-020]
+    owner: ARC
+    tags: [design, rules-lifecycle]
+
+  - id: T-SDH-DES-051
+    wbs: WBS-DES-IFD-050
+    name: インフラ構成図派生成果物の起草・レビュー
+    duration_days: 0.25
+    depends_on: [T-SDH-DES-050]
+    owner: ARC
+    tags: [design, derivatives-lifecycle]
+
+  # --- WBS-DES-TSD-060: technology stack definition (1 pair) ---
+  - id: T-SDH-DES-060
+    wbs: WBS-DES-TSD-060
+    name: 技術スタック定義ルールの起草・レビュー
+    duration_days: 0.5
+    depends_on: [M-SDH-300]
+    owner: ARC
+    tags: [design, rules-lifecycle]
+
+  - id: T-SDH-DES-061
+    wbs: WBS-DES-TSD-060
+    name: 技術スタック定義派生成果物の起草・レビュー
+    duration_days: 0.25
+    depends_on: [T-SDH-DES-060]
+    owner: ARC
+    tags: [design, derivatives-lifecycle]
+
+  # --- WBS-DES-SYSD-070: system design family (3 pairs) ---
+  - id: T-SDH-DES-070
+    wbs: WBS-DES-SYSD-070
+    name: システム設計ルールの起草・レビュー
+    duration_days: 1.0
+    depends_on: [T-SDH-DES-011, T-SDH-DES-041, T-SDH-DES-051, T-SDH-DES-061]
+    owner: ARC
+    tags: [design, rules-lifecycle]
+    notes: "対象: sysd-index, sysd-critical-flows, sysd-cross-cutting-policy ルール。"
+
+  - id: T-SDH-DES-071
+    wbs: WBS-DES-SYSD-070
+    name: システム設計派生成果物の起草・レビュー
+    duration_days: 0.75
+    depends_on: [T-SDH-DES-070]
+    owner: ARC
+    tags: [design, derivatives-lifecycle]
 
 milestones:
   - id: M-SDH-DES-900
-    name: design domain complete
-    depends_on: [T-SDH-DES-300]
+    name: 設計ドメイン完了
+    depends_on:
+      - T-SDH-DES-011
+      - T-SDH-DES-021
+      - T-SDH-DES-031
+      - T-SDH-DES-041
+      - T-SDH-DES-051
+      - T-SDH-DES-061
+      - T-SDH-DES-071
     owner: ARC
-    date_hint: 2026-04-01

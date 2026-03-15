@@ -1,9 +1,11 @@
 ---
 id: nfr-integrity-rules
-title: 非機能要件 / 完全性 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 非機能要件 / 完全性 作成ルール
 
 Non-Functional Requirements Integrity Documentation Rules
 

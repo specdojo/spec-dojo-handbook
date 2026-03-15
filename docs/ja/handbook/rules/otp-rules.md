@@ -1,9 +1,11 @@
 ---
 id: otp-rules
-title: 運用切替計画 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 運用切替計画 作成ルール
 
 Operations Transition Plan (OTP) Documentation Rules
 

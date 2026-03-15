@@ -5,62 +5,49 @@ assigned_team: specdojo-handbook
 
 settings:
   finish_milestone_id: M-SDH-999
-  notes: Handbook rules and instructions maintenance plan derived from domain WBS files.
+  notes: >
+    プロジェクトレベルのマイルストーン計画。
+    ドメイン完了マイルストーン（M-SDH-*-900）は各ドメインスケジュールで定義。
 
 milestones:
   - id: M-SDH-100
-    name: schedule kickoff
+    name: スケジュールキックオフ
     depends_on: []
     owner: PO
-    date_hint: 2026-03-16
+    date_hint: "2026-03-16"
     tags: [kickoff]
 
   - id: M-SDH-200
-    name: governance baseline ready
-    depends_on:
-      - T-SDH-GOV-020
-      - T-SDH-GOV-030
-      - T-SDH-GOV-040
-      - T-SDH-GOV-050
+    name: ガバナンスベースライン確定
+    depends_on: [M-SDH-GOV-900]
     owner: PO
-    date_hint: 2026-03-19
+    date_hint: "2026-03-21"
     tags: [governance]
 
   - id: M-SDH-300
-    name: business and nfr baseline ready
-    depends_on:
-      - T-SDH-BIZ-060
-      - T-SDH-NFR-020
-      - T-SDH-NFR-030
-      - T-SDH-NFR-040
-      - T-SDH-NFR-050
-      - T-SDH-NFR-070
-      - T-SDH-NFR-080
-      - T-SDH-NFR-090
-    owner: QE
-    date_hint: 2026-03-25
+    name: 業務・非機能要件ベースライン確定
+    depends_on: [M-SDH-BIZ-900, M-SDH-NFR-900]
+    owner: PO
+    date_hint: "2026-04-01"
     tags: [definition]
 
   - id: M-SDH-350
-    name: design baseline ready
-    depends_on:
-      - M-SDH-DES-900
+    name: 設計ベースライン確定
+    depends_on: [M-SDH-DES-900]
     owner: ARC
-    date_hint: 2026-04-01
+    date_hint: "2026-04-10"
     tags: [design]
 
   - id: M-SDH-400
-    name: quality and traceability baseline ready
-    depends_on:
-      - M-SDH-QLT-900
+    name: 品質ベースライン確定
+    depends_on: [M-SDH-QLT-900]
     owner: PO
-    date_hint: 2026-04-07
+    date_hint: "2026-04-18"
     tags: [quality]
 
   - id: M-SDH-999
-    name: prj-0001 schedule scope completed
-    depends_on:
-      - M-SDH-400
+    name: prj-0001 スケジュールスコープ完了
+    depends_on: [M-SDH-400]
     owner: PO
-    date_hint: 2026-04-08
+    date_hint: "2026-04-18"
     tags: [finish]

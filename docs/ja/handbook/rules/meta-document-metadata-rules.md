@@ -1,9 +1,10 @@
 ---
 id: meta-document-metadata-rules
 type: meta
-title: ドキュメントのメタ情報の記述ルール
 status: draft
 ---
+
+# ドキュメントのメタ情報の記述ルール
 
 Document Metadata Rules
 
@@ -13,6 +14,7 @@ Document Metadata Rules
 
 - 参照スキーマ: [`docs/shared/schemas/spec-frontmatter.schema.yaml`](../../../shared/schemas/spec-frontmatter.schema.yaml)
 - Markdownの場合は、記述は YAML Front Matter を想定（各仕様ドキュメントの先頭）。
+- ドキュメント名は Frontmatter ではなく、本文先頭の `#` 見出し（H1）に記述する。
 - YAML/JSON や他フォーマットの場合は、同等のメタ情報を持つこと。
 
 ## 2. メタ情報項目一覧
@@ -21,7 +23,6 @@ Document Metadata Rules
 | ---------- | --------------------------------------------------- | ---- |
 | id         | ドキュメントID (xxx-xxx-xxxx)                       | ○    |
 | type       | ドキュメントの種類                                  | ○    |
-| title      | ドキュメント名                                      | ○    |
 | status     | ドキュメントの状態                                  | ○    |
 | part_of    | 集約ドキュメント（一覧/親）への所属リンク           | 任意 |
 | based_on   | 技術的・定義的な土台（前提）/根拠となるドキュメント | 任意 |
@@ -58,12 +59,15 @@ Document Metadata Rules
 | rulebook     | ドキュメント記述ルール                             |
 | instruction  | 生成AIへの指示テンプレート                         |
 | guide        | ガイドライン                                       |
+| migration    | 移行計画・設計・手順                               |
+| operations   | 運用要件・設計・手順                               |
+| template     | ドキュメントテンプレート                           |
 
-### 3.3. title(ドキュメント名)
+### 3.3. ドキュメント名（H1見出し）
 
-- 必須項目
-- ドキュメント名（1文字以上）
-- ドキュメントの内容が一目で分かる名称
+- Frontmatter ではなく、本文先頭の `#` 見出しとして記述する
+- 1文字以上、内容が一目で分かる名称にする
+- 見出しレベルは H1（`#`）を必須とする
 
 ### 3.4. status(ドキュメントの状態)
 
@@ -114,7 +118,6 @@ Document Metadata Rules
 ---
 id: api-get-order-v1
 type: api
-title: 注文API仕様
 status: ready
 part_of: []
 based_on: []
@@ -122,5 +125,9 @@ supersedes: [api-get-order-v0]
 ---
 ```
 
-- NG例: `id: Order_API_v1`（大文字・アンダースコアNG）, `status: public`（列挙外）, `extra: foo`（未定義プロパティNG）
-- OK例: `id: order-api-v1`, `status: ready`
+```markdown
+# 注文API仕様
+```
+
+- NG例: `id: Order_API_v1`（大文字・アンダースコアNG）, `status: public`（列挙外）, `extra: foo`（未定義プロパティNG）, Frontmatterに`title`を記述
+- OK例: `id: order-api-v1`, `status: ready`, 本文先頭に `# <ドキュメント名>`

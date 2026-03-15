@@ -1,9 +1,11 @@
 ---
 id: utc-rules
-title: 単体テストカタログ 対象別 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 単体テストカタログ 対象別 作成ルール
 
 Unit Test Catalog (UTC) Documentation Rules
 

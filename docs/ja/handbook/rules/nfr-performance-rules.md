@@ -1,9 +1,11 @@
 ---
 id: nfr-performance-rules
-title: 非機能要件 / 性能 作成ルール
 type: rulebook
 status: draft
+
 ---
+
+# 非機能要件 / 性能 作成ルール
 
 Non-Functional Requirements Performance Documentation Rules
 

@@ -3,99 +3,42 @@ project_id: prj-0001
 domain: design
 assigned_team: specdojo-handbook
 wbs:
-  - id: WBS-DES-CLD-010
-    name: maintain context landscape documentation pair
-    description: Maintain the CLD rule and instruction pair for context landscape documents and their required narrative structure.
+  - id: WBS-DES-IFX-010
+    name: 外部インターフェースドキュメントファミリーの整備
+    description: >
+      外部システムIF一覧・API・ファイル・メッセージ仕様の
+      ルール・指示ファイルを1つのインターフェースファミリーとして整備する（カタログ §4）。
     owner: ARC
-    component: landscape
+    component: external-if
     deliverables:
-      - path: docs/ja/handbook/rules/cld-rules.md
+      - path: docs/ja/handbook/rules/ifx-rules.md
         kind: modify
-      - path: docs/ja/handbook/instructions/cld-instruction.md
+      - path: docs/ja/handbook/instructions/ifx-instruction.md
         kind: modify
-    done_criteria: The CLD rule and instruction pair defines the mandatory structure and AI guidance for context landscape documents with stable terminology and section order.
+      - path: docs/ja/handbook/rules/ifx-api-rules.md
+        kind: modify
+      - path: docs/ja/handbook/instructions/ifx-api-instruction.md
+        kind: modify
+      - path: docs/ja/handbook/rules/ifx-file-rules.md
+        kind: modify
+      - path: docs/ja/handbook/instructions/ifx-file-instruction.md
+        kind: modify
+      - path: docs/ja/handbook/rules/ifx-msg-rules.md
+        kind: modify
+      - path: docs/ja/handbook/instructions/ifx-msg-instruction.md
+        kind: modify
+    done_criteria: >
+      外部インターフェースのルール・指示ファイルが、IF一覧・API・ファイル・
+      メッセージ仕様ドキュメント全体にわたり一貫した構造・必須フィールド・
+      AI生成制約を定義していること。
 
-  - id: WBS-DES-CND-020
-    name: maintain context narrative and mermaid family
-    description: Maintain the CND markdown and mermaid rule and instruction files for context documentation as one aligned family.
+  - id: WBS-DES-CXD-020
+    name: C4 コンテキスト図ドキュメントファミリーの整備
+    description: >
+      C4 コンテキストレベルドキュメントの CXD Markdown および Mermaid の
+      ルール・指示ファイルを整備する（カタログ §6.1）。
     owner: ARC
-    component: context
-    deliverables:
-      - path: docs/ja/handbook/rules/cnd-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/cnd-instruction.md
-        kind: modify
-      - path: docs/ja/handbook/rules/cnd-mermaid-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/cnd-mermaid-instruction.md
-        kind: modify
-    done_criteria: The CND family defines narrative and diagram requirements that stay aligned across markdown and mermaid outputs for context documentation.
-
-  - id: WBS-DES-COP-030
-    name: maintain cross-cutting policy documentation pair
-    description: Maintain the COP rule and instruction pair for cross-cutting policy documents and their fixed policy coverage.
-    owner: ARC
-    component: policy
-    deliverables:
-      - path: docs/ja/handbook/rules/cop-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/cop-instruction.md
-        kind: modify
-    done_criteria: The COP rule and instruction pair defines the fixed headings, policy coverage, and AI generation constraints for cross-cutting policy documents.
-
-  - id: WBS-DES-CPD-040
-    name: maintain component policy documentation family
-    description: Maintain the CPD markdown and mermaid rule and instruction files for component policy documents.
-    owner: ARC
-    component: component-policy
-    deliverables:
-      - path: docs/ja/handbook/rules/cpd-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/cpd-instruction.md
-        kind: modify
-      - path: docs/ja/handbook/rules/cpd-mermaid-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/cpd-mermaid-instruction.md
-        kind: modify
-    done_criteria: The CPD family defines both narrative and mermaid outputs for component policy documents with matching scope, terminology, and required elements.
-
-  - id: WBS-DES-CDFD-050
-    name: maintain data flow documentation family
-    description: Maintain the CDFD textual and mermaid rule and instruction files for data flow design documentation.
-    owner: ARC
-    component: data-flow
-    deliverables:
-      - path: docs/ja/handbook/rules/cdfd-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/cdfd-instruction.md
-        kind: modify
-      - path: docs/ja/handbook/rules/cdfd-mermaid-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/cdfd-mermaid-instruction.md
-        kind: modify
-    done_criteria: The CDFD family defines consistent structure and AI guidance for textual and mermaid representations of data flow design documents.
-
-  - id: WBS-DES-CSTD-060
-    name: maintain state transition documentation family
-    description: Maintain the CSTD markdown and mermaid rule and instruction files for state transition design artifacts.
-    owner: ARC
-    component: state-transition
-    deliverables:
-      - path: docs/ja/handbook/rules/cstd-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/cstd-instruction.md
-        kind: modify
-      - path: docs/ja/handbook/rules/cstd-mermaid-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/cstd-mermaid-instruction.md
-        kind: modify
-    done_criteria: The CSTD family defines narrative and mermaid requirements for state transition design with consistent headings, coverage, and prohibition rules.
-
-  - id: WBS-DES-CXD-070
-    name: maintain cross-system design documentation family
-    description: Maintain the CXD markdown and mermaid rule and instruction files for cross-system design documentation.
-    owner: ARC
-    component: cross-system
+    component: c4-context
     deliverables:
       - path: docs/ja/handbook/rules/cxd-rules.md
         kind: modify
@@ -105,91 +48,87 @@ wbs:
         kind: modify
       - path: docs/ja/handbook/instructions/cxd-mermaid-instruction.md
         kind: modify
-    done_criteria: The CXD family defines aligned markdown and mermaid outputs for cross-system design artifacts with fixed required content and AI guidance.
+    done_criteria: >
+      CXD ファミリーが、C4 コンテキスト図の Markdown と Mermaid の
+      出力を整合させ、必須コンテンツとAIガイダンスを定義していること。
 
-  - id: WBS-DES-DIAGRAM-080
-    name: maintain catalog and interface diagram rule sets
-    description: Maintain the catalog and interface mermaid rule and instruction files that define shared diagramming conventions.
+  - id: WBS-DES-CND-030
+    name: C4 コンテナ図ドキュメントファミリーの整備
+    description: >
+      C4 コンテナレベルドキュメントの CND Markdown および Mermaid の
+      ルール・指示ファイルを整備する（カタログ §6.1）。
     owner: ARC
-    component: diagrams
+    component: c4-container
     deliverables:
-      - path: docs/ja/handbook/rules/ccd-mermaid-rules.md
+      - path: docs/ja/handbook/rules/cnd-rules.md
         kind: modify
-      - path: docs/ja/handbook/instructions/ccd-mermaid-instruction.md
+      - path: docs/ja/handbook/instructions/cnd-instruction.md
         kind: modify
+      - path: docs/ja/handbook/rules/cnd-mermaid-rules.md
+        kind: modify
+      - path: docs/ja/handbook/instructions/cnd-mermaid-instruction.md
+        kind: modify
+    done_criteria: >
+      CND ファミリーが、C4 コンテナドキュメントの Markdown と Mermaid の
+      ナラティブと図の要件を整合させて定義していること。
+
+  - id: WBS-DES-CPD-040
+    name: C4 コンポーネント図ドキュメントファミリーの整備
+    description: >
+      C4 コンポーネントレベルドキュメントの CPD Markdown および Mermaid の
+      ルール・指示ファイルを整備する（カタログ §6.1）。
+    owner: ARC
+    component: c4-component
+    deliverables:
+      - path: docs/ja/handbook/rules/cpd-rules.md
+        kind: modify
+      - path: docs/ja/handbook/instructions/cpd-instruction.md
+        kind: modify
+      - path: docs/ja/handbook/rules/cpd-mermaid-rules.md
+        kind: modify
+      - path: docs/ja/handbook/instructions/cpd-mermaid-instruction.md
+        kind: modify
+    done_criteria: >
+      CPD ファミリーが、C4 コンポーネントドキュメントのナラティブと Mermaid の
+      出力をスコープ・用語・必須要素で整合させて定義していること。
+
+  - id: WBS-DES-IFD-050
+    name: インフラ構成図 Mermaid ペアの整備
+    description: >
+      インフラ構成図の IFD Mermaid ルール・指示ペアを
+      整備する（カタログ §6.2）。
+    owner: ARC
+    component: infrastructure
+    deliverables:
       - path: docs/ja/handbook/rules/ifd-mermaid-rules.md
         kind: modify
       - path: docs/ja/handbook/instructions/ifd-mermaid-instruction.md
         kind: modify
-    done_criteria: Catalog and interface mermaid rule sets define diagram syntax, mandatory nodes and relationships, and AI guidance consistently across diagram families.
+    done_criteria: >
+      IFD Mermaid ルール・指示ペアが、図の構文・必須ノード・関係・
+      AIガイダンスを定義していること。
 
-  - id: WBS-DES-CDSD-090
-    name: maintain component design summary pair
-    description: Maintain the CDSD rule and instruction pair for concise component design summary documents.
+  - id: WBS-DES-TSD-060
+    name: 技術スタック定義ペアの整備
+    description: >
+      採用技術・バージョン・選定理由を網羅する技術スタック定義ドキュメントの
+      TSD ルール・指示ペアを整備する（カタログ §6.2）。
     owner: ARC
-    component: design-summary
+    component: tech-stack
     deliverables:
-      - path: docs/ja/handbook/rules/cdsd-rules.md
+      - path: docs/ja/handbook/rules/tsd-rules.md
         kind: modify
-      - path: docs/ja/handbook/instructions/cdsd-instruction.md
+      - path: docs/ja/handbook/instructions/tsd-instruction.md
         kind: modify
-    done_criteria: The CDSD rule and instruction pair defines the summary structure and AI guidance needed to author concise but complete component design summaries.
+    done_criteria: >
+      TSD ルール・指示ペアが、技術スタックの必須セクション・
+      バージョン制約・AIガイダンスを定義していること。
 
-  - id: WBS-DES-DMD-100
-    name: maintain domain model documentation pair
-    description: Maintain the DMD rule and instruction pair for domain model documents and their modeling constraints.
-    owner: ARC
-    component: domain-model
-    deliverables:
-      - path: docs/ja/handbook/rules/dmd-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/dmd-instruction.md
-        kind: modify
-    done_criteria: The DMD rule and instruction pair defines mandatory domain model sections, modeling constraints, and AI guidance without leaking implementation detail.
-
-  - id: WBS-DES-ENGINEERING-110
-    name: maintain engineering support documentation set
-    description: Maintain the engineering support rule and instruction files covering API, feature, message, and integration support documents.
-    owner: ARC
-    component: engineering-support
-    deliverables:
-      - path: docs/ja/handbook/rules/eapis-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/eapis-instruction.md
-        kind: modify
-      - path: docs/ja/handbook/rules/efes-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/efes-instruction.md
-        kind: modify
-      - path: docs/ja/handbook/rules/ems-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/ems-instruction.md
-        kind: modify
-      - path: docs/ja/handbook/rules/esil-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/esil-instruction.md
-        kind: modify
-    done_criteria: Engineering support rule and instruction files define consistent structures, mandatory fields, and AI generation constraints across API, feature, message, and integration support documents.
-
-  - id: WBS-DES-STRUCTURE-120
-    name: maintain logical structure and UI specification pairs
-    description: Maintain the logical structure and UI specification rule and instruction pairs as one shared structure-focused family.
-    owner: ARC
-    component: structure
-    deliverables:
-      - path: docs/ja/handbook/rules/sld-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/sld-instruction.md
-        kind: modify
-      - path: docs/ja/handbook/rules/uis-rules.md
-        kind: modify
-      - path: docs/ja/handbook/instructions/uis-instruction.md
-        kind: modify
-    done_criteria: Structure and UI rule and instruction pairs define fixed headings, modeling scope, and AI authoring guidance for logical structure and UI specification documents.
-
-  - id: WBS-DES-SYSD-130
-    name: maintain system design index and policy family
-    description: Maintain the system design index, critical-flow, and cross-cutting-policy rule and instruction files as one system design family.
+  - id: WBS-DES-SYSD-070
+    name: システム設計ドキュメントファミリーの整備
+    description: >
+      システム設計インデックス・クリティカルフロー・横断的ポリシーの
+      ルール・指示ファイルを1つのシステム設計ファミリーとして整備する（カタログ §7）。
     owner: ARC
     component: system-design
     deliverables:
@@ -205,4 +144,6 @@ wbs:
         kind: modify
       - path: docs/ja/handbook/instructions/sysd-cross-cutting-policy-instruction.md
         kind: modify
-    done_criteria: The SYSD family defines index, critical-flow, and cross-cutting-policy artifacts with aligned section structures and reusable AI guidance.
+    done_criteria: >
+      SYSD ファミリーが、インデックス・クリティカルフロー・横断的ポリシーの
+      成果物を整合したセクション構造と再利用可能なAIガイダンスで定義していること。
