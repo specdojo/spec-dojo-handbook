@@ -148,6 +148,13 @@ function isWorkingDateUtc(dt: Date, calendar: ScheduleCalendar): boolean {
   return calendar.workdays.has(dt.getUTCDay()) && !calendar.holidays.has(dateOnly)
 }
 
+function advanceToNextWorkingInstantUtc(dt: Date, calendar: ScheduleCalendar): void {
+  while (!isWorkingDateUtc(dt, calendar)) {
+    dt.setUTCDate(dt.getUTCDate() + 1)
+    dt.setUTCHours(0, 0, 0, 0)
+  }
+}
+
 function addWorkingDayOffset(
   startDate: string,
   dayOffset: number,
@@ -156,19 +163,27 @@ function addWorkingDayOffset(
   const [year, month, day] = startDate.split('-').map(Number)
   const dt = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
 
-  while (!isWorkingDateUtc(dt, calendar)) dt.setUTCDate(dt.getUTCDate() + 1)
+  advanceToNextWorkingInstantUtc(dt, calendar)
 
-  const wholeDays = Math.floor(dayOffset)
-  const fractionalDays = dayOffset - wholeDays
+  let remainingMinutes = Math.round(dayOffset * 24 * 60)
+  while (remainingMinutes > 0) {
+    advanceToNextWorkingInstantUtc(dt, calendar)
 
-  for (let i = 0; i < wholeDays; i += 1) {
-    do {
-      dt.setUTCDate(dt.getUTCDate() + 1)
-    } while (!isWorkingDateUtc(dt, calendar))
+    const nextMidnight = new Date(dt.getTime())
+    nextMidnight.setUTCHours(24, 0, 0, 0)
+
+    const usableMinutes = Math.round((nextMidnight.getTime() - dt.getTime()) / (60 * 1000))
+    if (remainingMinutes < usableMinutes) {
+      dt.setUTCMinutes(dt.getUTCMinutes() + remainingMinutes)
+      remainingMinutes = 0
+      break
+    }
+
+    dt.setTime(nextMidnight.getTime())
+    remainingMinutes -= usableMinutes
   }
 
-  const minutes = Math.round(fractionalDays * 24 * 60)
-  dt.setUTCMinutes(dt.getUTCMinutes() + minutes)
+  advanceToNextWorkingInstantUtc(dt, calendar)
   return dt
 }
 
@@ -188,6 +203,15 @@ function formatGanttDate(
   return `${yyyy}-${mm}-${dd} ${hh}:${mi}`
 }
 
+function formatGanttDateTime(dt: Date): string {
+  const yyyy = dt.getUTCFullYear().toString().padStart(4, '0')
+  const mm = (dt.getUTCMonth() + 1).toString().padStart(2, '0')
+  const dd = dt.getUTCDate().toString().padStart(2, '0')
+  const hh = dt.getUTCHours().toString().padStart(2, '0')
+  const mi = dt.getUTCMinutes().toString().padStart(2, '0')
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`
+}
+
 function formatGanttDuration(durationDays: number): string {
   if (durationDays === 0) return '0d'
 
@@ -195,6 +219,66 @@ function formatGanttDuration(durationDays: number): string {
   if (minutes % (24 * 60) === 0) return `${minutes / (24 * 60)}d`
   if (minutes % 60 === 0) return `${minutes / 60}h`
   return `${minutes}m`
+}
+
+function formatGanttTaskTiming(
+  row: CpmNode,
+  projectStartDate: string | null,
+  calendar: ScheduleCalendar
+): string {
+  const start = formatGanttDate(row.es, projectStartDate, calendar)
+  if (row.kind === 'milestone' || row.duration_days === 0) {
+    return `${start}, ${formatGanttDuration(row.duration_days)}`
+  }
+
+  const end = formatGanttDate(row.ef, projectStartDate, calendar)
+  return `${start}, ${end}`
+}
+
+type GanttTaskSegment = {
+  start: Date
+  end: Date
+}
+
+function buildWorkingTaskSegments(
+  startDate: string,
+  startOffset: number,
+  durationDays: number,
+  calendar: ScheduleCalendar
+): GanttTaskSegment[] {
+  const cursor = addWorkingDayOffset(startDate, startOffset, calendar)
+  let remainingMinutes = Math.round(durationDays * 24 * 60)
+  const segments: GanttTaskSegment[] = []
+
+  while (remainingMinutes > 0) {
+    advanceToNextWorkingInstantUtc(cursor, calendar)
+
+    const nextMidnight = new Date(cursor.getTime())
+    nextMidnight.setUTCHours(24, 0, 0, 0)
+
+    const usableMinutes = Math.round((nextMidnight.getTime() - cursor.getTime()) / (60 * 1000))
+    const segmentMinutes = Math.min(remainingMinutes, usableMinutes)
+    const segmentStart = new Date(cursor.getTime())
+    const segmentEnd = new Date(cursor.getTime())
+    segmentEnd.setUTCMinutes(segmentEnd.getUTCMinutes() + segmentMinutes)
+
+    segments.push({ start: segmentStart, end: segmentEnd })
+
+    cursor.setTime(segmentEnd.getTime())
+    remainingMinutes -= segmentMinutes
+  }
+
+  return segments
+}
+
+function renderGanttTaskLine(
+  label: string,
+  taskId: string,
+  flags: string[],
+  timing: string
+): string {
+  const attrs = flags.length ? `${flags.join(', ')}, ` : ''
+  return `  ${label} : ${attrs}${taskId}, ${timing}`
 }
 
 function escapeMermaidText(text: string): string {
@@ -778,12 +862,54 @@ export function writeCpmFiles(
 
       const stateSuffix =
         taskState === 'blocked' ? ' [blocked]' : taskState === 'cancelled' ? ' [cancelled]' : ''
-      const label = escapeMermaidText(
-        row.name ? `${row.id} ${row.name}${stateSuffix}` : `${row.id}${stateSuffix}`
-      )
-      const attrs = flags.length ? `${flags.join(', ')}, ` : ''
+      const label = row.name ? `${row.id} ${row.name}${stateSuffix}` : `${row.id}${stateSuffix}`
+
+      if (row.kind === 'task' && cpm.project_start_date) {
+        const segments = buildWorkingTaskSegments(
+          cpm.project_start_date,
+          row.es,
+          row.duration_days,
+          schedule.calendar
+        )
+
+        if (segments.length > 1) {
+          for (const [index, segment] of segments.entries()) {
+            const segmentLabel =
+              index === 0
+                ? `${label} [1/${segments.length}]`
+                : `${row.id}${stateSuffix} [${index + 1}/${segments.length}]`
+            ganttLines.push(
+              renderGanttTaskLine(
+                escapeMermaidText(segmentLabel),
+                toMermaidTaskId(`${row.id}_seg_${index + 1}`),
+                flags,
+                `${formatGanttDateTime(segment.start)}, ${formatGanttDateTime(segment.end)}`
+              )
+            )
+          }
+          continue
+        }
+
+        if (segments.length === 1) {
+          ganttLines.push(
+            renderGanttTaskLine(
+              escapeMermaidText(label),
+              toMermaidTaskId(row.id),
+              flags,
+              `${formatGanttDateTime(segments[0].start)}, ${formatGanttDateTime(segments[0].end)}`
+            )
+          )
+          continue
+        }
+      }
+
       ganttLines.push(
-        `  ${label} : ${attrs}${toMermaidTaskId(row.id)}, ${formatGanttDate(row.es, cpm.project_start_date, schedule.calendar)}, ${formatGanttDuration(row.duration_days)}`
+        renderGanttTaskLine(
+          escapeMermaidText(label),
+          toMermaidTaskId(row.id),
+          flags,
+          formatGanttTaskTiming(row, cpm.project_start_date, schedule.calendar)
+        )
       )
     }
   }
