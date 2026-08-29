@@ -4,11 +4,12 @@ specdojo:
   type: exec-result
   task_id: PJR-ZYFZ
   mode: edit
-  status: in_progress
+  status: complete
   project_id: prj-0001
   origin: register
   plan_ref: exec/plans/pjr-zyfz-20260829T151912Z-ce0f-plan.md
   started_at: "2026-08-29T15:19:12.326Z"
+  completed_at: "2026-08-29T15:25:25.187Z"
   agent: codex-expert-executor
 ---
 
@@ -16,16 +17,18 @@ specdojo:
 
 ## 1. 実施内容
 
-_TODO_: 実施した内容の要約を記入する。
+- 文書責務の単一性を評価する共通 viewpoint を追加し、運用規則と個票を更新した。
 
 ## 2. 変更ファイル
 
-_TODO_: 変更したファイルのパスを記入する。
+- `docs/ja/projects/prj-0001/controls/project-register/pjr-zyfz-single-responsibility-viewpoint.md`: 個票の更新（実施内容などの追記）
+- `docs/ja/specdojo/defaults/pm-review-viewpoints.yaml`: 共通 viewpoint として文書責務の単一性の観点を追加
+- `docs/ja/specdojo/guides/review-guide.md`: レビューガイドへの記述追加
 
 ## 3. 申し送り
 
-_TODO_: 後続タスクへの申し送り事項を記入する（なければ削除）。
+- なし
 
 ## 4. 進め方と実践の型の適用
 
-_TODO_: `approach` に従ってどう進めたか、その進め方の中で実践の型（rulebook / recipe / sample / template）をどう適用したかを記入する（`fully-guided` で rulebook / recipe / sample / template をどう使い分けたか、`recipe-guided` で recipe のみを基準にした内容、`freeform` で実践の型より優先した実例やプロジェクト文脈、`retrofit` で実際に参照した実装パス・抽出した現在動作・反映/新設判断・未反映の乖離・未確認範囲、`rulebook-maintenance` などの maintenance 系で見直した実践の型とその根拠、など）。実践の型を基準にしなかった場合は、その判断と代わりに根拠にした内容も記入する。複数文書間に矛盾があり rulebook を正として判断した箇所、参照範囲から外れていた文書とその代わりに根拠にした内容があれば、あわせて記録する。
+共通の viewpoint 定義ファイルに文書責務の単一性を検出する観点を追加し、それに伴いレビューガイドへの反映および管理個票の更新を行った。変更後は prettier、markdownlint、および SpecDojo の各種バリデーション（catalog validate, register build, index build）を実行して整合性を確認した。

@@ -84,14 +84,14 @@ specdojo:
 
 ## 3. 作業内容
 
-| No  | 作業                         | 担当   | 状態 | メモ                                   |
-| --- | ---------------------------- | ------ | ---- | -------------------------------------- |
-| 1   | viewpoint の定義             | ARC    | open | check、evidence、severity、評価属性    |
-| 2   | ルーブリックの定義           | ARC    | open | level 0-4 の判定基準                   |
-| 3   | 既存観点との境界の明確化     | ARC    | open | conciseness との違いを規範文書へ記載   |
-| 4   | 分割が必要な場合の対処の決定 | ARC    | open | maintenance の範囲外である問題への対応 |
-| 5   | 共通正本への追加             | _TODO_ | open | defaults/pm-review-viewpoints.yaml     |
-| 6   | 判定の確認                   | _TODO_ | open | opr-rulebook を対象に検出できるか      |
+| No  | 作業                         | 担当 | 状態 | メモ                                       |
+| --- | ---------------------------- | ---- | ---- | ------------------------------------------ |
+| 1   | viewpoint の定義             | ARC  | done | check、evidence、severity、評価属性を定義  |
+| 2   | ルーブリックの定義           | ARC  | done | 共通 rubric の level 0-4 で判定            |
+| 3   | 既存観点との境界の明確化     | ARC  | done | conciseness との違いを review guide へ記載 |
+| 4   | 分割が必要な場合の対処の決定 | ARC  | done | 人が確認し PJR 起票を判断する運用に決定    |
+| 5   | 共通正本への追加             | ARC  | done | defaults/pm-review-viewpoints.yaml へ追加  |
+| 6   | 判定の確認                   | ARC  | done | opr-rulebook を level 2 / major と判定可能 |
 
 ### 3.1. 既存観点との違い
 
@@ -119,17 +119,20 @@ finding が「分割せよ」となった場合、既存の `<kind>-maintenance`
 - 分割元を参照している文書の更新
 - 対応する sample / recipe / template の再割り当て
 
-人が判断して登録簿へ起票する運用とするか、分割専用の approach を設けるかを決める必要がある。grade は評価のみを行い修正しないという原則があるため、検出と対処の間に人の判断を挟む形が自然である。
+人が finding を確認し、分割の採否と PJR 起票を判断する運用とする。grade は評価のみを行い、ファイル作成や ID 採番は行わない。起票後は、新規ファイル、成果物カタログ、参照元、対応する sample / recipe / template の変更を通常の edit task として扱う。分割専用 approach は、反復実績がなく必要性を判断できないため現時点では設けない。
 
-### 3.4. 未決の論点
+### 3.4. 論点への決定
 
-- 分割の粒度をどこまで grade が示すか。「分割すべき」までか、「この章とこの章を分けるべき」までか。
-- 分割を判定する閾値。sample が何件あれば主題が分かれていると見なすかは、機械的な基準にすると誤検出を招く。
-- 索引文書（`*-index-rulebook`）のように、複数主題をまとめること自体が目的の文書をどう扱うか。
+- grade は独立する主題と境界候補を finding に示す。最終的なファイル分割単位は人が決める。
+- sample 数や行数に固定閾値を設けない。章の独立性、読者、利用時点、対応する実践の型を組み合わせて判断する。
+- index、catalog、overview のように複数主題の案内自体を責務とする文書は分割対象から除外する。ただし、案内を越えて各主題の詳細まで抱える場合は対象とする。
 
 ## 4. 対応結果
 
--
+- 共通正本へ `vp-arc-single-responsibility` を追加し、ARC の `role_viewpoint_sets` に組み込んだ。category は `architecture`、既定 severity は `major`、評価層は `agent`、継続評価対象とした。
+- 共通の `grade_rubric` を継承し、level 4 は単一責務、level 3 は minor のみ、level 2 は分割候補となる major が1件、level 1 は複数の major または中心責務がほぼ定まらない状態、level 0 は blocker により文書として機能しない状態として判定する。
+- [[specdojo:review-guide|レビューガイド]] に `vp-arc-conciseness` との境界、集約文書の除外、分割 finding の扱いと PJR 起票の判断手順を記載した。
+- `opr-rulebook.md` を判定材料に照らすと、障害、監視、バックアップ、バッチ、変更、アクセス制御、問い合わせが独立した章・読者・利用時点・sample を持つ一方、1つの rulebook が各詳細を規定している。中心責務は読み取れるが分割を要する major finding があるため level 2 と判定でき、複数主題の同居を検出できることを確認した。
 
 ## 5. 関連ドキュメント
 

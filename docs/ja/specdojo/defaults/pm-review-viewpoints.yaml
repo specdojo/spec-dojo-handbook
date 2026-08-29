@@ -366,6 +366,17 @@ viewpoints:
     default_severity: minor
     evaluation: agent
     continuous: true
+  - id: vp-arc-single-responsibility
+    role: ARC
+    category: architecture
+    title: 文書責務の単一性
+    check: >-
+      文書の中心主題と責務境界が一つに定まり、各章がその責務に直接寄与しているか。独立して参照・更新できる主題が複数あり、対象読者・利用時点が異なる、または別々の sample・recipe・template に対応する場合は分割を検討する。分量や対応する実践の型の数だけでは不備とせず、複数主題の案内自体を責務とする index・catalog・overview は分割対象から除外する。同一主張の反復や正本の過剰な再掲は vp-arc-conciseness で判定し、この観点では扱わない。
+    evidence: >-
+      文書の目的、章ごとの主題と相互依存、章が参照・更新される単位、対象読者、利用時点、対応する sample・recipe・template、index・catalog・overview としての集約責務、分割後も独立して成立する境界候補。分割が必要な finding には境界候補と参照・カタログへの影響を記録する。
+    default_severity: major
+    evaluation: agent
+    continuous: true
   - id: vp-dev-implementation-readiness
     role: DEV
     category: implementation
@@ -564,6 +575,7 @@ role_viewpoint_sets:
       - vp-arc-cross-document-consistency
       - vp-arc-technical-constraints
       - vp-arc-conciseness
+      - vp-arc-single-responsibility
   - role: DEV
     viewpoints:
       - vp-dev-implementation-readiness
