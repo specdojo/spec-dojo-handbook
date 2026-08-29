@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: review
   priority: medium
   owner: ARC
   registered_at: "2026-08-29T12:49:25Z"
@@ -59,6 +59,19 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_fd510476614241c9b4579e1a7b91ce1e
+    - v: 1
+      id: reg_ec4a1100b92a4ddaaef68ad400ce65bc
+      ts: "2026-08-29T14:24:35Z"
+      action: review
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: review
+      reason: ready for review
+      changes:
+        - field: status
+          from: in-progress
+          to: review
+      previous_event_id: reg_f5c1da9b62d145ac868d6710048de0d6
 ---
 
 # PJR-4TZ7 grade を1文書単位の評価へ変更し plan として保存する
