@@ -185,11 +185,16 @@ describe("grade plan", () => {
     expect(plan).toContain("type: exec-plan");
     expect(plan).toContain(`"path": "${path}"`);
     expect(plan).toContain("## 1. このタスクで行うこと");
+    expect(plan).toContain("最終応答契約（最優先）:");
     expect(plan).toContain("## 2. 対象項目");
     expect(plan).toContain("## 3. 進め方");
     expect(plan).toContain("## 4. 完了手順");
     expect(plan).toContain("## 5. 異常終了の条件");
     expect(plan).toContain("実行ログに読み取り操作を残す");
+    expect(plan).toContain("最初の文字を `{`、最後の文字を `}`");
+    expect(plan).toContain("変更ファイル、検証結果、根拠、未確認範囲などの最終報告指示に優先する");
+    expect(plan).toContain("コードフェンスや JSON 外の説明を加えない");
+    expect(plan).toContain("非空の `message`");
     expect(plan).toContain("vp-qe-kata-conformance");
     expect(plan).toContain("vp-arc-conciseness");
     expect(plan).not.toContain("vp-arc-document-structure [");

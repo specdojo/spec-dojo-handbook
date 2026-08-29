@@ -474,6 +474,8 @@ specdojo grade validate --target kata --project prj-0001
 
 agent は判定前に、plan が示す評価対象とすべての参考資料をファイル読み取りツールで全文読み、実行ログに各パスの読み取り操作を残します。参考資料は判定材料であり、GradeSubmission の `documents` には含めません。いずれかのファイルを読み取れない場合は、内容を推測せず異常終了します。grade plan の Frontmatter と「このタスクで行うこと / 対象項目 / 進め方 / 完了手順 / 異常終了の条件」の章構成は exec plan に準拠します。
 
+grade plan は冒頭に最優先の最終応答契約を持ちます。正常終了時は最初の文字が `{`、最後の文字が `}` である GradeSubmission JSON オブジェクト1個だけを返し、途中経過、タスクリスト、変更ファイル、検証結果、JSON 外の根拠、Markdown コードフェンスを含めません。この契約は agent の通常タスク向け最終報告指示に優先し、判定根拠は `findings[].message` に格納します。出力前に対象1件と全 agent viewpoint、level 3 以下の finding、および finding の非空 `message` を自己確認します。
+
 複数対象は、生成された plan を順に agent へ渡し、1件の GradeSubmission を直ちに `grade apply --path <document>` で反映します。agent 起動は Job / exec が担い、`grade` は plan の生成と結果の検証・反映に限定されます。この単位で処理すると、後続文書が失敗しても適用済みの grade は保持されます。保存済み plan は `exec trial` などで同じ入力を複数 agent へ渡す用途にも利用できます。
 
 `apply` は level 3 以下に finding を要求し、`blocker` は level 0、`major` は最大 level 2、`minor` は最大 level 3 に制限します。category score は viewpoint score（`level × 25`）の平均、総合 score は対象種別ごとの重み付き平均です。verdict は `blocker` があれば `fail`、`major` があるか総合 score が 70 未満なら `needs-work`、それ以外を `pass` とします。
