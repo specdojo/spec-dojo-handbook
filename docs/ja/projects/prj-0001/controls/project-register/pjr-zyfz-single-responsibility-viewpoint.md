@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-zyfz-single-responsibility-viewpoint
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-29T14:52:37Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-29T23:18:29Z"
+  conclusion: 共通正本へ vp-arc-single-responsibility を追加し、ARC の role_viewpoint_sets へ組み込んだ。分量や対応する実践の型の数だけでは不備とせず、複数主題の案内自体を責務とする index・catalog・overview は分割対象から除外する。同一主張の反復は vp-arc-conciseness で扱い、本観点とは境界を分ける。分割が必要と判定された場合は人が確認して PJR 起票を判断する運用とし、判断手順をレビューガイドへ記載した。opr-rulebook を level 2 / major と判定できることを確認した。
   register_events:
     - v: 1
       id: reg_6f581f0538d14825901d8b38c9fe35e0
@@ -72,6 +74,25 @@ specdojo:
           from: in-progress
           to: review
       previous_event_id: reg_171dd02bea534d5abcca2a23ec695f4e
+    - v: 1
+      id: reg_41f78448982447808ad69624162bc211
+      ts: "2026-08-29T23:18:29Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-30"
+        - field: conclusion
+          from: "-"
+          to: 共通正本へ vp-arc-single-responsibility を追加し、ARC の role_viewpoint_sets へ組み込んだ。分量や対応する実践の型の数だけでは不備とせず、複数主題の案内自体を責務とする index・catalog・overview は分割対象から除外する。同一主張の反復は vp-arc-conciseness で扱い、本観点とは境界を分ける。分割が必要と判定された場合は人が確認して PJR 起票を判断する運用とし、判断手順をレビューガイドへ記載した。opr-rulebook を level 2 / major と判定できることを確認した。
+      previous_event_id: reg_40e61fd4f7024f3a913a4a13d6e4264e
 ---
 
 # PJR-ZYFZ 文書責務の単一性を見る viewpoint を追加する

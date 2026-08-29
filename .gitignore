@@ -100,4 +100,4 @@ docs/**/generated/*
 docs/**/execution/exec/.locks/
 
 /*.log
-/logs/*.log
+/logs/**

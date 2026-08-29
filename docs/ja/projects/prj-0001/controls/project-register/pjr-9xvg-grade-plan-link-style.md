@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-9xvg-grade-plan-link-style
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-29T14:58:09Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-29T23:18:29Z"
+  conclusion: grade plan を全文埋め込みからパス参照へ変更し、frontmatter と章構成を exec plan へ揃えた。参考資料はパスで列挙し、全文を読んで実行ログに読み取り操作を残すよう plan へ明記した。opr-batch-sample を対象とした plan は 63,631 文字から 8,798 文字へ縮小し、対象の分量に依存しなくなった。
   register_events:
     - v: 1
       id: reg_d6fd27ccfd7741778008543b3af97b0d
@@ -72,6 +74,25 @@ specdojo:
           from: in-progress
           to: review
       previous_event_id: reg_b403ddd990de41b4ad195c0fcf77b382
+    - v: 1
+      id: reg_10d39ac0b2af479db6e0c08b2180d549
+      ts: "2026-08-29T23:18:29Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-30"
+        - field: conclusion
+          from: "-"
+          to: grade plan を全文埋め込みからパス参照へ変更し、frontmatter と章構成を exec plan へ揃えた。参考資料はパスで列挙し、全文を読んで実行ログに読み取り操作を残すよう plan へ明記した。opr-batch-sample を対象とした plan は 63,631 文字から 8,798 文字へ縮小し、対象の分量に依存しなくなった。
+      previous_event_id: reg_d473ee85ff4d45d18df1366202e8bf5a
 ---
 
 # PJR-9XVG grade plan を全文埋め込みからパス参照へ変更し exec plan と構造を揃える
