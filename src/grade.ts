@@ -389,12 +389,6 @@ function deterministicResults(
   return results;
 }
 
-function fencedBlock(language: string, content: string): string[] {
-  const longest = Math.max(0, ...[...content.matchAll(/`+/g)].map((match) => match[0].length));
-  const fence = "`".repeat(Math.max(3, longest + 1));
-  return [`${fence}${language}`, content, fence];
-}
-
 export function renderGradePlan(opts: {
   target: GradeTarget;
   path: string;
@@ -410,6 +404,10 @@ export function renderGradePlan(opts: {
   const metadata = document.data.specdojo as Record<string, unknown>;
   const documentId = typeof metadata.id === "string" ? metadata.id : rel;
   const taskHash = createHash("sha256").update(rel).digest("hex").slice(0, 12).toUpperCase();
+  const taskId = `GRADE-${opts.target.toUpperCase()}-${taskHash}`;
+  const references = (opts.references ?? []).map((reference) =>
+    repoRelativePath(resolveSafeRepositoryPath(reference, "reference")),
+  );
   const lines = [
     "---",
     yaml
@@ -419,7 +417,7 @@ export function renderGradePlan(opts: {
             id: `${opts.projectId}:grade-${opts.target}-${taskHash.toLowerCase()}-plan`,
             type: "exec-plan",
             rulebook: "none",
-            task_id: `GRADE-${opts.target.toUpperCase()}-${taskHash}`,
+            task_id: taskId,
             name: `grade: ${rel}`,
             mode: "review",
             status: "ready",
@@ -432,16 +430,50 @@ export function renderGradePlan(opts: {
       .trimEnd(),
     "---",
     "",
-    "# SpecDojo grade assessment",
+    `# Review Plan: ${taskId} grade: ${rel}`,
     "",
-    `rubric: ${rubric.id}`,
-    `target: ${opts.target}`,
+    "## 1. このタスクで行うこと",
     "",
-    "各文書を共通 viewpoint と category rubric で 0-4 判定してください。level 3 以下には finding が必須です。deterministic viewpoint は CLI が判定するため出力に含めません。",
-    "finding は severity（blocker / major / minor / note）、対象直前の本文行番号、具体的な修正理由を含めます。line は Frontmatter を除く本文の1始まり（通常は H1 が1行目）です。",
-    "出力は GradeSubmission JSON のみとし、facts である path と rubric は変更しません。",
+    `評価対象 \`${rel}\` を共通 viewpoint と category rubric で 0-4 判定する。deterministic viewpoint は CLI が判定するため、agent の出力には含めない。`,
     "",
-    "## Output JSON",
+    "## 2. 対象項目",
+    "",
+    `- \`target\`: ${opts.target}`,
+    `- \`rubric\`: ${rubric.id}`,
+    `- \`document_id\`: ${documentId}`,
+    `- \`評価対象\`: \`${rel}\``,
+    "",
+    "### 参考資料",
+    "",
+    "参考資料は評価対象ではなく、成果物間整合を判定するための材料である。GradeSubmission の `documents` へ追加しない。",
+    "",
+    ...(references.length > 0 ? references.map((reference) => `- \`${reference}\``) : ["- なし"]),
+    "",
+    "## 3. 進め方",
+    "",
+    "1. 評価対象をファイル読み取りツールで全文読み、実行ログに読み取り操作を残す。plan に対象本文は埋め込まれていないため、この手順を省略しない。",
+    "2. 参考資料がある場合は列挙された全ファイルを全文読み、実行ログに各パスの読み取り操作を残す。参考資料を評価対象と混同しない。",
+    "3. 評価対象を次の rubric と viewpoint に照らし、各 viewpoint を 0-4 で判定する。",
+    "4. level 3 以下には finding を付ける。finding には severity（blocker / major / minor / note）、対象直前の本文行番号、具体的な修正理由を含める。line は Frontmatter を除く本文の1始まり（通常は H1 が1行目）とする。",
+    "",
+    "### 3.1. Rubric",
+    "",
+    ...rubric.levels.map(
+      (level) =>
+        `- ${level.level} (${level.name}, review=${level.review_verdict}): ${level.description}`,
+    ),
+    "",
+    "### 3.2. Viewpoints",
+    "",
+    ...viewpoints.map(
+      (viewpoint) =>
+        `- ${viewpoint.id} [${viewpoint.category}/${viewpoint.evaluation}]: ${viewpoint.check} Evidence: ${viewpoint.evidence}`,
+    ),
+    "",
+    "## 4. 完了手順",
+    "",
+    "1. すべての agent viewpoint の判定と、必要な finding が揃っていることを確認する。",
+    "2. facts である `path` と `rubric` を変更せず、次の GradeSubmission JSON のみを出力する。",
     "",
     "```json",
     JSON.stringify(
@@ -464,53 +496,12 @@ export function renderGradePlan(opts: {
     ),
     "```",
     "",
-    "## Rubric",
+    "## 5. 異常終了の条件",
     "",
-    ...rubric.levels.map(
-      (level) =>
-        `- ${level.level} (${level.name}, review=${level.review_verdict}): ${level.description}`,
-    ),
-    "",
-    "## Viewpoints",
-    "",
-    ...viewpoints.map(
-      (viewpoint) =>
-        `- ${viewpoint.id} [${viewpoint.category}/${viewpoint.evaluation}]: ${viewpoint.check} Evidence: ${viewpoint.evidence}`,
-    ),
+    "- 評価対象または参考資料を読み取れない場合は、内容を推測せず異常終了する。",
+    "- rubric または viewpoint に不足があり、全項目を判定できない場合は異常終了する。",
+    "- GradeSubmission JSON の契約を満たせない場合は異常終了する。",
   ];
-  lines.push(
-    "",
-    `## Document: ${rel}`,
-    "",
-    "Frontmatter（CLI の決定的判定対象）:",
-    "",
-    ...fencedBlock("yaml", yaml.dump(document.data, { lineWidth: 120, noRefs: true }).trimEnd()),
-    "",
-    "本文（finding.line は次の H1 を1行目として数える）:",
-    "",
-    ...fencedBlock("markdown", document.body.replace(/^\n+/, "")),
-  );
-  const references = opts.references ?? [];
-  if (references.length > 0) {
-    lines.push(
-      "",
-      "## Reference materials",
-      "",
-      "次の文書は評価対象ではありません。成果物間整合を判定するための参考資料です。出力 JSON の documents へ追加しないでください。",
-    );
-    for (const reference of references) {
-      const referencePath = resolveSafeRepositoryPath(reference, "reference");
-      const referenceRel = repoRelativePath(referencePath);
-      const extension = extname(referencePath).toLowerCase();
-      const language = extension === ".md" ? "markdown" : extension === ".json" ? "json" : "yaml";
-      lines.push(
-        "",
-        `### Reference: ${referenceRel}`,
-        "",
-        ...fencedBlock(language, readFileSync(referencePath, "utf8").trimEnd()),
-      );
-    }
-  }
   return `${lines.join("\n")}\n`;
 }
 
