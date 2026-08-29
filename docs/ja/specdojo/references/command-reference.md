@@ -457,7 +457,7 @@ specdojo exec trial adopt --project prj-0001 --comparison <comparison-id> --tria
 
 | コマンド         | 用途                                                      |
 | ---------------- | --------------------------------------------------------- |
-| `grade plan`     | 1文書ごとに参考資料付きの再利用可能な評価 plan を保存する |
+| `grade plan`     | 1文書ごとに対象・参考資料のパスを持つ評価 plan を保存する |
 | `grade apply`    | agent の JSON を検証し、スコアと finding を冪等に反映する |
 | `grade validate` | 内容ハッシュと Frontmatter / 本文 finding 件数を検証する  |
 
@@ -470,7 +470,9 @@ specdojo grade validate --target kata --project prj-0001
 
 `--target` は `kata` または `deliverable` です。`--path` は繰り返し指定でき、明示した Markdown 文書だけを対象にします。`--changed-only` は既存 grade の `content_hash` と、grade・finding を除いた現在内容のハッシュを比較するため、評価結果の書き込み自体を変更として再検出しません。
 
-`grade plan` は対象ごとに1ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名と内容は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。各 plan は評価対象を1件だけ含み、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書を参考資料として添付します。参考資料は判定材料であり、GradeSubmission の `documents` には含めません。
+`grade plan` は対象ごとに1ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名と内容は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。各 plan は評価対象を1件だけリポジトリ相対パスで示し、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書も参考資料のパスとして列挙します。対象や参考資料の本文は plan に埋め込みません。このため対象本文を更新しても plan の内容は変わらず、再生成は不要です。
+
+agent は判定前に、plan が示す評価対象とすべての参考資料をファイル読み取りツールで全文読み、実行ログに各パスの読み取り操作を残します。参考資料は判定材料であり、GradeSubmission の `documents` には含めません。いずれかのファイルを読み取れない場合は、内容を推測せず異常終了します。grade plan の Frontmatter と「このタスクで行うこと / 対象項目 / 進め方 / 完了手順 / 異常終了の条件」の章構成は exec plan に準拠します。
 
 複数対象は、生成された plan を順に agent へ渡し、1件の GradeSubmission を直ちに `grade apply --path <document>` で反映します。agent 起動は Job / exec が担い、`grade` は plan の生成と結果の検証・反映に限定されます。この単位で処理すると、後続文書が失敗しても適用済みの grade は保持されます。保存済み plan は `exec trial` などで同じ入力を複数 agent へ渡す用途にも利用できます。
 

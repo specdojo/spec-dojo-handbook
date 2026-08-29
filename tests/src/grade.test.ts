@@ -173,7 +173,7 @@ describe("grade markdown update", () => {
 });
 
 describe("grade plan", () => {
-  it("includes one document and only continuous agent viewpoints", () => {
+  it("references one document by path and uses the exec plan section structure", () => {
     const path = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
     const plan = renderGradePlan({
       target: "kata",
@@ -184,10 +184,17 @@ describe("grade plan", () => {
     });
     expect(plan).toContain("type: exec-plan");
     expect(plan).toContain(`"path": "${path}"`);
+    expect(plan).toContain("## 1. このタスクで行うこと");
+    expect(plan).toContain("## 2. 対象項目");
+    expect(plan).toContain("## 3. 進め方");
+    expect(plan).toContain("## 4. 完了手順");
+    expect(plan).toContain("## 5. 異常終了の条件");
+    expect(plan).toContain("実行ログに読み取り操作を残す");
     expect(plan).toContain("vp-qe-kata-conformance");
     expect(plan).toContain("vp-arc-conciseness");
     expect(plan).not.toContain("vp-arc-document-structure [");
-    expect(plan.match(/## Document:/g)).toHaveLength(1);
+    expect(plan).not.toContain("## Document:");
+    expect(plan).not.toContain("Frontmatter（CLI の決定的判定対象）");
   });
 
   it("resolves declared and reverse-linked Kata references", () => {
@@ -199,5 +206,23 @@ describe("grade plan", () => {
         expect.stringContaining("/templates/opr-template.md"),
       ]),
     );
+  });
+
+  it("lists reference paths without embedding target or reference contents", () => {
+    const path = "docs/ja/specdojo/samples/opr-batch-sample.md";
+    const references = resolveGradeReferencePaths(path);
+    const plan = renderGradePlan({
+      target: "kata",
+      path,
+      references,
+      viewpoints,
+      projectId: "prj-0001",
+    });
+    expect(plan).toContain(`- \`評価対象\`: \`${path}\``);
+    expect(plan).toContain("`docs/ja/specdojo/rulebooks/opr-rulebook.md`");
+    expect(plan).not.toContain("本文（finding.line");
+    expect(plan).not.toContain("# 運用手順: バッチ再実行・失敗対応 サンプル");
+    expect(plan).not.toContain("# 運用手順 作成ルール");
+    expect(plan.length).toBeLessThan(20_000);
   });
 });
