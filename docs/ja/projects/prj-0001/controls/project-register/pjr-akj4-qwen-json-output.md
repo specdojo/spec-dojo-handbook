@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-08-29T13:44:26Z"
   due_on: "2026-09-30"
+  block_reason: "agent exited with non-zero code: 実モデル（Qwen API）への接続ができず、JSON 出力が実際に得られるか、およびそれが `grade apply` で受理されるかの検証が完了していないため。"
   register_events:
     - v: 1
       id: reg_e5a8e0d95fb24107846317ebd0d8490d
@@ -75,6 +76,22 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_e895465abb1241f486eedc12ddb996d2
+    - v: 1
+      id: reg_24b620ec3ed74494806026dce594ab0e
+      ts: "2026-08-29T15:38:32Z"
+      action: wait
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: waiting
+      reason: "agent exited with non-zero code: 実モデル（Qwen API）への接続ができず、JSON 出力が実際に得られるか、およびそれが `grade apply` で受理されるかの検証が完了していないため。"
+      changes:
+        - field: status
+          from: in-progress
+          to: waiting
+        - field: block_reason
+          from: "-"
+          to: "agent exited with non-zero code: 実モデル（Qwen API）への接続ができず、JSON 出力が実際に得られるか、およびそれが `grade apply` で受理されるかの検証が完了していないため。"
+      previous_event_id: reg_c2d5e37d255b4e4590c3cca3dd0d06f3
 ---
 
 # PJR-AKJ4 qwen が GradeSubmission JSON を出力できない問題に対処する
