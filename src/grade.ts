@@ -3,6 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, extname, isAbsolute, join, relative, resolve } from "node:path";
 import { type Command } from "commander";
 import yaml from "js-yaml";
+import { extractJsonText } from "./agent-response.js";
 import { collectResolvedDeliverables, loadCatalogDocs } from "./catalog-build.js";
 import { resolveBasePath } from "./catalog-paths.js";
 import { resolveViewpointsDoc } from "./review-plan.js";
@@ -549,7 +550,7 @@ export function writeGradePlans(opts: {
 export function parseGradeSubmission(raw: string): GradeSubmission {
   let value: unknown;
   try {
-    value = JSON.parse(raw);
+    value = JSON.parse(extractJsonText(raw));
   } catch (error) {
     throw new Error(
       `Grade submission must be JSON: ${error instanceof Error ? error.message : String(error)}`,

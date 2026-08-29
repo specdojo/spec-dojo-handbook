@@ -166,4 +166,4 @@ kata 285 件を定期評価するにあたり、ローカルモデルで運用�
 
 - [[prj-0001:pjr-49d2-quality-assessment]]: grade の設計と実装。本比較はその agent 選定にあたる。
 - [[prj-0001:pjr-4tz7-grade-per-document]]: 評価単位の見直し。本比較で判明したコンテキスト膨張の問題を扱う。
-- [[prj-0001:pjr-akj4-qwen-json-output]]: qwen の出力形式問題。
+- [[prj-0001:pjr-akj4-agent-json-response]]: qwen の出力形式問題。

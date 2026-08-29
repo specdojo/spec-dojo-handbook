@@ -1,4 +1,5 @@
 import Ajv2020Module from "ajv/dist/2020.js";
+import { extractJsonText } from "./agent-response.js";
 import type { ExecEvidence } from "./exec-evidence.js";
 import type { TaskMode } from "./exec-types.js";
 
@@ -275,7 +276,7 @@ export function parseReporterOutput(
 ): { output?: ReporterOutput; error?: string } {
   let value: unknown;
   try {
-    value = JSON.parse(raw.trim());
+    value = JSON.parse(extractJsonText(raw));
   } catch (error) {
     return {
       error: `response is not a single JSON value: ${error instanceof Error ? error.message : String(error)}`,
