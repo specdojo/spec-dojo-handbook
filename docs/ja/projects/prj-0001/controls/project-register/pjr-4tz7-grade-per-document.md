@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-4tz7-grade-per-document
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-29T12:49:25Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-29T14:53:21Z"
+  conclusion: grade prompt を grade plan へ改称し、対象1件ごとに exec 互換の plan を生成・保存する構成へ変更した。kata のメタデータを索引化し、参照と逆参照から対応する rulebook / recipe / sample / template を解決して参考資料として plan へ含める。参考資料は評価対象には含めない旨を plan へ明記する。plan は execution/grade/plans/`<target>`/ へ対象由来の固定ファイル名で冪等に保存する。Job は1件の判定ごとに apply を実行するため、後続の失敗時も既存の grade と finding は失われない。
   register_events:
     - v: 1
       id: reg_fd510476614241c9b4579e1a7b91ce1e
@@ -72,6 +74,25 @@ specdojo:
           from: in-progress
           to: review
       previous_event_id: reg_f5c1da9b62d145ac868d6710048de0d6
+    - v: 1
+      id: reg_6f546c5a4c0f4aab8b3e9b409996a79c
+      ts: "2026-08-29T14:53:21Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-29"
+        - field: conclusion
+          from: "-"
+          to: grade prompt を grade plan へ改称し、対象1件ごとに exec 互換の plan を生成・保存する構成へ変更した。kata のメタデータを索引化し、参照と逆参照から対応する rulebook / recipe / sample / template を解決して参考資料として plan へ含める。参考資料は評価対象には含めない旨を plan へ明記する。plan は execution/grade/plans/`<target>`/ へ対象由来の固定ファイル名で冪等に保存する。Job は1件の判定ごとに apply を実行するため、後続の失敗時も既存の grade と finding は失われない。
+      previous_event_id: reg_ec4a1100b92a4ddaaef68ad400ce65bc
 ---
 
 # PJR-4TZ7 grade を1文書単位の評価へ変更し plan として保存する
