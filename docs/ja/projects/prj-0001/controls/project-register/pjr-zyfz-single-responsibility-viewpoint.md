@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: review
   priority: medium
   owner: ARC
   registered_at: "2026-08-29T14:52:37Z"
@@ -59,6 +59,19 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_6f581f0538d14825901d8b38c9fe35e0
+    - v: 1
+      id: reg_40e61fd4f7024f3a913a4a13d6e4264e
+      ts: "2026-08-29T15:25:46Z"
+      action: review
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: review
+      reason: ready for review
+      changes:
+        - field: status
+          from: in-progress
+          to: review
+      previous_event_id: reg_171dd02bea534d5abcca2a23ec695f4e
 ---
 
 # PJR-ZYFZ 文書責務の単一性を見る viewpoint を追加する
