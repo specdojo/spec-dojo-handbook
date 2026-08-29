@@ -7,12 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-08-29T13:44:26Z"
   due_on: "2026-09-30"
-  block_reason: "agent exited with non-zero code: 実モデル（Qwen API）への接続ができず、JSON 出力が実際に得られるか、およびそれが `grade apply` で受理されるかの検証が完了していないため。"
+  block_reason: "agent exited with non-zero code: JSON出力契約の実装および静的検証は完了したが、Ollama接続不可のため、実モデルを用いた最終的な動作検証が未完了である。"
   register_events:
     - v: 1
       id: reg_e5a8e0d95fb24107846317ebd0d8490d
@@ -105,6 +105,22 @@ specdojo:
           from: waiting
           to: in-progress
       previous_event_id: reg_24b620ec3ed74494806026dce594ab0e
+    - v: 1
+      id: reg_dce0a599920444cd925140206d0269a8
+      ts: "2026-08-29T16:48:29Z"
+      action: wait
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: waiting
+      reason: "agent exited with non-zero code: JSON出力契約の実装および静的検証は完了したが、Ollama接続不可のため、実モデルを用いた最終的な動作検証が未完了である。"
+      changes:
+        - field: status
+          from: in-progress
+          to: waiting
+        - field: block_reason
+          from: "agent exited with non-zero code: 実モデル（Qwen API）への接続ができず、JSON 出力が実際に得られるか、およびそれが `grade apply` で受理されるかの検証が完了していないため。"
+          to: "agent exited with non-zero code: JSON出力契約の実装および静的検証は完了したが、Ollama接続不可のため、実モデルを用いた最終的な動作検証が未完了である。"
+      previous_event_id: reg_ec416a7badaa4cf29f781bc8865c25af
 ---
 
 # PJR-AKJ4 qwen が GradeSubmission JSON を出力できない問題に対処する
