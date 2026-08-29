@@ -143,13 +143,13 @@ specdojo:
 
 ## 3. 作業内容
 
-| No  | 作業                   | 担当   | 状態 | メモ                                         |
-| --- | ---------------------- | ------ | ---- | -------------------------------------------- |
-| 1   | 未出力の原因の切り分け | _TODO_ | open | 応答長の上限、タスク管理、指示解釈のいずれか |
-| 2   | 解決手段の検証         | _TODO_ | open | agent 定義、スキーマ制約、plan の指示強化    |
-| 3   | 安定性の確認           | _TODO_ | open | 同一 plan の反復実行で出力が安定するか       |
-| 4   | 精度の比較             | _TODO_ | open | claude との level 差と finding の質          |
-| 5   | 採否の判断と記録       | _TODO_ | open | routine で使う agent の選定へ反映する        |
+| No  | 作業                   | 担当 | 状態    | メモ                                          |
+| --- | ---------------------- | ---- | ------- | --------------------------------------------- |
+| 1   | 未出力の原因の切り分け | ARC  | done    | 旧バッチの長さと最終報告指示の競合を確認      |
+| 2   | 解決手段の検証         | ARC  | done    | 1文書化に加えて plan と agent 定義を整合      |
+| 3   | 安定性の確認           | ARC  | blocked | Ollama 停止中のため同一 plan の反復実行は未了 |
+| 4   | 精度の比較             | ARC  | blocked | 実出力が得られず claude との再比較は未了      |
+| 5   | 採否の判断と記録       | ARC  | blocked | 反復実測後に routine 採用を判断する           |
 
 ### 3.1. 観測された挙動
 
@@ -178,7 +178,11 @@ specdojo:
 
 ## 4. 対応結果
 
--
+旧比較で用いた4文書・46,673文字のバッチ plan は、判定後に JSON を組み立てる前に応答を終えていた。現在は PJR-4TZ7 と PJR-9XVG により1文書単位かつ本文を埋め込まない plan へ縮小済みである。一方、`qwen-expert-executor` の通常契約は「変更ファイルと検証結果を最終応答へ残す」と要求し、grade plan の「GradeSubmission JSON のみ」と競合していた。
+
+この競合を解消するため、grade plan の冒頭に最優先の最終応答契約を追加した。正常終了時は GradeSubmission JSON オブジェクト1個だけを返し、途中経過、タスクリスト、通常の変更・検証報告、JSON 外の根拠、コードフェンスを禁止する。完了手順には、対象1件、全 agent viewpoint、level 3 以下の finding、非空の `message` を出力前に確認する手順も追加した。`qwen-expert-executor` 定義は、plan が機械可読な最終応答形式を指定した場合に通常の最終報告よりその形式を優先するよう整合させた。JSON mode / JSON Schema は executor の通常作業まで JSON に固定する影響があり、agent 単位での転送可否も未確認のため採用していない。
+
+2026-08-30 の再検証では `host.docker.internal` は名前解決できたが、`http://host.docker.internal:11434/v1/models` への接続が拒否された。このため、Qwen による同一 plan の反復実行、生成 JSON の `grade apply`、claude との精度再比較は未実施である。Ollama 起動後に `opr-batch-sample.md` の1文書 plan を同一条件で複数回実行し、JSON 単体出力と `grade apply` 受理を確認してから routine への採否を判断する。
 
 ## 5. 関連ドキュメント
 
