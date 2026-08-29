@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: review
   priority: medium
   owner: ARC
   registered_at: "2026-08-29T14:58:09Z"
@@ -59,6 +59,19 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_d6fd27ccfd7741778008543b3af97b0d
+    - v: 1
+      id: reg_d473ee85ff4d45d18df1366202e8bf5a
+      ts: "2026-08-29T15:19:06Z"
+      action: review
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: review
+      reason: ready for review
+      changes:
+        - field: status
+          from: in-progress
+          to: review
+      previous_event_id: reg_b403ddd990de41b4ad195c0fcf77b382
 ---
 
 # PJR-9XVG grade plan を全文埋め込みからパス参照へ変更し exec plan と構造を揃える
