@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: open
+  item_status: in-progress
   priority: medium
   owner: ARC
   registered_at: "2026-08-29T13:44:26Z"
@@ -62,6 +62,19 @@ specdojo:
           from: _TODO_
           to: "2026-09-30"
       previous_event_id: reg_e5a8e0d95fb24107846317ebd0d8490d
+    - v: 1
+      id: reg_c2d5e37d255b4e4590c3cca3dd0d06f3
+      ts: "2026-08-29T15:25:53Z"
+      action: start
+      actor: codex-expert-executor
+      from_status: open
+      to_status: in-progress
+      reason: work started
+      changes:
+        - field: status
+          from: open
+          to: in-progress
+      previous_event_id: reg_e895465abb1241f486eedc12ddb996d2
 ---
 
 # PJR-AKJ4 qwen が GradeSubmission JSON を出力できない問題に対処する
