@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   gradeMarkdownContent,
   parseGradeSubmission,
-  renderGradePrompt,
+  renderGradePlan,
+  resolveGradeReferencePaths,
   validateGradeSubmission,
   validateGradedMarkdown,
   type GradeSubmission,
@@ -171,11 +172,32 @@ describe("grade markdown update", () => {
   });
 });
 
-describe("grade prompt", () => {
-  it("includes only continuous agent viewpoints", () => {
-    const prompt = renderGradePrompt({ target: "kata", paths: [], viewpoints });
-    expect(prompt).toContain("vp-qe-kata-conformance");
-    expect(prompt).toContain("vp-arc-conciseness");
-    expect(prompt).not.toContain("vp-arc-document-structure [");
+describe("grade plan", () => {
+  it("includes one document and only continuous agent viewpoints", () => {
+    const path = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
+    const plan = renderGradePlan({
+      target: "kata",
+      path,
+      references: [],
+      viewpoints,
+      projectId: "prj-0001",
+    });
+    expect(plan).toContain("type: exec-plan");
+    expect(plan).toContain(`"path": "${path}"`);
+    expect(plan).toContain("vp-qe-kata-conformance");
+    expect(plan).toContain("vp-arc-conciseness");
+    expect(plan).not.toContain("vp-arc-document-structure [");
+    expect(plan.match(/## Document:/g)).toHaveLength(1);
+  });
+
+  it("resolves declared and reverse-linked Kata references", () => {
+    const references = resolveGradeReferencePaths("docs/ja/specdojo/samples/opr-batch-sample.md");
+    expect(references).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("/rulebooks/opd-rulebook.md"),
+        expect.stringContaining("/rulebooks/opr-rulebook.md"),
+        expect.stringContaining("/templates/opr-template.md"),
+      ]),
+    );
   });
 });

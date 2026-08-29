@@ -10,10 +10,11 @@ task:
   mode: edit
   owner: ARC
   description: |
-    `specdojo grade prompt --target kata --changed-only --project prj-0001` で判定対象と
-    共通 rubric を取得し、全 agent viewpoint の GradeSubmission JSON を作成する。
-    `specdojo grade apply --target kata --changed-only --project prj-0001 --from <json>` で
-    検証・スコア計算・finding 配置を行う。対象がなければ result に no-op と記録する。
+    `specdojo grade plan --target kata --changed-only --project prj-0001` で1文書単位の
+    評価 plan を保存する。表示された plan を順に agent へ渡し、各文書について全 agent
+    viewpoint の GradeSubmission JSON を作成する。1件ごとに
+    `specdojo grade apply --target kata --path <document> --from <json>` で検証・スコア計算・
+    finding 配置を完了してから次へ進む。対象がなければ result に no-op と記録する。
   paths:
     - docs/ja/specdojo/rulebooks
     - docs/ja/specdojo/recipes

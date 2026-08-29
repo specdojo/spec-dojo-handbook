@@ -138,6 +138,10 @@ docs/
 │   │   │   │   ├── jobs/                         # Job Run履歴と派生state
 │   │   │   │   │   ├── runs/                    # 入力・task・attempt・結果
 │   │   │   │   │   └── generated/               # checkpoint派生ビュー
+│   │   │   │   ├── grade/                        # 継続品質評価（最新状態）
+│   │   │   │   │   └── plans/                    # 1文書単位の再利用可能な評価plan
+│   │   │   │   │       ├── kata/                 # Kata評価plan
+│   │   │   │   │       └── deliverable/          # 成果物評価plan
 │   │   │   │   └── generated/                    # 自動生成成果物
 │   │   │   │
 │   │   │   └── reporting/                        # レポート

@@ -31,10 +31,10 @@ describe("CLI generation verb taxonomy", () => {
     expect(subcommandNames(program, "exec")).not.toContain("build");
   });
 
-  it("registers the grade prompt/apply/validate workflow", () => {
+  it("registers the grade plan/apply/validate workflow", () => {
     const program = new Command();
     registerGradeCommand(program);
 
-    expect(subcommandNames(program, "grade")).toEqual(["prompt", "apply", "validate"]);
+    expect(subcommandNames(program, "grade")).toEqual(["plan", "apply", "validate"]);
   });
 });
