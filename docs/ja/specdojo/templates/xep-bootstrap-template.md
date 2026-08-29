@@ -52,7 +52,7 @@ _OWNER_ROLE_VIEWPOINTS_
 4. sample: 必要と判断した場合だけ、粒度・文体・表の書き方が伝わる最小の完成例にする。プロジェクト固有の値は一般化またはプレースホルダ化する。sample は [[specdojo:sample-authoring-standard]]（構成・記述ルール・共通サンプル文脈・禁止事項の正本）に従い、rulebook / recipe と矛盾しないように作成する。
 5. template: 必要と判断した場合だけ、章構成の骨組みとプレースホルダを配置した雛形にする。成果物固有の内容は持ち込まない。template は [[specdojo:template-authoring-standard]]（構成・プレースホルダ規約・禁止事項の正本）に従い、埋めた結果が rulebook の本文構成と矛盾しないように作成する。
 
-対象文書に `specdojo.grade` と `specdojo:finding` がある場合は、同じ viewpoint ID で根拠を確認し、該当箇所を修正した finding コメントだけを削除する。修正後は `grade prompt --changed-only` の対象になるため、再評価で構造・整合性が劣化していないことを確認する。
+対象文書に `specdojo.grade` と `specdojo:finding` がある場合は、同じ viewpoint ID で根拠を確認し、該当箇所を修正した finding コメントだけを削除する。修正後は `grade plan --changed-only` の対象になるため、再評価で構造・整合性が劣化していないことを確認する。
 
 実践の型は成果物の丸写しにせず、同種成果物に再利用できる形に一般化する。構造・必須項目・禁止事項は rulebook を正とし、recipe / sample / template は rulebook と矛盾しないように揃える。
 

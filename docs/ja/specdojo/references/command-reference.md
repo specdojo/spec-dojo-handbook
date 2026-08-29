@@ -453,22 +453,26 @@ specdojo exec trial adopt --project prj-0001 --comparison <comparison-id> --tria
 
 ## 8. grade
 
-`grade` は kata（rulebook / recipe / sample / template）または成果物を、review と同じ共通 viewpoint・category rubric で継続評価します。agent に直接ファイル探索やスコア計算をさせず、prompt と反映を分離します。
+`grade` は kata（rulebook / recipe / sample / template）または成果物を、review と同じ共通 viewpoint・category rubric で継続評価します。agent に直接ファイル探索やスコア計算をさせず、plan 生成と反映を分離します。
 
 | コマンド         | 用途                                                      |
 | ---------------- | --------------------------------------------------------- |
-| `grade prompt`   | 対象文書・rubric・継続評価対象 viewpoint を prompt にする |
+| `grade plan`     | 1文書ごとに参考資料付きの再利用可能な評価 plan を保存する |
 | `grade apply`    | agent の JSON を検証し、スコアと finding を冪等に反映する |
 | `grade validate` | 内容ハッシュと Frontmatter / 本文 finding 件数を検証する  |
 
 ```bash
-specdojo grade prompt --target kata --changed-only --project prj-0001 --out logs/grade-prompt.md
-# prompt に従った GradeSubmission JSON を agent が作成する
-specdojo grade apply --target kata --changed-only --project prj-0001 --from logs/grade-result.json
+specdojo grade plan --target kata --changed-only --project prj-0001
+# 表示された plan を1件ずつ agent へ渡し、文書ごとの GradeSubmission JSON を作成する
+specdojo grade apply --target kata --path <document.md> --from <grade-result.json>
 specdojo grade validate --target kata --project prj-0001
 ```
 
 `--target` は `kata` または `deliverable` です。`--path` は繰り返し指定でき、明示した Markdown 文書だけを対象にします。`--changed-only` は既存 grade の `content_hash` と、grade・finding を除いた現在内容のハッシュを比較するため、評価結果の書き込み自体を変更として再検出しません。
+
+`grade plan` は対象ごとに1ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名と内容は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。各 plan は評価対象を1件だけ含み、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書を参考資料として添付します。参考資料は判定材料であり、GradeSubmission の `documents` には含めません。
+
+複数対象は、生成された plan を順に agent へ渡し、1件の GradeSubmission を直ちに `grade apply --path <document>` で反映します。agent 起動は Job / exec が担い、`grade` は plan の生成と結果の検証・反映に限定されます。この単位で処理すると、後続文書が失敗しても適用済みの grade は保持されます。保存済み plan は `exec trial` などで同じ入力を複数 agent へ渡す用途にも利用できます。
 
 `apply` は level 3 以下に finding を要求し、`blocker` は level 0、`major` は最大 level 2、`minor` は最大 level 3 に制限します。category score は viewpoint score（`level × 25`）の平均、総合 score は対象種別ごとの重み付き平均です。verdict は `blocker` があれば `fail`、`major` があるか総合 score が 70 未満なら `needs-work`、それ以外を `pass` とします。
 

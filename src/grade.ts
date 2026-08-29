@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, extname, isAbsolute, join, relative, resolve } from "node:path";
 import { type Command } from "commander";
 import yaml from "js-yaml";
 import { collectResolvedDeliverables, loadCatalogDocs } from "./catalog-build.js";
@@ -9,6 +9,7 @@ import { resolveViewpointsDoc } from "./review-plan.js";
 import type { GradeRubric, ReviewViewpoint, ReviewViewpointsDoc } from "./review-types.js";
 import {
   getProjectCatalogPath,
+  getProjectExecutionPath,
   getProjectViewpointsPath,
   loadConfig,
   specdojoRootDir,
@@ -53,6 +54,8 @@ type MarkdownDocument = {
 const FINDING_RE =
   /^[ \t]*<!--[ \t]*specdojo:finding[ \t]+id=([^ \t]+)[ \t]+severity=(blocker|major|minor|note)[ \t]+rule=([^ \t]+)[ \t]+(.*?)[ \t]*-->[ \t]*(?:\r?\n|$)/gm;
 const KATA_DIRS = ["rulebooks", "recipes", "samples", "templates"] as const;
+const KATA_REFERENCE_EXTENSIONS = new Set([".md", ".yaml", ".yml", ".json"]);
+const KATA_REFERENCE_FIELDS = ["rulebook", "recipe", "sample", "template"] as const;
 const SEVERITY_LEVEL_CAP: Record<GradeSeverity, number> = {
   blocker: 0,
   major: 2,
@@ -177,6 +180,87 @@ function assertRubric(doc: ReviewViewpointsDoc): GradeRubric {
 
 function repoRelativePath(path: string): string {
   return relative(specdojoRootDir(), path).replace(/\\/g, "/");
+}
+
+type KataReference = {
+  id: string;
+  path: string;
+  kind: (typeof KATA_DIRS)[number];
+  references: string[];
+};
+
+function referenceIds(metadata: Record<string, unknown>): string[] {
+  return KATA_REFERENCE_FIELDS.flatMap((field) => {
+    const value = metadata[field];
+    if (typeof value === "string") return [value];
+    if (Array.isArray(value))
+      return value.filter((item): item is string => typeof item === "string");
+    return [];
+  }).filter((id) => id !== "none" && id !== "undecided");
+}
+
+function parseKataReference(path: string, kind: KataReference["kind"]): KataReference | null {
+  try {
+    const extension = extname(path).toLowerCase();
+    let metadata: Record<string, unknown>;
+    if (extension === ".md") {
+      metadata = parseMarkdown(readFileSync(path, "utf8"), repoRelativePath(path)).data
+        .specdojo as Record<string, unknown>;
+    } else {
+      const parsed = yaml.load(readFileSync(path, "utf8"));
+      if (!isRecord(parsed)) return null;
+      metadata = isRecord(parsed.specdojo) ? parsed.specdojo : parsed;
+    }
+    const id = typeof metadata.id === "string" ? metadata.id.trim() : "";
+    if (!id) return null;
+    return { id, path, kind, references: referenceIds(metadata) };
+  } catch {
+    // Some reusable snippets in Kata directories are Markdown fragments rather than documents.
+    return null;
+  }
+}
+
+function loadKataReferences(): KataReference[] {
+  const root = specdojoRootDir();
+  return KATA_DIRS.flatMap((kind) =>
+    listFilesRecursive(join(root, "docs/ja/specdojo", kind))
+      .filter((path) => KATA_REFERENCE_EXTENSIONS.has(extname(path).toLowerCase()))
+      .flatMap((path) => {
+        const reference = parseKataReference(path, kind);
+        return reference ? [reference] : [];
+      }),
+  );
+}
+
+function resolveGradeReferencePathsFromCatalog(path: string, catalog: KataReference[]): string[] {
+  const target = resolveSafeMarkdownPath(path);
+  const targetDocument = parseMarkdown(readFileSync(target, "utf8"), repoRelativePath(target));
+  const targetMetadata = targetDocument.data.specdojo as Record<string, unknown>;
+  const targetId = typeof targetMetadata.id === "string" ? targetMetadata.id.trim() : "";
+  if (!targetId) return [];
+
+  const byId = new Map(catalog.map((item) => [item.id, item]));
+  const selected = new Map<string, KataReference>();
+  const add = (item: KataReference | undefined) => {
+    if (item && item.path !== target) selected.set(item.id, item);
+  };
+
+  for (const id of referenceIds(targetMetadata)) add(byId.get(id));
+  for (const item of catalog) if (item.references.includes(targetId)) add(item);
+
+  // A document and the directly linked rulebook/recipe form the anchor of a Kata set.
+  // Follow their declared links, but do not recursively traverse sibling back-links.
+  for (let depth = 0; depth < 2; depth += 1) {
+    for (const item of [...selected.values()]) {
+      if (item.kind !== "rulebooks" && item.kind !== "recipes") continue;
+      for (const id of item.references) add(byId.get(id));
+    }
+  }
+  return [...selected.values()].map((item) => item.path).sort();
+}
+
+export function resolveGradeReferencePaths(path: string): string[] {
+  return resolveGradeReferencePathsFromCatalog(path, loadKataReferences());
 }
 
 function resolveSafeMarkdownPath(input: string): string {
@@ -305,14 +389,49 @@ function deterministicResults(
   return results;
 }
 
-export function renderGradePrompt(opts: {
+function fencedBlock(language: string, content: string): string[] {
+  const longest = Math.max(0, ...[...content.matchAll(/`+/g)].map((match) => match[0].length));
+  const fence = "`".repeat(Math.max(3, longest + 1));
+  return [`${fence}${language}`, content, fence];
+}
+
+export function renderGradePlan(opts: {
   target: GradeTarget;
-  paths: string[];
+  path: string;
+  references?: string[];
   viewpoints: ReviewViewpointsDoc;
+  projectId: string;
 }): string {
   const rubric = assertRubric(opts.viewpoints);
   const viewpoints = agentViewpoints(opts.viewpoints, opts.target);
+  const absolute = resolveSafeMarkdownPath(opts.path);
+  const rel = repoRelativePath(absolute);
+  const document = parseMarkdown(readFileSync(absolute, "utf8"), rel);
+  const metadata = document.data.specdojo as Record<string, unknown>;
+  const documentId = typeof metadata.id === "string" ? metadata.id : rel;
+  const taskHash = createHash("sha256").update(rel).digest("hex").slice(0, 12).toUpperCase();
   const lines = [
+    "---",
+    yaml
+      .dump(
+        {
+          specdojo: {
+            id: `${opts.projectId}:grade-${opts.target}-${taskHash.toLowerCase()}-plan`,
+            type: "exec-plan",
+            rulebook: "none",
+            task_id: `GRADE-${opts.target.toUpperCase()}-${taskHash}`,
+            name: `grade: ${rel}`,
+            mode: "review",
+            status: "ready",
+            project_id: opts.projectId,
+            targets: [documentId],
+          },
+        },
+        { lineWidth: 120, noRefs: true },
+      )
+      .trimEnd(),
+    "---",
+    "",
     "# SpecDojo grade assessment",
     "",
     `rubric: ${rubric.id}`,
@@ -329,14 +448,16 @@ export function renderGradePrompt(opts: {
       {
         rubric: rubric.id,
         graded_by: "<agent-id>",
-        documents: opts.paths.map((path) => ({
-          path: repoRelativePath(path),
-          viewpoints: viewpoints.map((viewpoint) => ({
-            id: viewpoint.id,
-            level: 4,
-            findings: [],
-          })),
-        })),
+        documents: [
+          {
+            path: rel,
+            viewpoints: viewpoints.map((viewpoint) => ({
+              id: viewpoint.id,
+              level: 4,
+              findings: [],
+            })),
+          },
+        ],
       },
       null,
       2,
@@ -357,27 +478,77 @@ export function renderGradePrompt(opts: {
         `- ${viewpoint.id} [${viewpoint.category}/${viewpoint.evaluation}]: ${viewpoint.check} Evidence: ${viewpoint.evidence}`,
     ),
   ];
-  for (const path of opts.paths) {
-    const rel = repoRelativePath(path);
-    const document = parseMarkdown(readFileSync(path, "utf8"), rel);
+  lines.push(
+    "",
+    `## Document: ${rel}`,
+    "",
+    "Frontmatter（CLI の決定的判定対象）:",
+    "",
+    ...fencedBlock("yaml", yaml.dump(document.data, { lineWidth: 120, noRefs: true }).trimEnd()),
+    "",
+    "本文（finding.line は次の H1 を1行目として数える）:",
+    "",
+    ...fencedBlock("markdown", document.body.replace(/^\n+/, "")),
+  );
+  const references = opts.references ?? [];
+  if (references.length > 0) {
     lines.push(
       "",
-      `## Document: ${rel}`,
+      "## Reference materials",
       "",
-      "Frontmatter（CLI の決定的判定対象）:",
-      "",
-      "```yaml",
-      yaml.dump(document.data, { lineWidth: 120, noRefs: true }).trimEnd(),
-      "```",
-      "",
-      "本文（finding.line は次の H1 を1行目として数える）:",
-      "",
-      "```markdown",
-      document.body.replace(/^\n+/, ""),
-      "```",
+      "次の文書は評価対象ではありません。成果物間整合を判定するための参考資料です。出力 JSON の documents へ追加しないでください。",
     );
+    for (const reference of references) {
+      const referencePath = resolveSafeRepositoryPath(reference, "reference");
+      const referenceRel = repoRelativePath(referencePath);
+      const extension = extname(referencePath).toLowerCase();
+      const language = extension === ".md" ? "markdown" : extension === ".json" ? "json" : "yaml";
+      lines.push(
+        "",
+        `### Reference: ${referenceRel}`,
+        "",
+        ...fencedBlock(language, readFileSync(referencePath, "utf8").trimEnd()),
+      );
+    }
   }
   return `${lines.join("\n")}\n`;
+}
+
+function gradePlanFilename(path: string): string {
+  const rel = repoRelativePath(path);
+  const stem = basename(path, extname(path))
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const hash = createHash("sha256").update(rel).digest("hex").slice(0, 10);
+  return `${stem || "document"}-${hash}-grade-plan.md`;
+}
+
+export function writeGradePlans(opts: {
+  target: GradeTarget;
+  paths: string[];
+  viewpoints: ReviewViewpointsDoc;
+  projectId: string;
+  outputDirectory: string;
+}): { path: string; changed: boolean }[] {
+  const outputDirectory = resolveSafeRepositoryPath(opts.outputDirectory, "--out");
+  if (opts.paths.length === 0) return [];
+  mkdirSync(outputDirectory, { recursive: true });
+  const kataReferences = loadKataReferences();
+  return opts.paths.map((path) => {
+    const absolute = resolveSafeMarkdownPath(path);
+    const output = join(outputDirectory, gradePlanFilename(absolute));
+    const content = renderGradePlan({
+      target: opts.target,
+      path: absolute,
+      references: resolveGradeReferencePathsFromCatalog(absolute, kataReferences),
+      viewpoints: opts.viewpoints,
+      projectId: opts.projectId,
+    });
+    const changed = !existsSync(output) || readFileSync(output, "utf8") !== content;
+    if (changed) writeFileSync(output, content, "utf8");
+    return { path: repoRelativePath(output), changed };
+  });
 }
 
 export function parseGradeSubmission(raw: string): GradeSubmission {
@@ -659,26 +830,32 @@ export function registerGradeCommand(program: Command): void {
       .option("--changed-only", "Select documents changed since their latest grade", false);
 
   addSelection(
-    grade.command("prompt").description("Render the shared-rubric prompt for an assessment agent"),
+    grade.command("plan").description("Write one reusable assessment plan per selected document"),
   )
-    .option("--out <path>", "Write the prompt to a repository-relative path")
+    .option("--out <directory>", "Write plans below this repository-relative directory")
     .action((options) => {
       try {
         const target = requireTarget(options.target);
         const viewpoints = loadViewpoints(options.project);
+        const { id: projectId, project } = resolveProject(options.project);
         const paths = discoverGradeTargets({
           target,
           project: options.project,
           paths: options.path,
           changedOnly: options.changedOnly,
         });
-        const prompt = renderGradePrompt({ target, paths, viewpoints });
-        if (options.out) {
-          const output = resolveSafeRepositoryPath(options.out, "--out");
-          if (!existsSync(dirname(output)))
-            throw new Error(`Output directory not found: ${dirname(output)}`);
-          writeFileSync(output, prompt, "utf8");
-        } else process.stdout.write(prompt);
+        const outputDirectory =
+          options.out ?? join(getProjectExecutionPath(project), "grade", "plans", target);
+        const plans = writeGradePlans({
+          target,
+          paths,
+          viewpoints,
+          projectId,
+          outputDirectory,
+        });
+        for (const plan of plans)
+          process.stdout.write(`${plan.changed ? "written" : "unchanged"}: ${plan.path}\n`);
+        process.stdout.write(`Planned: ${plans.length} document(s)\n`);
       } catch (error) {
         commandError(error);
       }

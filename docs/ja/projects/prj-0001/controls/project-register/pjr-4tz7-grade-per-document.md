@@ -83,15 +83,15 @@ specdojo:
 
 ## 3. 作業内容
 
-| No  | 作業                           | 担当   | 状態 | メモ                                            |
-| --- | ------------------------------ | ------ | ---- | ----------------------------------------------- |
-| 1   | 評価単位と参考資料の範囲の決定 | ARC    | open | 対象1件に対してどの実践の型を添付するか         |
-| 2   | plan の保存場所と命名の決定    | ARC    | open | 履歴として蓄積させない置き場所                  |
-| 3   | ループ実行の責務の決定         | ARC    | open | CLI 内で回すか job / exec 側で回すか            |
-| 4   | plan 生成の実装                | _TODO_ | open | 1文書単位、参考資料の解決                       |
-| 5   | 改称と互換対応                 | _TODO_ | open | CLI、job-grade-kata、規範文書                   |
-| 6   | 失敗時の継続と再開の実装       | _TODO_ | open | 成功済みの結果を保持する                        |
-| 7   | 規範文書の更新                 | _TODO_ | open | command-reference、routine-operation-guide ほか |
+| No  | 作業                           | 担当 | 状態 | メモ                                            |
+| --- | ------------------------------ | ---- | ---- | ----------------------------------------------- |
+| 1   | 評価単位と参考資料の範囲の決定 | ARC  | done | 対象1件とメタデータで対応する Kata セット       |
+| 2   | plan の保存場所と命名の決定    | ARC  | done | execution 配下へ対象パス由来の固定名で保存      |
+| 3   | ループ実行の責務の決定         | ARC  | done | Job / exec が plan を順に処理                   |
+| 4   | plan 生成の実装                | ARC  | done | 1文書単位、参考資料の正逆参照解決               |
+| 5   | 改称と互換対応                 | ARC  | done | CLI、job-grade-kata、規範文書を `plan` へ統一   |
+| 6   | 失敗時の継続と再開の実装       | ARC  | done | 文書ごとに即時 apply して成功済み結果を保持     |
+| 7   | 規範文書の更新                 | ARC  | done | command-reference、routine-operation-guide ほか |
 
 ### 3.1. 現状の問題
 
@@ -119,15 +119,20 @@ plan を exec plan と同じく履歴として蓄積すると、定期実行の�
 
 対象文書ごとに1つの plan を持ち、再生成時は上書きする。判断の履歴は評価結果そのもの（Frontmatter の grade）と finding が担う。
 
-### 3.5. 未決の論点
+### 3.5. 決定事項
 
-- ループ実行の責務。grade が agent を起動しない現在の責務分離を保つなら job / exec 側で回すことになるが、285 件分の exec タスクを作るのは現実的でない。grade 側にループ実行を持たせる場合、agent 起動の責務が増える点をどう整理するか。
-- 参考資料の解決範囲。実践の型のセットに加えて、上位の authoring standard を含めるかどうか。含めるとコンテキストが増える一方、規範との整合をより正確に判定できる。
-- 改称に伴う互換性。`grade prompt` を残すか、`plan` のみとするか。
+- grade は agent を起動せず、1文書単位の plan 生成と GradeSubmission の検証・反映を担う。Job / exec が生成された plan を順に agent へ渡し、各結果を直ちに apply する。文書ごとに完結するため、途中で失敗しても成功済みの grade は保持される。
+- 参考資料は対象文書の `rulebook` / `recipe` / `sample` / `template` 参照、対象への逆参照、そこから特定できる rulebook / recipe の宣言先とする。上位 authoring standard は一律添付せず、共通 viewpoint の記述を判定基準とする。
+- CLI は `grade plan` へ改称し、`grade prompt` は残さない。全対象を1つの標準出力へ展開する旧契約を残すと、文書単位という不変条件を迂回できるためである。
+- plan は既定で `<execution_path>/grade/plans/<target>/` へ保存する。対象パスの basename とハッシュから安定したファイル名を作り、内容が同じ場合は書き換えない。同じ対象は常に同じファイルへ保存される。
 
 ## 4. 対応結果
 
--
+- `renderGradePlan` と `writeGradePlans` を追加し、選択対象ごとに対象文書が1件だけの exec 互換 plan を生成・保存するようにした。plan は `task_id` / `mode` / `project_id` / `targets` を持ち、同一内容を複数 agent へ渡せる。
+- Kata のメタデータを索引化し、対象からの参照と対象への逆参照を用いて対応する rulebook / recipe / sample / template を解決した。参考資料は plan に埋め込むが GradeSubmission の評価対象には含めない。
+- `grade prompt` を `grade plan` へ置き換え、Job 定義と規範文書を文書単位の逐次処理へ更新した。
+- plan の保存先をプロジェクトの `execution/grade/plans/<target>/` とし、対象由来の固定ファイル名へ冪等に保存するようにした。
+- Job は1件の agent 判定後に `grade apply --path <document>` を実行してから次の plan へ進む。後続の失敗時も、それ以前の文書に保存した grade と finding は失われない。
 
 ## 5. 関連ドキュメント
 
