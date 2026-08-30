@@ -265,4 +265,28 @@ describe("grade plan", () => {
     expect(plan).not.toContain("# 運用手順 作成ルール");
     expect(plan.length).toBeLessThan(20_000);
   });
+
+  it("carries previous finding facts into the next plan without previous scores", () => {
+    const path = "tests/fixtures/grade/previous-findings.md";
+    const plan = renderGradePlan({
+      target: "kata",
+      path,
+      references: [],
+      viewpoints,
+      projectId: "prj-0001",
+    });
+    const previousSection = plan.match(/### 3\.1\. 前回の指摘\n([\s\S]*?)\n### 3\.2\. Rubric/)?.[1];
+
+    expect(previousSection).toBeDefined();
+    expect(previousSection).toContain('"rule": "vp-qe-kata-conformance"');
+    expect(previousSection).toContain('"severity": "major"');
+    expect(previousSection).toContain('"message": "必須の禁止事項が欠落している。"');
+    expect(previousSection).not.toContain("F042");
+    expect(previousSection).not.toContain("level");
+    expect(previousSection).not.toContain("score");
+    expect(previousSection).not.toContain("verdict");
+    expect(plan).toContain("未解消なら今回の finding に含める");
+    expect(plan).toContain("各 viewpoint は現在の根拠から独立に評価する");
+    expect(plan).toContain("前回の指摘にない問題もすべての viewpoint で独立して検出する");
+  });
 });

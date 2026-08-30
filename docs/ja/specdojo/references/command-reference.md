@@ -470,7 +470,9 @@ specdojo grade validate --target kata --project prj-0001
 
 `--target` は `kata` または `deliverable` です。`--path` は繰り返し指定でき、明示した Markdown 文書だけを対象にします。`--changed-only` は既存 grade の `content_hash` と、grade・finding を除いた現在内容のハッシュを比較するため、評価結果の書き込み自体を変更として再検出しません。
 
-`grade plan` は対象ごとに1ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名と内容は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。各 plan は評価対象を1件だけリポジトリ相対パスで示し、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書も参考資料のパスとして列挙します。対象や参考資料の本文は plan に埋め込みません。このため対象本文を更新しても plan の内容は変わらず、再生成は不要です。
+`grade plan` は対象ごとに1ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。各 plan は評価対象を1件だけリポジトリ相対パスで示し、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書も参考資料のパスとして列挙します。対象や参考資料の本文は plan に埋め込みません。
+
+再評価時は、対象本文に現在残っている `specdojo:finding` コメントから `rule`、`severity`、`message` を前回の指摘として plan へ含めます。agent は各指摘が現在も未解消かを確認し、未解消なら今回の finding に含めます。前回の観点割り当てに判定を引きずられないよう各 viewpoint を現在の根拠から独立に評価し、前回指摘にない問題も検出します。前回の level、score、verdict や解消履歴は plan に引き継ぎません。適用結果は従来どおり最新状態へ上書きされます。
 
 agent は判定前に、plan が示す評価対象とすべての参考資料をファイル読み取りツールで全文読み、実行ログに各パスの読み取り操作を残します。参考資料は判定材料であり、GradeSubmission の `documents` には含めません。いずれかのファイルを読み取れない場合は、内容を推測せず異常終了します。grade plan の Frontmatter と「このタスクで行うこと / 対象項目 / 進め方 / 完了手順 / 異常終了の条件」の章構成は exec plan に準拠します。
 
