@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: open
+  item_status: in-progress
   priority: medium
   owner: ARC
   registered_at: "2026-08-30T13:07:19Z"
@@ -46,6 +46,19 @@ specdojo:
         - field: due
           from: ""
           to: "2026-09-30"
+    - v: 1
+      id: reg_6b2e7af059c3498986927785bf094933
+      ts: "2026-08-30T13:32:04Z"
+      action: start
+      actor: codex-expert-executor
+      from_status: open
+      to_status: in-progress
+      reason: work started
+      changes:
+        - field: status
+          from: open
+          to: in-progress
+      previous_event_id: reg_b2f09dd55ac94235b5324e2761b2bd99
 ---
 
 # PJR-23DT grade plan へ良い実例をリファレンスとして渡す
