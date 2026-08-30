@@ -4,11 +4,12 @@ specdojo:
   type: exec-result
   task_id: PJR-ANKR
   mode: edit
-  status: in_progress
+  status: complete
   project_id: prj-0001
   origin: register
   plan_ref: exec/plans/pjr-ankr-20260830T110905Z-7ce0-plan.md
   started_at: "2026-08-30T11:09:06.000Z"
+  completed_at: "2026-08-30T11:22:03.514Z"
   agent: codex-expert-executor
 ---
 
@@ -16,16 +17,23 @@ specdojo:
 
 ## 1. 実施内容
 
-_TODO_: 実施した内容の要約を記入する。
+- grade機能をexecutorとreporterの2段構成に分離する実装を完了しました。
+- src/grade.ts のロジックを分離し、対応するテストおよびジョブ定義、操作ガイド、コマンドリファレンスを更新しました。
+- 静的検査（prettier, markdownlint, typecheck, ESLint）および親検証（test-unit, test-integration, validate-schema）をすべてパスしています。
 
 ## 2. 変更ファイル
 
-_TODO_: 変更したファイルのパスを記入する。
+- `src/grade.ts`: executorとreporterの分離実装
+- `tests/src/grade.test.ts`: 分離後の機能検証テストの更新
+- `docs/ja/projects/prj-0001/jobs/job-grade-kata.yaml`: 2段構成に合わせたジョブ定義の更新
+- `docs/ja/specdojo/references/command-reference.md`: 新構成に伴うコマンドリファレンスの更新
+- `docs/ja/specdojo/guides/routine-operation-guide.md`: 操作ガイドの更新
+- `docs/ja/projects/prj-0001/controls/project-register/pjr-ankr-grade-executor-reporter.md`: 個票の実施内容更新
 
 ## 3. 申し送り
 
-_TODO_: 後続タスクへの申し送り事項を記入する（なければ削除）。
+- なし
 
 ## 4. 進め方と実践の型の適用
 
-_TODO_: `approach` に従ってどう進めたか、その進め方の中で実践の型（rulebook / recipe / sample / template）をどう適用したかを記入する（`fully-guided` で rulebook / recipe / sample / template をどう使い分けたか、`recipe-guided` で recipe のみを基準にした内容、`freeform` で実践の型より優先した実例やプロジェクト文脈、`retrofit` で実際に参照した実装パス・抽出した現在動作・反映/新設判断・未反映の乖離・未確認範囲、`rulebook-maintenance` などの maintenance 系で見直した実践の型とその根拠、など）。実践の型を基準にしなかった場合は、その判断と代わりに根拠にした内容も記入する。複数文書間に矛盾があり rulebook を正として判断した箇所、参照範囲から外れていた文書とその代わりに根拠にした内容があれば、あわせて記録する。
+src/grade.ts において分析を行う executor と構造化を行う reporter の責務を分離し、それぞれのインターフェースと処理フローを定義しました。変更に伴い、影響を受けるジョブ定義、ドキュメント（リファレンス・ガイド）、およびユニットテスト・統合テストを更新し、整合性を確保しました。

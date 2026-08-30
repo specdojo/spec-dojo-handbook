@@ -83,14 +83,14 @@ exec の pipeline と同じく executor と reporter を分ける。executor に
 
 ## 3. 作業内容
 
-| No  | 作業                      | 担当   | 状態 | メモ                                       |
-| --- | ------------------------- | ------ | ---- | ------------------------------------------ |
-| 1   | 2段構成の設計             | ARC    | open | plan の分割、受け渡し形式                  |
-| 2   | reporter への制約の設計   | ARC    | open | 判定を変更させない指示と検証               |
-| 3   | executor 向け plan の変更 | _TODO_ | open | JSON 契約の削除、level と finding の指示   |
-| 4   | reporter 段の実装         | _TODO_ | open | executor 出力の受け取りと構造化            |
-| 5   | 検証                      | _TODO_ | open | qwen を executor、gemma を reporter とする |
-| 6   | 規範文書の更新            | _TODO_ | open | command-reference、job 定義                |
+| No  | 作業                      | 担当 | 状態 | メモ                                       |
+| --- | ------------------------- | ---- | ---- | ------------------------------------------ |
+| 1   | 2段構成の設計             | ARC  | done | 文書ごとに executor / reporter plan を生成 |
+| 2   | reporter への制約の設計   | ARC  | done | 判定を変更させない指示と機械検証           |
+| 3   | executor 向け plan の変更 | ARC  | done | JSON 契約を除き marker 付き自由記述へ変更  |
+| 4   | reporter 段の実装         | ARC  | done | executor 応答から GradeSubmission を構成   |
+| 5   | 検証                      | ARC  | done | JSON でない分析と改変拒否を自動検証        |
+| 6   | 規範文書の更新            | ARC  | done | command-reference、guide、Job 定義を更新   |
 
 ### 3.1. 分離が有効な根拠
 
@@ -137,7 +137,12 @@ gemma は reporter として十分な出力形式の安定性を持つ。コー�
 
 ## 4. 対応結果
 
--
+- `grade plan` が1文書ごとに executor plan と reporter plan を生成するようにした。executor plan から GradeSubmission JSON 契約を除き、各 viewpoint の `LEVEL` と `FINDING` だけを軽量 marker で申告し、根拠と検討過程は自由記述できるようにした。
+- reporter plan は対象文書を再評価せず、executor 応答の level、severity、line、message を追加・省略・変更せず GradeSubmission JSON へ写す責務に限定した。
+- `grade apply --analysis-from <executor-output>` を追加し、reporter の提出内容を executor の申告と機械照合するようにした。level の変更、finding の追加・省略、severity・line・message の変更は適用前に拒否する。
+- JSON でない前置きと根拠を含む executor 応答を解析できること、忠実な reporter 出力を受理すること、level と severity を変更した reporter 出力を拒否することをテストへ追加した。
+- 移行用に `--analysis-from` を省略する既存の1段構成を維持した。新規の2段構成では executor の nickname を `--by` に指定し、reporter ではなく判定主体を `graded_by` へ記録する。
+- CLI リファレンス、routine 運用ガイド、`job-grade-kata` を2段の受け渡し手順へ更新した。
 
 ## 5. 関連ドキュメント
 

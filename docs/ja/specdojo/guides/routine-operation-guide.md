@@ -13,7 +13,7 @@ Routine Operation Guide
 
 routineは、既存の未完了Schedule/Register項目を探索するほか、再利用可能なJob Definitionから期間・revisionごとのJob Runを生成できます。週報や変更文書の翻訳は[Job実行設計](../../product/040-system-design/sysd-job-execution.md)を参照してください。
 
-継続品質評価は `job-grade-kata` のような Job Definition に `grade plan --changed-only` と、各 plan に対する agent 実行・`grade apply --path` の逐次処理を記述し、`action.kind: job` の routine から定期起動します。これにより routine は時刻条件、Job は agent 実行履歴とループ、grade は文書単位の plan と冪等な品質状態という既存の責務分担を維持します。
+継続品質評価は `job-grade-kata` のような Job Definition に `grade plan --changed-only` と、各文書の executor / reporter 実行・`grade apply --path --analysis-from` の逐次処理を記述し、`action.kind: job` の routine から定期起動します。executor は自由記述で判定し、reporter は判定を変更せず JSON へ構造化します。これにより routine は時刻条件、Job は agent 実行履歴・stage 間の応答受け渡し・ループ、grade は文書単位の plan と冪等な品質状態という既存の責務分担を維持します。
 
 **対象読者**
 
