@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: open
+  item_status: in-progress
   priority: high
   owner: ARC
   registered_at: "2026-08-30T04:12:52Z"
@@ -46,6 +46,19 @@ specdojo:
         - field: due
           from: ""
           to: "2026-09-30"
+    - v: 1
+      id: reg_aed8a914896442feb68c988396e42dd4
+      ts: "2026-08-30T04:13:51Z"
+      action: start
+      actor: codex-expert-executor
+      from_status: open
+      to_status: in-progress
+      reason: work started
+      changes:
+        - field: status
+          from: open
+          to: in-progress
+      previous_event_id: reg_4cfad8c46dec4cf789c1dfbaa3f97424
 ---
 
 # PJR-Z8T1 未解消の finding は前回の severity を維持する
