@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: review
   priority: medium
   owner: ARC
   registered_at: "2026-08-30T02:27:43Z"
@@ -59,6 +59,19 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_9701569a36c148d1937dae27d0df590e
+    - v: 1
+      id: reg_23941e3656314ad89695b1add942e613
+      ts: "2026-08-30T02:54:07Z"
+      action: review
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: review
+      reason: ready for review
+      changes:
+        - field: status
+          from: in-progress
+          to: review
+      previous_event_id: reg_a1b9ee36ed794bfdababe31fc2ff42cf
 ---
 
 # PJR-X40M grade plan へ前回の finding を引き継ぎ解消を確認させる
