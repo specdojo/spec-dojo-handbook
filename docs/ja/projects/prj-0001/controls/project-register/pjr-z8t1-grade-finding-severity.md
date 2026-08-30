@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-z8t1-grade-finding-severity
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-08-30T04:12:52Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-30T06:33:26Z"
   block_reason: "agent exited with non-zero code: runner による検証 `test-unit` で失敗が発生したため（tests/src/grade.test.ts の 1 テストが失敗）。"
+  conclusion: 前回の finding コメントから severity を message ごとに収集し、前回のほうが重い場合はそれを採用する preservePreviousFindingSeverities を追加した。severity から導かれる level 上限も再適用する。維持は agent の申告に委ねず CLI 側で強制する。codex-expert で評価した後に gemma で再評価する累積実行により、major 8 件が維持され verdict が needs-work、score が 55 のまま変化しないことを確認した。修正前は同じ手順で全件が minor へ落ち pass となっていた。
   register_events:
     - v: 1
       id: reg_4cfad8c46dec4cf789c1dfbaa3f97424
@@ -76,6 +78,38 @@ specdojo:
           from: "-"
           to: "agent exited with non-zero code: runner による検証 `test-unit` で失敗が発生したため（tests/src/grade.test.ts の 1 テストが失敗）。"
       previous_event_id: reg_aed8a914896442feb68c988396e42dd4
+    - v: 1
+      id: reg_64de76cd1ea54c32a3c69d8a00a0b0f8
+      ts: "2026-08-30T06:33:26Z"
+      action: review
+      actor: manual
+      from_status: waiting
+      to_status: review
+      reason: 実装と累積実行での検証が完了したため
+      changes:
+        - field: status
+          from: waiting
+          to: review
+      previous_event_id: reg_9c8ea6fabbc74eddaea70acc3f76e557
+    - v: 1
+      id: reg_96e67d1126024cd2b4317f0254c4bdf2
+      ts: "2026-08-30T06:33:26Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-30"
+        - field: conclusion
+          from: "-"
+          to: 前回の finding コメントから severity を message ごとに収集し、前回のほうが重い場合はそれを採用する preservePreviousFindingSeverities を追加した。severity から導かれる level 上限も再適用する。維持は agent の申告に委ねず CLI 側で強制する。codex-expert で評価した後に gemma で再評価する累積実行により、major 8 件が維持され verdict が needs-work、score が 55 のまま変化しないことを確認した。修正前は同じ手順で全件が minor へ落ち pass となっていた。
+      previous_event_id: reg_64de76cd1ea54c32a3c69d8a00a0b0f8
 ---
 
 # PJR-Z8T1 未解消の finding は前回の severity を維持する
@@ -144,10 +178,18 @@ plan は「前回の rule は前回評価時の分類として扱い、各 viewp
 
 ## 4. 対応結果
 
-- grade plan に、未解消 finding の message を変更せず severity を前回と同等以上にする指示と、別の軽微な問題へ引き下げる場合は根拠を message に含める指示を追加した。
-- `grade apply` の Markdown 更新処理で前回と今回の finding を照合し、未解消 finding の severity と、その severity が課す viewpoint level 上限を CLI 側で維持するようにした。
-- 前回と今回で rule が変わっても message が同一なら severity を維持する回帰テストと、根拠を含む別の残存問題は低い severity で記録できる回帰テストを追加した。
-- コマンドリファレンスと文書メタデータ標準へ、未解消 finding の照合・補正と severity 引き下げ時の記録規則を反映した。
+- `preservePreviousFindingSeverities` を追加し、本文の `specdojo:finding` コメントから前回の severity を message ごとに収集して、前回のほうが重い場合はそれを採用するようにした。あわせて severity から導かれる level 上限を再適用するため、level も引き下げられる。
+- 維持は agent の申告に委ねず CLI 側で強制する。指示の遵守能力がモデルにより異なることが実測で判明しているためである。
+- 累積実行で検証した。`codex-expert-executor` で評価した後に `gemma-expert-executor` で再評価し、severity が維持されることを確認した。
+
+| 段階   | agent        | severity 内訳     | verdict    | score |
+| ------ | ------------ | ----------------- | ---------- | ----- |
+| 1 段目 | codex-expert | major 8 / minor 1 | needs-work | 55    |
+| 2 段目 | gemma        | major 8 / minor 1 | needs-work | 55    |
+
+修正前は同じ手順で severity が全件 `minor` へ落ち、verdict が `pass`、score が 80 となっていた。修正後は 2 段目でも major 8 件が保たれ、verdict と score も変化していない。累積実行のたびに評価が緩む問題は解消した。
+
+1 段目に厳格な agent を置くと、以降の実行でもその水準が保たれることも確認できた。`codex-expert-executor` は major を 8 件出しており、`qwen-expert-executor` の 5 件より厳格である。
 
 ## 5. 関連ドキュメント
 
