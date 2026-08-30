@@ -602,12 +602,18 @@ export function renderGradePlan(opts: {
     "",
     ...(references.length > 0 ? references.map((reference) => `- \`${reference}\``) : ["- なし"]),
     "",
-    "### 良い実例（比較リファレンス）",
-    "",
-    "`status: ready` の文書から選んだ比較材料である。記載水準を具体化するために使い、評価対象へ含めず、内容を正解として機械的に模倣しない。`ready` は品質保証ではないため、実例自体の問題を評価対象へ転用しない。",
-    "",
-    ...(referenceExample ? [`- \`${referenceExample}\``] : ["- なし（該当候補なし）"]),
-    "",
+    // 比較リファレンスは任意である。指定がない場合は節ごと省略する。空の節を残すと
+    // 候補が存在しないのか指定していないのかを読み手が区別できない。
+    ...(referenceExample
+      ? [
+          "### 良い実例（比較リファレンス）",
+          "",
+          "`status: ready` の文書から選んだ比較材料である。記載水準を具体化するために使い、評価対象へ含めず、内容を正解として機械的に模倣しない。`ready` は品質保証ではないため、実例自体の問題を評価対象へ転用しない。",
+          "",
+          `- \`${referenceExample}\``,
+          "",
+        ]
+      : []),
     "## 3. 進め方",
     "",
     "1. 評価対象をファイル読み取りツールで全文読み、実行ログに読み取り操作を残す。plan に対象本文は埋め込まれていないため、この手順を省略しない。",
@@ -1272,9 +1278,11 @@ export function registerGradeCommand(program: Command): void {
       .description("Write reusable executor and reporter plans per selected document"),
   )
     .option("--out <directory>", "Write plans below this repository-relative directory")
+    .option("--reference <path>", "Use this document as the comparison reference")
     .option(
-      "--reference <path>",
-      "Use this document as the comparison reference instead of selecting one",
+      "--random-reference",
+      "Select a comparison reference at random from ready documents",
+      false,
     )
     .action((options) => {
       try {
@@ -1287,11 +1295,14 @@ export function registerGradeCommand(program: Command): void {
           paths: options.path,
           changedOnly: options.changedOnly,
         });
-        const referenceExampleCandidates = discoverGradeTargets({
-          target,
-          project: options.project,
-          changedOnly: false,
-        });
+        if (options.reference && options.randomReference) {
+          throw new Error("--reference and --random-reference cannot be combined");
+        }
+        // 比較リファレンスは既定で付けない。効果が未実証であり、付けると executor の
+        // 読み込み対象が増えるためである。利用する場合は明示的に指定する。
+        const referenceExampleCandidates = options.randomReference
+          ? discoverGradeTargets({ target, project: options.project, changedOnly: false })
+          : [];
         const outputDirectory =
           options.out ?? join(getProjectExecutionPath(project), "grade", "plans", target);
         const plans = writeGradePlans({
