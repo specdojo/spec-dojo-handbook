@@ -41,4 +41,21 @@ describe("CLI generation verb taxonomy", () => {
       ?.commands.find((command) => command.name() === "apply");
     expect(apply?.options.find((option) => option.long === "--by")?.mandatory).toBe(true);
   });
+
+  it("offers reference selection as an opt-in on grade plan", () => {
+    // 比較リファレンスは既定で付けない。効果が未実証であり、executor の読み込み
+    // 対象も増えるため、利用する場合だけ明示的に指定させる。
+    const program = new Command();
+    registerGradeCommand(program);
+    const plan = program.commands
+      .find((command) => command.name() === "grade")
+      ?.commands.find((command) => command.name() === "plan");
+    const longs = (plan?.options ?? []).map((option) => option.long);
+
+    expect(longs).toContain("--reference");
+    expect(longs).toContain("--random-reference");
+    expect(plan?.options.find((option) => option.long === "--random-reference")?.defaultValue).toBe(
+      false,
+    );
+  });
 });
