@@ -471,11 +471,11 @@ specdojo grade validate --target kata --project prj-0001
 
 `--target` は `kata` または `deliverable` です。`--path` は繰り返し指定でき、明示した Markdown 文書だけを対象にします。`--changed-only` は既存 grade の `content_hash` と、grade・finding を除いた現在内容のハッシュを比較するため、評価結果の書き込み自体を変更として再検出しません。
 
-`grade plan` は対象ごとに executor plan と reporter plan の2ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。executor plan は評価対象を1件だけリポジトリ相対パスで示し、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書も参考資料のパスとして列挙します。対象や参考資料の本文は plan に埋め込みません。reporter plan は対象の固定 facts と GradeSubmission テンプレートだけを持ち、評価資料は持ちません。
+`grade plan` は対象ごとに executor plan と reporter plan の2ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。executor plan は評価対象を1件だけリポジトリ相対パスで示し、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書も参考資料のパスとして列挙します。さらに、同じ種別で `status: ready` の別文書から良い実例を1件無作為に選び、記載水準を比較するリファレンスとして記録します。Kata は同じ rulebook / recipe / sample / template 種別、成果物は同じ `specdojo.type` を候補範囲とします。実例は評価対象ではなく、`ready` も品質保証ではありません。対象・参考資料・実例の本文は plan に埋め込みません。再生成のたびに候補集合から選び直すため、同じ対象の plan でも実例だけが変わることがあります。reporter plan は対象の固定 facts と GradeSubmission テンプレートだけを持ち、評価資料は持ちません。
 
 再評価時は、対象本文に現在残っている `specdojo:finding` コメントから `rule`、`severity`、`message` を前回の指摘として plan へ含めます。agent は各指摘が現在も未解消かを確認し、未解消なら前回の message を変更せず、前回と同等以上の severity で今回の finding に含めます。`grade apply` も同じ message の finding を未解消と扱い、提出された severity が前回より軽ければ前回値へ戻し、対応する viewpoint level を severity 上限まで補正します。前回の問題が解消され、別の軽微な問題だけが残る場合は、新しい finding の message に引き下げの根拠を含めます。前回の観点割り当てに判定を引きずられないよう各 viewpoint を現在の根拠から独立に評価し、前回指摘にない問題も検出します。前回の level、score、verdict や解消履歴は plan に引き継ぎません。適用結果は従来どおり最新状態へ上書きされます。
 
-executor は判定前に、plan が示す評価対象とすべての参考資料をファイル読み取りツールで全文読み、実行ログに各パスの読み取り操作を残します。参考資料は判定材料であり、評価対象にはしません。いずれかのファイルを読み取れない場合は、内容を推測せず異常終了します。grade plan の Frontmatter と「このタスクで行うこと / 対象項目 / 進め方 / 完了手順 / 異常終了の条件」の章構成は exec plan に準拠します。
+executor は判定前に、plan が示す評価対象、すべての参考資料、選定された良い実例をファイル読み取りツールで全文読み、実行ログに各パスの読み取り操作を残します。参考資料は成果物間整合、良い実例は章ごとの具体性・根拠の密度・過不足を比較する材料であり、どちらも評価対象にはしません。実例の表現や欠点を機械的に転用せず、rubric と viewpoint を最終的な判定基準にします。いずれかのファイルを読み取れない場合は、内容を推測せず異常終了します。grade plan の Frontmatter と「このタスクで行うこと / 対象項目 / 進め方 / 完了手順 / 異常終了の条件」の章構成は exec plan に準拠します。
 
 executor plan は JSON 契約を持ちません。各 viewpoint を `[VIEWPOINT <id>]` と `[END VIEWPOINT]` で囲み、`LEVEL: <0-4>` と、必要な `FINDING <severity> line=<line>: <message>` を申告します。marker 間の根拠と検討過程は自由記述です。この軽量な申告形式により、JSON を安定して生成できない agent でも分析を完了できます。
 

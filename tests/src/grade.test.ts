@@ -7,6 +7,7 @@ import {
   renderGradeReporterPlan,
   resolveGradeActor,
   resolveGradeReferencePaths,
+  selectGradeReferenceExample,
   validateGradeReporterFidelity,
   validateGradeSubmission,
   validateGradedMarkdown,
@@ -429,6 +430,70 @@ LEVEL: 4
     expect(plan).not.toContain("本文（finding.line");
     expect(plan).not.toContain("# 運用手順: バッチ再実行・失敗対応 サンプル");
     expect(plan).not.toContain("# 運用手順 作成ルール");
+    expect(plan.length).toBeLessThan(20_000);
+  });
+
+  it("selects a ready reference example from the same Kata kind on each run", () => {
+    const path = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
+    const candidates = [
+      path,
+      "docs/ja/specdojo/rulebooks/atc-rulebook.md",
+      "docs/ja/specdojo/rulebooks/cdfd-overview-rulebook.md",
+      "docs/ja/specdojo/rulebooks/cdfd-rulebook.md",
+      "docs/ja/specdojo/recipes/cdfd-recipe.md",
+    ];
+    const first = selectGradeReferenceExample({
+      target: "kata",
+      path,
+      candidates,
+      random: () => 0,
+    });
+    const second = selectGradeReferenceExample({
+      target: "kata",
+      path,
+      candidates,
+      random: () => 0.999,
+    });
+
+    expect(first).toMatch(/\/rulebooks\/cdfd-overview-rulebook\.md$/);
+    expect(second).toMatch(/\/rulebooks\/cdfd-rulebook\.md$/);
+    expect(first).not.toBe(second);
+  });
+
+  it("falls back to another family when no ready document shares the target family", () => {
+    // 同種別に ready が無い場合、リファレンス無しで抽象的な rubric だけに頼るより、
+    // 別種別でも完成した文書と比較できるほうが記載水準を判断しやすい。
+    const path = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
+    const candidates = [path, "docs/ja/specdojo/rulebooks/cdfd-rulebook.md"];
+
+    const selected = selectGradeReferenceExample({
+      target: "kata",
+      path,
+      candidates,
+      random: () => 0,
+    });
+
+    expect(selected).toMatch(/\/rulebooks\/cdfd-rulebook\.md$/);
+  });
+
+  it("records a good example as comparison material without evaluating it", () => {
+    const path = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
+    const referenceExample = "docs/ja/specdojo/rulebooks/cdfd-rulebook.md";
+    const plan = renderGradePlan({
+      target: "kata",
+      path,
+      references: [],
+      referenceExample,
+      viewpoints,
+      projectId: "prj-0001",
+    });
+
+    expect(plan).toContain("### 良い実例（比較リファレンス）");
+    expect(plan).toContain(`- \`${referenceExample}\``);
+    expect(plan).toContain("評価対象へ含めず");
+    expect(plan).toContain("内容を正解として機械的に模倣しない");
+    expect(plan).toContain("参考資料や良い実例を評価対象と混同しない");
+    expect(plan).not.toContain("# CDFD 作成ルール");
     expect(plan.length).toBeLessThan(20_000);
   });
 

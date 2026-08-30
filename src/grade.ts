@@ -327,6 +327,88 @@ export function resolveGradeReferencePaths(path: string): string[] {
   return resolveGradeReferencePathsFromCatalog(path, loadKataReferences());
 }
 
+function gradeReferenceExampleFamily(
+  target: GradeTarget,
+  path: string,
+  metadata: Record<string, unknown>,
+): string | null {
+  if (target === "kata") {
+    const rel = repoRelativePath(path);
+    const kind = KATA_DIRS.find((candidate) => rel.startsWith(`docs/ja/specdojo/${candidate}/`));
+    if (kind) return kind;
+  }
+  const type = typeof metadata.type === "string" ? metadata.type.trim() : "";
+  return type || null;
+}
+
+type GradeReferenceExample = {
+  path: string;
+  family: string | null;
+  status: string;
+};
+
+function parseGradeReferenceExample(
+  path: string,
+  target: GradeTarget,
+): GradeReferenceExample | null {
+  try {
+    const absolute = resolveSafeMarkdownPath(path);
+    const document = parseMarkdown(readFileSync(absolute, "utf8"), repoRelativePath(absolute));
+    const metadata = document.data.specdojo as Record<string, unknown>;
+    return {
+      path: absolute,
+      family: gradeReferenceExampleFamily(target, absolute, metadata),
+      status: typeof metadata.status === "string" ? metadata.status.trim() : "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function selectGradeReferenceExampleFromCatalog(opts: {
+  target: GradeTarget;
+  path: string;
+  candidates: GradeReferenceExample[];
+  random?: () => number;
+}): string | undefined {
+  const target = resolveSafeMarkdownPath(opts.path);
+  const targetDocument = parseMarkdown(readFileSync(target, "utf8"), repoRelativePath(target));
+  const targetMetadata = targetDocument.data.specdojo as Record<string, unknown>;
+  const family = gradeReferenceExampleFamily(opts.target, target, targetMetadata);
+
+  // 同種別を優先する。比較の基準として最も近いためである。同種別に ready が無い場合は
+  // 種別を跨いで選ぶ。リファレンスが無いまま抽象的な rubric だけで判定するより、
+  // 別種別でも完成した文書と比較できるほうが記載水準を判断しやすい。
+  const ready = opts.candidates.filter(
+    (candidate) => candidate.path !== target && candidate.status === "ready",
+  );
+  const sameFamily = family ? ready.filter((candidate) => candidate.family === family) : [];
+  const pool = sameFamily.length > 0 ? sameFamily : ready;
+  const candidates = pool.map((candidate) => candidate.path).sort();
+  if (candidates.length === 0) return undefined;
+
+  const random = opts.random ?? Math.random;
+  const sample = random();
+  const normalizedSample = Number.isFinite(sample) ? Math.max(0, sample) : 0;
+  const index = Math.min(Math.floor(normalizedSample * candidates.length), candidates.length - 1);
+  return candidates[index];
+}
+
+export function selectGradeReferenceExample(opts: {
+  target: GradeTarget;
+  path: string;
+  candidates: string[];
+  random?: () => number;
+}): string | undefined {
+  return selectGradeReferenceExampleFromCatalog({
+    ...opts,
+    candidates: opts.candidates.flatMap((candidate) => {
+      const parsed = parseGradeReferenceExample(candidate, opts.target);
+      return parsed ? [parsed] : [];
+    }),
+  });
+}
+
 function resolveSafeMarkdownPath(input: string): string {
   const root = specdojoRootDir();
   const absolute = resolve(root, input);
@@ -457,6 +539,7 @@ export function renderGradePlan(opts: {
   target: GradeTarget;
   path: string;
   references?: string[];
+  referenceExample?: string;
   viewpoints: ReviewViewpointsDoc;
   projectId: string;
 }): string {
@@ -473,6 +556,9 @@ export function renderGradePlan(opts: {
   const references = (opts.references ?? []).map((reference) =>
     repoRelativePath(resolveSafeRepositoryPath(reference, "reference")),
   );
+  const referenceExample = opts.referenceExample
+    ? repoRelativePath(resolveSafeMarkdownPath(opts.referenceExample))
+    : undefined;
   const lines = [
     "---",
     yaml
@@ -516,14 +602,21 @@ export function renderGradePlan(opts: {
     "",
     ...(references.length > 0 ? references.map((reference) => `- \`${reference}\``) : ["- なし"]),
     "",
+    "### 良い実例（比較リファレンス）",
+    "",
+    "`status: ready` の文書から選んだ比較材料である。記載水準を具体化するために使い、評価対象へ含めず、内容を正解として機械的に模倣しない。`ready` は品質保証ではないため、実例自体の問題を評価対象へ転用しない。",
+    "",
+    ...(referenceExample ? [`- \`${referenceExample}\``] : ["- なし（該当候補なし）"]),
+    "",
     "## 3. 進め方",
     "",
     "1. 評価対象をファイル読み取りツールで全文読み、実行ログに読み取り操作を残す。plan に対象本文は埋め込まれていないため、この手順を省略しない。",
-    "2. 参考資料がある場合は列挙された全ファイルを全文読み、実行ログに各パスの読み取り操作を残す。参考資料を評価対象と混同しない。",
-    "3. 評価対象を次の rubric と viewpoint に照らし、各 viewpoint を 0-4 で判定する。ある viewpoint の finding の有無から、ほかの viewpoint の判定を推論しない。",
-    "4. level 3 以下には finding を付ける。finding には severity（blocker / major / minor / note）、対象直前の本文行番号、具体的な修正理由を含める。line は Frontmatter を除く本文の1始まり（通常は H1 が1行目）とする。level 4 は finding なしとする。",
-    "5. 前回の指摘を対象の現在内容と照合し、解消済みか確認する。未解消なら前回の message を変更せず今回の finding に含め、severity は前回と同等以上を指定する。前回の rule は前回評価時の分類として扱い、各 viewpoint は現在の根拠から独立に評価する。前回の問題が解消され、別の軽微な問題だけが残るため severity を引き下げる場合は、その根拠を新しい finding の message に含める。",
-    "6. 前回の指摘の確認だけで終了せず、前回の指摘にない問題もすべての viewpoint で独立して検出する。",
+    "2. 参考資料と良い実例がある場合は列挙された全ファイルを全文読み、実行ログに各パスの読み取り操作を残す。参考資料や良い実例を評価対象と混同しない。",
+    "3. 良い実例がある場合は、章ごとの具体性、根拠の密度、過不足を評価対象と比較して記載水準を判定する。表現の類似や実例自体の欠点を評価理由にせず、rubric と viewpoint を最終的な判定基準にする。",
+    "4. 評価対象を次の rubric と viewpoint に照らし、各 viewpoint を 0-4 で判定する。ある viewpoint の finding の有無から、ほかの viewpoint の判定を推論しない。",
+    "5. level 3 以下には finding を付ける。finding には severity（blocker / major / minor / note）、対象直前の本文行番号、具体的な修正理由を含める。line は Frontmatter を除く本文の1始まり（通常は H1 が1行目）とする。level 4 は finding なしとする。",
+    "6. 前回の指摘を対象の現在内容と照合し、解消済みか確認する。未解消なら前回の message を変更せず今回の finding に含め、severity は前回と同等以上を指定する。前回の rule は前回評価時の分類として扱い、各 viewpoint は現在の根拠から独立に評価する。前回の問題が解消され、別の軽微な問題だけが残るため severity を引き下げる場合は、その根拠を新しい finding の message に含める。",
+    "7. 前回の指摘の確認だけで終了せず、前回の指摘にない問題もすべての viewpoint で独立して検出する。",
     "",
     "### 3.1. 前回の指摘",
     "",
@@ -567,7 +660,7 @@ export function renderGradePlan(opts: {
     "",
     "## 5. 異常終了の条件",
     "",
-    "- 評価対象または参考資料を読み取れない場合は、内容を推測せず異常終了する。",
+    "- 評価対象、参考資料、または良い実例を読み取れない場合は、内容を推測せず異常終了する。",
     "- rubric または viewpoint に不足があり、全項目を判定できない場合は異常終了する。",
     "- すべての viewpoint の level と finding を申告できない場合は異常終了する。",
   ];
@@ -684,14 +777,23 @@ function gradeReporterPlanFilename(path: string): string {
 export function writeGradePlans(opts: {
   target: GradeTarget;
   paths: string[];
+  referenceExampleCandidates: string[];
+  // 明示指定があれば選定を行わず固定する。比較実験では選定の揺れを排除する必要があり、
+  // 運用でも特定の実例へ水準を揃えたい場合がある。
+  referenceExampleOverride?: string;
   viewpoints: ReviewViewpointsDoc;
   projectId: string;
   outputDirectory: string;
+  random?: () => number;
 }): { path: string; changed: boolean; reporterPath: string; reporterChanged: boolean }[] {
   const outputDirectory = resolveSafeRepositoryPath(opts.outputDirectory, "--out");
   if (opts.paths.length === 0) return [];
   mkdirSync(outputDirectory, { recursive: true });
   const kataReferences = loadKataReferences();
+  const referenceExamples = opts.referenceExampleCandidates.flatMap((candidate) => {
+    const parsed = parseGradeReferenceExample(candidate, opts.target);
+    return parsed ? [parsed] : [];
+  });
   return opts.paths.map((path) => {
     const absolute = resolveSafeMarkdownPath(path);
     const output = join(outputDirectory, gradePlanFilename(absolute));
@@ -700,6 +802,14 @@ export function writeGradePlans(opts: {
       target: opts.target,
       path: absolute,
       references: resolveGradeReferencePathsFromCatalog(absolute, kataReferences),
+      referenceExample:
+        opts.referenceExampleOverride ??
+        selectGradeReferenceExampleFromCatalog({
+          target: opts.target,
+          path: absolute,
+          candidates: referenceExamples,
+          random: opts.random,
+        }),
       viewpoints: opts.viewpoints,
       projectId: opts.projectId,
     });
@@ -1162,6 +1272,10 @@ export function registerGradeCommand(program: Command): void {
       .description("Write reusable executor and reporter plans per selected document"),
   )
     .option("--out <directory>", "Write plans below this repository-relative directory")
+    .option(
+      "--reference <path>",
+      "Use this document as the comparison reference instead of selecting one",
+    )
     .action((options) => {
       try {
         const target = requireTarget(options.target);
@@ -1173,11 +1287,18 @@ export function registerGradeCommand(program: Command): void {
           paths: options.path,
           changedOnly: options.changedOnly,
         });
+        const referenceExampleCandidates = discoverGradeTargets({
+          target,
+          project: options.project,
+          changedOnly: false,
+        });
         const outputDirectory =
           options.out ?? join(getProjectExecutionPath(project), "grade", "plans", target);
         const plans = writeGradePlans({
           target,
           paths,
+          referenceExampleCandidates,
+          referenceExampleOverride: options.reference,
           viewpoints,
           projectId,
           outputDirectory,
