@@ -11,11 +11,14 @@ task:
   owner: ARC
   description: |
     `specdojo grade plan --target kata --changed-only --project prj-0001` で1文書単位の
-    評価 plan を保存する。表示された plan を順に agent へ渡し、各文書について全 agent
-    viewpoint の GradeSubmission JSON を作成する。1件ごとに
-    `specdojo grade apply --target kata --path <document> --from <json> --by <nickname>` で
-    実行 agent の nickname を指定し、検証・スコア計算・finding 配置を完了してから次へ進む。
-    対象がなければ result に no-op と記録する。
+    executor plan と reporter plan を保存する。各文書について executor plan を分析担当へ渡し、
+    JSON ではない marker 付き自由記述の最終応答を保存する。次に reporter plan と executor 応答を
+    `<grade_executor_output>` として reporter へ渡し、判定を変更しない GradeSubmission JSON を得る。
+    1件ごとに `specdojo grade apply --target kata --path <document>
+    --analysis-from <executor-output> --from <json> --by <executor-nickname>` を実行し、level・severity・
+    finding の忠実性検証、スコア計算、finding 配置を完了してから次へ進む。reporter は対象文書を
+    再評価せず、executor の nickname を graded_by として指定する。対象がなければ result に no-op と
+    記録する。
   paths:
     - docs/ja/specdojo/rulebooks
     - docs/ja/specdojo/recipes

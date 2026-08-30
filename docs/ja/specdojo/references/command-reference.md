@@ -455,30 +455,35 @@ specdojo exec trial adopt --project prj-0001 --comparison <comparison-id> --tria
 
 `grade` は kata（rulebook / recipe / sample / template）または成果物を、review と同じ共通 viewpoint・category rubric で継続評価します。agent に直接ファイル探索やスコア計算をさせず、plan 生成と反映を分離します。
 
-| コマンド         | 用途                                                      |
-| ---------------- | --------------------------------------------------------- |
-| `grade plan`     | 1文書ごとに対象・参考資料のパスを持つ評価 plan を保存する |
-| `grade apply`    | agent の JSON を検証し、スコアと finding を冪等に反映する |
-| `grade validate` | 内容ハッシュと Frontmatter / 本文 finding 件数を検証する  |
+| コマンド         | 用途                                                     |
+| ---------------- | -------------------------------------------------------- |
+| `grade plan`     | 1文書ごとに executor / reporter の評価 plan を保存する   |
+| `grade apply`    | reporter の JSON と executor の申告を検証して反映する    |
+| `grade validate` | 内容ハッシュと Frontmatter / 本文 finding 件数を検証する |
 
 ```bash
 specdojo grade plan --target kata --changed-only --project prj-0001
-# 表示された plan を1件ずつ agent へ渡し、文書ごとの GradeSubmission JSON を作成する
-specdojo grade apply --target kata --path <document.md> --from <grade-result.json> --by <nickname>
+# executor plan の自由記述を保存し、reporter plan と一緒に reporter へ渡す
+specdojo grade apply --target kata --path <document.md> \
+  --analysis-from <executor-output.txt> --from <grade-result.json> --by <executor-nickname>
 specdojo grade validate --target kata --project prj-0001
 ```
 
 `--target` は `kata` または `deliverable` です。`--path` は繰り返し指定でき、明示した Markdown 文書だけを対象にします。`--changed-only` は既存 grade の `content_hash` と、grade・finding を除いた現在内容のハッシュを比較するため、評価結果の書き込み自体を変更として再検出しません。
 
-`grade plan` は対象ごとに1ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。各 plan は評価対象を1件だけリポジトリ相対パスで示し、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書も参考資料のパスとして列挙します。対象や参考資料の本文は plan に埋め込みません。
+`grade plan` は対象ごとに executor plan と reporter plan の2ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。executor plan は評価対象を1件だけリポジトリ相対パスで示し、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書も参考資料のパスとして列挙します。対象や参考資料の本文は plan に埋め込みません。reporter plan は対象の固定 facts と GradeSubmission テンプレートだけを持ち、評価資料は持ちません。
 
 再評価時は、対象本文に現在残っている `specdojo:finding` コメントから `rule`、`severity`、`message` を前回の指摘として plan へ含めます。agent は各指摘が現在も未解消かを確認し、未解消なら前回の message を変更せず、前回と同等以上の severity で今回の finding に含めます。`grade apply` も同じ message の finding を未解消と扱い、提出された severity が前回より軽ければ前回値へ戻し、対応する viewpoint level を severity 上限まで補正します。前回の問題が解消され、別の軽微な問題だけが残る場合は、新しい finding の message に引き下げの根拠を含めます。前回の観点割り当てに判定を引きずられないよう各 viewpoint を現在の根拠から独立に評価し、前回指摘にない問題も検出します。前回の level、score、verdict や解消履歴は plan に引き継ぎません。適用結果は従来どおり最新状態へ上書きされます。
 
-agent は判定前に、plan が示す評価対象とすべての参考資料をファイル読み取りツールで全文読み、実行ログに各パスの読み取り操作を残します。参考資料は判定材料であり、GradeSubmission の `documents` には含めません。いずれかのファイルを読み取れない場合は、内容を推測せず異常終了します。grade plan の Frontmatter と「このタスクで行うこと / 対象項目 / 進め方 / 完了手順 / 異常終了の条件」の章構成は exec plan に準拠します。
+executor は判定前に、plan が示す評価対象とすべての参考資料をファイル読み取りツールで全文読み、実行ログに各パスの読み取り操作を残します。参考資料は判定材料であり、評価対象にはしません。いずれかのファイルを読み取れない場合は、内容を推測せず異常終了します。grade plan の Frontmatter と「このタスクで行うこと / 対象項目 / 進め方 / 完了手順 / 異常終了の条件」の章構成は exec plan に準拠します。
 
-grade plan は冒頭に最優先の最終応答契約を持ちます。正常終了時は最初の文字が `{`、最後の文字が `}` である GradeSubmission JSON オブジェクト1個だけを返し、途中経過、タスクリスト、変更ファイル、検証結果、JSON 外の根拠、Markdown コードフェンスを含めません。この契約は agent の通常タスク向け最終報告指示に優先し、判定根拠は `findings[].message` に格納します。出力前に対象1件と全 agent viewpoint、level 3 以下の finding、および finding の非空 `message` を自己確認します。判定主体は agent に自己申告させず、`grade apply --by <nickname>` がプロジェクトの `pm-members.yaml` に存在する nickname を検証して `specdojo.grade.graded_by` へ記録します。旧 GradeSubmission の `graded_by` は入力互換性のため受理しますが、記録には使いません。
+executor plan は JSON 契約を持ちません。各 viewpoint を `[VIEWPOINT <id>]` と `[END VIEWPOINT]` で囲み、`LEVEL: <0-4>` と、必要な `FINDING <severity> line=<line>: <message>` を申告します。marker 間の根拠と検討過程は自由記述です。この軽量な申告形式により、JSON を安定して生成できない agent でも分析を完了できます。
 
-複数対象は、生成された plan を順に agent へ渡し、1件の GradeSubmission を直ちに `grade apply --path <document>` で反映します。agent 起動は Job / exec が担い、`grade` は plan の生成と結果の検証・反映に限定されます。この単位で処理すると、後続文書が失敗しても適用済みの grade は保持されます。保存済み plan は `exec trial` などで同じ入力を複数 agent へ渡す用途にも利用できます。
+reporter は executor の最終応答を `<grade_executor_output>` として reporter plan と一緒に受け取り、GradeSubmission JSON だけを返します。対象文書や参考資料を再評価せず、executor の level、severity、line、message を追加・省略・変更しません。`grade apply --analysis-from <executor-output>` は reporter JSON と executor marker を機械照合し、不一致、欠落、追加を拒否してから既存の GradeSubmission 検証を実行します。判定主体は reporter ではなく executor なので、`--by <executor-nickname>` がプロジェクトの `pm-members.yaml` に存在する nickname を検証して `specdojo.grade.graded_by` へ記録します。
+
+移行期間中は `--analysis-from` を省略した従来の1段構成も受理します。既存の保存済み plan や GradeSubmission を適用するための互換経路であり、新しく生成した2段 plan では `--analysis-from` を指定します。旧 GradeSubmission の `graded_by` も入力互換性のため受理しますが、記録には使いません。
+
+複数対象は、生成された plan の組を順に処理し、executor 応答を保存して reporter へ引き渡し、1件の GradeSubmission を直ちに `grade apply --path <document> --analysis-from <executor-output>` で反映します。agent 起動と stage 間の応答受け渡しは Job / exec が担い、`grade` は plan の生成と結果の検証・反映に限定されます。この単位で処理すると、後続文書が失敗しても適用済みの grade は保持されます。保存済み executor plan は `exec trial` などで同じ入力を複数 agent へ渡す用途にも利用できます。
 
 `apply` は level 3 以下に finding を要求し、`blocker` は level 0、`major` は最大 level 2、`minor` は最大 level 3 に制限します。category score は viewpoint score（`level × 25`）の平均、総合 score は対象種別ごとの重み付き平均です。verdict は `blocker` があれば `fail`、`major` があるか総合 score が 70 未満なら `needs-work`、それ以外を `pass` とします。
 

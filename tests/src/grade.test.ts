@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   gradeMarkdownContent,
+  parseGradeExecutorAnalysis,
   parseGradeSubmission,
   renderGradePlan,
+  renderGradeReporterPlan,
   resolveGradeActor,
   resolveGradeReferencePaths,
+  validateGradeReporterFidelity,
   validateGradeSubmission,
   validateGradedMarkdown,
   type GradeSubmission,
@@ -289,7 +292,7 @@ describe("grade markdown update", () => {
 });
 
 describe("grade plan", () => {
-  it("references one document by path and uses the exec plan section structure", () => {
+  it("renders an executor plan without a GradeSubmission JSON contract", () => {
     const path = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
     const plan = renderGradePlan({
       target: "kata",
@@ -299,25 +302,105 @@ describe("grade plan", () => {
       projectId: "prj-0001",
     });
     expect(plan).toContain("type: exec-plan");
-    expect(plan).toContain(`"path": "${path}"`);
+    expect(plan).toContain(`- \`評価対象\`: \`${path}\``);
     expect(plan).toContain("## 1. このタスクで行うこと");
-    expect(plan).toContain("最終応答契約（最優先）:");
     expect(plan).toContain("## 2. 対象項目");
     expect(plan).toContain("## 3. 進め方");
     expect(plan).toContain("## 4. 完了手順");
     expect(plan).toContain("## 5. 異常終了の条件");
     expect(plan).toContain("実行ログに読み取り操作を残す");
-    expect(plan).toContain("最初の文字を `{`、最後の文字を `}`");
-    expect(plan).toContain("変更ファイル、検証結果、根拠、未確認範囲などの最終報告指示に優先する");
-    expect(plan).toContain("コードフェンスや JSON 外の説明を加えない");
-    expect(plan).toContain("非空の `message`");
-    expect(plan).toContain("grade apply --by <nickname>");
+    expect(plan).toContain("[VIEWPOINT vp-qe-kata-conformance]");
+    expect(plan).toContain("根拠や検討過程を自由形式で詳しく記述してよい");
+    expect(plan).toContain("GradeSubmission JSON は作成しない");
+    expect(plan).not.toContain('"documents"');
     expect(plan).not.toContain('"graded_by"');
     expect(plan).toContain("vp-qe-kata-conformance");
     expect(plan).toContain("vp-arc-conciseness");
     expect(plan).not.toContain("vp-arc-document-structure [");
     expect(plan).not.toContain("## Document:");
     expect(plan).not.toContain("Frontmatter（CLI の決定的判定対象）");
+  });
+
+  it("renders a reporter plan that only structures the executor declaration", () => {
+    const path = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
+    const plan = renderGradeReporterPlan({
+      target: "kata",
+      path,
+      viewpoints,
+      projectId: "prj-0001",
+    });
+
+    expect(plan).toContain("grade pipeline の reporter stage");
+    expect(plan).toContain("評価やファイル読み取りは行わず");
+    expect(plan).toContain("追加・省略・変更せず");
+    expect(plan).toContain(`"path": "${path}"`);
+    expect(plan).toContain('"rubric": "grade-rubric-v1"');
+    expect(plan).toContain("message の要約、言い換え、校正を行わない");
+  });
+
+  it("parses free-form executor rationale and rejects reporter judgment changes", () => {
+    const executorOutput = `前置きの分析も許容する。
+[VIEWPOINT vp-qe-kata-conformance]
+LEVEL: 2
+規約の必須事項と比較した。
+FINDING major line=7: 必須の禁止事項が欠落している。
+[END VIEWPOINT]
+[VIEWPOINT vp-arc-conciseness]
+LEVEL: 4
+重複は見つからなかった。
+[END VIEWPOINT]
+`;
+    const expectedPath = "docs/ja/specdojo/rulebooks/example-rulebook.md";
+    const reporterSubmission: GradeSubmission = {
+      rubric: "grade-rubric-v1",
+      documents: [
+        {
+          path: expectedPath,
+          viewpoints: [
+            {
+              id: "vp-qe-kata-conformance",
+              level: 2,
+              findings: [{ severity: "major", line: 7, message: "必須の禁止事項が欠落している。" }],
+            },
+            { id: "vp-arc-conciseness", level: 4, findings: [] },
+          ],
+        },
+      ],
+    };
+
+    expect(parseGradeExecutorAnalysis(executorOutput).viewpoints).toHaveLength(2);
+    expect(
+      validateGradeReporterFidelity({
+        executorOutput,
+        submission: reporterSubmission,
+        viewpoints,
+        target: "kata",
+        expectedPath,
+      }),
+    ).toEqual([]);
+    expect(validateGradeSubmission(reporterSubmission, viewpoints, "kata")).toEqual([]);
+
+    const changed = structuredClone(reporterSubmission);
+    changed.documents[0].viewpoints[0].level = 1;
+    changed.documents[0].viewpoints[0].findings![0].severity = "blocker";
+    expect(
+      validateGradeReporterFidelity({
+        executorOutput,
+        submission: changed,
+        viewpoints,
+        target: "kata",
+        expectedPath,
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message: expect.stringContaining("differs from executor level"),
+        }),
+        expect.objectContaining({
+          message: expect.stringContaining("differs from executor count"),
+        }),
+      ]),
+    );
   });
 
   it("resolves declared and reverse-linked Kata references", () => {
