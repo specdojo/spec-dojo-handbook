@@ -31,6 +31,10 @@ export type GradeFindingInput = {
   line?: number;
 };
 
+type PreviousGradeFinding = Pick<GradeFindingInput, "severity" | "message"> & {
+  rule: string;
+};
+
 export type GradeViewpointInput = {
   id: string;
   level: number;
@@ -97,6 +101,14 @@ function serializeMarkdown(document: MarkdownDocument): string {
 
 function withoutFindingComments(body: string): string {
   return body.replace(FINDING_RE, "");
+}
+
+function previousGradeFindings(body: string): PreviousGradeFinding[] {
+  return [...body.matchAll(FINDING_RE)].map((match) => ({
+    severity: match[2] as GradeSeverity,
+    rule: match[3],
+    message: match[4].trim(),
+  }));
 }
 
 function stableContentHash(document: MarkdownDocument): string {
@@ -419,6 +431,7 @@ export function renderGradePlan(opts: {
   const document = parseMarkdown(readFileSync(absolute, "utf8"), rel);
   const metadata = document.data.specdojo as Record<string, unknown>;
   const documentId = typeof metadata.id === "string" ? metadata.id : rel;
+  const priorFindings = previousGradeFindings(document.body);
   const taskHash = createHash("sha256").update(rel).digest("hex").slice(0, 12).toUpperCase();
   const taskId = `GRADE-${opts.target.toUpperCase()}-${taskHash}`;
   const references = (opts.references ?? []).map((reference) =>
@@ -471,17 +484,27 @@ export function renderGradePlan(opts: {
     "",
     "1. 評価対象をファイル読み取りツールで全文読み、実行ログに読み取り操作を残す。plan に対象本文は埋め込まれていないため、この手順を省略しない。",
     "2. 参考資料がある場合は列挙された全ファイルを全文読み、実行ログに各パスの読み取り操作を残す。参考資料を評価対象と混同しない。",
-    "3. 評価対象を次の rubric と viewpoint に照らし、各 viewpoint を 0-4 で判定する。",
+    "3. 評価対象を次の rubric と viewpoint に照らし、各 viewpoint を 0-4 で判定する。ある viewpoint の finding の有無から、ほかの viewpoint の判定を推論しない。",
     "4. level 3 以下には finding を付ける。finding には severity（blocker / major / minor / note）、対象直前の本文行番号、具体的な修正理由を含める。line は Frontmatter を除く本文の1始まり（通常は H1 が1行目）とする。",
+    "5. 前回の指摘を対象の現在内容と照合し、解消済みか確認する。未解消なら今回の finding に含める。前回の rule は前回評価時の分類として扱い、各 viewpoint は現在の根拠から独立に評価する。",
+    "6. 前回の指摘の確認だけで終了せず、前回の指摘にない問題もすべての viewpoint で独立して検出する。",
     "",
-    "### 3.1. Rubric",
+    "### 3.1. 前回の指摘",
+    "",
+    "対象文書に現在記録されている finding の事実情報を示す。",
+    "",
+    ...(priorFindings.length > 0
+      ? ["```json", JSON.stringify(priorFindings, null, 2), "```"]
+      : ["- なし"]),
+    "",
+    "### 3.2. Rubric",
     "",
     ...rubric.levels.map(
       (level) =>
         `- ${level.level} (${level.name}, review=${level.review_verdict}): ${level.description}`,
     ),
     "",
-    "### 3.2. Viewpoints",
+    "### 3.3. Viewpoints",
     "",
     ...viewpoints.map(
       (viewpoint) =>
