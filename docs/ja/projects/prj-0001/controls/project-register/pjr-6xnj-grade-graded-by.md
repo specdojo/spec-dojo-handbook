@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: review
   priority: medium
   owner: ARC
   registered_at: "2026-08-30T01:11:23Z"
@@ -59,6 +59,19 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_bf061ef2082c4715b3575858b7c3d8a0
+    - v: 1
+      id: reg_11ecc74c6dd04b31b2247924bf54455b
+      ts: "2026-08-30T02:45:00Z"
+      action: review
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: review
+      reason: ready for review
+      changes:
+        - field: status
+          from: in-progress
+          to: review
+      previous_event_id: reg_bac79f76a0564a9e99928c62f9a4c5ff
 ---
 
 # PJR-6XNJ grade の graded_by を CLI 側で確定させる
