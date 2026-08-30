@@ -64,106 +64,114 @@ specdojo:
       previous_event_id: reg_ff0f15ca90c84752bb54c675a9c19ac7
 ---
 
-# PJR-VQB5 grade 判定の agent 比較結果（gemma / claude / qwen）
+# PJR-VQB5 grade 判定の agent 比較結果
 
 ## 1. メモ
 
-同一の grade plan を3つの agent へ渡し、判定結果を比較した実測記録である。対象は kata 4 件、agent が判定する viewpoint は7件で、合計 28 判定を比較した。
+同一の grade plan を6つの agent へ渡し、判定結果を比較した実測記録である。kata 285 件の定期評価にどの agent を使うかを判断するために行った。
 
 ### 1.1. 実行条件
 
-| 項目           | 内容                                                                                                       |
-| -------------- | ---------------------------------------------------------------------------------------------------------- |
-| 対象文書       | `dec-rulebook.md`（60 行）、`opr-rulebook.md`（483 行）、`pjr-rulebook.md`、`opr-batch-sample.md`（22 行） |
-| plan           | 同一。964 行・46,673 文字                                                                                  |
-| 判定 viewpoint | 7 件（決定的観点は CLI が判定するため plan に含まれない）                                                  |
-| 実行日         | 2026-08-29                                                                                                 |
+| 項目           | 内容                                                       |
+| -------------- | ---------------------------------------------------------- |
+| 対象文書       | `dec-rulebook.md`（60 行）、`opr-batch-sample.md`（22 行） |
+| plan           | 1文書単位・パス参照。9,165 文字と 9,865 文字               |
+| 判定 viewpoint | 8 件（決定的観点は CLI が判定するため plan に含まれない）  |
+| 実行日         | 2026-08-30                                                 |
 
-対象は性質を意図的に分散させた。`opr-rulebook.md`（483 行）と `opr-batch-sample.md`（22 行）は対応関係にあり、規範に対して完成例が明らかに不足しているため、成果物間整合の判定能力を見る材料とした。
+`opr-batch-sample.md` は 483 行の `opr-rulebook.md` に対応する 22 行の sample であり、規範に対して完成例が大きく不足している。良い文書と問題のある文書を区別できるかを見る材料として選んだ。
 
 ### 1.2. 総合比較
 
-| 項目                   | gemma                   | claude        | qwen                 |
-| ---------------------- | ----------------------- | ------------- | -------------------- |
-| モデル                 | gemma4:31b-mlx-work-64k | claude-opus-5 | opencode 経由の Qwen |
-| JSON 出力              | あり                    | あり          | **なし**             |
-| 判定件数               | 28                      | 28            | 判定不能             |
-| level 平均             | 3.82                    | 2.36          | -                    |
-| level 4（指摘なし）    | 25 / 28                 | 4 / 28        | -                    |
-| finding 件数           | 3                       | 47            | -                    |
-| finding の message 空  | 3 / 3                   | 0 / 47        | -                    |
-| `grade apply` の受理   | **拒否**                | **受理**      | **不可**             |
-| 所要時間               | 10 分超                 | 数分          | 10 分超              |
-| ファイル読み取りツール | 不明                    | 使用せず      | 使用した             |
+`opr-batch-sample.md` に対する判定である。平均 level が低いほど厳格な評価を意味する。
 
-`grade apply` は level 3 以下に根拠となる finding を要求し、finding には非空の message を要求する。gemma は message が空のため `severity and non-empty message are required` で拒否された。
+| agent                    | 平均 level | finding | 出力形式       | 判定                   |
+| ------------------------ | ---------- | ------- | -------------- | ---------------------- |
+| `claude-expert-executor` | 1.88       | 19      | コードフェンス | 最も厳格かつ網羅的     |
+| `codex-expert-executor`  | 2.38       | 7       | 素の JSON      | 網羅性と均衡が良い     |
+| `codex-executor`         | 2.62       | 5       | 素の JSON      | 判定と根拠が不釣り合い |
+| `gemma-expert-executor`  | 2.88       | 4       | コードフェンス | 弁別能力が最も高い     |
+| `qwen-expert-executor`   | 3.25       | 5       | 前置きあり     | 甘めだが安定           |
+| `claude-executor`        | 3.75       | 1       | コードフェンス | 検出できていない       |
 
-### 1.3. 文書別の level 比較
+### 1.3. 弁別能力
 
-`dec-rulebook.md` に対する判定を viewpoint 別に示す。括弧内は finding 件数である。
+良い文書と問題のある文書をどれだけ区別できるかを示す。`dec-rulebook.md` と `opr-batch-sample.md` の平均 level の差である。
 
-| viewpoint                           | gemma | claude |
-| ----------------------------------- | ----- | ------ |
-| `vp-arc-cross-document-consistency` | 4 (0) | 2 (3)  |
-| `vp-arc-conciseness`                | 4 (0) | 3 (1)  |
-| `vp-qe-verifiability`               | 4 (0) | 2 (2)  |
-| `vp-qe-omissions-consistency`       | 4 (0) | 2 (2)  |
-| `vp-qe-kata-conformance`            | 4 (0) | 3 (2)  |
-| `vp-ux-readability`                 | 4 (0) | 3 (2)  |
-| `vp-ux-language-consistency`        | 4 (0) | 3 (1)  |
+| agent                    | dec-rulebook | opr-batch-sample | 差       |
+| ------------------------ | ------------ | ---------------- | -------- |
+| `gemma-expert-executor`  | 4.00         | 2.88             | **1.12** |
+| `claude-expert-executor` | 2.62         | 1.88             | 0.74     |
+| `codex-expert-executor`  | 2.75         | 2.38             | 0.37     |
+| `qwen-expert-executor`   | 3.62         | 3.25             | 0.37     |
+| `codex-executor`         | 2.50         | 2.62             | -0.12    |
+| `claude-executor`        | 3.50         | 3.75             | -0.25    |
 
-claude は文書の質に応じて level を分散させた。整備済みの `pjr-rulebook.md` には 4,3,3,3,4,4,4、内容の薄い `dec-rulebook.md` には 2,3,2,2,3,3,3、規範と乖離した `opr-batch-sample.md` には 1,2,2,1,1,2,2 を与えており、事前の想定と一致する。gemma は `pjr-rulebook.md` と `opr-rulebook.md` を同じ level 4 と判定し、弁別できていない。
+`gemma` は差が最も大きいが、`dec-rulebook.md` を全観点 level 4 と判定しており、中程度の問題を見落とす。他の5 agent はいずれも `dec-rulebook.md` に問題を検出している。
 
-### 1.4. プロンプトサイズの影響
+`codex-executor` と `claude-executor` は差が負であり、問題のある文書ほど高い level を付けている。品質評価として成立していない。
 
-gemma の判定がコンテキスト量に起因するかを確かめるため、`dec-rulebook.md` 単体（7,271 文字。バッチの約6分の1）で再実行した。
+### 1.4. proficiency による差
 
-| 条件             | level 4 の数 | finding | message 空 | `grade apply` |
-| ---------------- | ------------ | ------- | ---------- | ------------- |
-| バッチ（4 文書） | 7 / 7        | 0       | -          | 拒否          |
-| 単体（1 文書）   | 6 / 7        | 2       | 2 / 2      | 拒否          |
+同一 provider で proficiency だけが異なる組み合わせを比較する。
 
-改善は1観点のみで、message が空である問題は解消しなかった。**gemma の限界はコンテキスト量ではなく、指摘内容を言語化する能力または指示遵守にある。**
+| 組み合わせ                 | expert の平均 level | normal の平均 level | expert の finding | normal の finding |
+| -------------------------- | ------------------- | ------------------- | ----------------- | ----------------- |
+| claude（opr-batch-sample） | 1.88                | 3.75                | 19                | 1                 |
+| codex（opr-batch-sample）  | 2.38                | 2.62                | 7                 | 5                 |
 
-### 1.5. 指摘の正確性
+**proficiency の差は provider 間の差より大きい。** claude は expert と normal で平均 level が 1.87、finding が 18 件も違う。grade には expert が必要である。
 
-実データと突き合わせて検証した。
+`codex-executor` は `dec-rulebook.md` の3観点へ level 1 を付けながら finding は各1件であり、重い判定に対して根拠が薄い。
 
-| agent  | 指摘                                                                                                | 検証結果 |
-| ------ | --------------------------------------------------------------------------------------------------- | -------- |
-| claude | `dec-rulebook.md` に同一主張の反復がある                                                            | 事実     |
-| qwen   | `opr-batch-sample.md` の Frontmatter が `opd-rulebook` を指すが本文は `opr-rulebook` を参照している | 事実     |
-| qwen   | `opr-rulebook.md` の template 宣言が `opq-template` である                                          | 誤り     |
+### 1.5. 全 agent が検出した不整合
 
-qwen は実在する不整合を発見した。`opr-batch-sample.md` の Frontmatter は運用方針（opd）の rulebook を指す一方、本文は運用手順（opr）の rulebook を参照しており、系統が食い違っている。一方で存在しない `opq-template` への言及という誤認も含んでいた。
+`opr-batch-sample.md` の Frontmatter が `rulebook: specdojo:opd-rulebook`（運用方針）を指す一方、本文は `../rulebooks/opr-rulebook.md`（運用手順）を参照している。系統が食い違う実在の不整合であり、6 agent すべてが検出した。
 
-### 1.6. qwen が JSON を出力できなかった経緯
+明白な不整合は agent を問わず捉えられる。差が出るのは網羅性である。
 
-実行ログのタスクリストは、判定まで完了していたことを示す。
+### 1.6. 出力形式
 
-```text
-[✓] 対象4文書を読み本文行番号を確定する
-[✓] 関連設計書を確認しクロスドキュメント整合をチェック
-[✓] 各文書×7viewpointで0-4判定とfindingを作成
-[•] GradeSubmission JSONを出力し、変更ファイル/検証結果を最終応答へ残す
-```
+| provider | 形式                                   |
+| -------- | -------------------------------------- |
+| codex    | 素の JSON。4回すべてで契約を守った     |
+| claude   | コードフェンスで囲む                   |
+| opencode | コードフェンス、または作業経過の前置き |
 
-最終ステップに到達せず散文で応答を終えている。分析能力ではなく出力形式の問題である。
+契約で「JSON だけを出力する」と指示しても、codex 以外は付加物を伴う。PJR-AKJ4 で実装した抽出処理により、いずれの形式でも受理できる。
+
+### 1.7. gemma の評価が変わった経緯
+
+初回の比較では gemma を不採用と判断した。finding の `message` がすべて空で `grade apply` に拒否され、prompt を 46,673 文字から 7,271 文字へ縮小しても解消しなかったため、限界は言語化能力にあると結論づけた。
+
+この結論は誤りだった。PJR-AKJ4 で plan へ最終応答契約を明示した後に再測定したところ、`message` が記述され apply も受理された。原因は能力ではなく plan の指示不足だった。唯一 `blocker` severity を出した agent でもある。
+
+agent の評価は plan の指示品質に強く依存する。指示を改善せずに agent の能力を判断すると誤った結論に至る。
 
 ## 2. 背景・文脈
 
-kata 285 件を定期評価するにあたり、ローカルモデルで運用できれば API コストなしで全件を回せる。その可否を判断するために比較した。
-
-結論として、現時点で `grade apply` を通過する出力を返せるのは claude のみである。gemma は不採用とする。qwen は分析品質が claude に匹敵するため、出力形式を強制できれば候補となる。
+kata 285 件を定期評価するにあたり、ローカルモデルで運用できれば API コストなしで全件を回せる。その可否と、どの agent をどの用途に使うかを判断するために比較した。
 
 ## 3. フォローアップ
 
-- qwen の JSON 出力問題は PJR-AKJ4 で扱う。
-- grade の評価単位を1文書へ変更し plan として保存する変更は PJR-4TZ7 で扱う。本比較で用いた plan の再利用や `exec trial` による agent 比較は、その実装後に仕組みとして実行できる。
-- 合格閾値 70 の妥当性は未確定である。claude の判定では 4 件中 `pjr-rulebook.md` のみが閾値に近く、他は下回った。全件評価の結果を見て確定する。
+用途別の推奨は次のとおりである。
+
+| 用途                | 推奨 agent                          | 理由                                       |
+| ------------------- | ----------------------------------- | ------------------------------------------ |
+| 全 285 件の定期評価 | `codex-expert-executor`             | 網羅性・弁別・整合性の均衡が良い           |
+| 重要な kata の精査  | `claude-expert-executor`            | 最も厳格で網羅的                           |
+| ローカル無償運用    | `gemma-expert-executor`             | 弁別能力が最も高く、深刻な問題の検出に有効 |
+| 補助的な二次評価    | `qwen-expert-executor`              | 甘いが安定している                         |
+| 不採用              | `claude-executor`、`codex-executor` | 判定と根拠が釣り合わない                   |
+
+- `graded_by` が agent の自己申告のため値が安定しない。agent 別の傾向分析の前提となるため PJR-6XNJ で扱う。
+- 合格閾値 70 の妥当性は未確定である。agent により平均 level が 1.88 から 3.75 まで分かれるため、閾値を agent 別に変える必要があるかを全件評価の分布を見て判断する。
+- `gemma-expert-executor` の agent 定義へ、plan の契約を優先する記述を追加した。qwen と同等の条件になったため、次回の測定では結果が変わる可能性がある。
 
 ## 4. 関連ドキュメント
 
 - [[prj-0001:pjr-49d2-quality-assessment]]: grade の設計と実装。本比較はその agent 選定にあたる。
-- [[prj-0001:pjr-4tz7-grade-per-document]]: 評価単位の見直し。本比較で判明したコンテキスト膨張の問題を扱う。
-- [[prj-0001:pjr-akj4-agent-json-response]]: qwen の出力形式問題。
+- [[prj-0001:pjr-4tz7-grade-per-document]]: 1文書単位の評価と plan 保存。本比較で用いた plan 方式。
+- [[prj-0001:pjr-akj4-agent-json-response]]: 最終応答契約と JSON 抽出。gemma の評価が変わった要因。
+- [[prj-0001:pjr-6xnj-grade-graded-by]]: `graded_by` の不安定さ。
+- [[prj-0001:pjr-zyfz-single-responsibility-viewpoint]]: 判定に用いた文書責務の単一性の観点。
