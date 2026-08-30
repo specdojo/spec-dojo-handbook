@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-ankr-grade-executor-reporter
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-30T11:06:46Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-30T11:56:35Z"
+  conclusion: grade plan が1文書ごとに executor plan と reporter plan を生成するようにした。executor plan から JSON 契約を除き、各 viewpoint の LEVEL と FINDING を軽量 marker で申告させる。reporter plan は対象文書を再評価せず、executor の申告を追加・省略・変更せず JSON へ写す責務に限定した。grade apply --analysis-from により reporter の忠実性を機械照合し、level の変更や finding の追加・省略を適用前に拒否する。qwen を executor、gemma を reporter として検証し、所要時間が 1 段構成の 18 分から 27 分に対し 6.5 分へ短縮され、構文破損も解消することを確認した。--analysis-from を省略する 1 段構成も維持している。
   register_events:
     - v: 1
       id: reg_3b63a239d642481f976ce609d9f0bc00
@@ -72,6 +74,25 @@ specdojo:
           from: in-progress
           to: review
       previous_event_id: reg_73c320ae6dfc47508d32850ac30a11c2
+    - v: 1
+      id: reg_ba388b324131495f936eb9b46e617611
+      ts: "2026-08-30T11:56:35Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-30"
+        - field: conclusion
+          from: "-"
+          to: grade plan が1文書ごとに executor plan と reporter plan を生成するようにした。executor plan から JSON 契約を除き、各 viewpoint の LEVEL と FINDING を軽量 marker で申告させる。reporter plan は対象文書を再評価せず、executor の申告を追加・省略・変更せず JSON へ写す責務に限定した。grade apply --analysis-from により reporter の忠実性を機械照合し、level の変更や finding の追加・省略を適用前に拒否する。qwen を executor、gemma を reporter として検証し、所要時間が 1 段構成の 18 分から 27 分に対し 6.5 分へ短縮され、構文破損も解消することを確認した。--analysis-from を省略する 1 段構成も維持している。
+      previous_event_id: reg_de9368a351f744b48836b441a72228d2
 ---
 
 # PJR-ANKR grade を executor と reporter の2段構成へ分ける
@@ -156,6 +177,22 @@ gemma は reporter として十分な出力形式の安定性を持つ。コー�
 - JSON でない前置きと根拠を含む executor 応答を解析できること、忠実な reporter 出力を受理すること、level と severity を変更した reporter 出力を拒否することをテストへ追加した。
 - 移行用に `--analysis-from` を省略する既存の1段構成を維持した。新規の2段構成では executor の nickname を `--by` に指定し、reporter ではなく判定主体を `graded_by` へ記録する。
 - CLI リファレンス、routine 運用ガイド、`job-grade-kata` を2段の受け渡し手順へ更新した。
+
+### 4.1. 検証結果
+
+`qwen-expert-executor` を executor、`gemma-reporter` を reporter として `dec-rulebook.md` を評価した。
+
+| 段階     | agent | 所要時間 | 結果                           |
+| -------- | ----- | -------- | ------------------------------ |
+| executor | qwen  | 5 分     | 8 観点すべて申告。構文破損なし |
+| reporter | gemma | 1.5 分   | GradeSubmission JSON を生成    |
+| 照合     | CLI   | 即時     | 忠実性の検証を通過             |
+
+`grade apply --analysis-from` による照合を通過しており、reporter は executor の判定を改変していない。
+
+1段構成では qwen の所要時間が 18 分から 27 分であり、閉じ括弧の過剰による構文破損も発生していた。2段構成では executor が JSON 構造を生成しないため、所要時間が 5 分へ短縮され破損も起きない。全体でも 6.5 分で完了しており、1段構成より速い。
+
+executor の申告は marker 形式で軽量だが、内容は従来と同等である。判断軸が未定義で pass/fail を判定できないという指摘に、用語定義節での定義または例示という修正案を添えている。
 
 ## 5. 関連ドキュメント
 
