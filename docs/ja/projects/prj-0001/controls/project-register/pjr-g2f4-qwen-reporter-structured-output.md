@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-g2f4-qwen-reporter-structured-output
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: open
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-27T23:00:18Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-30T03:04:17Z"
+  conclusion: 構造化出力の指定は採用せず、応答から JSON を抽出する方式で解決した。対処は PJR-AKJ4 で実施済みである。exec-reporter.ts の JSON.parse(raw.trim()) を extractJsonText 経由へ変更し、コードフェンスと前置きを除去してから解析する。本項目が記録した失敗例と同じ形状の応答が受理されることを確認した。Ollama の構造化出力は provider 固有で claude と codex へ適用できず、thinking を有効化した agent と競合しうるため採らない。モデル設定を変更していないため reporter と executor を分離する課題も生じない。
   register_events:
     - v: 1
       id: reg_46dd43dc781c26a074df0791447b8ab7
@@ -56,6 +58,25 @@ specdojo:
           from: ""
           to: "-"
       legacy_commit: 8500f4214d92fb08157eefcac13b4b7b895b0790
+    - v: 1
+      id: reg_63a065cf39274aa29a0c95e4c0049b04
+      ts: "2026-08-30T03:04:17Z"
+      action: close
+      actor: manual
+      from_status: open
+      to_status: done
+      reason: PJR-AKJ4 の実装により解決済みであることを確認したため
+      changes:
+        - field: status
+          from: open
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-30"
+        - field: conclusion
+          from: "-"
+          to: 構造化出力の指定は採用せず、応答から JSON を抽出する方式で解決した。対処は PJR-AKJ4 で実施済みである。exec-reporter.ts の JSON.parse(raw.trim()) を extractJsonText 経由へ変更し、コードフェンスと前置きを除去してから解析する。本項目が記録した失敗例と同じ形状の応答が受理されることを確認した。Ollama の構造化出力は provider 固有で claude と codex へ適用できず、thinking を有効化した agent と競合しうるため採らない。モデル設定を変更していないため reporter と executor を分離する課題も生じない。
+      previous_event_id: reg_46dd43dc781c26a074df0791447b8ab7
 ---
 
 # PJR-G2F4 qwen-reporterへ構造化出力を指定してJSON単体出力を強制する
@@ -94,7 +115,13 @@ qwen-reporter は JSON 自体は生成できるが前後に散文が付き、Spe
 
 ## 4. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+構造化出力の指定は採用せず、応答から JSON を抽出する方式で解決した。対処は PJR-AKJ4 で実施済みである。
+
+- 失敗の実体は「JSON だけを出力できない」ことであり、`exec-reporter.ts` が `JSON.parse(raw.trim())` で応答全体を単一 JSON として解析していた点にあった。この解析を `extractJsonText` を経由する形へ変更し、コードフェンスと前置きを除去してから解析するようにした。
+- 散文が前置きされた reporter 応答が受理されることを確認した。本項目が記録した失敗例（`I need to reconsider this.` に続く JSON）と同じ形状で検証している。
+- Ollama の構造化出力を採らない判断は次の理由による。provider 固有であり claude と codex へ適用できない。thinking を有効化した agent と競合しうる。新しいモデルを追加するたびに固有設定を調べる必要が生じる。抽出処理は provider に依存せず、1箇所の実装で全 agent に効く。
+- executor へ影響しない。モデル設定を変更していないため、reporter と executor を分離する必要も生じなかった。本項目が完了条件に挙げた分離の課題は、構造化出力を採らないことで解消した。
+- 指示文による対処は効果がないことが実証された。gemma の agent 定義へ「Markdown コードフェンスを加えない」旨を明示して再測定したが、コードフェンスは消えなかった。qwen では同じ記述が効いており、指示の遵守能力はモデルごとに異なる。指示の強化では出力形式を保証できないため、受け側で吸収する設計が妥当である。
 
 ## 5. 関連ドキュメント
 
