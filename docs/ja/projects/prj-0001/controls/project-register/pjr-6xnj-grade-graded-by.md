@@ -79,12 +79,12 @@ GradeSubmission の `graded_by` は agent が自己申告するため、値が�
 
 ## 3. 作業内容
 
-| No  | 作業                     | 担当   | 状態 | メモ                                 |
-| --- | ------------------------ | ------ | ---- | ------------------------------------ |
-| 1   | 確定方法の決定           | ARC    | open | plan での指定か apply 実行時の付与か |
-| 2   | 識別子の語彙の決定       | ARC    | open | nickname、モデル名、その両方         |
-| 3   | 実装                     | _TODO_ | open | 自己申告値の扱いを含む               |
-| 4   | 既存記録との互換性の確認 | _TODO_ | open | 既に書き込まれた grade をどう扱うか  |
+| No  | 作業                     | 担当 | 状態 | メモ                                      |
+| --- | ------------------------ | ---- | ---- | ----------------------------------------- |
+| 1   | 確定方法の決定           | ARC  | done | `grade apply --by` で CLI が確定する      |
+| 2   | 識別子の語彙の決定       | ARC  | done | `pm-members.yaml` の nickname を使う      |
+| 3   | 実装                     | ARC  | done | 自己申告値を無視して CLI 指定値を記録する |
+| 4   | 既存記録との互換性の確認 | ARC  | done | 既存 snapshot と旧 Submission を受理する  |
 
 ### 3.1. 観測された値
 
@@ -117,14 +117,17 @@ codex は実行環境のパスを返しており、agent を識別できない�
 
 agent の自己申告を信用しない方式が望ましい。判定内容は agent に委ねるが、実行主体の記録は事実として CLI が持つべきである。
 
-### 3.4. 未決の論点
+### 3.4. 決定事項
 
-- モデル名を併記するか。同じ nickname でも背後のモデルが更新されると判定傾向が変わるため、モデル名は追跡に有用である。ただし取得方法が provider ごとに異なる。
-- 既に書き込まれた `graded_by` を再評価時に上書きするか、区別できる形で残すか。
+- 判定主体にはモデル名ではなく、実行ログでも使う安定識別子である `pm-members.yaml` の nickname を記録する。モデルの追跡は provider ごとに取得方法が異なるため、この項目へ混在させない。
+- `grade apply` に `--by <nickname>` を必須とし、名簿にない値を拒否する。GradeSubmission に従来の `graded_by` が含まれていても入力互換性のため受理するが、保存値には使わない。
+- 既存の grade snapshot は移行せず維持する。再評価した文書だけ、通常の snapshot 更新として CLI が確定した nickname へ置き換える。
 
 ## 4. 対応結果
 
--
+`grade apply --by <nickname>` を追加し、指定値をプロジェクトの `pm-members.yaml` と照合してから `specdojo.grade.graded_by` に記録するよう変更した。agent が GradeSubmission で自己申告した値は保存に使わず、新規 plan から自己申告欄を削除した。
+
+既存の GradeSubmission にある `graded_by` は引き続き解析でき、既に文書へ保存された grade snapshot の schema も変更していない。コマンドリファレンス、文書メタデータ標準、Kata grade Job Definition を新しい `--by` 契約に合わせて更新した。
 
 ## 5. 関連ドキュメント
 

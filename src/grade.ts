@@ -9,11 +9,14 @@ import { resolveBasePath } from "./catalog-paths.js";
 import { resolveViewpointsDoc } from "./review-plan.js";
 import type { GradeRubric, ReviewViewpoint, ReviewViewpointsDoc } from "./review-types.js";
 import {
+  assertValidActor,
   getProjectCatalogPath,
   getProjectExecutionPath,
   getProjectViewpointsPath,
   loadConfig,
+  loadMemberRoster,
   specdojoRootDir,
+  type MemberRoster,
   type SpecDojoProjectConfig,
 } from "./specdojo-config.js";
 import { listFilesRecursive } from "./exec-shared.js";
@@ -41,7 +44,8 @@ export type GradeDocumentInput = {
 
 export type GradeSubmission = {
   rubric: string;
-  graded_by: string;
+  /** @deprecated grade apply ignores this agent-supplied value; use --by instead. */
+  graded_by?: string;
   documents: GradeDocumentInput[];
 };
 
@@ -171,6 +175,17 @@ function loadViewpoints(projectOption?: string): ReviewViewpointsDoc {
   const path = getProjectViewpointsPath(project);
   if (!path) throw new Error("viewpoints_path is required for grade");
   return resolveViewpointsDoc(resolve(specdojoRootDir(), path));
+}
+
+export function resolveGradeActor(actor: string, roster: MemberRoster | null): string {
+  const normalized = actor.trim();
+  if (!normalized) throw new Error("--by must be a non-empty pm-members.yaml nickname");
+  if (!roster) throw new Error("members_path is required for grade apply --by");
+  assertValidActor(normalized, roster);
+  if (roster.members.filter((member) => member.nickname === normalized).length !== 1) {
+    throw new Error(`Duplicate actor nickname in members_path: ${normalized}`);
+  }
+  return normalized;
 }
 
 function assertRubric(doc: ReviewViewpointsDoc): GradeRubric {
@@ -476,15 +491,14 @@ export function renderGradePlan(opts: {
     "## 4. 完了手順",
     "",
     "1. すべての agent viewpoint の判定と、必要な finding が揃っていることを確認する。",
-    "2. facts である `path` と `rubric` を変更せず、次のテンプレートを満たす GradeSubmission JSON を作る。`graded_by` は実行中の agent ID に置き換え、判定結果を各 `level` と `findings` へ反映する。",
-    "3. JSON が `rubric`、非空の `graded_by`、対象1件、すべての agent viewpoint を含むこと、level 3 以下の各 viewpoint に非空の `message` を持つ finding があることを確認する。",
+    "2. facts である `path` と `rubric` を変更せず、次のテンプレートを満たす GradeSubmission JSON を作り、判定結果を各 `level` と `findings` へ反映する。判定主体は CLI が `grade apply --by <nickname>` から確定するため、agent は `graded_by` を出力しない。",
+    "3. JSON が `rubric`、対象1件、すべての agent viewpoint を含むこと、level 3 以下の各 viewpoint に非空の `message` を持つ finding があることを確認する。",
     "4. 最終応答には確認済みの JSON オブジェクトだけを出力する。コードフェンスや JSON 外の説明を加えない。",
     "",
     "```json",
     JSON.stringify(
       {
         rubric: rubric.id,
-        graded_by: "<agent-id>",
         documents: [
           {
             path: rel,
@@ -559,10 +573,10 @@ export function parseGradeSubmission(raw: string): GradeSubmission {
   if (
     !isRecord(value) ||
     typeof value.rubric !== "string" ||
-    typeof value.graded_by !== "string" ||
+    (value.graded_by !== undefined && typeof value.graded_by !== "string") ||
     !Array.isArray(value.documents)
   ) {
-    throw new Error("Grade submission requires rubric, graded_by, and documents[]");
+    throw new Error("Grade submission requires rubric and documents[]");
   }
   return value as GradeSubmission;
 }
@@ -576,8 +590,6 @@ export function validateGradeSubmission(
   const rubric = assertRubric(doc);
   if (submission.rubric !== rubric.id)
     issues.push({ path: "$", message: `rubric must be ${rubric.id}` });
-  if (!submission.graded_by.trim())
-    issues.push({ path: "$", message: "graded_by must not be empty" });
   const required = agentViewpoints(doc, target);
   const allowed = new Map(required.map((viewpoint) => [viewpoint.id, viewpoint]));
   const paths = new Set<string>();
@@ -704,6 +716,7 @@ export function applyGradeSubmission(opts: {
   submission: GradeSubmission;
   viewpoints: ReviewViewpointsDoc;
   target: GradeTarget;
+  gradedBy: string;
   dryRun?: boolean;
   now?: Date;
 }): string[] {
@@ -721,7 +734,7 @@ export function applyGradeSubmission(opts: {
       input,
       viewpoints: opts.viewpoints,
       target: opts.target,
-      gradedBy: opts.submission.graded_by,
+      gradedBy: opts.gradedBy,
       now: opts.now,
     });
     if (next !== current) {
@@ -863,11 +876,17 @@ export function registerGradeCommand(program: Command): void {
       .description("Validate agent JSON, calculate scores, and update documents"),
   )
     .requiredOption("--from <path>", "GradeSubmission JSON produced by the assessment agent")
+    .requiredOption("--by <nickname>", "Grading agent nickname from pm-members.yaml")
     .option("--dry-run", "Validate and list updates without writing", false)
     .action((options) => {
       try {
         const target = requireTarget(options.target);
         const viewpoints = loadViewpoints(options.project);
+        const { project } = resolveProject(options.project);
+        const gradedBy = resolveGradeActor(
+          options.by,
+          loadMemberRoster(specdojoRootDir(), project),
+        );
         const submission = parseGradeSubmission(
           readFileSync(resolveSafeRepositoryPath(options.from, "--from"), "utf8"),
         );
@@ -886,6 +905,7 @@ export function registerGradeCommand(program: Command): void {
           submission,
           viewpoints,
           target,
+          gradedBy,
           dryRun: options.dryRun,
         });
         for (const path of changed)

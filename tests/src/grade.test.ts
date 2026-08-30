@@ -3,12 +3,14 @@ import {
   gradeMarkdownContent,
   parseGradeSubmission,
   renderGradePlan,
+  resolveGradeActor,
   resolveGradeReferencePaths,
   validateGradeSubmission,
   validateGradedMarkdown,
   type GradeSubmission,
 } from "../../src/grade.js";
 import type { ReviewViewpointsDoc } from "../../src/review-types.js";
+import type { MemberRoster } from "../../src/specdojo-config.js";
 
 const viewpoints: ReviewViewpointsDoc = {
   id: "specdojo:pm-review-viewpoints",
@@ -109,6 +111,35 @@ describe("grade submission", () => {
     });
   });
 
+  it("accepts submissions without the legacy agent-supplied graded_by", () => {
+    const withoutActor = structuredClone(submission);
+    delete withoutActor.graded_by;
+    expect(parseGradeSubmission(JSON.stringify(withoutActor))).toEqual(withoutActor);
+    expect(validateGradeSubmission(withoutActor, viewpoints, "kata")).toEqual([]);
+  });
+
+  it("resolves the grading actor from the member roster", () => {
+    const roster: MemberRoster = {
+      version: 1,
+      project_id: "prj-0001",
+      members: [
+        {
+          nickname: "codex-executor",
+          display_name: "Codex Executor",
+          email: null,
+          roles: [],
+          type: "agent",
+        },
+      ],
+    };
+
+    expect(resolveGradeActor(" codex-executor ", roster)).toBe("codex-executor");
+    expect(() => resolveGradeActor("/root", roster)).toThrow('Unknown actor: "/root"');
+    expect(() => resolveGradeActor("codex-executor", null)).toThrow(
+      "members_path is required for grade apply --by",
+    );
+  });
+
   it("requires every continuous agent viewpoint and excludes deterministic viewpoints", () => {
     const missing = structuredClone(submission);
     missing.documents[0].viewpoints.pop();
@@ -128,7 +159,7 @@ describe("grade markdown update", () => {
       input: submission.documents[0],
       viewpoints,
       target: "kata",
-      gradedBy: submission.graded_by,
+      gradedBy: "codex-executor",
       now,
     });
     const second = gradeMarkdownContent({
@@ -137,13 +168,15 @@ describe("grade markdown update", () => {
       input: submission.documents[0],
       viewpoints,
       target: "kata",
-      gradedBy: submission.graded_by,
+      gradedBy: "codex-executor",
       now,
     });
 
     expect(second).toBe(first);
     expect(first).toContain("verdict: pass");
     expect(first).toContain("score: 90");
+    expect(first).toContain("graded_by: codex-executor");
+    expect(first).not.toContain("graded_by: test-agent");
     expect(first.match(/specdojo:finding/g)).toHaveLength(1);
     expect(validateGradedMarkdown(first, submission.documents[0].path)).toEqual([]);
   });
@@ -155,7 +188,7 @@ describe("grade markdown update", () => {
       input: submission.documents[0],
       viewpoints,
       target: "kata",
-      gradedBy: submission.graded_by,
+      gradedBy: "codex-executor",
       now: new Date("2026-08-29T00:00:00.000Z"),
     });
     expect(
@@ -195,6 +228,8 @@ describe("grade plan", () => {
     expect(plan).toContain("変更ファイル、検証結果、根拠、未確認範囲などの最終報告指示に優先する");
     expect(plan).toContain("コードフェンスや JSON 外の説明を加えない");
     expect(plan).toContain("非空の `message`");
+    expect(plan).toContain("grade apply --by <nickname>");
+    expect(plan).not.toContain('"graded_by"');
     expect(plan).toContain("vp-qe-kata-conformance");
     expect(plan).toContain("vp-arc-conciseness");
     expect(plan).not.toContain("vp-arc-document-structure [");
