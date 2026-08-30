@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-6xnj-grade-graded-by
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-30T01:11:23Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-30T02:55:39Z"
+  conclusion: grade apply --by `<nickname>` を追加し、指定値を pm-members.yaml と照合してから specdojo.grade.graded_by へ記録するようにした。agent が GradeSubmission で自己申告した値は保存に使わず、新規 plan から自己申告欄を削除した。既存の GradeSubmission にある graded_by は引き続き解析でき、保存済み grade の schema も変更していない。
   register_events:
     - v: 1
       id: reg_bf061ef2082c4715b3575858b7c3d8a0
@@ -72,6 +74,25 @@ specdojo:
           from: in-progress
           to: review
       previous_event_id: reg_bac79f76a0564a9e99928c62f9a4c5ff
+    - v: 1
+      id: reg_cd7d8a3beff24b71957f40a06d0fec64
+      ts: "2026-08-30T02:55:39Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-30"
+        - field: conclusion
+          from: "-"
+          to: grade apply --by `<nickname>` を追加し、指定値を pm-members.yaml と照合してから specdojo.grade.graded_by へ記録するようにした。agent が GradeSubmission で自己申告した値は保存に使わず、新規 plan から自己申告欄を削除した。既存の GradeSubmission にある graded_by は引き続き解析でき、保存済み grade の schema も変更していない。
+      previous_event_id: reg_11ecc74c6dd04b31b2247924bf54455b
 ---
 
 # PJR-6XNJ grade の graded_by を CLI 側で確定させる

@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-x40m-grade-previous-findings
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-30T02:27:43Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-30T02:55:39Z"
+  conclusion: grade plan の生成時に対象文書の既存 specdojo:finding コメントを解析し、rule / severity / message を前回の指摘として plan へ含めるようにした。level、score、verdict、finding ID、解消履歴は引き継がない。plan には前回指摘の解消確認、未解消 finding の再掲、前回指摘にない問題の検出、各 viewpoint の独立評価を明記した。評価結果を最新状態へ上書きする既存方針は維持している。
   register_events:
     - v: 1
       id: reg_9701569a36c148d1937dae27d0df590e
@@ -72,6 +74,25 @@ specdojo:
           from: in-progress
           to: review
       previous_event_id: reg_a1b9ee36ed794bfdababe31fc2ff42cf
+    - v: 1
+      id: reg_b68d0f0f644b4881af2a4d2409dffa08
+      ts: "2026-08-30T02:55:39Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-30"
+        - field: conclusion
+          from: "-"
+          to: grade plan の生成時に対象文書の既存 specdojo:finding コメントを解析し、rule / severity / message を前回の指摘として plan へ含めるようにした。level、score、verdict、finding ID、解消履歴は引き継がない。plan には前回指摘の解消確認、未解消 finding の再掲、前回指摘にない問題の検出、各 viewpoint の独立評価を明記した。評価結果を最新状態へ上書きする既存方針は維持している。
+      previous_event_id: reg_23941e3656314ad89695b1add942e613
 ---
 
 # PJR-X40M grade plan へ前回の finding を引き継ぎ解消を確認させる
