@@ -203,6 +203,89 @@ describe("grade markdown update", () => {
       "test.md: content changed after the last grade",
     );
   });
+
+  it("preserves the severity and level cap across repeated grading", () => {
+    const content = markdown.replace(
+      "本文です。",
+      "<!-- specdojo:finding id=F042 severity=major rule=vp-qe-kata-conformance 必須の禁止事項が欠落している。 -->\n本文です。",
+    );
+    const input = structuredClone(submission.documents[0]);
+    input.viewpoints = [
+      { id: "vp-qe-kata-conformance", level: 4, findings: [] },
+      {
+        id: "vp-arc-conciseness",
+        level: 3,
+        findings: [{ severity: "minor", message: "必須の禁止事項が欠落している。", line: 1 }],
+      },
+    ];
+
+    const graded = gradeMarkdownContent({
+      content,
+      path: input.path,
+      input,
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-30T00:00:00.000Z"),
+    });
+
+    expect(graded).toContain(
+      "severity=major rule=vp-arc-conciseness 必須の禁止事項が欠落している。",
+    );
+    expect(graded).toMatch(/vp-arc-conciseness:\s*\n\s*level: 2/);
+    expect(graded).toContain("major: 1");
+    expect(graded).toContain("verdict: needs-work");
+
+    const repeatedInput = structuredClone(input);
+    repeatedInput.viewpoints[1].level = 4;
+    repeatedInput.viewpoints[1].findings![0].severity = "note";
+    const repeated = gradeMarkdownContent({
+      content: graded,
+      path: repeatedInput.path,
+      input: repeatedInput,
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-30T01:00:00.000Z"),
+    });
+
+    expect(repeated).toContain(
+      "severity=major rule=vp-arc-conciseness 必須の禁止事項が欠落している。",
+    );
+    expect(repeated).toMatch(/vp-arc-conciseness:\s*\n\s*level: 2/);
+    expect(repeated).toContain("major: 1");
+    expect(repeated).toContain("verdict: needs-work");
+  });
+
+  it("allows a lower severity for a different residual finding with rationale", () => {
+    const content = markdown.replace(
+      "本文です。",
+      "<!-- specdojo:finding id=F042 severity=major rule=vp-qe-kata-conformance 必須の禁止事項が欠落している。 -->\n本文です。",
+    );
+    const input = structuredClone(submission.documents[0]);
+    input.viewpoints[1].findings = [
+      {
+        severity: "minor",
+        message: "必須の禁止事項は追加済みだが、例示が一部不足しているため軽微な問題だけが残る。",
+        line: 1,
+      },
+    ];
+
+    const graded = gradeMarkdownContent({
+      content,
+      path: input.path,
+      input,
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-30T00:00:00.000Z"),
+    });
+
+    expect(graded).toContain(
+      "severity=minor rule=vp-arc-conciseness 必須の禁止事項は追加済みだが、例示が一部不足しているため軽微な問題だけが残る。",
+    );
+    expect(graded).toContain("minor: 1");
+  });
 });
 
 describe("grade plan", () => {
@@ -285,7 +368,11 @@ describe("grade plan", () => {
     expect(previousSection).not.toContain("level");
     expect(previousSection).not.toContain("score");
     expect(previousSection).not.toContain("verdict");
-    expect(plan).toContain("未解消なら今回の finding に含める");
+    expect(plan).toContain("未解消なら前回の message を変更せず今回の finding に含め");
+    expect(plan).toContain("severity は前回と同等以上を指定する");
+    expect(plan).toContain(
+      "severity を引き下げる場合は、その根拠を新しい finding の message に含める",
+    );
     expect(plan).toContain("各 viewpoint は現在の根拠から独立に評価する");
     expect(plan).toContain("前回の指摘にない問題もすべての viewpoint で独立して検出する");
   });

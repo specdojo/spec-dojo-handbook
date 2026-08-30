@@ -72,6 +72,38 @@ const SEVERITY_LEVEL_CAP: Record<GradeSeverity, number> = {
   note: 4,
 };
 
+function preservePreviousFindingSeverities(
+  body: string,
+  viewpoints: readonly GradeViewpointInput[],
+): GradeViewpointInput[] {
+  const previousByMessage = new Map<string, GradeSeverity>();
+  for (const finding of previousGradeFindings(body)) {
+    const message = sanitizeCommentText(finding.message);
+    const previous = previousByMessage.get(message);
+    if (
+      previous === undefined ||
+      SEVERITY_LEVEL_CAP[finding.severity] < SEVERITY_LEVEL_CAP[previous]
+    ) {
+      previousByMessage.set(message, finding.severity);
+    }
+  }
+
+  return viewpoints.map((viewpoint) => {
+    const findings = (viewpoint.findings ?? []).map((finding) => {
+      const previous = previousByMessage.get(sanitizeCommentText(finding.message));
+      return previous !== undefined &&
+        SEVERITY_LEVEL_CAP[previous] < SEVERITY_LEVEL_CAP[finding.severity]
+        ? { ...finding, severity: previous }
+        : { ...finding };
+    });
+    return {
+      ...viewpoint,
+      findings,
+      level: Math.min(viewpoint.level, levelCapForFindings(findings)),
+    };
+  });
+}
+
 function levelCapForFindings(findings: readonly GradeFindingInput[]): number {
   const majorCount = findings.filter((finding) => finding.severity === "major").length;
   const severityCap = findings.reduce(
@@ -486,7 +518,7 @@ export function renderGradePlan(opts: {
     "2. 参考資料がある場合は列挙された全ファイルを全文読み、実行ログに各パスの読み取り操作を残す。参考資料を評価対象と混同しない。",
     "3. 評価対象を次の rubric と viewpoint に照らし、各 viewpoint を 0-4 で判定する。ある viewpoint の finding の有無から、ほかの viewpoint の判定を推論しない。",
     "4. level 3 以下には finding を付ける。finding には severity（blocker / major / minor / note）、対象直前の本文行番号、具体的な修正理由を含める。line は Frontmatter を除く本文の1始まり（通常は H1 が1行目）とする。",
-    "5. 前回の指摘を対象の現在内容と照合し、解消済みか確認する。未解消なら今回の finding に含める。前回の rule は前回評価時の分類として扱い、各 viewpoint は現在の根拠から独立に評価する。",
+    "5. 前回の指摘を対象の現在内容と照合し、解消済みか確認する。未解消なら前回の message を変更せず今回の finding に含め、severity は前回と同等以上を指定する。前回の rule は前回評価時の分類として扱い、各 viewpoint は現在の根拠から独立に評価する。前回の問題が解消され、別の軽微な問題だけが残るため severity を引き下げる場合は、その根拠を新しい finding の message に含める。",
     "6. 前回の指摘の確認だけで終了せず、前回の指摘にない問題もすべての viewpoint で独立して検出する。",
     "",
     "### 3.1. 前回の指摘",
@@ -779,12 +811,10 @@ export function gradeMarkdownContent(opts: {
 }): string {
   const document = parseMarkdown(opts.content, opts.path);
   const specdojo = document.data.specdojo as Record<string, unknown>;
+  const agentResults = preservePreviousFindingSeverities(document.body, opts.input.viewpoints);
   const evaluated = {
     ...opts.input,
-    viewpoints: [
-      ...opts.input.viewpoints,
-      ...deterministicResults(document, opts.viewpoints, opts.target),
-    ],
+    viewpoints: [...agentResults, ...deterministicResults(document, opts.viewpoints, opts.target)],
   };
   const rubric = assertRubric(opts.viewpoints);
   const summary = scoreDocument(evaluated, rubric, opts.viewpoints, opts.target);

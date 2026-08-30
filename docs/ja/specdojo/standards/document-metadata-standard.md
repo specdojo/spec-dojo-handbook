@@ -271,6 +271,8 @@ Markdown 文書の最新の継続品質評価は `specdojo.grade` に記録し�
 <!-- specdojo:finding id=F001 severity=major rule=vp-qe-omissions-consistency 必須の禁止事項が欠落している。 -->
 ```
 
+再評価で同じ message の finding が残る場合は未解消として扱い、severity を前回より引き下げません。前回の問題が解消され、別の軽微な問題だけが残る場合は、新しい finding の message に severity を引き下げる根拠を含めます。
+
 YAML / JSON は Markdown Frontmatter と HTML コメントの契約を持たないため、現行 grade のインライン記録対象外です。別形式を黙って書き換えず、将来のサイドカー schema 導入まではエラーとして扱います。
 
 ## 7. 成果物の値制約
