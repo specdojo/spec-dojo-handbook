@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: high
   owner: ARC
   registered_at: "2026-08-30T04:12:52Z"
   due_on: "2026-09-30"
+  block_reason: "agent exited with non-zero code: runner による検証 `test-unit` で失敗が発生したため（tests/src/grade.test.ts の 1 テストが失敗）。"
   register_events:
     - v: 1
       id: reg_4cfad8c46dec4cf789c1dfbaa3f97424
@@ -59,6 +60,22 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_4cfad8c46dec4cf789c1dfbaa3f97424
+    - v: 1
+      id: reg_9c8ea6fabbc74eddaea70acc3f76e557
+      ts: "2026-08-30T04:22:34Z"
+      action: wait
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: waiting
+      reason: "agent exited with non-zero code: runner による検証 `test-unit` で失敗が発生したため（tests/src/grade.test.ts の 1 テストが失敗）。"
+      changes:
+        - field: status
+          from: in-progress
+          to: waiting
+        - field: block_reason
+          from: "-"
+          to: "agent exited with non-zero code: runner による検証 `test-unit` で失敗が発生したため（tests/src/grade.test.ts の 1 テストが失敗）。"
+      previous_event_id: reg_aed8a914896442feb68c988396e42dd4
 ---
 
 # PJR-Z8T1 未解消の finding は前回の severity を維持する
