@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   gradeMarkdownContent,
   parseGradeExecutorAnalysis,
@@ -7,9 +10,11 @@ import {
   renderGradeReporterPlan,
   resolveGradeActor,
   resolveGradeReferencePaths,
+  selectGradeReferenceExample,
   validateGradeReporterFidelity,
   validateGradeSubmission,
   validateGradedMarkdown,
+  writeGradePlans,
   type GradeSubmission,
 } from "../../src/grade.js";
 import type { ReviewViewpointsDoc } from "../../src/review-types.js";
@@ -429,6 +434,128 @@ LEVEL: 4
     expect(plan).not.toContain("本文（finding.line");
     expect(plan).not.toContain("# 運用手順: バッチ再実行・失敗対応 サンプル");
     expect(plan).not.toContain("# 運用手順 作成ルール");
+    expect(plan.length).toBeLessThan(20_000);
+  });
+
+  it("selects a ready reference example from the same Kata kind on each run", () => {
+    const path = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
+    const candidates = [
+      path,
+      "docs/ja/specdojo/rulebooks/atc-rulebook.md",
+      "docs/ja/specdojo/rulebooks/cdfd-overview-rulebook.md",
+      "docs/ja/specdojo/rulebooks/cdfd-rulebook.md",
+      "docs/ja/specdojo/recipes/cdfd-recipe.md",
+    ];
+    const first = selectGradeReferenceExample({
+      target: "kata",
+      path,
+      candidates,
+      random: () => 0,
+    });
+    const second = selectGradeReferenceExample({
+      target: "kata",
+      path,
+      candidates,
+      random: () => 0.999,
+    });
+
+    expect(first).toMatch(/\/rulebooks\/cdfd-overview-rulebook\.md$/);
+    expect(second).toMatch(/\/rulebooks\/cdfd-rulebook\.md$/);
+    expect(first).not.toBe(second);
+  });
+
+  it("omits the reference section entirely when no example is given", () => {
+    // 空の節に「なし」と記すと、候補が存在しないのか指定していないのかを読み手が
+    // 区別できない。
+    const plan = renderGradePlan({
+      target: "kata",
+      path: "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md",
+      references: [],
+      viewpoints,
+      projectId: "prj-0001",
+    });
+
+    expect(plan).not.toContain("### 良い実例（比較リファレンス）");
+    expect(plan).not.toContain("該当候補なし");
+  });
+
+  it("uses the given reference instead of selecting one", () => {
+    const directory = mkdtempSync(join(tmpdir(), "specdojo-grade-plan-"));
+    try {
+      const override = "docs/ja/specdojo/rulebooks/prj-overview-rulebook.md";
+      const plans = writeGradePlans({
+        target: "kata",
+        paths: ["docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md"],
+        referenceExampleCandidates: ["docs/ja/specdojo/rulebooks/cdfd-rulebook.md"],
+        referenceExampleOverride: override,
+        viewpoints,
+        projectId: "prj-0001",
+        outputDirectory: "logs/grade-plan-test",
+        random: () => 0,
+      });
+
+      expect(plans).toHaveLength(1);
+      expect(plans[0].referenceExample).toBe(override);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+      rmSync("logs/grade-plan-test", { recursive: true, force: true });
+    }
+  });
+
+  it("reports no reference when candidates are empty", () => {
+    // 候補を渡さない場合はリファレンスなしになる。CLI はこの結果を見て警告する。
+    try {
+      const plans = writeGradePlans({
+        target: "kata",
+        paths: ["docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md"],
+        referenceExampleCandidates: [],
+        viewpoints,
+        projectId: "prj-0001",
+        outputDirectory: "logs/grade-plan-empty",
+        random: () => 0,
+      });
+
+      expect(plans[0].referenceExample).toBeUndefined();
+      expect(plans[0].target).toMatch(/pm-quality-management-plan-rulebook\.md$/);
+    } finally {
+      rmSync("logs/grade-plan-empty", { recursive: true, force: true });
+    }
+  });
+
+  it("returns nothing when no ready document shares the target kind", () => {
+    // 種別が違うと構造も目的も異なり、記載水準の基準として誤りを招く。代用せず
+    // リファレンスなしで評価する。
+    const path = "docs/ja/specdojo/recipes/cdfd-recipe.md";
+    const candidates = [path, "docs/ja/specdojo/rulebooks/cdfd-rulebook.md"];
+
+    const selected = selectGradeReferenceExample({
+      target: "kata",
+      path,
+      candidates,
+      random: () => 0,
+    });
+
+    expect(selected).toBeUndefined();
+  });
+
+  it("records a good example as comparison material without evaluating it", () => {
+    const path = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
+    const referenceExample = "docs/ja/specdojo/rulebooks/cdfd-rulebook.md";
+    const plan = renderGradePlan({
+      target: "kata",
+      path,
+      references: [],
+      referenceExample,
+      viewpoints,
+      projectId: "prj-0001",
+    });
+
+    expect(plan).toContain("### 良い実例（比較リファレンス）");
+    expect(plan).toContain(`- \`${referenceExample}\``);
+    expect(plan).toContain("評価対象へ含めず");
+    expect(plan).toContain("内容を正解として機械的に模倣しない");
+    expect(plan).toContain("参考資料や良い実例を評価対象と混同しない");
+    expect(plan).not.toContain("# CDFD 作成ルール");
     expect(plan.length).toBeLessThan(20_000);
   });
 
