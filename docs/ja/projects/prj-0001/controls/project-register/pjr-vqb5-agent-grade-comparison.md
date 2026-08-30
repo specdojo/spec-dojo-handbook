@@ -144,6 +144,32 @@ specdojo:
 
 本記録の総合比較にある「甘めだが安定」という qwen の評価は判定内容についてのものであり、出力形式の安定性は別である。定期実行で用いる場合、失敗時の再試行を運用へ組み込む必要がある。codex は 4 回の実行すべてで素の JSON を返しており、この点では最も安定している。
 
+### 1.12. 出力形式と判定能力は独立している
+
+qwen の構文破損を受けて `muse-glimmer:30b-mlx` を検証した。同一の plan で `opr-batch-sample.md` を評価している。
+
+| 項目         | muse       | codex-expert | gemma          | qwen   |
+| ------------ | ---------- | ------------ | -------------- | ------ |
+| 出力形式     | 素の JSON  | 素の JSON    | フェンス       | 前置き |
+| 構文破損     | なし       | なし         | なし           | あり   |
+| 平均 level   | 3.12       | 2.38         | 2.88           | 3.25   |
+| finding 件数 | 7          | 7            | 4              | 5      |
+| severity     | minor のみ | major 中心   | blocker を含む | 混在   |
+
+muse はローカルモデルで唯一、前置きもコードフェンスもない素の JSON を返した。出力形式の安定性では最良である。
+
+一方で判定は 8 観点中 7 つが level 3、finding 1 件という均一な結果となり、深刻度に応じた差が付かなかった。必須章の欠落という最も深刻な問題（codex は level 1、gemma は level 0）も level 3 の `minor` としている。`major` と `blocker` を一度も出していない。
+
+出力形式の安定性と判定能力は独立した軸である。qwen は判定能力が高く出力形式が不安定、muse はその逆であった。grade の目的は品質のばらつきを検出することであるため、判定能力を優先する。
+
+### 1.13. Ollama の構造化出力
+
+Ollama のネイティブ API（`/api/chat`）へ `format` として JSON Schema を渡すと、前置きのない純粋な JSON が返る。しかし opencode は `@ai-sdk/openai-compatible` を用いて OpenAI 互換の `/v1` へ接続しており、ネイティブ API の `format` を送る手段がない。
+
+`/v1` の `response_format` は転送される。opencode.json のモデル単位 `options` へ `response_format` を設定して実行したところ、直接 `/v1` を呼んだ場合と同じ応答が得られた。PJR-G2F4 が懸念していた「options が転送されない可能性」は本環境では該当しない。
+
+ただし効果は逆であった。`response_format: json_object` を指定すると応答の先頭に `json` という文字列が混入し、指定しない場合の素の JSON より汚れる。`json_schema` を指定した場合も別の文字列が混入した。Ollama の OpenAI 互換レイヤーがコードフェンスを生成しようとした残骸と見られる。構造化出力の指定は採用しない。
+
 ### 1.7. gemma の評価が変わった経緯
 
 初回の比較では gemma を不採用と判断した。finding の `message` がすべて空で `grade apply` に拒否され、prompt を 46,673 文字から 7,271 文字へ縮小しても解消しなかったため、限界は言語化能力にあると結論づけた。
