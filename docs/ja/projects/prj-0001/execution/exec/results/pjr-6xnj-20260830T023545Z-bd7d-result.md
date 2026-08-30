@@ -4,11 +4,12 @@ specdojo:
   type: exec-result
   task_id: PJR-6XNJ
   mode: edit
-  status: in_progress
+  status: complete
   project_id: prj-0001
   origin: register
   plan_ref: exec/plans/pjr-6xnj-20260830T023545Z-bd7d-plan.md
   started_at: "2026-08-30T02:35:45.418Z"
+  completed_at: "2026-08-30T02:44:26.511Z"
   agent: codex-expert-executor
 ---
 
@@ -16,16 +17,25 @@ specdojo:
 
 ## 1. 実施内容
 
-_TODO_: 実施した内容の要約を記入する。
+- GradeSubmissionの`graded_by`をCLIの`--by`オプションおよび`pm-members.yaml`から確定させる実装を完了しました。
+- 既存のGradeSubmissionおよび保存済みgradeとの互換性を維持しています。
+- 関連する設計書（コマンドリファレンス、メタデータ標準）および個票を更新しました。
+- ユニットテストおよび統合テストで正常に動作することを確認済みです。
 
 ## 2. 変更ファイル
 
-_TODO_: 変更したファイルのパスを記入する。
+- `src/grade.ts`: graded_byをCLI引数またはメンバーリストから確定するロジックの実装
+- `tests/src/grade.test.ts`: graded_byの確定ロジックに関するユニットテストの追加・修正
+- `tests/src/cli-verb-taxonomy.test.ts`: CLIコマンド体系のテスト更新
+- `docs/ja/projects/prj-0001/controls/project-register/pjr-6xnj-grade-graded-by.md`: 個票の作業内容および対応結果の更新
+- `docs/ja/projects/prj-0001/jobs/job-grade-kata.yaml`: ジョブ定義の更新
+- `docs/ja/specdojo/references/command-reference.md`: CLIリファレンスに--byオプション等の説明を追加
+- `docs/ja/specdojo/standards/document-metadata-standard.md`: メタデータ標準の更新
 
 ## 3. 申し送り
 
-_TODO_: 後続タスクへの申し送り事項を記入する（なければ削除）。
+- なし
 
 ## 4. 進め方と実践の型の適用
 
-_TODO_: `approach` に従ってどう進めたか、その進め方の中で実践の型（rulebook / recipe / sample / template）をどう適用したかを記入する（`fully-guided` で rulebook / recipe / sample / template をどう使い分けたか、`recipe-guided` で recipe のみを基準にした内容、`freeform` で実践の型より優先した実例やプロジェクト文脈、`retrofit` で実際に参照した実装パス・抽出した現在動作・反映/新設判断・未反映の乖離・未確認範囲、`rulebook-maintenance` などの maintenance 系で見直した実践の型とその根拠、など）。実践の型を基準にしなかった場合は、その判断と代わりに根拠にした内容も記入する。複数文書間に矛盾があり rulebook を正として判断した箇所、参照範囲から外れていた文書とその代わりに根拠にした内容があれば、あわせて記録する。
+GradeSubmissionの`graded_by`がエージェントの自己申告に依存していたため、CLI側で制御可能にする実装を行いました。具体的には、`--by`オプションによる明示的な指定、またはプロジェクトメンバー定義 (`pm-members.yaml`) に基づく確定処理を導入し、値の安定性を確保しました。また、変更に伴い影響を受けるテストコードおよび設計文書を併せて更新し、整合性を担保しました。

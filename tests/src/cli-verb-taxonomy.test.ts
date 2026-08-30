@@ -36,5 +36,9 @@ describe("CLI generation verb taxonomy", () => {
     registerGradeCommand(program);
 
     expect(subcommandNames(program, "grade")).toEqual(["plan", "apply", "validate"]);
+    const apply = program.commands
+      .find((command) => command.name() === "grade")
+      ?.commands.find((command) => command.name() === "apply");
+    expect(apply?.options.find((option) => option.long === "--by")?.mandatory).toBe(true);
   });
 });
