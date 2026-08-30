@@ -375,16 +375,18 @@ function selectGradeReferenceExampleFromCatalog(opts: {
   const targetDocument = parseMarkdown(readFileSync(target, "utf8"), repoRelativePath(target));
   const targetMetadata = targetDocument.data.specdojo as Record<string, unknown>;
   const family = gradeReferenceExampleFamily(opts.target, target, targetMetadata);
+  if (!family) return undefined;
 
-  // 同種別を優先する。比較の基準として最も近いためである。同種別に ready が無い場合は
-  // 種別を跨いで選ぶ。リファレンスが無いまま抽象的な rubric だけで判定するより、
-  // 別種別でも完成した文書と比較できるほうが記載水準を判断しやすい。
-  const ready = opts.candidates.filter(
-    (candidate) => candidate.path !== target && candidate.status === "ready",
-  );
-  const sameFamily = family ? ready.filter((candidate) => candidate.family === family) : [];
-  const pool = sameFamily.length > 0 ? sameFamily : ready;
-  const candidates = pool.map((candidate) => candidate.path).sort();
+  // 同種別だけを候補にする。種別が違うと構造も目的も異なり、記載水準の基準として
+  // 誤りを招く。template はプレースホルダを正解と誤解させ、rulebook は recipe の
+  // 基準にならない。該当がなければリファレンスなしで評価する。
+  const candidates = opts.candidates
+    .filter(
+      (candidate) =>
+        candidate.path !== target && candidate.family === family && candidate.status === "ready",
+    )
+    .map((candidate) => candidate.path)
+    .sort();
   if (candidates.length === 0) return undefined;
 
   const random = opts.random ?? Math.random;
@@ -791,7 +793,14 @@ export function writeGradePlans(opts: {
   projectId: string;
   outputDirectory: string;
   random?: () => number;
-}): { path: string; changed: boolean; reporterPath: string; reporterChanged: boolean }[] {
+}): {
+  path: string;
+  changed: boolean;
+  reporterPath: string;
+  reporterChanged: boolean;
+  target: string;
+  referenceExample?: string;
+}[] {
   const outputDirectory = resolveSafeRepositoryPath(opts.outputDirectory, "--out");
   if (opts.paths.length === 0) return [];
   mkdirSync(outputDirectory, { recursive: true });
@@ -804,18 +813,19 @@ export function writeGradePlans(opts: {
     const absolute = resolveSafeMarkdownPath(path);
     const output = join(outputDirectory, gradePlanFilename(absolute));
     const reporterOutput = join(outputDirectory, gradeReporterPlanFilename(absolute));
+    const referenceExample =
+      opts.referenceExampleOverride ??
+      selectGradeReferenceExampleFromCatalog({
+        target: opts.target,
+        path: absolute,
+        candidates: referenceExamples,
+        random: opts.random,
+      });
     const content = renderGradePlan({
       target: opts.target,
       path: absolute,
       references: resolveGradeReferencePathsFromCatalog(absolute, kataReferences),
-      referenceExample:
-        opts.referenceExampleOverride ??
-        selectGradeReferenceExampleFromCatalog({
-          target: opts.target,
-          path: absolute,
-          candidates: referenceExamples,
-          random: opts.random,
-        }),
+      referenceExample,
       viewpoints: opts.viewpoints,
       projectId: opts.projectId,
     });
@@ -835,6 +845,8 @@ export function writeGradePlans(opts: {
       changed,
       reporterPath: repoRelativePath(reporterOutput),
       reporterChanged,
+      target: repoRelativePath(absolute),
+      referenceExample,
     };
   });
 }
@@ -1315,6 +1327,14 @@ export function registerGradeCommand(program: Command): void {
           outputDirectory,
         });
         for (const plan of plans) {
+          // 無作為選定を求めたのに同種別の ready が無い場合は、種別を跨いで代用せず
+          // リファレンスなしで続行する。種別が違うと記載水準の基準として誤りを招く。
+          // 気づかないまま基準なしで評価し続けることを避けるため警告する。
+          if (options.randomReference && !plan.referenceExample) {
+            process.stderr.write(
+              `warning: no ready reference of the same kind for ${plan.target}; grading without a reference\n`,
+            );
+          }
           process.stdout.write(`${plan.changed ? "written" : "unchanged"}: ${plan.path}\n`);
           process.stdout.write(
             `${plan.reporterChanged ? "written" : "unchanged"}: ${plan.reporterPath}\n`,

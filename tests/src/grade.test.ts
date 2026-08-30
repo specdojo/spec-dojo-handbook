@@ -460,10 +460,10 @@ LEVEL: 4
     expect(first).not.toBe(second);
   });
 
-  it("falls back to another family when no ready document shares the target family", () => {
-    // 同種別に ready が無い場合、リファレンス無しで抽象的な rubric だけに頼るより、
-    // 別種別でも完成した文書と比較できるほうが記載水準を判断しやすい。
-    const path = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
+  it("returns nothing when no ready document shares the target kind", () => {
+    // 種別が違うと構造も目的も異なり、記載水準の基準として誤りを招く。代用せず
+    // リファレンスなしで評価する。
+    const path = "docs/ja/specdojo/recipes/cdfd-recipe.md";
     const candidates = [path, "docs/ja/specdojo/rulebooks/cdfd-rulebook.md"];
 
     const selected = selectGradeReferenceExample({
@@ -473,7 +473,7 @@ LEVEL: 4
       random: () => 0,
     });
 
-    expect(selected).toMatch(/\/rulebooks\/cdfd-rulebook\.md$/);
+    expect(selected).toBeUndefined();
   });
 
   it("records a good example as comparison material without evaluating it", () => {
