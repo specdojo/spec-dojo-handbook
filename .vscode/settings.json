@@ -203,6 +203,7 @@
   "yaml.format.enable": true,
 
   "files.associations": {
+    ".remarkrc.yaml": "plaintext",
     "*.schema.yaml": "yaml",
     "*.instructions.md": "markdown",
     "*.plist": "xml"
