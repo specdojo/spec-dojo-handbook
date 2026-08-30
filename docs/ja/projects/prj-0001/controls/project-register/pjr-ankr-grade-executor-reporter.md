@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: review
   priority: medium
   owner: ARC
   registered_at: "2026-08-30T11:06:46Z"
@@ -59,6 +59,19 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_3b63a239d642481f976ce609d9f0bc00
+    - v: 1
+      id: reg_de9368a351f744b48836b441a72228d2
+      ts: "2026-08-30T11:22:37Z"
+      action: review
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: review
+      reason: ready for review
+      changes:
+        - field: status
+          from: in-progress
+          to: review
+      previous_event_id: reg_73c320ae6dfc47508d32850ac30a11c2
 ---
 
 # PJR-ANKR grade を executor と reporter の2段構成へ分ける
