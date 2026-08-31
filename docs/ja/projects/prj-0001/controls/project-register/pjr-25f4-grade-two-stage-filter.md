@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: review
   priority: medium
   owner: ARC
   registered_at: "2026-08-30T12:22:15Z"
@@ -59,6 +59,19 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_b85b0998a43c4611911b0fbed2b21304
+    - v: 1
+      id: reg_d1cb22635ae14dd496f83af0a1bafa1f
+      ts: "2026-08-31T13:51:02Z"
+      action: review
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: review
+      reason: ready for review
+      changes:
+        - field: status
+          from: in-progress
+          to: review
+      previous_event_id: reg_11eccd091ef64da7806e232e004600cb
 ---
 
 # PJR-25F4 grade の段階的な運用を設計する
