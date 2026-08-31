@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: review
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T11:26:50Z"
@@ -59,6 +59,19 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_b658ec796fbf4c90953e633edae057ed
+    - v: 1
+      id: reg_20a273c043d141ef8cfcee8c34a3b759
+      ts: "2026-08-31T23:28:08Z"
+      action: review
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: review
+      reason: ready for review
+      changes:
+        - field: status
+          from: in-progress
+          to: review
+      previous_event_id: reg_3148223ab2144cfcbeb282371001d0b0
 ---
 
 # PJR-21E8 grade の Frontmatter をフロースタイルで出力する
