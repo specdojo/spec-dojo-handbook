@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   gradeMarkdownContent,
+  matchesGradeTargetFilters,
   parseGradeExecutorAnalysis,
   parseGradeSubmission,
   renderGradePlan,
@@ -106,6 +107,112 @@ specdojo:
 
 本文です。
 `;
+
+describe("grade target filters", () => {
+  const passSubmission: GradeSubmission = {
+    rubric: "grade-rubric-v1",
+    documents: [
+      {
+        path: "docs/ja/specdojo/rulebooks/example-rulebook.md",
+        viewpoints: [
+          { id: "vp-qe-kata-conformance", level: 4, findings: [] },
+          { id: "vp-arc-conciseness", level: 4, findings: [] },
+        ],
+      },
+    ],
+  };
+
+  it("combines verdict, finding-count, and changed-only filters", () => {
+    const graded = gradeMarkdownContent({
+      content: markdown,
+      path: passSubmission.documents[0].path,
+      input: passSubmission.documents[0],
+      viewpoints,
+      target: "kata",
+      gradedBy: "test-agent",
+      now: new Date("2026-08-31T00:00:00.000Z"),
+    });
+
+    expect(
+      matchesGradeTargetFilters(graded, "example.md", {
+        verdict: "pass",
+        maxFindings: 0,
+      }),
+    ).toBe(true);
+    expect(
+      matchesGradeTargetFilters(graded, "example.md", {
+        verdict: "needs-work",
+        maxFindings: 0,
+      }),
+    ).toBe(false);
+    expect(
+      matchesGradeTargetFilters(graded, "example.md", {
+        verdict: "pass",
+        maxFindings: 0,
+        changedOnly: true,
+      }),
+    ).toBe(false);
+    expect(
+      matchesGradeTargetFilters(
+        graded.replace("本文です。", "本文を変更しました。"),
+        "example.md",
+        {
+          verdict: "pass",
+          maxFindings: 0,
+          changedOnly: true,
+        },
+      ),
+    ).toBe(true);
+  });
+
+  it("counts all stored finding severities against the maximum", () => {
+    const needsWork = structuredClone(passSubmission);
+    needsWork.documents[0].viewpoints[0] = {
+      id: "vp-qe-kata-conformance",
+      level: 2,
+      findings: [{ severity: "major", message: "必須事項が欠落している。", line: 1 }],
+    };
+    const graded = gradeMarkdownContent({
+      content: markdown,
+      path: needsWork.documents[0].path,
+      input: needsWork.documents[0],
+      viewpoints,
+      target: "kata",
+      gradedBy: "test-agent",
+      now: new Date("2026-08-31T00:00:00.000Z"),
+    });
+
+    expect(
+      matchesGradeTargetFilters(graded, "example.md", {
+        verdict: "needs-work",
+        maxFindings: 1,
+      }),
+    ).toBe(true);
+    expect(matchesGradeTargetFilters(graded, "example.md", { maxFindings: 0 })).toBe(false);
+  });
+
+  it("defines ungraded as the absence of specdojo.grade", () => {
+    expect(matchesGradeTargetFilters(markdown, "example.md", { ungraded: true })).toBe(true);
+    expect(
+      matchesGradeTargetFilters(markdown, "example.md", {
+        ungraded: true,
+        changedOnly: true,
+      }),
+    ).toBe(true);
+    expect(() =>
+      matchesGradeTargetFilters(markdown, "example.md", {
+        ungraded: true,
+        verdict: "pass",
+      }),
+    ).toThrow("--ungraded cannot be combined");
+  });
+
+  it("rejects invalid finding thresholds", () => {
+    expect(() => matchesGradeTargetFilters(markdown, "example.md", { maxFindings: -1 })).toThrow(
+      "--max-findings must be a non-negative integer",
+    );
+  });
+});
 
 describe("grade submission", () => {
   it("parses JSON and enforces severity level caps", () => {

@@ -23,6 +23,14 @@ import { listFilesRecursive } from "./exec-shared.js";
 
 export type GradeTarget = "kata" | "deliverable";
 export type GradeSeverity = "blocker" | "major" | "minor" | "note";
+export type GradeVerdict = "pass" | "needs-work" | "fail";
+
+export type GradeTargetFilters = {
+  changedOnly?: boolean;
+  verdict?: GradeVerdict;
+  maxFindings?: number;
+  ungraded?: boolean;
+};
 
 export type GradeFindingInput = {
   id?: string;
@@ -450,12 +458,14 @@ function resolveSafeRepositoryPath(input: string, option: string): string {
   return absolute;
 }
 
-export function discoverGradeTargets(opts: {
-  target: GradeTarget;
-  project?: string;
-  paths?: string[];
-  changedOnly?: boolean;
-}): string[] {
+export function discoverGradeTargets(
+  opts: {
+    target: GradeTarget;
+    project?: string;
+    paths?: string[];
+  } & GradeTargetFilters,
+): string[] {
+  validateGradeTargetFilters(opts);
   const root = specdojoRootDir();
   let candidates: string[];
   if (opts.paths && opts.paths.length > 0) {
@@ -488,13 +498,83 @@ export function discoverGradeTargets(opts: {
     candidates = [...paths];
   }
   const unique = [...new Set(candidates)].sort();
-  if (!opts.changedOnly) return unique;
+  if (
+    !opts.changedOnly &&
+    opts.verdict === undefined &&
+    opts.maxFindings === undefined &&
+    !opts.ungraded
+  ) {
+    return unique;
+  }
   return unique.filter((path) => {
-    const parsed = parseMarkdown(readFileSync(path, "utf8"), repoRelativePath(path));
-    const specdojo = parsed.data.specdojo as Record<string, unknown>;
-    const grade = isRecord(specdojo.grade) ? specdojo.grade : {};
-    return grade.content_hash !== stableContentHash(parsed);
+    const rel = repoRelativePath(path);
+    return matchesParsedGradeTargetFilters(
+      parseMarkdown(readFileSync(path, "utf8"), rel),
+      rel,
+      opts,
+    );
   });
+}
+
+function validateGradeTargetFilters(filters: GradeTargetFilters): void {
+  if (
+    filters.verdict !== undefined &&
+    filters.verdict !== "pass" &&
+    filters.verdict !== "needs-work" &&
+    filters.verdict !== "fail"
+  ) {
+    throw new Error("--verdict must be pass, needs-work, or fail");
+  }
+  if (
+    filters.maxFindings !== undefined &&
+    (!Number.isSafeInteger(filters.maxFindings) || filters.maxFindings < 0)
+  ) {
+    throw new Error("--max-findings must be a non-negative integer");
+  }
+  if (filters.ungraded && (filters.verdict !== undefined || filters.maxFindings !== undefined)) {
+    throw new Error("--ungraded cannot be combined with --verdict or --max-findings");
+  }
+}
+
+function storedFindingCount(grade: Record<string, unknown>, path: string): number {
+  const findings = grade.findings;
+  if (!isRecord(findings)) throw new Error(`${path}: specdojo.grade.findings is missing`);
+  return (["blocker", "major", "minor", "note"] as const).reduce((total, severity) => {
+    const count = findings[severity];
+    if (!Number.isSafeInteger(count) || (count as number) < 0) {
+      throw new Error(
+        `${path}: specdojo.grade.findings.${severity} must be a non-negative integer`,
+      );
+    }
+    return total + (count as number);
+  }, 0);
+}
+
+function matchesParsedGradeTargetFilters(
+  document: MarkdownDocument,
+  path: string,
+  filters: GradeTargetFilters,
+): boolean {
+  const specdojo = document.data.specdojo as Record<string, unknown>;
+  const grade = isRecord(specdojo.grade) ? specdojo.grade : undefined;
+  if (filters.ungraded && grade !== undefined) return false;
+  if (filters.verdict !== undefined && grade?.verdict !== filters.verdict) return false;
+  if (
+    filters.maxFindings !== undefined &&
+    (grade === undefined || storedFindingCount(grade, path) > filters.maxFindings)
+  ) {
+    return false;
+  }
+  return !filters.changedOnly || grade?.content_hash !== stableContentHash(document);
+}
+
+export function matchesGradeTargetFilters(
+  content: string,
+  path: string,
+  filters: GradeTargetFilters,
+): boolean {
+  validateGradeTargetFilters(filters);
+  return matchesParsedGradeTargetFilters(parseMarkdown(content, path), path, filters);
 }
 
 function continuousViewpoints(doc: ReviewViewpointsDoc, target: GradeTarget): ReviewViewpoint[] {
@@ -1297,6 +1377,21 @@ function requireTarget(value: string): GradeTarget {
   return value;
 }
 
+function requireGradeVerdict(value: string): GradeVerdict {
+  if (value !== "pass" && value !== "needs-work" && value !== "fail") {
+    throw new Error("--verdict must be pass, needs-work, or fail");
+  }
+  return value;
+}
+
+function requireMaxFindings(value: string): number {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) {
+    throw new Error("--max-findings must be a non-negative integer");
+  }
+  return parsed;
+}
+
 function commandError(error: unknown): void {
   process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   process.exitCode = 1;
@@ -1316,7 +1411,18 @@ export function registerGradeCommand(program: Command): void {
         collectPathOption,
         [],
       )
-      .option("--changed-only", "Select documents changed since their latest grade", false);
+      .option("--changed-only", "Select documents changed since their latest grade", false)
+      .option(
+        "--verdict <verdict>",
+        "Select documents with this latest verdict: pass, needs-work, or fail",
+        requireGradeVerdict,
+      )
+      .option(
+        "--max-findings <count>",
+        "Select graded documents with at most this many findings",
+        requireMaxFindings,
+      )
+      .option("--ungraded", "Select documents without a stored grade", false);
 
   addSelection(
     grade
@@ -1340,6 +1446,9 @@ export function registerGradeCommand(program: Command): void {
           project: options.project,
           paths: options.path,
           changedOnly: options.changedOnly,
+          verdict: options.verdict,
+          maxFindings: options.maxFindings,
+          ungraded: options.ungraded,
         });
         if (options.reference && options.randomReference) {
           throw new Error("--reference and --random-reference cannot be combined");
@@ -1414,6 +1523,9 @@ export function registerGradeCommand(program: Command): void {
             project: options.project,
             paths: options.path,
             changedOnly: options.changedOnly,
+            verdict: options.verdict,
+            maxFindings: options.maxFindings,
+            ungraded: options.ungraded,
           }).map(repoRelativePath),
         );
         if (options.analysisFrom) {
@@ -1467,7 +1579,10 @@ export function registerGradeCommand(program: Command): void {
         target,
         project: options.project,
         paths: options.path,
-        changedOnly: false,
+        changedOnly: options.changedOnly,
+        verdict: options.verdict,
+        maxFindings: options.maxFindings,
+        ungraded: options.ungraded,
       });
       const errors = paths.flatMap(validateGradedDocument);
       for (const error of errors) process.stderr.write(`ERROR: ${error}\n`);

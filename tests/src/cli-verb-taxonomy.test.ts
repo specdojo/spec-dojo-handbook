@@ -69,4 +69,15 @@ describe("CLI generation verb taxonomy", () => {
       false,
     );
   });
+
+  it("offers stored-result filters on every grade workflow command", () => {
+    const program = new Command();
+    registerGradeCommand(program);
+    const grade = program.commands.find((command) => command.name() === "grade");
+
+    for (const command of grade?.commands ?? []) {
+      const longs = command.options.map((option) => option.long);
+      expect(longs).toEqual(expect.arrayContaining(["--verdict", "--max-findings", "--ungraded"]));
+    }
+  });
 });
