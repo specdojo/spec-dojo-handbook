@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_6235426b8f0e47e69635e9581c499469
+  ts: "2026-08-31T22:34:14Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: register のイベントを個票の Frontmatter から分離する
+    - field: description
+      from: ""
+      to: register_events が個票の Frontmatter を肥大化させている。PJR-AKJ4 では Frontmatter 174 行のうち 156 行がイベントで、本文 77 行の 2 倍に達する。イベントは状態遷移のたびに増えるため比率は悪化し続ける。状態遷移のたびに個票が変更されるため、本文の修正とイベント追記が同じ差分に混在してレビューしにくい。controls/project-register/events/ へ項目ごとに 1 ファイルとして分離する。pjr-rulebook が避けたいとする共有ログの競合は、全項目を 1 ファイルへ集約する形を否定したものであり、項目ごとに分ければ生じない。exec のようにイベント単位まで分けると 300 ファイルを超え、項目の履歴を通読できなくなる。register の状態遷移は項目あたり数個から十数個で並行更新もほぼ起きないため、項目ごとの粒度で足りる。ファイル名には topic を含めない。register update --topic で topic を変えたときに追随が不要になるためである。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-01"
+    - field: due
+      from: ""
+      to: "2026-09-30"
+- v: 1
+  id: reg_3a443c04c2b94afaa229345baf7f33ef
+  ts: "2026-08-31T23:28:16Z"
+  action: start
+  actor: codex-expert-executor
+  from_status: open
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: open
+      to: in-progress
+  previous_event_id: reg_6235426b8f0e47e69635e9581c499469

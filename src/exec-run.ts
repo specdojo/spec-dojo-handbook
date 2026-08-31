@@ -100,6 +100,8 @@ import {
   type RegisterItemTransition,
 } from "./exec-register.js";
 import type { PjrItem, RegisterPaths } from "./register.js";
+import { registerEventFilePath } from "./register-events.js";
+import { displayIdFromTicketFilename } from "./register-item.js";
 import {
   isResultUnfilled,
   readResultFrontmatterSnapshot,
@@ -3616,6 +3618,17 @@ function repoRelativePath(repoRoot: string, path: string): string {
   return relative(repoRoot, path).split(sep).join("/");
 }
 
+function registerEventPathForTicket(
+  registerPaths: RegisterPaths,
+  ticketPath?: string | null,
+): string | undefined {
+  if (!ticketPath) return undefined;
+  const displayId = displayIdFromTicketFilename(basename(ticketPath));
+  return displayId
+    ? registerEventFilePath(registerPaths.projectRegisterPath, displayId)
+    : undefined;
+}
+
 function registerRunnerManagedPaths(
   repoRoot: string,
   registerPaths: RegisterPaths,
@@ -3631,6 +3644,8 @@ function registerRunnerManagedPaths(
   const managed = [planPath, resultPath, ...additionalManagedPaths];
   if (existsSync(registerPaths.pjrIndexPath)) managed.push(registerPaths.pjrIndexPath);
   if (ticketPath) managed.push(ticketPath);
+  const eventPath = registerEventPathForTicket(registerPaths, ticketPath);
+  if (eventPath) managed.push(eventPath);
   const exact = new Set(managed.map((path) => repoRelativePath(repoRoot, path)));
   const prefixes = [registerPaths.generatedPath, registerPaths.controlsGeneratedPath].map(
     (path) => `${repoRelativePath(repoRoot, path)}/`,
@@ -3857,6 +3872,8 @@ export function registerStatePaths(
   const changed = worktreeStatusPaths(repoRoot);
   const exact = new Set([repoRelativePath(repoRoot, registerPaths.pjrIndexPath)]);
   if (ticketPath) exact.add(repoRelativePath(repoRoot, ticketPath));
+  const eventPath = registerEventPathForTicket(registerPaths, ticketPath);
+  if (eventPath) exact.add(repoRelativePath(repoRoot, eventPath));
   const prefixes = [registerPaths.generatedPath, registerPaths.controlsGeneratedPath].map(
     (path) => `${repoRelativePath(repoRoot, path)}/`,
   );

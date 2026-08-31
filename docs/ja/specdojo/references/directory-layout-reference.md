@@ -103,6 +103,9 @@ docs/
 │   │   │   │   ├── project-register/             # 統合管理台帳（正本）
 │   │   │   │   │   ├── pjr-0001-auth.md          # 登録項目（認証）
 │   │   │   │   │   ├── pjr-0002-payment.md       # 登録項目（決済）
+│   │   │   │   │   ├── events/                   # 項目別の監査イベントログ
+│   │   │   │   │   │   ├── pjr-0001.yaml         # PJR-0001 のイベント配列
+│   │   │   │   │   │   └── pjr-0002.yaml         # PJR-0002 のイベント配列
 │   │   │   │   │   └── generated/                # 正本から生成される補助一覧
 │   │   │   │   │       ├── pjr-index.md              # プロジェクト登録台帳・文書IDの解決先
 │   │   │   │   │       ├── pjr-views-by-status.md    # 台帳ビュー（状態別）

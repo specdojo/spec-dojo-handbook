@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_306d7c368c7e43ebaa1a2701e268f542
+  ts: "2026-08-31T22:45:16Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: 登録簿の type 別に状態遷移の指針を定める
+    - field: description
+      from: ""
+      to: pjr-rulebook は item_status の遷移基準を文書成熟度の status については記載しているが、item_type ごとに終端をどう扱うかを定めていない。note は記録であり事実を蓄積し続けるため終端しない。PJR-VQB5 は 10 回以上追記しており、done にすると追記しにくくなる。一方 question は問いであり答えが出たら decided で閉じ、conclusion へ結論を残す。schema の ClosedItemStatus に decided があるのはこの用途と読めるが明文化されていない。運用として合意していても規約に無ければ人や agent によって解釈が分かれる。agent が register を操作する場面では判断基準が要る。type ごとの終端の有無と、note の open が未対応ではなく生きている記録を意味することを明記する。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-01"
+    - field: due
+      from: ""
+      to: "2026-09-30"
