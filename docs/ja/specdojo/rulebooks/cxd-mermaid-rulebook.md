@@ -1,3 +1,16 @@
+---
+specdojo:
+  id: specdojo:cxd-mermaid-rulebook
+  type: rulebook
+  status: draft
+  target_format: markdown
+  recipe: undecided
+  sample: specdojo:cxd-sample
+  template: undecided
+  based_on:
+    - specdojo:rulebook-authoring-standard
+---
+
 # Mermaid を用いたC4コンテキスト図 作成ルール
 
 C4 Context Diagram (CXD) Documentation Rules using Mermaid

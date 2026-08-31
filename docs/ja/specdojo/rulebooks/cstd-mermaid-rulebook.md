@@ -1,3 +1,16 @@
+---
+specdojo:
+  id: specdojo:cstd-mermaid-rulebook
+  type: rulebook
+  status: draft
+  target_format: markdown
+  recipe: undecided
+  sample: specdojo:cstd-sample
+  template: undecided
+  based_on:
+    - specdojo:rulebook-authoring-standard
+---
+
 # Mermaid を用いた概念状態遷移図（Conceptual State Transition Diagram）作成ルール
 
 本ドキュメントは、業務仕様・要求定義のために **概念状態遷移図（Conceptual State Transition Diagram: CSTD）を Mermaid の `stateDiagram-v2` で記述する標準ルール**です。
