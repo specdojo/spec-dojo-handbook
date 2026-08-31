@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=../../../../specdojo/schemas/v1/job.schema.yaml
+id: job-grade-kata-local-confirmation
+name: 実践の型のローカル安定評価
+description: Markdown の実践の型をリファレンスなしのローカル構成で全件再評価する。
+inputs:
+  scheduled_at:
+    type: string
+    required: true
+task:
+  mode: edit
+  owner: ARC
+  description: |
+    `specdojo grade plan --target kata --project prj-0001` で Markdown の Kata 全件について
+    リファレンスなしの executor plan と reporter plan を保存する。各 executor plan を
+    `gemma-expert-executor` へ渡して marker 付き自由記述の最終応答を保存し、reporter plan と応答を
+    `<grade_executor_output>` として `gemma-reporter` へ渡す。1件ごとに `specdojo grade apply
+    --target kata --path <document> --analysis-from <executor-output> --from <json>
+    --by gemma-expert-executor` を実行する。直前の finding を含む現在の文書を入力とし、level・severity・
+    finding の忠実性検証、スコア計算、finding 配置を完了してから次へ進む。対象がなければ result に
+    no-op と記録する。
+  paths:
+    - docs/ja/specdojo/rulebooks
+    - docs/ja/specdojo/recipes
+    - docs/ja/specdojo/samples
+    - docs/ja/specdojo/templates
+run:
+  idempotency_key: "{{job_id}}:{{inputs.scheduled_at}}"

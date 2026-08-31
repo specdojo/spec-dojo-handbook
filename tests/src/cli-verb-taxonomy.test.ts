@@ -77,7 +77,9 @@ describe("CLI generation verb taxonomy", () => {
 
     for (const command of grade?.commands ?? []) {
       const longs = command.options.map((option) => option.long);
-      expect(longs).toEqual(expect.arrayContaining(["--verdict", "--max-findings", "--ungraded"]));
+      expect(longs).toEqual(
+        expect.arrayContaining(["--verdict", "--min-score", "--max-findings", "--ungraded"]),
+      );
     }
   });
 });
