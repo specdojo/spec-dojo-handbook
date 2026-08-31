@@ -7,7 +7,7 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: open
+  item_status: in-progress
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T21:38:14Z"
@@ -71,6 +71,19 @@ specdojo:
           from: "2026-10-31"
           to: "2026-09-30"
       previous_event_id: reg_ced76bdd8e324812a974133aa518f5c0
+    - v: 1
+      id: reg_bb57ccc07d7d4da9b9de986f139f398a
+      ts: "2026-08-31T22:57:32Z"
+      action: start
+      actor: codex-expert-executor
+      from_status: open
+      to_status: in-progress
+      reason: work started
+      changes:
+        - field: status
+          from: open
+          to: in-progress
+      previous_event_id: reg_af8fd462f0264d1c9b1952c86919a419
 ---
 
 # PJR-9S41 exec 系テンプレートを成果物テンプレートから分離する
