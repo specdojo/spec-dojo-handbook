@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T21:38:14Z"
   due_on: "2026-09-30"
+  block_reason: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=lefthook.yml; agent must record the required change in the result …"
   register_events:
     - v: 1
       id: reg_ced76bdd8e324812a974133aa518f5c0
@@ -84,6 +85,22 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_af8fd462f0264d1c9b1952c86919a419
+    - v: 1
+      id: reg_46649e0dc50b44f6bdfb2685dee7195b
+      ts: "2026-08-31T23:09:36Z"
+      action: wait
+      actor: codex-expert-executor
+      from_status: in-progress
+      to_status: waiting
+      reason: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=lefthook.yml; agent must record the required change in the result …"
+      changes:
+        - field: status
+          from: in-progress
+          to: waiting
+        - field: block_reason
+          from: "-"
+          to: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=lefthook.yml; agent must record the required change in the result …"
+      previous_event_id: reg_bb57ccc07d7d4da9b9de986f139f398a
 ---
 
 # PJR-9S41 exec 系テンプレートを成果物テンプレートから分離する
