@@ -3,18 +3,21 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
+  aggregateRoutineActionResults,
   buildExecAutoArgs,
   buildExecCycleArgs,
   buildExecResumeArgs,
   buildJobRunArgs,
   buildRegisterRunArgs,
   cronOccurrences,
+  executeRoutineActions,
   formatRoutineLastRun,
   isRoutineDue,
   isoWeek,
   loadRoutines,
   parseIntervalMs,
   parseRoutineDoc,
+  routineActionKindLabel,
   selectRegisterItems,
   type RoutineDoc,
 } from "../../src/routine.js";
@@ -148,6 +151,85 @@ describe("parseRoutineDoc", () => {
 
     expect(errors).toEqual([
       'rtn-bad-filter.yaml: action.filter.types contains unknown value "epic". Allowed: todo, question, risk, issue, change-request, decision, note',
+    ]);
+  });
+
+  it("action の配列を受け入れ、段ごとの引数を保持する", () => {
+    const { doc, errors } = parseRoutineDoc(
+      {
+        id: "rtn-sequential",
+        interval: "1d",
+        action: [
+          { kind: "exec-auto", strategy: "fifo", parallel: 1 },
+          { kind: "exec-auto", strategy: "critical-first", parallel: 2 },
+          { kind: "job", job: "job-final-check", inputs: { mode: "strict" } },
+        ],
+      },
+      "rtn-sequential.yaml",
+    );
+
+    expect(errors).toEqual([]);
+    expect(doc?.action).toEqual([
+      { kind: "exec-auto", strategy: "fifo", parallel: 1 },
+      { kind: "exec-auto", strategy: "critical-first", parallel: 2 },
+      { kind: "job", job: "job-final-check", inputs: { mode: "strict" } },
+    ]);
+  });
+
+  it("空の action 配列と不正な段を段番号つきで報告する", () => {
+    const empty = parseRoutineDoc(
+      { id: "rtn-empty", interval: "1d", action: [] },
+      "rtn-empty.yaml",
+    );
+    const invalid = parseRoutineDoc(
+      {
+        id: "rtn-invalid-step",
+        interval: "1d",
+        action: [{ kind: "exec-auto" }, { kind: "unknown" }],
+      },
+      "rtn-invalid-step.yaml",
+    );
+
+    expect(empty.errors).toContain("rtn-empty.yaml: action must contain at least one action");
+    expect(invalid.errors).toContain(
+      'rtn-invalid-step.yaml: action[1].kind must be one of: register, exec-auto, exec-resume, exec-cycle, job (got "unknown")',
+    );
+  });
+});
+
+describe("aggregateRoutineActionResults", () => {
+  it("failure、skipped、success の優先順で全体結果を返す", () => {
+    expect(aggregateRoutineActionResults(["success", "success"])).toBe("success");
+    expect(aggregateRoutineActionResults(["success", "skipped"])).toBe("skipped");
+    expect(aggregateRoutineActionResults(["skipped", "failure", "success"])).toBe("failure");
+  });
+});
+
+describe("routineActionKindLabel", () => {
+  it("単一 kind と配列の実行順を表示する", () => {
+    expect(routineActionKindLabel({ kind: "exec-auto" })).toBe("exec-auto");
+    expect(routineActionKindLabel([{ kind: "exec-auto" }, { kind: "job" }])).toBe(
+      "exec-auto -> job",
+    );
+  });
+});
+
+describe("executeRoutineActions", () => {
+  it("失敗後も action を定義順に実行して段別結果を返す", () => {
+    const executed: string[] = [];
+    const results = executeRoutineActions(
+      [{ kind: "exec-auto" }, { kind: "exec-resume" }, { kind: "job", job: "job-check" }],
+      (action, index) => {
+        executed.push(`${index}:${action.kind}`);
+        return index === 1 ? "failure" : "success";
+      },
+    );
+
+    expect(executed).toEqual(["1:exec-auto", "2:exec-resume", "3:job"]);
+    expect(results).toEqual([
+      { index: 1, kind: "exec-auto", result: "failure" },
+      { index: 2, kind: "exec-resume", result: "success" },
+      { index: 3, kind: "job", result: "success" },
     ]);
   });
 });

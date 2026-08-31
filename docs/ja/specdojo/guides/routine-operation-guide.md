@@ -51,11 +51,47 @@ action:
   limit: 3
 ```
 
+### 1.1. 複数 action の順次実行
+
+通常は従来どおり `action` に1つのオブジェクトを指定します。複数の処理を同じ実行機会で順序保証したい場合は、`action` に1件以上の配列を指定します。各要素は単一 action と同じ形式であり、段ごとに異なる kind と引数を指定できます。
+
+```yaml
+id: rtn-staged-execution
+enabled: true
+interval: 1d
+action:
+  - kind: exec-auto
+    strategy: fifo
+    parallel: 1
+  - kind: exec-auto
+    strategy: critical-first
+    parallel: 2
+  - kind: job
+    job: job-final-check
+    inputs:
+      mode: strict
+```
+
+配列は先頭から1段ずつ同期的に実行し、前段が完了してから次段を起動します。途中の段が `failure` または `skipped` でも、失敗分を後段で拾う運用を可能にするため、残りの段を続行します。全体結果は `failure`、`skipped`、`success` の優先順で集約します。つまり、1段でも失敗すれば `failure`、失敗がなく1段でも skip なら `skipped`、全段成功時だけ `success` です。段間の待機と失敗時中断の切り替えは提供しません。
+
+配列 action の実行後は、通常の `last_result` に加えて段ごとの `index`（1始まり）、`kind`、`result` を `last_action_results` へ記録します。単一オブジェクトの action では `last_action_results` を記録せず、既存の状態形式を維持します。
+
+```json
+{
+  "last_result": "failure",
+  "last_action_results": [
+    { "index": 1, "kind": "exec-auto", "result": "failure" },
+    { "index": 2, "kind": "exec-auto", "result": "success" },
+    { "index": 3, "kind": "job", "result": "success" }
+  ]
+}
+```
+
 ## 2. due判定と実行
 
-最終実行時刻と結果は `<routines-path>/generated/routine-state.json` に記録され、`interval`（`30m` / `6h` / `1d` / `1w` 形式）が経過したものを due と判定します。多重起動は lock で防ぐため、外部スケジューラが重複起動しても同じ routine が二重に走ることはありません。
+最終実行時刻と結果は `<routines-path>/generated/routine-state.json` に記録され、`interval`（`30m` / `6h` / `1d` / `1w` 形式）が経過したものを due と判定します。配列 action の場合は段別結果も同じ state に記録します。多重起動は lock で防ぐため、外部スケジューラが重複起動しても同じ routine が二重に走ることはありません。
 
-`action.kind` で、どの実行経路を発火させるかを選びます。
+単一オブジェクトの `action.kind`、または配列の各要素の `kind` で、どの実行経路を発火させるかを選びます。
 
 | kind          | 動作                                                                                                                                                                               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -139,7 +175,7 @@ devcontainerが停止している時刻のcronは実行されません。また�
 
 ## 3. 実行経路への委譲
 
-routine 自体は実行機構を持たないトリガー層です。何を実行するかは `action.kind` が指す schedule 実行または register 実行に委ねられ、状態追跡もそれぞれの経路の規則に従います。routine は発火結果として `last_run` と `last_result` を記録します。
+routine 自体は実行機構を持たないトリガー層です。何を実行するかは各 `action.kind` が指す schedule 実行または register 実行に委ねられ、状態追跡もそれぞれの経路の規則に従います。routine は発火結果として `last_run` と `last_result`、配列 action では `last_action_results` を記録します。
 
 ### 3.1. 既存項目の再探索と実行単位の反復
 

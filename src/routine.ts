@@ -53,6 +53,8 @@ export type RoutineAction = {
   inputs?: Record<string, string>;
 };
 
+export type RoutineActionList = RoutineAction | RoutineAction[];
+
 export type RoutineDoc = {
   id: string;
   name?: string;
@@ -67,7 +69,7 @@ export type RoutineDoc = {
     missed_run?: "latest" | "all";
     overlap?: "skip";
   };
-  action: RoutineAction;
+  action: RoutineActionList;
 };
 
 export type LoadedRoutine = {
@@ -88,7 +90,19 @@ export type RoutineStateEntry = {
   last_run: string;
   last_result?: RoutineExecutionResult;
   last_scheduled_for?: string;
+  last_action_results?: RoutineActionResult[];
 };
+
+export type RoutineActionResult = {
+  index: number;
+  kind: RoutineActionKind;
+  result: RoutineExecutionResult;
+};
+
+export function routineActionKindLabel(action: RoutineActionList): string {
+  const actions = Array.isArray(action) ? action : [action];
+  return actions.length > 0 ? actions.map((item) => item.kind).join(" -> ") : "-";
+}
 
 type RoutineStateFile = {
   routines: Record<string, RoutineStateEntry>;
@@ -284,6 +298,111 @@ function validatePositiveIntegerField(errors: string[], value: unknown, fieldNam
   }
 }
 
+function parseRoutineAction(
+  value: unknown,
+  fieldName: string,
+  errors: string[],
+): RoutineAction | undefined {
+  if (!isRecord(value)) {
+    errors.push(`${fieldName} must be a mapping with kind`);
+    return undefined;
+  }
+
+  const kind = typeof value.kind === "string" ? value.kind : "";
+  if (
+    kind !== "register" &&
+    kind !== "exec-auto" &&
+    kind !== "exec-resume" &&
+    kind !== "exec-cycle" &&
+    kind !== "job"
+  ) {
+    errors.push(
+      `${fieldName}.kind must be one of: register, exec-auto, exec-resume, exec-cycle, job (got "${kind}")`,
+    );
+  }
+
+  if (kind === "register") {
+    if (value.filter !== undefined && !isRecord(value.filter)) {
+      errors.push(`${fieldName}.filter must be a mapping`);
+    } else if (isRecord(value.filter)) {
+      validateStringListField(errors, value.filter.types, `${fieldName}.filter.types`, VALID_TYPES);
+      validateStringListField(
+        errors,
+        value.filter.priorities,
+        `${fieldName}.filter.priorities`,
+        VALID_PRIORITIES,
+      );
+      validateStringListField(
+        errors,
+        value.filter.statuses,
+        `${fieldName}.filter.statuses`,
+        VALID_STATUSES,
+      );
+    }
+    validatePositiveIntegerField(errors, value.limit, `${fieldName}.limit`);
+  }
+
+  // exec-cycle takes the same auto-step tuning as exec-auto (strategy / parallel / loop /
+  // max_rounds); parallel additionally caps the resume step of the cycle.
+  if (kind === "exec-auto" || kind === "exec-cycle") {
+    if (
+      value.strategy !== undefined &&
+      value.strategy !== "critical-first" &&
+      value.strategy !== "fifo"
+    ) {
+      errors.push(`${fieldName}.strategy must be "critical-first" or "fifo"`);
+    }
+    validatePositiveIntegerField(errors, value.parallel, `${fieldName}.parallel`);
+    validatePositiveIntegerField(errors, value.max_rounds, `${fieldName}.max_rounds`);
+    if (value.loop !== undefined && typeof value.loop !== "boolean") {
+      errors.push(`${fieldName}.loop must be a boolean`);
+    }
+  }
+
+  if (kind === "exec-resume") {
+    validatePositiveIntegerField(errors, value.parallel, `${fieldName}.parallel`);
+  }
+
+  if (kind === "job") {
+    if (typeof value.job !== "string" || !/^job-[a-z0-9][a-z0-9-]*$/.test(value.job)) {
+      errors.push(`${fieldName}.job must match job-<slug>`);
+    }
+    if (
+      value.inputs !== undefined &&
+      (!isRecord(value.inputs) ||
+        Object.values(value.inputs).some((item) => typeof item !== "string"))
+    ) {
+      errors.push(`${fieldName}.inputs must be a mapping of string values`);
+    }
+  }
+
+  const filter = isRecord(value.filter)
+    ? {
+        ...(Array.isArray(value.filter.types) ? { types: value.filter.types as string[] } : {}),
+        ...(Array.isArray(value.filter.priorities)
+          ? { priorities: value.filter.priorities as string[] }
+          : {}),
+        ...(Array.isArray(value.filter.statuses)
+          ? { statuses: value.filter.statuses as string[] }
+          : {}),
+      }
+    : undefined;
+
+  return {
+    kind: kind as RoutineActionKind,
+    ...(filter && Object.keys(filter).length > 0 ? { filter } : {}),
+    ...(typeof value.limit === "number" ? { limit: value.limit } : {}),
+    ...(value.strategy === "critical-first" || value.strategy === "fifo"
+      ? { strategy: value.strategy }
+      : {}),
+    ...(typeof value.parallel === "number" ? { parallel: value.parallel } : {}),
+    ...(typeof value.loop === "boolean" ? { loop: value.loop } : {}),
+    ...(typeof value.max_rounds === "number" ? { max_rounds: value.max_rounds } : {}),
+    ...(typeof value.job === "string" ? { job: value.job } : {}),
+    ...(isRecord(value.inputs) ? { inputs: value.inputs as Record<string, string> } : {}),
+  };
+}
+
 // rtn-*.yaml 1 ファイルぶんを検証し、妥当なら RoutineDoc として返す。
 // id はファイル名（拡張子なし）と一致させ、doc-index と同じ「ファイル名 = id」規約に揃える。
 export function parseRoutineDoc(
@@ -365,95 +484,20 @@ export function parseRoutineDoc(
     }
   }
 
-  if (!isRecord(value.action)) {
-    errors.push("action is required and must be a mapping with kind");
-    return { errors: errors.map((message) => `${fileName}: ${message}`) };
-  }
-
-  const action = value.action;
-  const kind = typeof action.kind === "string" ? action.kind : "";
-  if (
-    kind !== "register" &&
-    kind !== "exec-auto" &&
-    kind !== "exec-resume" &&
-    kind !== "exec-cycle" &&
-    kind !== "job"
-  ) {
-    errors.push(
-      `action.kind must be one of: register, exec-auto, exec-resume, exec-cycle, job (got "${kind}")`,
+  let action: RoutineActionList | undefined;
+  if (Array.isArray(value.action)) {
+    if (value.action.length === 0) errors.push("action must contain at least one action");
+    const parsed = value.action.map((item, index) =>
+      parseRoutineAction(item, `action[${index}]`, errors),
     );
+    if (parsed.every((item): item is RoutineAction => item !== undefined)) action = parsed;
+  } else {
+    action = parseRoutineAction(value.action, "action", errors);
   }
 
-  if (kind === "register") {
-    if (action.filter !== undefined && !isRecord(action.filter)) {
-      errors.push("action.filter must be a mapping");
-    } else if (isRecord(action.filter)) {
-      validateStringListField(errors, action.filter.types, "action.filter.types", VALID_TYPES);
-      validateStringListField(
-        errors,
-        action.filter.priorities,
-        "action.filter.priorities",
-        VALID_PRIORITIES,
-      );
-      validateStringListField(
-        errors,
-        action.filter.statuses,
-        "action.filter.statuses",
-        VALID_STATUSES,
-      );
-    }
-    validatePositiveIntegerField(errors, action.limit, "action.limit");
-  }
-
-  // exec-cycle takes the same auto-step tuning as exec-auto (strategy / parallel / loop /
-  // max_rounds); parallel additionally caps the resume step of the cycle.
-  if (kind === "exec-auto" || kind === "exec-cycle") {
-    if (
-      action.strategy !== undefined &&
-      action.strategy !== "critical-first" &&
-      action.strategy !== "fifo"
-    ) {
-      errors.push('action.strategy must be "critical-first" or "fifo"');
-    }
-    validatePositiveIntegerField(errors, action.parallel, "action.parallel");
-    validatePositiveIntegerField(errors, action.max_rounds, "action.max_rounds");
-    if (action.loop !== undefined && typeof action.loop !== "boolean") {
-      errors.push("action.loop must be a boolean");
-    }
-  }
-
-  if (kind === "exec-resume") {
-    validatePositiveIntegerField(errors, action.parallel, "action.parallel");
-  }
-
-  if (kind === "job") {
-    if (typeof action.job !== "string" || !/^job-[a-z0-9][a-z0-9-]*$/.test(action.job)) {
-      errors.push("action.job must match job-<slug>");
-    }
-    if (
-      action.inputs !== undefined &&
-      (!isRecord(action.inputs) ||
-        Object.values(action.inputs).some((item) => typeof item !== "string"))
-    ) {
-      errors.push("action.inputs must be a mapping of string values");
-    }
-  }
-
-  if (errors.length > 0) {
+  if (errors.length > 0 || action === undefined) {
     return { errors: errors.map((message) => `${fileName}: ${message}`) };
   }
-
-  const filter = isRecord(action.filter)
-    ? {
-        ...(Array.isArray(action.filter.types) ? { types: action.filter.types as string[] } : {}),
-        ...(Array.isArray(action.filter.priorities)
-          ? { priorities: action.filter.priorities as string[] }
-          : {}),
-        ...(Array.isArray(action.filter.statuses)
-          ? { statuses: action.filter.statuses as string[] }
-          : {}),
-      }
-    : undefined;
 
   const doc: RoutineDoc = {
     id,
@@ -463,19 +507,7 @@ export function parseRoutineDoc(
     ...(interval ? { interval } : {}),
     ...(parsedTrigger ? { trigger: parsedTrigger } : {}),
     ...(policy ? { policy } : {}),
-    action: {
-      kind: kind as RoutineActionKind,
-      ...(filter && Object.keys(filter).length > 0 ? { filter } : {}),
-      ...(typeof action.limit === "number" ? { limit: action.limit } : {}),
-      ...(action.strategy === "critical-first" || action.strategy === "fifo"
-        ? { strategy: action.strategy }
-        : {}),
-      ...(typeof action.parallel === "number" ? { parallel: action.parallel } : {}),
-      ...(typeof action.loop === "boolean" ? { loop: action.loop } : {}),
-      ...(typeof action.max_rounds === "number" ? { max_rounds: action.max_rounds } : {}),
-      ...(typeof action.job === "string" ? { job: action.job } : {}),
-      ...(isRecord(action.inputs) ? { inputs: action.inputs as Record<string, string> } : {}),
-    },
+    action,
   };
   return { doc, errors: [] };
 }
@@ -756,19 +788,35 @@ export function buildJobRunArgs(
   return args;
 }
 
-// 1 routine を実行する。register kind は対象項目ごとに失敗を記録して継続し、
+export function aggregateRoutineActionResults(
+  results: RoutineExecutionResult[],
+): RoutineExecutionResult {
+  if (results.includes("failure")) return "failure";
+  if (results.includes("skipped")) return "skipped";
+  return "success";
+}
+
+export function executeRoutineActions(
+  actions: RoutineAction[],
+  execute: (action: RoutineAction, index: number) => RoutineExecutionResult,
+): RoutineActionResult[] {
+  return actions.map((action, offset) => {
+    const index = offset + 1;
+    return { index, kind: action.kind, result: execute(action, index) };
+  });
+}
+
+// 1 action を実行する。register kind は対象項目ごとに失敗を記録して継続し、
 // 最後に集約する（1 件の失敗で残りの項目を止めない）。
-function executeRoutine(
-  routine: LoadedRoutine,
+function executeRoutineAction(
+  doc: RoutineDoc,
+  action: RoutineAction,
   projectId: string,
   dryRun: boolean,
   scheduledAt = new Date(),
 ): RoutineExecutionResult {
-  const { doc } = routine;
-  process.stdout.write(`[routine] ${doc.id}: ${doc.name ?? doc.action.kind}\n`);
-
-  if (doc.action.kind === "exec-auto") {
-    const args = buildExecAutoArgs(doc.action, projectId);
+  if (action.kind === "exec-auto") {
+    const args = buildExecAutoArgs(action, projectId);
     if (dryRun) {
       process.stdout.write(`  [dry-run] specdojo ${args.join(" ")}\n`);
       return "success";
@@ -776,8 +824,8 @@ function executeRoutine(
     return spawnSelf(args);
   }
 
-  if (doc.action.kind === "exec-resume") {
-    const args = buildExecResumeArgs(doc.action, projectId);
+  if (action.kind === "exec-resume") {
+    const args = buildExecResumeArgs(action, projectId);
     if (dryRun) {
       process.stdout.write(`  [dry-run] specdojo ${args.join(" ")}\n`);
       return "success";
@@ -785,8 +833,8 @@ function executeRoutine(
     return spawnSelf(args);
   }
 
-  if (doc.action.kind === "exec-cycle") {
-    const args = buildExecCycleArgs(doc.action, projectId);
+  if (action.kind === "exec-cycle") {
+    const args = buildExecCycleArgs(action, projectId);
     if (dryRun) {
       process.stdout.write(`  [dry-run] specdojo ${args.join(" ")}\n`);
       return "success";
@@ -794,13 +842,8 @@ function executeRoutine(
     return spawnSelf(args);
   }
 
-  if (doc.action.kind === "job") {
-    const args = buildJobRunArgs(
-      doc.action,
-      projectId,
-      scheduledAt,
-      doc.trigger?.timezone ?? "UTC",
-    );
+  if (action.kind === "job") {
+    const args = buildJobRunArgs(action, projectId, scheduledAt, doc.trigger?.timezone ?? "UTC");
     if (dryRun) {
       process.stdout.write(`  [dry-run] specdojo ${args.join(" ")}\n`);
       return "success";
@@ -816,7 +859,7 @@ function executeRoutine(
   }
   // 選択対象は個票 frontmatter（正本）から読む。未移行の項目は pjr-index の行で補う。
   const items = loadRegisterItems(registerPaths).map((view) => view.item);
-  const selected = selectRegisterItems(items, doc.action);
+  const selected = selectRegisterItems(items, action);
   if (selected.length === 0) {
     process.stdout.write(`  no matching register items\n`);
     return "success";
@@ -842,6 +885,43 @@ function executeRoutine(
     process.stderr.write(`  failed register item(s): ${failedIds.join(", ")}\n`);
   }
   return allOk ? "success" : "failure";
+}
+
+type RoutineRunResult = {
+  result: RoutineExecutionResult;
+  actionResults?: RoutineActionResult[];
+};
+
+// action が配列なら、前段の結果にかかわらず先頭から全段を順次実行する。
+// 段別結果を返し、全体結果は failure > skipped > success の順に集約する。
+function executeRoutine(
+  routine: LoadedRoutine,
+  projectId: string,
+  dryRun: boolean,
+  scheduledAt = new Date(),
+): RoutineRunResult {
+  const { doc } = routine;
+  const actions = Array.isArray(doc.action) ? doc.action : [doc.action];
+  const label = doc.name ?? (actions.length === 1 ? actions[0].kind : `${actions.length} actions`);
+  process.stdout.write(`[routine] ${doc.id}: ${label}\n`);
+
+  if (!Array.isArray(doc.action)) {
+    return {
+      result: executeRoutineAction(doc, doc.action, projectId, dryRun, scheduledAt),
+    };
+  }
+
+  const actionResults = executeRoutineActions(actions, (action, index) => {
+    process.stdout.write(`  action ${index}/${actions.length}: ${action.kind}\n`);
+    const result = executeRoutineAction(doc, action, projectId, dryRun, scheduledAt);
+    process.stdout.write(`  action ${index}/${actions.length}: ${result}\n`);
+    return result;
+  });
+  const result = aggregateRoutineActionResults(actionResults.map((item) => item.result));
+  process.stdout.write(
+    `  action summary: ${actionResults.map((item) => `${item.index}:${item.result}`).join(", ")} => ${result}\n`,
+  );
+  return { result, actionResults };
 }
 
 // ================================
@@ -927,7 +1007,7 @@ export function registerRoutineCommands(program: Command): void {
         id: doc.id,
         enabled: doc.enabled === false ? "disabled" : "enabled",
         interval: doc.interval ?? doc.trigger?.cron ?? "-",
-        kind: doc.action.kind,
+        kind: routineActionKindLabel(doc.action),
         lastRun: formatRoutineLastRun(state.routines[doc.id]),
         due:
           doc.enabled === false
@@ -1035,7 +1115,8 @@ export function registerRoutineCommands(program: Command): void {
           writeRoutineState(paths, state);
         }
 
-        const result = executeRoutine(entry, paths.projectId, dryRun, scheduledAt);
+        const execution = executeRoutine(entry, paths.projectId, dryRun, scheduledAt);
+        const { result } = execution;
         if (result === "failure") failed++;
         if (result === "skipped") {
           skipped++;
@@ -1046,6 +1127,7 @@ export function registerRoutineCommands(program: Command): void {
           state.routines[entry.doc.id] = {
             ...state.routines[entry.doc.id],
             last_result: result,
+            last_action_results: execution.actionResults,
           };
           writeRoutineState(paths, state);
         }

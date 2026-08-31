@@ -21,7 +21,7 @@ specdojo:
 
 ## 2. 適用範囲
 
-- 対象は、`rtn-*.yaml` の選択と due 判定、実行試行の記録、登録項目または Schedule task への委譲、exec-cycle の順次制御、Job Definition からの Job Run 生成、実行結果と checkpoint の反映である。
+- 対象は、`rtn-*.yaml` の選択と due 判定、実行試行の記録、単一または複数 action の順次制御、登録項目または Schedule task への委譲、exec-cycle の順次制御、Job Definition からの Job Run 生成、実行結果と checkpoint の反映である。
 - 登録項目の対応・審査・終了は [[prj-0001:cdfd-register-lifecycle|概念データフロー図（登録簿ライフサイクル）]]、個々の Schedule task の選択後の実行・結果統合・再開は [[prj-0001:cdfd-task-execution|概念データフロー図（タスク実行ライフサイクル）]] に委譲し、本領域では委譲入力、返却結果、実行順序だけを扱う。
 - Job Run は Schedule task ではなく、Job Definition と入力・checkpoint から生成される再利用可能な実行単位である。本領域では生成、重複判定、実行結果、checkpoint 更新までを扱い、AI Agent の内部作業は扱わない。
 - `where`、`list`、`validate`、`dry-run` は正本を更新しない補助操作であり、独立プロセスにしない。外部スケジューラの製品・設定手順、個別 CLI 操作、物理データ項目は対象外とする。
@@ -29,12 +29,12 @@ specdojo:
 
 ### 2.1. 定期処理定義と due 判定
 
-| 定義・経路         | 起動条件と選択                                                                                                                                                                                 | 引き渡す主な設定                                     | 実行後の次回判定                                                                                          |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| interval           | `last_run` がないか不正、または現在時刻との差が interval 以上なら一回 due とする。interval は正の整数と分・時・日・週の単位で定義する。                                                        | action kind と action 設定                           | 委譲前に更新した `last_run` から次の interval を判定する。失敗・skip でも同じ実行機会を直ちに再試行しない |
-| cron               | timezone 上の5フィールド cron に一致し、`last_scheduled_for` より後から現在分までの予定時刻を選ぶ。`missed_run: latest` または未指定は最新一件、`all` は取りこぼした各予定時刻を古い順に扱う。 | scheduled time、timezone、action kind と action 設定 | 委譲前に各 scheduled time を `last_scheduled_for` へ記録する。初回は直近の一致一件だけを選ぶ              |
-| 特定 ID の即時実行 | 指定 ID が存在すれば、enabled と due にかかわらず現在時刻を scheduled time として一回選ぶ。                                                                                                    | 指定 routine の action 設定                          | 通常実行と同じく `last_run` と結果を記録する                                                              |
-| disabled           | due 一括選択から除外する。                                                                                                                                                                     | なし                                                 | 状態を更新せず、明示 ID 実行または定義変更を待つ                                                          |
+| 定義・経路         | 起動条件と選択                                                                                                                                                                                 | 引き渡す主な設定                                  | 実行後の次回判定                                                                                          |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| interval           | `last_run` がないか不正、または現在時刻との差が interval 以上なら一回 due とする。interval は正の整数と分・時・日・週の単位で定義する。                                                        | 単一または配列の action と各 action 設定          | 委譲前に更新した `last_run` から次の interval を判定する。失敗・skip でも同じ実行機会を直ちに再試行しない |
+| cron               | timezone 上の5フィールド cron に一致し、`last_scheduled_for` より後から現在分までの予定時刻を選ぶ。`missed_run: latest` または未指定は最新一件、`all` は取りこぼした各予定時刻を古い順に扱う。 | scheduled time、timezone、単一または配列の action | 委譲前に各 scheduled time を `last_scheduled_for` へ記録する。初回は直近の一致一件だけを選ぶ              |
+| 特定 ID の即時実行 | 指定 ID が存在すれば、enabled と due にかかわらず現在時刻を scheduled time として一回選ぶ。                                                                                                    | 指定 routine の action 設定                       | 通常実行と同じく `last_run` と結果を記録する                                                              |
+| disabled           | due 一括選択から除外する。                                                                                                                                                                     | なし                                              | 状態を更新せず、明示 ID 実行または定義変更を待つ                                                          |
 
 cron の探索範囲は最大366日であり、`all` で1000件を超える取りこぼしは異常終了する。interval と cron は同じ定義へ同時指定できない。
 
@@ -50,6 +50,8 @@ cron の探索範囲は最大366日であり、`all` で1000件を超える取�
 | 委譲前記録後の想定外例外 | 新しい `last_run` と必要時の `last_scheduled_for` は残るが、`last_result` は直前値または未記録になり得る | 例外発生点より後は未更新になり得る                              | 同じ実行機会は直ちに再試行されないため、運用担当が状態と外部記録を確認する |
 
 routine / Job の due、scheduled time、冪等性、`last_run` / `last_result` / `last_scheduled_for`、checkpoint と次回判定は本書を正本とする。委譲後の登録項目状態は [[prj-0001:cdfd-register-lifecycle|概念データフロー図（登録簿ライフサイクル）]]、task 状態・利用制限後の再開は [[prj-0001:cdfd-task-execution|概念データフロー図（タスク実行ライフサイクル）]]、索引の生成順と失敗時の扱いは [[prj-0001:cdfd-derived-content|概念データフロー図（成果物・派生ビュー・索引生成）]] を参照する。
+
+`action` は単一オブジェクト、または1件以上の配列とする。配列は先頭から同期的に実行し、各段は直前段の完了後に起動する。途中の `failure` / `skipped` でも後段を続行し、全体結果は `failure`、`skipped`、`success` の優先順で集約する。配列 action では、各段の1始まりの index、kind、結果を `last_action_results` に記録する。単一オブジェクトの action ではこの項目を記録しない。
 
 ## 3. 領域内プロセス一覧
 
@@ -104,7 +106,7 @@ flowchart LR
   対象なし -->|"変更なしの終了結果"| 外部起動者
   定期実行対象選択 -->|"routine・scheduled time"| 実行試行記録
   実行試行記録 -->|"last_run・last_scheduled_for"| routine実行状態
-  実行試行記録 -->|"action・scheduled time"| action起動
+  実行試行記録 -->|"単一または順序付き action・scheduled time"| action起動
   action結果返却 -->|"success・failure・skipped"| routine結果反映
   routine結果反映 -->|"last_result"| routine実行状態
   routine結果反映 -->|"実行件数・失敗件数・継続判断材料"| 外部起動者
@@ -228,7 +230,7 @@ flowchart LR
 | --- | --- | --- | --- | --- |
 | `P-05-01` | 定期実行対象選択 | 定期処理定義、現在時刻、routine 実行状態、任意の指定 routine ID | routine と scheduled time の組、または対象なし | 定期処理定義、routine 実行状態 |
 | `P-05-02` | 実行試行記録 | routine ID、現在時刻、scheduled time、直前の実行状態 | `last_run`、cron の場合は `last_scheduled_for`、選択 action の起動条件 | routine 実行状態 |
-| `P-05-08` | routine 結果反映 | `success` / `failure` / `skipped`、項目別結果、cycle step 別結果、または Job Run 集約結果 | `last_result`、実行件数、失敗件数、継続判断材料 | routine 実行状態、委譲先の実行記録 |
+| `P-05-08` | routine 結果反映 | action ごとの `success` / `failure` / `skipped`、項目別結果、cycle step 別結果、または Job Run 集約結果 | `last_result`、配列 action の `last_action_results`、実行件数、失敗件数、継続判断材料 | routine 実行状態、委譲先の実行記録 |
 
 ### 5.2. 登録項目・Schedule・cycle の条件付きプロセス（P-05-03〜P-05-05）
 
@@ -253,6 +255,8 @@ action kind に応じて、登録項目の対応、Ready task の自動実行、
 
 ### 5.4. action kind 別の選択・委譲規則
 
+次表は1つの action に対する規則である。action が配列の場合は要素ごとに同じ規則を適用し、前段の成否にかかわらず先頭から全段を実行する。全体結果は `failure`、`skipped`、`success` の優先順で集約する。
+
 | action kind   | 選択・制御条件                                                                                                                         | 委譲先へ渡す情報                                                                       | 返却結果と本領域での扱い                                                                                                                                                              |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `register`    | 個票 Frontmatter を正本に、実行可能 type、既定 `open` または指定 status、任意の priority を照合し、ID 昇順で limit 件まで選ぶ          | project ID、登録項目 ID                                                                | 項目ごとの `review` / `waiting` と result。全項目を処理し、一件でも失敗なら routine は `failure`。対象なしは `success`                                                                |
@@ -269,7 +273,7 @@ action kind に応じて、登録項目の対応、Ready task の自動実行、
 | ------- | -------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `E-01`  | `P-05-01`、`P-05-06` | routine の ID・interval / cron・timezone・policy・action、または Job Definition が不正、routine ID が重複している | 不正定義を実行対象にしない。検証エラーを報告し、正本や生成状態を推測で補正しない                                                                                                                  | 定義を規約に合わせ、routine / Job の検証が成功する                                                    |
 | `E-02`  | `P-05-01`、`P-05-02` | 別の routine run が routine 全体の lock を保持している                                                            | 新しい routine run を実行前に停止し、`last_run`・`last_result`・`last_scheduled_for` を更新しない。定義上の `overlap: skip` にかかわらず重複起動は異常終了する                                    | 先行 run が完了して lock を解放する。1時間を超えて陳腐化した lock は次回取得時に回収される            |
-| `E-03`  | `P-05-03`〜`P-05-07` | 同じ project の run / resume / cycle が実行中である                                                               | 委譲先の busy policy を `skip` とし、対象の実行を変更せず routine の `last_result` を `skipped` にする                                                                                            | project lock が解放された後の次回定期機会、または明示実行で再選択する                                 |
+| `E-03`  | `P-05-03`〜`P-05-07` | 同じ project の run / resume / cycle が実行中である                                                               | 委譲先の busy policy を `skip` とし、対象 action を変更せず段別結果を `skipped` にする。単一 action、または他段に失敗がない複数 action の集約結果は `skipped` とする                              | project lock が解放された後の次回定期機会、または明示実行で再選択する                                 |
 | `E-04`  | `P-05-03`、`P-05-04` | filter に合う登録項目、Ready task、または due deferred-limit task が存在しない                                    | 対象なしとして正常終了し、対象側の正本を変更せず `last_result: success` を記録する                                                                                                                | 次回定期機会に個票 Frontmatter、Ready、再開時刻を再評価する                                           |
 | `E-05`  | `P-05-03`            | 選択した登録項目の一部が失敗または busy skip になった                                                             | 通常の失敗は残りの選択項目を継続して項目別結果を残し、一件でも失敗なら集約を `failure` とする。busy skip は未着手の残りを起動せず routine を `skipped` とする                                     | 各項目の `waiting` 理由または project busy を解消し、次回機会か明示実行で再選択する                   |
 | `E-06`  | `P-05-05`            | exec-cycle の resume、索引再生成、Schedule 検証・状態再計算、または auto が失敗した                               | resume 失敗は記録して後続を継続する。索引・検証・状態再計算の失敗は auto を起動せず停止する。auto 失敗を含め、実行済み step の失敗があれば cycle を `failure` とする                              | block 理由、索引、Schedule、構成を解消し、次回 cycle で resume から順に再実行する                     |

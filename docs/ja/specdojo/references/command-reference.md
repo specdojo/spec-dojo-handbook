@@ -568,7 +568,7 @@ specdojo exec worktree remove --project prj-0001 --task <task-id> --delete-branc
 | `--id <id>` | due 判定と無関係に特定の routine を即時実行する |
 | `--dry-run` | 実行も `last_run` 記録も行わず、対象を表示する  |
 
-`action.kind` は `register` / `exec-auto` / `exec-resume` / `exec-cycle` / `job` の5種類です。`exec-cycle` は延期 task の再開・doc-index 再構築・古い track の再生成・状態再計算・`--auto` loop を単一ロック内で順次実行します。定義ファイルの配置、`interval`または`trigger.cron`の書式、due判定、kindごとの動作は [routine運用ガイド](../guides/routine-operation-guide.md) を参照します。
+`action` は単一オブジェクト、または先頭から順に実行する1件以上の配列を受け付けます。単一オブジェクトの `action.kind` または配列の各要素の `kind` は、`register` / `exec-auto` / `exec-resume` / `exec-cycle` / `job` の5種類です。`exec-cycle` は延期 task の再開・doc-index 再構築・古い track の再生成・状態再計算・`--auto` loop を単一ロック内で順次実行します。定義ファイルの配置、`interval`または`trigger.cron`の書式、複数 action の失敗方針、due判定、kindごとの動作は [routine運用ガイド](../guides/routine-operation-guide.md) を参照します。
 
 ```bash
 # due な routine をまとめて実行する（cron / CI から呼ぶ想定）
