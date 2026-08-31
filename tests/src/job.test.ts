@@ -16,7 +16,13 @@ const originalCwd = process.cwd();
 
 function setupRepo(): string {
   const repo = mkdtempSync(join(tmpdir(), "specdojo-job-"));
-  for (const path of [".specdojo", "jobs", "schedule", "execution", "docs/ja/specdojo/templates"])
+  for (const path of [
+    ".specdojo",
+    "jobs",
+    "schedule",
+    "execution",
+    "docs/ja/specdojo/exec-templates",
+  ])
     mkdirSync(join(repo, path), { recursive: true });
   writeFileSync(
     join(repo, ".specdojo/specdojo.config.json"),
@@ -29,11 +35,11 @@ function setupRepo(): string {
     }),
   );
   writeFileSync(
-    join(repo, "docs/ja/specdojo/templates/xep-job-template.md"),
+    join(repo, "docs/ja/specdojo/exec-templates/xep-job-template.md"),
     "_FRONTMATTER_\n\n# _JOB_NAME_\n\n_JOB_DESCRIPTION_\n\n_JOB_INPUTS_\n\n_JOB_TARGETS_\n\n_JOB_PATHS_\n",
   );
   writeFileSync(
-    join(repo, "docs/ja/specdojo/templates/xep-common-conventions-template.md"),
+    join(repo, "docs/ja/specdojo/exec-templates/xep-common-conventions-template.md"),
     "## Common\n",
   );
   writeFileSync(

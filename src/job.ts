@@ -6,7 +6,7 @@ import yaml from "js-yaml";
 import type { Command } from "commander";
 import { buildSpecdojoFrontmatter } from "./frontmatter-namespace.js";
 import { formatMarkdownFile } from "./exec-format.js";
-import { injectCommonConventions, MISSING, templatesDir } from "./exec-plans.js";
+import { execTemplatesDir, injectCommonConventions, MISSING } from "./exec-plans.js";
 import { expandTemplate, listFilesRecursive, readJson, writeJson } from "./exec-shared.js";
 import { gitEnvironment } from "./exec-worktree.js";
 import {
@@ -578,7 +578,7 @@ export async function generateJobPlan(
   definition: JobDefinition,
   record: JobRunRecord,
 ): Promise<string> {
-  const templatePath = join(templatesDir(), "xep-job-template.md");
+  const templatePath = join(execTemplatesDir(), "xep-job-template.md");
   if (!existsSync(templatePath)) throw new Error(`Template not found: ${templatePath}`);
   const planPath = join(paths.executionPath, "exec", "plans", `${record.run_id}-plan.md`);
   mkdirSync(resolve(planPath, ".."), { recursive: true });

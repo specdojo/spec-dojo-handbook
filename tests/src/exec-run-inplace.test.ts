@@ -121,7 +121,7 @@ function setupRepository(): { repo: string; executionPath: string } {
   mkdirSync(join(repo, "schedule"), { recursive: true });
   mkdirSync(join(repo, "catalog"), { recursive: true });
   mkdirSync(join(repo, "execution", "exec", "events"), { recursive: true });
-  mkdirSync(join(repo, "docs", "ja", "specdojo", "templates"), { recursive: true });
+  mkdirSync(join(repo, "docs", "ja", "specdojo", "exec-templates"), { recursive: true });
 
   writeFileSync(
     join(repo, ".specdojo", "specdojo.config.json"),
@@ -208,22 +208,22 @@ function setupRepository(): { repo: string; executionPath: string } {
     "utf8",
   );
   writeFileSync(
-    join(repo, "docs", "ja", "specdojo", "templates", "xep-template.md"),
+    join(repo, "docs", "ja", "specdojo", "exec-templates", "xep-template.md"),
     "_FRONTMATTER_\n\n# Edit Plan: _TASK_ID_\n\n_DONE_CRITERIA_GOALS_\n",
     "utf8",
   );
   writeFileSync(
-    join(repo, "docs", "ja", "specdojo", "templates", "xer-template.md"),
+    join(repo, "docs", "ja", "specdojo", "exec-templates", "xer-template.md"),
     "_FRONTMATTER_\n\n## 1. 実施内容\n",
     "utf8",
   );
   writeFileSync(
-    join(repo, "docs", "ja", "specdojo", "templates", "xrp-viewpoint-detail-template.md"),
+    join(repo, "docs", "ja", "specdojo", "exec-templates", "xrp-viewpoint-detail-template.md"),
     "### _VP_ID_\n\n_VP_CHECK_\n",
     "utf8",
   );
   writeFileSync(
-    join(repo, "docs", "ja", "specdojo", "templates", "xep-common-conventions-template.md"),
+    join(repo, "docs", "ja", "specdojo", "exec-templates", "xep-common-conventions-template.md"),
     "## 記法・リンク規約（共通）\n\n- リンクは `[[id|title]]` 形式。\n",
     "utf8",
   );
@@ -597,7 +597,7 @@ describe("exec run (in-place, default)", () => {
     // The fake agent never fills the result, mirroring an agent (e.g. claude -p) that
     // concludes "blocked" yet still exits 0.
     writeFileSync(
-      join(repo, "docs", "ja", "specdojo", "templates", "xer-template.md"),
+      join(repo, "docs", "ja", "specdojo", "exec-templates", "xer-template.md"),
       [
         "_FRONTMATTER_",
         "",

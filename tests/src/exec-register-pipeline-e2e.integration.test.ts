@@ -232,6 +232,15 @@ function withRepo(fn: (fixture: Fixture) => Promise<void> | void): Promise<void>
         "utf8",
       );
       cpSync(
+        join(REAL_REPO_ROOT, "docs/ja/specdojo/exec-templates"),
+        join(root, "docs/ja/specdojo/exec-templates"),
+        {
+          recursive: true,
+        },
+      );
+      // register add は個票の雛形として templates 配下の pjr-*-template.md を読む。
+      // exec-templates とは別ディレクトリのため、両方を用意する必要がある。
+      cpSync(
         join(REAL_REPO_ROOT, "docs/ja/specdojo/templates"),
         join(root, "docs/ja/specdojo/templates"),
         {

@@ -598,7 +598,7 @@ describe("review plan templates", () => {
 
   it("Prettier 保存後もレビュー観点テーブルと行プレースホルダの間に空行を入れない", async () => {
     for (const template of reviewTemplates) {
-      const path = join("docs/ja/specdojo/templates", template);
+      const path = join("docs/ja/specdojo/exec-templates", template);
       const source = readFileSync(path, "utf8");
       const formatted = await format(source, { parser: "markdown" });
 

@@ -9,7 +9,7 @@ import {
   type PjrItem,
   type RegisterPaths,
 } from "./register.js";
-import { injectCommonConventions, MISSING, templatesDir } from "./exec-plans.js";
+import { execTemplatesDir, injectCommonConventions, MISSING } from "./exec-plans.js";
 import { buildSpecdojoFrontmatter } from "./frontmatter-namespace.js";
 import {
   escapeMarkdownInline,
@@ -285,7 +285,7 @@ export async function generateRegisterPlan(opts: {
   const { item } = opts;
   const category = requireRunnableRegisterItem(item);
 
-  const templatePath = join(templatesDir(), REGISTER_PLAN_TEMPLATES[category]);
+  const templatePath = join(execTemplatesDir(), REGISTER_PLAN_TEMPLATES[category]);
   if (!existsSync(templatePath)) {
     throw new Error(`Template not found: ${templatePath}`);
   }

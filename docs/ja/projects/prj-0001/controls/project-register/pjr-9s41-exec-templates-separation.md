@@ -109,14 +109,14 @@ grade は kata の template として `templates/` 配下を評価するため�
 
 ## 3. 作業内容
 
-| No  | 作業                      | 担当   | 状態 | メモ                                         |
-| --- | ------------------------- | ------ | ---- | -------------------------------------------- |
-| 1   | 移動対象の確定            | ARC    | open | xep / xer / xrp / xrr の 31 件               |
-| 2   | standard の記載方針の決定 | ARC    | open | 適用範囲と exec 系の扱い                     |
-| 3   | ディレクトリの移動        | _TODO_ | open | 参照の追随を含む                             |
-| 4   | 生成処理の参照更新        | _TODO_ | open | exec-plans、exec-results、exec-register、job |
-| 5   | grade の対象範囲の調整    | _TODO_ | open | `exec-templates/` を除く                     |
-| 6   | 規範文書の更新            | _TODO_ | open | template-authoring-standard ほか             |
+| No  | 作業                      | 担当 | 状態 | メモ                                         |
+| --- | ------------------------- | ---- | ---- | -------------------------------------------- |
+| 1   | 移動対象の確定            | ARC  | done | xep / xer / xrp / xrr の 31 件               |
+| 2   | standard の記載方針の決定 | ARC  | done | 適用範囲と exec 系の扱い                     |
+| 3   | ディレクトリの移動        | ARC  | done | 参照の追随を含む                             |
+| 4   | 生成処理の参照更新        | ARC  | done | exec-plans、exec-results、exec-register、job |
+| 5   | grade の対象範囲の調整    | ARC  | done | `exec-templates/` を除く                     |
+| 6   | 規範文書の更新            | ARC  | done | template-authoring-standard ほか             |
 
 ### 3.1. 役割の違い
 
@@ -144,15 +144,18 @@ grade の除外もディレクトリ単位で判定でき、本文の先頭を�
 
 当初は grade 側で除外する対処を PJR-Q3JG として別に起票していたが、ディレクトリ分離により除外の実装が単純になるため本項目へ統合する。`exec-templates/` を走査対象から外すだけでよい。
 
-### 3.4. 未決の論点
+### 3.4. 判断結果
 
-- `exec-templates/` に置くテンプレートが従うべき規約をどこに定めるか。`template-authoring-standard` から外す場合、別の標準が要るか、exec の運用ガイドへ記載するか。
-- `job` のテンプレート（`xep-job-template.md`）の扱い。exec と同じ生成経路を持つため exec 系に含める想定だが、確認が要る。
-- 移動に伴う参照の洗い出し。生成処理のほか、テストや規範文書がパスで参照している箇所がある。
+- exec 系の配置とメタ情報方式は `document-metadata-standard` と `plan-result-lifecycle-guide` を正本とし、独立した authoring standard は追加しない。
+- `xep-job-template.md` は plan を生成する実行基盤の部品のため、31 件の exec 系に含める。
+- 生成処理、テスト fixture、規範文書、ガイドのリンク、pre-commit 対象を新しい配置へ追随させる。
 
 ## 4. 対応結果
 
--
+- exec / result テンプレート 31 件を `docs/ja/specdojo/exec-templates/` へ移動した。
+- exec plan、review plan、result、register plan、job plan の生成処理とテスト fixture を新パスへ追随させた。
+- `template-authoring-standard` の適用範囲を成果物テンプレートに限定し、exec 系の位置づけを関連規範文書とガイドに反映した。
+- grade の kata 探索が成果物テンプレートを含み、`exec-templates/` を含まないことをテストで固定した。
 
 ## 5. 関連ドキュメント
 

@@ -101,7 +101,7 @@ function execResultDocId(projectId: string, mode: TaskMode, localBase: string): 
 // approach が finalize 系なら xer-human-<approach>-template.md を優先し、無ければ
 // mode 別の標準テンプレートへフォールバックする（plan 側の human × approach 解決と対称）。
 function loadResultTemplate(mode: TaskMode, approach: Approach | undefined): string {
-  const templatesPath = join(specdojoRootDir(), "docs/ja/specdojo/templates");
+  const templatesPath = join(specdojoRootDir(), "docs/ja/specdojo/exec-templates");
   if (mode === "edit" && approach === "cross-deliverable-dedup") {
     const crossDeliverablePath = join(templatesPath, "xer-cross-deliverable-dedup-template.md");
     if (existsSync(crossDeliverablePath)) return readFileSync(crossDeliverablePath, "utf8");
