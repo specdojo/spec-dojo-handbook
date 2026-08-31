@@ -265,6 +265,8 @@ Markdown 文書の最新の継続品質評価は `specdojo.grade` に記録し�
 | `viewpoints`   | viewpoint 別 level / score                                |
 | `findings`     | `blocker` / `major` / `minor` / `note` の本文コメント件数 |
 
+Frontmatter の肥大化を抑えつつ観点単位の差分を保つため、`categories` と `viewpoints` は項目ごとの値（score または level / score）をフロースタイルで記録し、collection 自体はブロックスタイルを維持します。`findings` は severity 別件数のマッピング全体をフロースタイルで記録します。この書式は `specdojo.grade` だけに適用し、同じ Frontmatter の他の項目には波及させません。
+
 要修正箇所の直前には独立行で次のコメントを置きます。`rule` は共通 viewpoint ID です。`grade validate` は Frontmatter の severity 別件数、本文コメント数、内容ハッシュを突き合わせます。
 
 ```markdown

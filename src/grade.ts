@@ -78,6 +78,8 @@ const FINDING_RE =
 const KATA_DIRS = ["rulebooks", "recipes", "samples", "templates"] as const;
 const KATA_REFERENCE_EXTENSIONS = new Set([".md", ".yaml", ".yml", ".json"]);
 const KATA_REFERENCE_FIELDS = ["rulebook", "recipe", "sample", "template"] as const;
+const GRADE_PLACEHOLDER = "__SPECDOJO_GRADE_FLOW_PLACEHOLDER__";
+const GRADE_FINDINGS_PLACEHOLDER = "__SPECDOJO_GRADE_FINDINGS_FLOW_PLACEHOLDER__";
 const SEVERITY_LEVEL_CAP: Record<GradeSeverity, number> = {
   blocker: 0,
   major: 2,
@@ -140,8 +142,48 @@ function parseMarkdown(content: string, path: string): MarkdownDocument {
   return { data: parsed, body: (match[2] ?? "").replace(/^(?:\r?\n)+/, "") };
 }
 
+function serializeGrade(grade: Record<string, unknown>): string {
+  const gradeForDump = structuredClone(grade);
+  const findings = isRecord(gradeForDump.findings) ? gradeForDump.findings : undefined;
+  if (findings) gradeForDump.findings = GRADE_FINDINGS_PLACEHOLDER;
+
+  let dumped = yaml
+    .dump(
+      { grade: gradeForDump },
+      // categories / viewpoints の各値だけをフロー化する。grade 全体や各 collection
+      // までフロー化すると一行が長くなり、差分も読みづらくなる。
+      { lineWidth: 120, noRefs: true, flowLevel: 3, quotingType: '"' },
+    )
+    .trimEnd();
+  if (findings) {
+    const inlineFindings = yaml
+      .dump(findings, { lineWidth: -1, noRefs: true, flowLevel: 0 })
+      .trimEnd();
+    dumped = dumped.replace(GRADE_FINDINGS_PLACEHOLDER, inlineFindings);
+  }
+  // js-yaml は `{score: 100}`、Prettier は `{ score: 100 }` と出力する。
+  // 最初から Prettier の形へ合わせ、整形と再評価の往復で差分が出ないようにする。
+  return dumped.replace(/^(\s+[^:\n]+: )\{([^{}\n]*)\}$/gm, "$1{ $2 }");
+}
+
 function serializeMarkdown(document: MarkdownDocument): string {
-  return `---\n${yaml.dump(document.data, { lineWidth: 120, noRefs: true }).trimEnd()}\n---\n\n${document.body.replace(/^\n+/, "")}`;
+  const dataForDump = structuredClone(document.data);
+  const specdojo = isRecord(dataForDump.specdojo) ? dataForDump.specdojo : undefined;
+  const grade = specdojo && isRecord(specdojo.grade) ? specdojo.grade : undefined;
+  if (!specdojo || !grade) {
+    return `---\n${yaml.dump(dataForDump, { lineWidth: 120, noRefs: true }).trimEnd()}\n---\n\n${document.body.replace(/^\n+/, "")}`;
+  }
+
+  specdojo.grade = GRADE_PLACEHOLDER;
+  const gradeBlock = serializeGrade(grade)
+    .split("\n")
+    .map((line) => `  ${line}`)
+    .join("\n");
+  const frontmatter = yaml
+    .dump(dataForDump, { lineWidth: 120, noRefs: true })
+    .trimEnd()
+    .replace(`  grade: ${GRADE_PLACEHOLDER}`, gradeBlock);
+  return `---\n${frontmatter}\n---\n\n${document.body.replace(/^\n+/, "")}`;
 }
 
 function withoutFindingComments(body: string): string {

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import yaml from "js-yaml";
+import { format } from "prettier";
 import {
   discoverGradeTargets,
   gradeMarkdownContent,
@@ -308,7 +310,7 @@ describe("grade submission", () => {
 });
 
 describe("grade markdown update", () => {
-  it("writes an idempotent grade snapshot and inline findings", () => {
+  it("writes an idempotent compact grade snapshot that Prettier preserves", async () => {
     const now = new Date("2026-08-29T00:00:00.000Z");
     const first = gradeMarkdownContent({
       content: markdown,
@@ -334,8 +336,49 @@ describe("grade markdown update", () => {
     expect(first).toContain("score: 90");
     expect(first).toContain("graded_by: codex-executor");
     expect(first).not.toContain("graded_by: test-agent");
+    expect(first).toContain("architecture: { score: 100 }");
+    expect(first).toContain("vp-qe-kata-conformance: { level: 4, score: 100 }");
+    expect(first).toContain("findings: { blocker: 0, major: 0, minor: 1, note: 0 }");
     expect(first.match(/specdojo:finding/g)).toHaveLength(1);
     expect(validateGradedMarkdown(first, submission.documents[0].path)).toEqual([]);
+    const formatted = await format(first, { parser: "markdown" });
+    expect(formatted).toContain("architecture: { score: 100 }");
+    expect(formatted).toContain("vp-qe-kata-conformance: { level: 4, score: 100 }");
+    expect(formatted).toContain("findings: { blocker: 0, major: 0, minor: 1, note: 0 }");
+    const frontmatterOf = (value: string) => yaml.load(value.match(/^---\n([\s\S]*?)\n---/)![1]);
+    expect(frontmatterOf(formatted)).toEqual(frontmatterOf(first));
+  });
+
+  it("keeps mappings outside grade in block style", () => {
+    const withExternalMetadata = markdown.replace(
+      "---\n\n# Example",
+      `external:
+  nested:
+    mapping:
+      remains:
+        first: one
+        second: two
+---
+
+# Example`,
+    );
+    const graded = gradeMarkdownContent({
+      content: withExternalMetadata,
+      path: submission.documents[0].path,
+      input: submission.documents[0],
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-29T00:00:00.000Z"),
+    });
+
+    expect(graded).toContain(`external:
+  nested:
+    mapping:
+      remains:
+        first: one
+        second: two`);
+    expect(graded).not.toContain("remains: { first: one, second: two }");
   });
 
   it("detects count drift and edits after grading", () => {
@@ -389,7 +432,7 @@ describe("grade markdown update", () => {
     expect(graded).toContain(
       "severity=major rule=vp-arc-conciseness 必須の禁止事項が欠落している。",
     );
-    expect(graded).toMatch(/vp-arc-conciseness:\s*\n\s*level: 2/);
+    expect(graded).toContain("vp-arc-conciseness: { level: 2, score: 50 }");
     expect(graded).toContain("major: 1");
     expect(graded).toContain("verdict: needs-work");
 
@@ -409,7 +452,7 @@ describe("grade markdown update", () => {
     expect(repeated).toContain(
       "severity=major rule=vp-arc-conciseness 必須の禁止事項が欠落している。",
     );
-    expect(repeated).toMatch(/vp-arc-conciseness:\s*\n\s*level: 2/);
+    expect(repeated).toContain("vp-arc-conciseness: { level: 2, score: 50 }");
     expect(repeated).toContain("major: 1");
     expect(repeated).toContain("verdict: needs-work");
   });

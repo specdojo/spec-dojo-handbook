@@ -83,12 +83,12 @@ grade 以外の Frontmatter へ影響させないため、grade 配下だけを�
 
 ## 3. 作業内容
 
-| No  | 作業                  | 担当   | 状態 | メモ                                   |
-| --- | --------------------- | ------ | ---- | -------------------------------------- |
-| 1   | 適用範囲の設計        | ARC    | open | grade 配下に限定する方法               |
-| 2   | findings の扱いの決定 | ARC    | open | flowLevel の対象外となるため個別に扱う |
-| 3   | 実装                  | _TODO_ | open | dump 後の整形か部分的な生成か          |
-| 4   | 整形と検証の確認      | _TODO_ | open | prettier、lint:fm、schema              |
+| No  | 作業                  | 担当 | 状態 | メモ                                                                                          |
+| --- | --------------------- | ---- | ---- | --------------------------------------------------------------------------------------------- |
+| 1   | 適用範囲の設計        | ARC  | done | `specdojo.grade` を切り出して専用シリアライズし、他の Frontmatter へ `flowLevel` を適用しない |
+| 2   | findings の扱いの決定 | ARC  | done | severity 別件数だけを個別に dump し、マッピング全体をフロースタイルで差し込む                 |
+| 3   | 実装                  | ARC  | done | grade 専用シリアライズ、Prettier 正規形への整形、回帰テストを追加                             |
+| 4   | 整形と検証の確認      | ARC  | done | Prettier、Markdown/Frontmatter lint、型検査、ESLint、CLI 検証を実施                           |
 
 ### 3.1. 現状の分量
 
@@ -123,7 +123,12 @@ Frontmatter の書き戻しは `src/grade.ts` の共通処理で行われ、grad
 
 ## 4. 対応結果
 
--
+- `src/grade.ts` の Frontmatter シリアライズで `specdojo.grade` を一時的に切り出し、grade 専用の dump 設定を適用した。`categories` と `viewpoints` は collection のブロックスタイルを維持し、各項目の score または level / score だけをフロースタイルにした。
+- `findings` は `flowLevel` の深さが他の2項目と異なるため個別に dump し、`{ blocker: 0, major: 0, minor: 1, note: 0 }` の形式で差し込むようにした。
+- フローマッピング内側の空白と grade 内で引用が必要な文字列を Prettier の正規形に合わせた。Prettier 適用後も3項目のフロースタイルと評価内容が維持される。
+- 同じ grade の連続適用がバイト単位で冪等であること、grade 外の深いマッピングがブロックスタイルのままであること、既存の severity / level 補正テストが新しい出力形式へ追随することを `tests/src/grade.test.ts` で固定した。
+- [[specdojo:document-metadata-standard]] に grade のフロースタイルと適用範囲を規範として追記した。
+- executor 内では Prettier、Markdown lint、Frontmatter lint、型検査、ESLint、grade のスモーク検証、カタログ・登録簿・索引・履歴リンク検証を通過した。unit / integration test と schema 検証は pipeline の親 runner が実行する。
 
 ## 5. 関連ドキュメント
 
