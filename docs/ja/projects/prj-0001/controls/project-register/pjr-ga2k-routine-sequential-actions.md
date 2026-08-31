@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-ga2k-routine-sequential-actions
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T12:41:15Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-31T13:45:20Z"
+  conclusion: routine の action を oneOf で単一オブジェクトと配列の双方を受け付ける形へ拡張した。配列の場合は先頭から順に全段を実行し、段ごとに異なる kind と引数をそのまま委譲する。途中で失敗や skip が生じても後続を続行し、全体結果と段別結果を記録する。単一 action の実行経路と state 形式は維持したため、既存 routine 6 件の移行は不要である。キー名は単数形のままとし、単一を基本として配列も許容する rulebook frontmatter の sample と同じ形に揃えた。
   register_events:
     - v: 1
       id: reg_7430da9a2dd047ddb990cdc01967402f
@@ -72,6 +74,25 @@ specdojo:
           from: in-progress
           to: review
       previous_event_id: reg_d107df2705f1478ebbae89c96a934a5a
+    - v: 1
+      id: reg_64d52886a5424d1a850d27b943a473eb
+      ts: "2026-08-31T13:45:20Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-31"
+        - field: conclusion
+          from: "-"
+          to: routine の action を oneOf で単一オブジェクトと配列の双方を受け付ける形へ拡張した。配列の場合は先頭から順に全段を実行し、段ごとに異なる kind と引数をそのまま委譲する。途中で失敗や skip が生じても後続を続行し、全体結果と段別結果を記録する。単一 action の実行経路と state 形式は維持したため、既存 routine 6 件の移行は不要である。キー名は単数形のままとし、単一を基本として配列も許容する rulebook frontmatter の sample と同じ形に揃えた。
+      previous_event_id: reg_8efc4ba544e743cd952e68ab903fd249
 ---
 
 # PJR-GA2K routine の action で複数段の順次実行を可能にする

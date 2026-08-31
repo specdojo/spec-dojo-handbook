@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-3d7q-grade-target-filter
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T12:41:16Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-31T13:45:21Z"
+  conclusion: discoverGradeTargets へ verdict、finding 件数の上限、未評価の各フィルターを追加し、既存条件との AND 結合を実装した。grade plan / apply / validate に --verdict、--max-findings、--ungraded を公開している。評価済み 6 件で検証し、--verdict pass --max-findings 1 が ifx-index のみを抽出することを確認した。指摘のある mm と gl は pass でも除外され、条件の組み合わせが機能している。
   register_events:
     - v: 1
       id: reg_6b9cc75f81d448cba854308fdb0c0d51
@@ -72,6 +74,25 @@ specdojo:
           from: in-progress
           to: review
       previous_event_id: reg_ebb753e2a3c54f94924b94de677684ba
+    - v: 1
+      id: reg_080179b567ef4db386c1a7fe96350c03
+      ts: "2026-08-31T13:45:21Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-31"
+        - field: conclusion
+          from: "-"
+          to: discoverGradeTargets へ verdict、finding 件数の上限、未評価の各フィルターを追加し、既存条件との AND 結合を実装した。grade plan / apply / validate に --verdict、--max-findings、--ungraded を公開している。評価済み 6 件で検証し、--verdict pass --max-findings 1 が ifx-index のみを抽出することを確認した。指摘のある mm と gl は pass でも除外され、条件の組み合わせが機能している。
+      previous_event_id: reg_a89724df359c40c2bb0358fc6bd6fdef
 ---
 
 # PJR-3D7Q grade の対象選択に判定結果による絞り込みを追加する
