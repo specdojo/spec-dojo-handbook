@@ -7,6 +7,57 @@ specdojo:
   recipe: not-needed
   sample: not-needed
   template: not-needed
+  grade:
+    rubric: grade-rubric-v1
+    reference: specdojo:prj-overview-rulebook
+    target: kata
+    verdict: pass
+    score: 100
+    graded_at: "2026-08-31T11:42:38.682Z"
+    graded_by: gemma-expert-executor
+    content_hash: 9952d0dba77a3ccf5099414badc74ca88f42396dc341b4627e1c8229ea757b1a
+    categories:
+      consistency:
+        score: 100
+      usability:
+        score: 100
+      architecture:
+        score: 100
+      quality:
+        score: 100
+    viewpoints:
+      vp-arc-cross-document-consistency:
+        level: 4
+        score: 100
+      vp-arc-conciseness:
+        level: 4
+        score: 100
+      vp-arc-single-responsibility:
+        level: 4
+        score: 100
+      vp-qe-verifiability:
+        level: 4
+        score: 100
+      vp-qe-omissions-consistency:
+        level: 4
+        score: 100
+      vp-qe-kata-conformance:
+        level: 4
+        score: 100
+      vp-ux-readability:
+        level: 4
+        score: 100
+      vp-ux-language-consistency:
+        level: 4
+        score: 100
+      vp-arc-document-structure:
+        level: 4
+        score: 100
+    findings:
+      blocker: 0
+      major: 0
+      minor: 0
+      note: 0
 ---
 
 # 外部システムIF一覧（External System Interface List: ESIL）作成ルール

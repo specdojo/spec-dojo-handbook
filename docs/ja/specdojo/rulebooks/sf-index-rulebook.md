@@ -6,7 +6,60 @@ specdojo:
   recipe: undecided
   sample: specdojo:sf-index-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    reference: specdojo:prj-overview-rulebook
+    target: kata
+    verdict: needs-work
+    score: 66
+    graded_at: "2026-08-31T11:42:38.045Z"
+    graded_by: gemma-expert-executor
+    content_hash: 4a70ad21ff6b45e1772f1b90b698fa7dc959dc2b9480a795d85865458fd19df2
+    categories:
+      consistency:
+        score: 38
+      usability:
+        score: 83
+      architecture:
+        score: 100
+      quality:
+        score: 50
+    viewpoints:
+      vp-arc-cross-document-consistency:
+        level: 2
+        score: 50
+      vp-arc-conciseness:
+        level: 4
+        score: 100
+      vp-arc-single-responsibility:
+        level: 4
+        score: 100
+      vp-qe-verifiability:
+        level: 3
+        score: 75
+      vp-qe-omissions-consistency:
+        level: 1
+        score: 25
+      vp-qe-kata-conformance:
+        level: 1
+        score: 25
+      vp-ux-readability:
+        level: 2
+        score: 50
+      vp-ux-language-consistency:
+        level: 4
+        score: 100
+      vp-arc-document-structure:
+        level: 4
+        score: 100
+    findings:
+      blocker: 0
+      major: 5
+      minor: 1
+      note: 0
 ---
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency H1に成果物名の代わりに別ドキュメントへのリンクが記述されており、成果物の識別を混乱させる。 -->
 
 # [システム化機能一覧 / 全体構成](../rulebooks/sf-rulebook.md) 作成ルール
 
@@ -18,9 +71,15 @@ System Functions Index Documentation Rules
 
 - 目的: システムで実現する機能の全体構成と一覧を定義する
 - 主な内容: 機能ID、機能名、概要、関連プロセス、関連仕様ID など
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-verifiability 判定可能な記述を求める指示はあるが、具体的にどのような状態が「判定可能」であるかの基準が不足している。 -->
+
 - 曖昧表現を避け、判定可能な記述にする。
 
 ## 2. 位置づけと用語定義（必要に応じて）
+
+<!-- specdojo:finding id=F003 severity=major rule=vp-qe-omissions-consistency 「2. 位置づけと用語定義」がテンプレートの指示文のままであり、実際の定義が記載されていない。 -->
+<!-- specdojo:finding id=F006 severity=major rule=vp-ux-readability 成果物の位置づけや責務境界が具体化されていないため、作成者が判断に迷う。 -->
 
 - 上位方針・関連成果物との責務境界を明確化する。
 - 必要に応じて用語を定義し、命名ゆれを防ぐ。
@@ -39,6 +98,8 @@ System Functions Index Documentation Rules
 | status   | draft / ready / deprecated                        | ○    |
 | rulebook | `sf-index-rulebook`                               | 任意 |
 
+<!-- specdojo:finding id=F005 severity=major rule=vp-qe-kata-conformance 本文構成の定義（必須章）と、対応するサンプルの構成が矛盾しており、適用方法が不透明である。 -->
+
 ## 5. 本文構成（標準テンプレ）
 
 | 章                | 必須 | 内容                   |
@@ -48,6 +109,8 @@ System Functions Index Documentation Rules
 | 3. 記述内容       | ○    | 主要項目、構成、記述順 |
 | 4. 検証観点       | ○    | 完了条件、確認観点     |
 | 5. 未解決事項     | 任意 | 課題、決定期限、担当   |
+
+<!-- specdojo:finding id=F004 severity=major rule=vp-qe-omissions-consistency 第5節で定義した必須章（目的、入力情報、記述内容、検証観点）に対する具体的な記述ガイドが不足している。 -->
 
 ## 6. 記述ガイド
 

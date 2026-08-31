@@ -62,6 +62,12 @@ $defs:
       rubric:
         type: string
         pattern: "^[a-z][a-z0-9-]*$"
+      reference:
+        $ref: "#/$defs/idRef"
+        description: >-
+          判定時に比較材料として用いた良い実例の文書 ID。使わずに評価した場合は省略する。
+          パスではなく ID で保存する。文書を移動しても参照が壊れないためである。
+          score の変化が対象の修正によるものか判定条件の違いによるものかを切り分けるために要る。
       target:
         enum: [kata, deliverable]
       verdict:

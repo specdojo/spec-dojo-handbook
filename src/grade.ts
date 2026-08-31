@@ -159,10 +159,16 @@ function stableContentHash(document: MarkdownDocument): string {
 }
 
 function sanitizeCommentText(value: string): string {
-  return value
-    .replace(/--+/g, "—")
-    .replace(/[\r\n]+/g, " ")
-    .trim();
+  return (
+    value
+      .replace(/--+/g, "—")
+      .replace(/[\r\n]+/g, " ")
+      // 山括弧プレースホルダは HTML コメント内でもプロジェクトの lint が検知する。
+      // コメント内ではインラインコードが機能しないため、全角へ置き換えて退避する。
+      .replace(/</g, "＜")
+      .replace(/>/g, "＞")
+      .trim()
+  );
 }
 
 function findingComment(
@@ -199,10 +205,20 @@ function insertFindings(body: string, viewpoints: GradeViewpointInput[]): string
   }
   const output: string[] = [];
   for (let index = 0; index <= lines.length; index += 1) {
-    output.push(...(insertions.get(index) ?? []));
+    const comments = insertions.get(index) ?? [];
+    // 直前が空行の場合は連続空行になるため詰める。agent が本文末尾を超える行番号を
+    // 指定すると、末尾の空行の後ろへコメントが並び markdownlint の MD012 に触れる。
+    if (comments.length > 0) {
+      while (output.length > 0 && output[output.length - 1].trim() === "") output.pop();
+      if (output.length > 0) output.push("");
+    }
+    output.push(...comments);
     if (index < lines.length) output.push(lines[index]);
   }
-  return output.join("\n").replace(/^\n+/, "");
+  return output
+    .join("\n")
+    .replace(/^\n+/, "")
+    .replace(/\n{3,}/g, "\n\n");
 }
 
 function resolveProject(projectOption?: string): {
@@ -1165,6 +1181,7 @@ export function applyGradeSubmission(opts: {
   viewpoints: ReviewViewpointsDoc;
   target: GradeTarget;
   gradedBy: string;
+  reference?: string;
   dryRun?: boolean;
   now?: Date;
 }): string[] {
@@ -1183,6 +1200,7 @@ export function applyGradeSubmission(opts: {
       viewpoints: opts.viewpoints,
       target: opts.target,
       gradedBy: opts.gradedBy,
+      reference: opts.reference,
       now: opts.now,
     });
     if (next !== current) {
@@ -1193,6 +1211,20 @@ export function applyGradeSubmission(opts: {
   return changed;
 }
 
+// 比較リファレンスは ID で保存する。パスで保存すると文書を移動したときに参照が壊れる。
+// 引数にはパスと ID のどちらも渡せる。パスの場合は Frontmatter の id を読み取る。
+export function resolveGradeReferenceId(pathOrId: string): string {
+  const trimmed = pathOrId.trim();
+  if (!trimmed.endsWith(".md")) return trimmed;
+  const absolute = resolveSafeMarkdownPath(trimmed);
+  const document = parseMarkdown(readFileSync(absolute, "utf8"), repoRelativePath(absolute));
+  const metadata = document.data.specdojo;
+  if (!isRecord(metadata) || typeof metadata.id !== "string" || metadata.id.length === 0) {
+    throw new Error(`${repoRelativePath(absolute)}: reference document has no specdojo.id`);
+  }
+  return metadata.id;
+}
+
 export function gradeMarkdownContent(opts: {
   content: string;
   path: string;
@@ -1200,6 +1232,7 @@ export function gradeMarkdownContent(opts: {
   viewpoints: ReviewViewpointsDoc;
   target: GradeTarget;
   gradedBy: string;
+  reference?: string;
   now?: Date;
 }): string {
   const document = parseMarkdown(opts.content, opts.path);
@@ -1214,6 +1247,7 @@ export function gradeMarkdownContent(opts: {
   const body = insertFindings(document.body, evaluated.viewpoints);
   specdojo.grade = {
     rubric: rubric.id,
+    ...(opts.reference ? { reference: resolveGradeReferenceId(opts.reference) } : {}),
     target: opts.target,
     verdict: summary.verdict,
     score: summary.score,
@@ -1357,6 +1391,10 @@ export function registerGradeCommand(program: Command): void {
       "--analysis-from <path>",
       "Executor analysis used to verify reporter fidelity (omit only for legacy one-stage output)",
     )
+    .option(
+      "--reference <pathOrId>",
+      "Comparison reference used during grading; recorded as a document id",
+    )
     .option("--dry-run", "Validate and list updates without writing", false)
     .action((options) => {
       try {
@@ -1407,6 +1445,7 @@ export function registerGradeCommand(program: Command): void {
           viewpoints,
           target,
           gradedBy,
+          reference: options.reference,
           dryRun: options.dryRun,
         });
         for (const path of changed)

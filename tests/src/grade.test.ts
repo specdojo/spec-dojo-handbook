@@ -9,6 +9,7 @@ import {
   renderGradePlan,
   renderGradeReporterPlan,
   resolveGradeActor,
+  resolveGradeReferenceId,
   resolveGradeReferencePaths,
   selectGradeReferenceExample,
   validateGradeReporterFidelity,
@@ -462,6 +463,44 @@ LEVEL: 4
     expect(first).toMatch(/\/rulebooks\/cdfd-overview-rulebook\.md$/);
     expect(second).toMatch(/\/rulebooks\/cdfd-rulebook\.md$/);
     expect(first).not.toBe(second);
+  });
+
+  it("records the comparison reference as a document id", () => {
+    // パスで保存すると文書を移動したときに参照が壊れる。ID なら移動しても解決できる。
+    const id = resolveGradeReferenceId("docs/ja/specdojo/rulebooks/prj-overview-rulebook.md");
+
+    expect(id).toBe("specdojo:prj-overview-rulebook");
+  });
+
+  it("keeps an already resolved id as is", () => {
+    expect(resolveGradeReferenceId("specdojo:prj-overview-rulebook")).toBe(
+      "specdojo:prj-overview-rulebook",
+    );
+  });
+
+  it("writes the reference id into the grade and omits the key when unused", () => {
+    const graded = gradeMarkdownContent({
+      content: markdown,
+      path: submission.documents[0].path,
+      input: submission.documents[0],
+      viewpoints,
+      target: "kata",
+      gradedBy: "gemma-expert-executor",
+      reference: "docs/ja/specdojo/rulebooks/prj-overview-rulebook.md",
+      now: new Date("2026-08-31T00:00:00.000Z"),
+    });
+    const without = gradeMarkdownContent({
+      content: markdown,
+      path: submission.documents[0].path,
+      input: submission.documents[0],
+      viewpoints,
+      target: "kata",
+      gradedBy: "gemma-expert-executor",
+      now: new Date("2026-08-31T00:00:00.000Z"),
+    });
+
+    expect(graded).toContain("reference: specdojo:prj-overview-rulebook");
+    expect(without).not.toContain("reference:");
   });
 
   it("omits the reference section entirely when no example is given", () => {

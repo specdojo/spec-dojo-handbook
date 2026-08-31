@@ -7,15 +7,73 @@ specdojo:
   recipe: undecided
   sample: specdojo:opd-index-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    reference: specdojo:prj-overview-rulebook
+    target: kata
+    verdict: needs-work
+    score: 79
+    graded_at: "2026-08-31T11:42:38.478Z"
+    graded_by: gemma-expert-executor
+    content_hash: 210911bb35ee82e9d2954687596f4c6782fbf8a170ec42d8434485cdde5465d1
+    categories:
+      consistency:
+        score: 38
+      usability:
+        score: 100
+      architecture:
+        score: 100
+      quality:
+        score: 75
+    viewpoints:
+      vp-arc-cross-document-consistency:
+        level: 1
+        score: 25
+      vp-arc-conciseness:
+        level: 4
+        score: 100
+      vp-arc-single-responsibility:
+        level: 4
+        score: 100
+      vp-qe-verifiability:
+        level: 4
+        score: 100
+      vp-qe-omissions-consistency:
+        level: 2
+        score: 50
+      vp-qe-kata-conformance:
+        level: 2
+        score: 50
+      vp-ux-readability:
+        level: 4
+        score: 100
+      vp-ux-language-consistency:
+        level: 4
+        score: 100
+      vp-arc-document-structure:
+        level: 4
+        score: 100
+    findings:
+      blocker: 0
+      major: 4
+      minor: 3
+      note: 0
 ---
 
 # 運用方針・設計 全体構成 作成ルール
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency サンプル `specdojo:opd-index-sample` における rulebook 参照 ID と本ルールの ID が不整合である。 -->
+<!-- specdojo:finding id=F005 severity=major rule=vp-qe-kata-conformance サンプルとしての整合性がなく、rulebook としての機能（ exemplification ）を果たしていない。 -->
 
 Operations Policy and Design Index Documentation Rules
 
 本ドキュメントは、運用方針・設計の全体構成（`opd-index`）を統一形式で記述するためのルールを定義する。
 
+<!-- specdojo:finding id=F006 severity=minor rule=vp-qe-kata-conformance recipe が undecided であり、具体的な記述手順への導線が未定義である。 -->
+
 ## 1. 全体方針
+
+<!-- specdojo:finding id=F007 severity=minor rule=vp-qe-kata-conformance template が undecided であり、骨組みの提供がなされていない。 -->
 
 - `opd-index` は恒常運用の方針と統制基準の SSOT とする。
 - SLO/SLA/KPI、責任分界、変更管理、復旧方針を判定可能な粒度で記述する。
@@ -35,14 +93,19 @@ Operations Policy and Design Index Documentation Rules
 
 ## 4. 推奨 Frontmatter 項目
 
-| 項目         | 説明                             | 必須 |
-| ------------ | -------------------------------- | ---- |
-| `id`         | `opd-index`                      | ○    |
-| `type`       | `operations`                     | ○    |
-| `status`     | `draft` / `ready` / `deprecated` | ○    |
-| `rulebook`   | `specdojo:opd-index-rulebook`    | 任意 |
-| `based_on`   | 根拠仕様 ID 配列                 | 任意 |
-| `supersedes` | 置換関係 ID 配列                 | 任意 |
+| 項目 | 説明        | 必須 |
+| ---- | ----------- | ---- |
+| `id` | `opd-index` | ○    |
+
+<!-- specdojo:finding id=F003 severity=major rule=vp-qe-omissions-consistency 推奨されるファイル配置（ディレクトリパス）の定義が欠落している。 -->
+
+| `type` | `operations` | ○ |
+| `status` | `draft` / `ready` / `deprecated` | ○ |
+| `rulebook` | `specdojo:opd-index-rulebook` | 任意 |
+| `based_on` | 根拠仕様 ID 配列 | 任意 |
+| `supersedes` | 置換関係 ID 配列 | 任意 |
+
+<!-- specdojo:finding id=F004 severity=minor rule=vp-qe-omissions-consistency Frontmatter の参照スキーマ（deliverable-frontmatter.schema.yaml 等）への言及がなく、共通標準との整合性が不明確である。 -->
 
 ## 5. 本文構成（標準テンプレ）
 
@@ -58,8 +121,11 @@ Operations Policy and Design Index Documentation Rules
 | 8   | バックアップ・リストア方針（RTO/RPO）              | ○    |
 | 9   | 権限・アカウント運用（棚卸し・監査ログ）           | ○    |
 | 10  | 定期運用方針（バッチ・点検）                       | ○    |
-| 11  | 問い合わせ運用方針（窓口・分類・SLA）              | ○    |
-| 12  | 関連ドキュメント導線（`opr-index` 等）             | ○    |
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-arc-cross-document-consistency 本ルールで12章すべてを必須としているが、対応するサンプルに実装されておらず、実効性に欠ける。 -->
+
+| 11 | 問い合わせ運用方針（窓口・分類・SLA） | ○ |
+| 12 | 関連ドキュメント導線（`opr-index` 等） | ○ |
 
 ## 6. 記述ガイド
 
