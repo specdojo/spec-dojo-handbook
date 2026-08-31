@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-25f4-grade-two-stage-filter
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-30T12:22:15Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-31T13:52:30Z"
+  conclusion: "grade を3段で回す運用を設計し実装した。1段目はリファレンスありで全件をローカル評価し、2段目はリファレンスなしで1段目の失敗を拾いつつ指摘を確認する。3段目は pass かつ score 96 以上で finding 1 件以下のものと、未評価のものだけを codex-expert-executor が確認する。rtn-grade-kata を3つの Job の配列 action へ変更し、前段の成否にかかわらず後段を実行する。あわせて grade へ --min-score を追加し、verdict と finding 件数と AND で組み合わせられるようにした。--ungraded とは保存済み grade の有無が矛盾するため併用を拒否する。routine の有効化は人が判断するため enabled: false を維持している。"
   register_events:
     - v: 1
       id: reg_b85b0998a43c4611911b0fbed2b21304
@@ -72,6 +74,25 @@ specdojo:
           from: in-progress
           to: review
       previous_event_id: reg_11eccd091ef64da7806e232e004600cb
+    - v: 1
+      id: reg_bd17190b0fd148679709bec48c43ec3e
+      ts: "2026-08-31T13:52:30Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-31"
+        - field: conclusion
+          from: "-"
+          to: "grade を3段で回す運用を設計し実装した。1段目はリファレンスありで全件をローカル評価し、2段目はリファレンスなしで1段目の失敗を拾いつつ指摘を確認する。3段目は pass かつ score 96 以上で finding 1 件以下のものと、未評価のものだけを codex-expert-executor が確認する。rtn-grade-kata を3つの Job の配列 action へ変更し、前段の成否にかかわらず後段を実行する。あわせて grade へ --min-score を追加し、verdict と finding 件数と AND で組み合わせられるようにした。--ungraded とは保存済み grade の有無が矛盾するため併用を拒否する。routine の有効化は人が判断するため enabled: false を維持している。"
+      previous_event_id: reg_d1cb22635ae14dd496f83af0a1bafa1f
 ---
 
 # PJR-25F4 grade の段階的な運用を設計する
