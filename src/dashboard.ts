@@ -25,7 +25,12 @@ import {
 } from "./timeline-build.js";
 // routine の due 判定は機械可読な正本（interval / trigger + last_scheduled_for / last_run）から同じ
 // 関数で算出する。CLI 出力の転記ではなく、routine.ts の実装へ流用して文言解析に依存しない。
-import { type RoutineDoc, isRoutineDue, cronOccurrences } from "./routine.js";
+import {
+  type RoutineDoc,
+  cronOccurrences,
+  isRoutineDue,
+  routineActionKindLabel,
+} from "./routine.js";
 
 // ================================
 // Types
@@ -451,10 +456,7 @@ function buildRoutineRow(
 ): void {
   const id = String(doc.id);
   const enabled = doc.enabled === undefined ? true : (doc.enabled as boolean);
-  const kind =
-    doc.action && typeof doc.action === "object"
-      ? String((doc.action as Record<string, unknown>).kind ?? "-")
-      : "-";
+  const kind = doc.action ? routineActionKindLabel(doc.action) : "-";
 
   const stateEntry = stateEntries[id];
   let lastRun = "-";

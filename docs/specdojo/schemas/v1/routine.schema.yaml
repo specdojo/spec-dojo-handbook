@@ -44,6 +44,14 @@ properties:
         const: skip
   action:
     oneOf:
+      - $ref: "#/$defs/action"
+      - type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/action"
+$defs:
+  action:
+    oneOf:
       - type: object
         additionalProperties: true
         required: [kind]
