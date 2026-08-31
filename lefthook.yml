@@ -28,7 +28,7 @@ pre-commit:
       run: npm run typecheck
 
     test:
-      glob: "{src/**,tests/**,docs/ja/specdojo/templates/**,vitest.config.*}"
+      glob: "{src/**,tests/**,docs/ja/specdojo/templates/**,docs/ja/specdojo/exec-templates/**,vitest.config.*}"
       run: npm test
 
     # *-build 系は generated/ 配下を出力するが、generated/ は gitignore 済みの生成物

@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-9s41-exec-templates-separation
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T21:38:14Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-31T23:16:13Z"
   block_reason: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=lefthook.yml; agent must record the required change in the result …"
+  conclusion: exec と result のテンプレート 31 件を docs/ja/specdojo/exec-templates/ へ分離した。template-authoring-standard の適用範囲を成果物テンプレートに限定し、exec 系は plan/result ライフサイクルガイドに従う旨を明記した。grade はこれまで Frontmatter を持たない exec 系まで対象に含めて全件走査が停止していたが、分離により 248 文書の走査が通るようになった。統合テストの fixture は exec-templates だけを複製していたため register add が読む pjr-*-template.md が欠けて 7 件が失敗した。2 つのディレクトリが必要になったため templates も複製するよう修正した。lefthook.yml の glob 追加は保護された設定のため result の申し送りへ記録し、オーケストレーターが適用した。
   register_events:
     - v: 1
       id: reg_ced76bdd8e324812a974133aa518f5c0
@@ -101,6 +103,38 @@ specdojo:
           from: "-"
           to: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=lefthook.yml; agent must record the required change in the result …"
       previous_event_id: reg_bb57ccc07d7d4da9b9de986f139f398a
+    - v: 1
+      id: reg_3ba05d27746e42a5a773921626094af8
+      ts: "2026-08-31T23:16:12Z"
+      action: review
+      actor: manual
+      from_status: waiting
+      to_status: review
+      reason: 実装と検証が完了し申し送りも適用したため
+      changes:
+        - field: status
+          from: waiting
+          to: review
+      previous_event_id: reg_46649e0dc50b44f6bdfb2685dee7195b
+    - v: 1
+      id: reg_2cec1780807b47fea7d7f8d715f5b3ef
+      ts: "2026-08-31T23:16:13Z"
+      action: close
+      actor: manual
+      from_status: review
+      to_status: done
+      reason: 実装・検証・レビューが完了したため
+      changes:
+        - field: status
+          from: review
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-09-01"
+        - field: conclusion
+          from: "-"
+          to: exec と result のテンプレート 31 件を docs/ja/specdojo/exec-templates/ へ分離した。template-authoring-standard の適用範囲を成果物テンプレートに限定し、exec 系は plan/result ライフサイクルガイドに従う旨を明記した。grade はこれまで Frontmatter を持たない exec 系まで対象に含めて全件走査が停止していたが、分離により 248 文書の走査が通るようになった。統合テストの fixture は exec-templates だけを複製していたため register add が読む pjr-*-template.md が欠けて 7 件が失敗した。2 つのディレクトリが必要になったため templates も複製するよう修正した。lefthook.yml の glob 追加は保護された設定のため result の申し送りへ記録し、オーケストレーターが適用した。
+      previous_event_id: reg_3ba05d27746e42a5a773921626094af8
 ---
 
 # PJR-9S41 exec 系テンプレートを成果物テンプレートから分離する
