@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=../../../../specdojo/schemas/v1/job.schema.yaml
+id: job-grade-kata-expert-check
+name: 実践の型の expert 再確認
+description: ローカル評価の高信頼 pass と未評価の実践の型だけを expert で再確認する。
+inputs:
+  scheduled_at:
+    type: string
+    required: true
+task:
+  mode: edit
+  owner: ARC
+  description: |
+    最初に `specdojo grade plan --target kata --verdict pass --min-score 96 --max-findings 1
+    --project prj-0001` で、ローカル評価が高得点かつ finding 1件以下の pass を選ぶ。生成した各
+    executor plan を `codex-expert-executor` へ渡し、reporter plan と marker 付き executor 応答を
+    `<grade_executor_output>` として `gemma-reporter` へ渡す。1件ごとに `specdojo grade apply
+    --target kata --path <document> --analysis-from <executor-output> --from <json>
+    --by codex-expert-executor` を実行し、反映を完了してから次へ進む。
+
+    次に `specdojo grade plan --target kata --ungraded --project prj-0001` を実行し、先行する2つの
+    ローカル Job で grade を保存できなかった Markdown の Kata を同じ executor / reporter 構成で
+    評価する。2つの選択集合は重複排除する。reporter は再評価せず executor の判定を忠実に構造化し、
+    対象がなければ result に no-op と記録する。
+  paths:
+    - docs/ja/specdojo/rulebooks
+    - docs/ja/specdojo/recipes
+    - docs/ja/specdojo/samples
+    - docs/ja/specdojo/templates
+run:
+  idempotency_key: "{{job_id}}:{{inputs.scheduled_at}}"

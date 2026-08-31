@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../../../specdojo/schemas/v1/job.schema.yaml
 id: job-grade-kata
-name: 実践の型の継続品質評価
-description: 前回の grade 以降に内容が変わった Markdown の実践の型を共通 viewpoint で評価する。
+name: 実践の型のローカル比較評価
+description: Markdown の実践の型を比較リファレンス付きのローカル構成で全件評価する。
 inputs:
   scheduled_at:
     type: string
@@ -10,15 +10,14 @@ task:
   mode: edit
   owner: ARC
   description: |
-    `specdojo grade plan --target kata --changed-only --project prj-0001` で1文書単位の
-    executor plan と reporter plan を保存する。各文書について executor plan を分析担当へ渡し、
-    JSON ではない marker 付き自由記述の最終応答を保存する。次に reporter plan と executor 応答を
-    `<grade_executor_output>` として reporter へ渡し、判定を変更しない GradeSubmission JSON を得る。
-    1件ごとに `specdojo grade apply --target kata --path <document>
-    --analysis-from <executor-output> --from <json> --by <executor-nickname>` を実行し、level・severity・
-    finding の忠実性検証、スコア計算、finding 配置を完了してから次へ進む。reporter は対象文書を
-    再評価せず、executor の nickname を graded_by として指定する。対象がなければ result に no-op と
-    記録する。
+    `specdojo grade plan --target kata --random-reference --project prj-0001` で Markdown の
+    Kata 全件について1文書単位の executor plan と reporter plan を保存する。各 executor plan を
+    `gemma-expert-executor` へ渡して marker 付き自由記述の最終応答を保存し、reporter plan と応答を
+    `<grade_executor_output>` として `gemma-reporter` へ渡す。1件ごとに `specdojo grade apply
+    --target kata --path <document> --analysis-from <executor-output> --from <json>
+    --by gemma-expert-executor --reference <planに記録されたreference>` を実行する。比較リファレンスが
+    ない plan では `--reference` を省略する。level・severity・finding の忠実性検証、スコア計算、
+    finding 配置を完了してから次へ進み、対象がなければ result に no-op と記録する。
   paths:
     - docs/ja/specdojo/rulebooks
     - docs/ja/specdojo/recipes

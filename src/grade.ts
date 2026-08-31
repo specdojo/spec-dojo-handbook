@@ -28,6 +28,7 @@ export type GradeVerdict = "pass" | "needs-work" | "fail";
 export type GradeTargetFilters = {
   changedOnly?: boolean;
   verdict?: GradeVerdict;
+  minScore?: number;
   maxFindings?: number;
   ungraded?: boolean;
 };
@@ -501,6 +502,7 @@ export function discoverGradeTargets(
   if (
     !opts.changedOnly &&
     opts.verdict === undefined &&
+    opts.minScore === undefined &&
     opts.maxFindings === undefined &&
     !opts.ungraded
   ) {
@@ -526,14 +528,33 @@ function validateGradeTargetFilters(filters: GradeTargetFilters): void {
     throw new Error("--verdict must be pass, needs-work, or fail");
   }
   if (
+    filters.minScore !== undefined &&
+    (!Number.isSafeInteger(filters.minScore) || filters.minScore < 0 || filters.minScore > 100)
+  ) {
+    throw new Error("--min-score must be an integer between 0 and 100");
+  }
+  if (
     filters.maxFindings !== undefined &&
     (!Number.isSafeInteger(filters.maxFindings) || filters.maxFindings < 0)
   ) {
     throw new Error("--max-findings must be a non-negative integer");
   }
-  if (filters.ungraded && (filters.verdict !== undefined || filters.maxFindings !== undefined)) {
-    throw new Error("--ungraded cannot be combined with --verdict or --max-findings");
+  if (
+    filters.ungraded &&
+    (filters.verdict !== undefined ||
+      filters.minScore !== undefined ||
+      filters.maxFindings !== undefined)
+  ) {
+    throw new Error("--ungraded cannot be combined with --verdict, --min-score, or --max-findings");
   }
+}
+
+function storedGradeScore(grade: Record<string, unknown>, path: string): number {
+  const score = grade.score;
+  if (!Number.isSafeInteger(score) || (score as number) < 0 || (score as number) > 100) {
+    throw new Error(`${path}: specdojo.grade.score must be an integer between 0 and 100`);
+  }
+  return score as number;
 }
 
 function storedFindingCount(grade: Record<string, unknown>, path: string): number {
@@ -559,6 +580,12 @@ function matchesParsedGradeTargetFilters(
   const grade = isRecord(specdojo.grade) ? specdojo.grade : undefined;
   if (filters.ungraded && grade !== undefined) return false;
   if (filters.verdict !== undefined && grade?.verdict !== filters.verdict) return false;
+  if (
+    filters.minScore !== undefined &&
+    (grade === undefined || storedGradeScore(grade, path) < filters.minScore)
+  ) {
+    return false;
+  }
   if (
     filters.maxFindings !== undefined &&
     (grade === undefined || storedFindingCount(grade, path) > filters.maxFindings)
@@ -1392,6 +1419,14 @@ function requireMaxFindings(value: string): number {
   return parsed;
 }
 
+function requireMinScore(value: string): number {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > 100) {
+    throw new Error("--min-score must be an integer between 0 and 100");
+  }
+  return parsed;
+}
+
 function commandError(error: unknown): void {
   process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   process.exitCode = 1;
@@ -1416,6 +1451,11 @@ export function registerGradeCommand(program: Command): void {
         "--verdict <verdict>",
         "Select documents with this latest verdict: pass, needs-work, or fail",
         requireGradeVerdict,
+      )
+      .option(
+        "--min-score <score>",
+        "Select graded documents with at least this score (0-100)",
+        requireMinScore,
       )
       .option(
         "--max-findings <count>",
@@ -1447,6 +1487,7 @@ export function registerGradeCommand(program: Command): void {
           paths: options.path,
           changedOnly: options.changedOnly,
           verdict: options.verdict,
+          minScore: options.minScore,
           maxFindings: options.maxFindings,
           ungraded: options.ungraded,
         });
@@ -1524,6 +1565,7 @@ export function registerGradeCommand(program: Command): void {
             paths: options.path,
             changedOnly: options.changedOnly,
             verdict: options.verdict,
+            minScore: options.minScore,
             maxFindings: options.maxFindings,
             ungraded: options.ungraded,
           }).map(repoRelativePath),
@@ -1581,6 +1623,7 @@ export function registerGradeCommand(program: Command): void {
         paths: options.path,
         changedOnly: options.changedOnly,
         verdict: options.verdict,
+        minScore: options.minScore,
         maxFindings: options.maxFindings,
         ungraded: options.ungraded,
       });

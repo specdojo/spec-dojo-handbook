@@ -122,7 +122,7 @@ describe("grade target filters", () => {
     ],
   };
 
-  it("combines verdict, finding-count, and changed-only filters", () => {
+  it("combines verdict, score, finding-count, and changed-only filters", () => {
     const graded = gradeMarkdownContent({
       content: markdown,
       path: passSubmission.documents[0].path,
@@ -136,18 +136,21 @@ describe("grade target filters", () => {
     expect(
       matchesGradeTargetFilters(graded, "example.md", {
         verdict: "pass",
+        minScore: 100,
         maxFindings: 0,
       }),
     ).toBe(true);
     expect(
       matchesGradeTargetFilters(graded, "example.md", {
         verdict: "needs-work",
+        minScore: 100,
         maxFindings: 0,
       }),
     ).toBe(false);
     expect(
       matchesGradeTargetFilters(graded, "example.md", {
         verdict: "pass",
+        minScore: 100,
         maxFindings: 0,
         changedOnly: true,
       }),
@@ -158,11 +161,29 @@ describe("grade target filters", () => {
         "example.md",
         {
           verdict: "pass",
+          minScore: 100,
           maxFindings: 0,
           changedOnly: true,
         },
       ),
     ).toBe(true);
+
+    const lowerScore = gradeMarkdownContent({
+      content: markdown,
+      path: submission.documents[0].path,
+      input: submission.documents[0],
+      viewpoints,
+      target: "kata",
+      gradedBy: "test-agent",
+      now: new Date("2026-08-31T00:00:00.000Z"),
+    });
+    expect(
+      matchesGradeTargetFilters(lowerScore, "example.md", {
+        verdict: "pass",
+        minScore: 96,
+        maxFindings: 1,
+      }),
+    ).toBe(false);
   });
 
   it("counts all stored finding severities against the maximum", () => {
@@ -205,9 +226,21 @@ describe("grade target filters", () => {
         verdict: "pass",
       }),
     ).toThrow("--ungraded cannot be combined");
+    expect(() =>
+      matchesGradeTargetFilters(markdown, "example.md", {
+        ungraded: true,
+        minScore: 96,
+      }),
+    ).toThrow("--ungraded cannot be combined");
   });
 
-  it("rejects invalid finding thresholds", () => {
+  it("rejects invalid score and finding thresholds", () => {
+    expect(() => matchesGradeTargetFilters(markdown, "example.md", { minScore: -1 })).toThrow(
+      "--min-score must be an integer between 0 and 100",
+    );
+    expect(() => matchesGradeTargetFilters(markdown, "example.md", { minScore: 101 })).toThrow(
+      "--min-score must be an integer between 0 and 100",
+    );
     expect(() => matchesGradeTargetFilters(markdown, "example.md", { maxFindings: -1 })).toThrow(
       "--max-findings must be a non-negative integer",
     );
