@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-23dt-grade-reference-examples
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-30T13:07:19Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-31T11:46:46Z"
+  conclusion: "grade plan へ比較リファレンスを含められるようにした。同種別かつ status: ready の文書から選び、同種別に候補がない場合は種別を跨がずリファレンスなしで評価する。種別が違うと構造も目的も異なり基準として誤りを招くためである。既定では付けず、--reference `<path>` で固定するか --random-reference で無作為に選ぶ。判定に用いたリファレンスは specdojo.grade.reference へ文書 ID で記録する。実測では同じ文書がリファレンスの有無で score が最大 19 ポイント動き、閾値 70 を下回る文書が 2 件現れた。抽象的な rubric だけでは記載水準を判断できていなかったことを確認した。"
   register_events:
     - v: 1
       id: reg_b2f09dd55ac94235b5324e2761b2bd99
@@ -59,6 +61,25 @@ specdojo:
           from: open
           to: in-progress
       previous_event_id: reg_b2f09dd55ac94235b5324e2761b2bd99
+    - v: 1
+      id: reg_4cf59fca0d83461ba7e88af27a767435
+      ts: "2026-08-31T11:46:46Z"
+      action: close
+      actor: manual
+      from_status: in-progress
+      to_status: done
+      reason: 完了条件をすべて満たし検証も通過したため
+      changes:
+        - field: status
+          from: in-progress
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-08-31"
+        - field: conclusion
+          from: "-"
+          to: "grade plan へ比較リファレンスを含められるようにした。同種別かつ status: ready の文書から選び、同種別に候補がない場合は種別を跨がずリファレンスなしで評価する。種別が違うと構造も目的も異なり基準として誤りを招くためである。既定では付けず、--reference `<path>` で固定するか --random-reference で無作為に選ぶ。判定に用いたリファレンスは specdojo.grade.reference へ文書 ID で記録する。実測では同じ文書がリファレンスの有無で score が最大 19 ポイント動き、閾値 70 を下回る文書が 2 件現れた。抽象的な rubric だけでは記載水準を判断できていなかったことを確認した。"
+      previous_event_id: reg_6b2e7af059c3498986927785bf094933
 ---
 
 # PJR-23DT grade plan へ良い実例をリファレンスとして渡す
