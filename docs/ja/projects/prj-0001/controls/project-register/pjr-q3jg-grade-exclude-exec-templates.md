@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-q3jg-grade-exclude-exec-templates
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: open
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T14:01:41Z"
   due_on: "2026-09-30"
+  completed_at: "2026-08-31T22:53:11Z"
+  conclusion: PJR-9S41 へ統合し単独では対応しない。grade 側で本文の先頭を判定して除外する方針だったが、exec 系テンプレートを exec-templates ディレクトリへ分離すればディレクトリ単位で対象から外せる。成果物テンプレートは rulebook から宣言され実践の型の一部を成すが、exec 系を宣言する rulebook は 0 件であり、kata として評価する前提が成り立たない。分離が根本解決にあたるため除外だけを別に実装する意味がない。
   register_events:
     - v: 1
       id: reg_164284675786499a889919bb27c45131
@@ -46,6 +48,60 @@ specdojo:
         - field: due
           from: ""
           to: "2026-09-30"
+    - v: 1
+      id: reg_0ebca77bac974f76a7b4a853dfd0f446
+      ts: "2026-08-31T22:52:24Z"
+      action: close
+      actor: manual
+      from_status: open
+      to_status: done
+      reason: PJR-9S41 の分離により解決するため統合した
+      changes:
+        - field: status
+          from: open
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-09-01"
+        - field: conclusion
+          from: "-"
+          to: PJR-9S41 へ統合し単独では対応しない。grade 側で本文の先頭を判定して除外する方針だったが、exec 系テンプレートを exec-templates ディレクトリへ分離すればディレクトリ単位で対象から外せる。判定が単純になり除外のための特別な実装が不要になる。成果物テンプレートは rulebook から宣言され実践の型の一部を成すが、exec 系を宣言する rulebook は 0 件であり、kata として評価する前提が成り立たない。分離が根本解決にあたるため除外だけを別に実装する意味がない。
+      previous_event_id: reg_164284675786499a889919bb27c45131
+    - v: 1
+      id: reg_ee34780e71824df4ab8d82dd6feb0aed
+      ts: "2026-08-31T22:53:11Z"
+      action: reopen
+      actor: manual
+      from_status: done
+      to_status: open
+      reason: status を ready へ昇格させるため一度戻す
+      changes:
+        - field: status
+          from: done
+          to: open
+        - field: completed
+          from: "2026-09-01"
+          to: "-"
+      previous_event_id: reg_0ebca77bac974f76a7b4a853dfd0f446
+    - v: 1
+      id: reg_53c706107741428a9dc570a3a7e5f8ec
+      ts: "2026-08-31T22:53:11Z"
+      action: close
+      actor: manual
+      from_status: open
+      to_status: done
+      reason: PJR-9S41 の分離により解決するため統合した
+      changes:
+        - field: status
+          from: open
+          to: done
+        - field: completed
+          from: "-"
+          to: "2026-09-01"
+        - field: conclusion
+          from: PJR-9S41 へ統合し単独では対応しない。grade 側で本文の先頭を判定して除外する方針だったが、exec 系テンプレートを exec-templates ディレクトリへ分離すればディレクトリ単位で対象から外せる。判定が単純になり除外のための特別な実装が不要になる。成果物テンプレートは rulebook から宣言され実践の型の一部を成すが、exec 系を宣言する rulebook は 0 件であり、kata として評価する前提が成り立たない。分離が根本解決にあたるため除外だけを別に実装する意味がない。
+          to: PJR-9S41 へ統合し単独では対応しない。grade 側で本文の先頭を判定して除外する方針だったが、exec 系テンプレートを exec-templates ディレクトリへ分離すればディレクトリ単位で対象から外せる。成果物テンプレートは rulebook から宣言され実践の型の一部を成すが、exec 系を宣言する rulebook は 0 件であり、kata として評価する前提が成り立たない。分離が根本解決にあたるため除外だけを別に実装する意味がない。
+      previous_event_id: reg_ee34780e71824df4ab8d82dd6feb0aed
 ---
 
 # PJR-Q3JG exec 系テンプレートを grade の対象から除外する
@@ -68,11 +124,11 @@ specdojo:
 
 ## 3. 作業内容
 
-| No  | 作業           | 担当   | 状態 | メモ                                     |
-| --- | -------------- | ------ | ---- | ---------------------------------------- |
-| 1   | 判定方法の決定 | ARC    | open | 本文の先頭で判定するか接頭辞で判定するか |
-| 2   | 実装           | _TODO_ | open | `discoverGradeTargets` の除外            |
-| 3   | 規範文書の更新 | _TODO_ | open | command-reference                        |
+| No  | 作業           | 担当 | 状態      | メモ                                     |
+| --- | -------------- | ---- | --------- | ---------------------------------------- |
+| 1   | 判定方法の決定 | ARC  | done      | ディレクトリ分離により判定が不要になった |
+| 2   | 実装           | ARC  | cancelled | PJR-9S41 へ統合                          |
+| 3   | 規範文書の更新 | ARC  | cancelled | PJR-9S41 へ統合                          |
 
 ### 3.1. 対象となるテンプレート
 
@@ -110,7 +166,13 @@ specdojo:
 
 ## 4. 対応結果
 
--
+本項目は PJR-9S41 へ統合し、単独では対応しない。
+
+grade 側で本文の先頭を判定して除外する方針だったが、exec 系テンプレートを `docs/ja/specdojo/exec-templates/` へ分離すれば、ディレクトリ単位で対象から外せる。判定は単純になり、除外のための特別な実装が不要になる。
+
+分離の根拠は役割の違いである。成果物テンプレートは rulebook から `template` として宣言され実践の型の一部を成すが、exec 系を宣言する rulebook は 0 件である。exec 系は plan と result を生成する実行基盤の内部テンプレートであり、kata として評価する前提が成り立たない。
+
+同じ問題への対処であり、分離が根本解決にあたるため、除外だけを別に実装する意味がない。
 
 ## 5. 関連ドキュメント
 
