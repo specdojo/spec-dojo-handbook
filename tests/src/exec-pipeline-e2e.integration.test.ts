@@ -335,7 +335,7 @@ function writeCatalog(repo: string): void {
 }
 
 function writeTemplates(repo: string): void {
-  const templates = join(repo, "docs", "ja", "specdojo", "templates");
+  const templates = join(repo, "docs", "ja", "specdojo", "exec-templates");
   writeFileSync(
     join(templates, "xep-template.md"),
     "_FRONTMATTER_\n\n# Edit Plan: _TASK_ID_\n\n_DONE_CRITERIA_GOALS_\n",
@@ -381,7 +381,7 @@ function setupPipelineRepository(): PipelineFixture {
     join(repo, "schedule"),
     join(repo, "catalog"),
     join(repo, "execution", "exec", "events"),
-    join(repo, "docs", "ja", "specdojo", "templates"),
+    join(repo, "docs", "ja", "specdojo", "exec-templates"),
   ]) {
     mkdirSync(dir, { recursive: true });
   }

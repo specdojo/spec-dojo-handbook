@@ -67,7 +67,8 @@ repo-root/
 │     ├─ specdojo/
 │     │  ├─ guides/
 │     │  ├─ rulebooks/
-│     │  └─ templates/
+│     │  ├─ templates/
+│     │  └─ exec-templates/
 │     └─ projects/
 │        └─ prj-0001/
 │           ├─ 010-deliverables-catalog/

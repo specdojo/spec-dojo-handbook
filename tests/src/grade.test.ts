@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  discoverGradeTargets,
   gradeMarkdownContent,
   matchesGradeTargetFilters,
   parseGradeExecutorAnalysis,
@@ -121,6 +122,13 @@ describe("grade target filters", () => {
       },
     ],
   };
+
+  it("discovers artifact templates but excludes internal exec templates from kata", () => {
+    const targets = discoverGradeTargets({ target: "kata" });
+
+    expect(targets).toContainEqual(expect.stringContaining("/templates/prj-overview-template.md"));
+    expect(targets).not.toContainEqual(expect.stringContaining("/exec-templates/"));
+  });
 
   it("combines verdict, score, finding-count, and changed-only filters", () => {
     const graded = gradeMarkdownContent({

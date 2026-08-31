@@ -43,7 +43,8 @@ docs/
 │   │   ├── rulebooks/                            # ドキュメント記述規約
 │   │   ├── recipes/                              # 成果物ごとの作成手順
 │   │   ├── samples/                              # 成果物の完成例
-│   │   ├── templates/                            # 成果物・plan/result の雛形
+│   │   ├── templates/                            # rulebook が宣言する成果物テンプレート
+│   │   ├── exec-templates/                       # plan/result 生成用の内部テンプレート
 │   │   ├── schemas/                              # 言語固有の文書構造スキーマ
 │   │
 │   ├── projects/
@@ -172,7 +173,8 @@ docs/
 │   │   ├── rulebooks/                            # ドキュメント記述規約
 │   │   ├── recipes/                              # 成果物ごとの作成手順
 │   │   ├── samples/                              # 成果物の完成例
-│   │   ├── templates/                            # 成果物・plan/result の雛形
+│   │   ├── templates/                            # rulebook が宣言する成果物テンプレート
+│   │   ├── exec-templates/                       # plan/result 生成用の内部テンプレート
 │   │   ├── schemas/                              # 言語固有の文書構造スキーマ
 │   │
 │   ├── projects/

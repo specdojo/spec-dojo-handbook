@@ -129,6 +129,7 @@ exec/results/<stem>-result.md
 
 plan は `mode` / `approach` に応じたテンプレートから生成します。
 plan の構造と生成規則は schema・本ガイド・各テンプレートを正本とするため、生成する Frontmatter の `rulebook` は `none` とします。
+これらは `docs/ja/specdojo/exec-templates/` に置く実行基盤の内部テンプレートであり、`docs/ja/specdojo/templates/` に置く成果物テンプレートとは別に管理します。
 
 | 条件                  | 代表テンプレート             |
 | --------------------- | ---------------------------- |
@@ -147,6 +148,7 @@ plan の構造と生成規則は schema・本ガイド・各テンプレート�
 ### 3.3. resultテンプレート
 
 result は実行記録です。agent では plan と対になり、human では作業指示も兼ねます。`claim` または `exec run` が scaffold 生成します。
+result テンプレートも plan と同じ `docs/ja/specdojo/exec-templates/` 配下に置きます。
 
 | 条件                                          | 代表テンプレート                           |
 | --------------------------------------------- | ------------------------------------------ |

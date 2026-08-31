@@ -53,12 +53,12 @@ specdojo:
 
 ### 2.1. テンプレート自身のメタ情報と生成物 Frontmatter の分離
 
-テンプレートファイル自身のメタ情報と、テンプレートから生成される成果物の Frontmatter は明確に分離する。
+成果物テンプレート自身のメタ情報と、テンプレートから生成される成果物の Frontmatter は明確に分離する。
 
-- テンプレートファイル自身のメタ情報も `specdojo:` 配下に置き、`id` / `type` / `status` は実値で記述して通常のメタ情報制約に従う。例: `specdojo.id: specdojo:dct-project-management-template`、`specdojo.type: template`、`specdojo.status: draft`。
+- `docs/ja/specdojo/templates/` 配下の成果物テンプレートは実践の型であり、ファイル自身のメタ情報も `specdojo:` 配下に置く。`id` / `type` / `status` は実値で記述して通常のメタ情報制約に従う。例: `specdojo.id: specdojo:dct-project-management-template`、`specdojo.type: template`、`specdojo.status: draft`。
+- `docs/ja/specdojo/exec-templates/` 配下の exec / result テンプレートは、plan / result 生成処理が消費する内部テンプレートである。実践の型の `type: template` 文書ではないため、ファイル自身の Frontmatter は持たない。本文先頭に `_FRONTMATTER_` を置き、生成処理が `specdojo:` 名前空間形の Frontmatter を注入する。
 - 生成される成果物の Frontmatter は、テンプレート自身の Frontmatter とは別に、生成物側の雛形として表現する。表現方法はテンプレート種別ごとに次のいずれかとする。
   - Markdown 成果物テンプレートは、自身 Frontmatter の `specdojo:` 配下に置いた `frontmatter_template` フィールドに、生成物 Frontmatter の雛形（`specdojo:` ラッパー込み）を記述する（本標準 `生成物 Frontmatter 雛形`）。
-  - Markdown の exec / result テンプレートは、本文先頭に `_FRONTMATTER_` を置き、生成処理が `specdojo:` 名前空間形の Frontmatter を注入する。
   - YAML catalog テンプレート（`dct-*`）は独立 YAML データファイルであり名前空間化しない。生成物側フィールドを平坦に記述し、生成処理（`specdojo scaffold`）が `id` / `type` などを変換する。
   - YAML catalog 以外の独立 YAML データファイルのテンプレート（`pm-members-template.yaml` 等）は、自身のメタ情報をトップレベルに実値で記述し、生成物のメタ情報はトップレベルの `metadata_template` フィールドに雛形として記述する（本標準 `生成物メタ情報雛形（metadata_template）`）。
 - 生成時に置換する値は `_UPPER_SNAKE_` 形式のプレースホルダで表す。ただし `type: template` を理由に、すべての Frontmatter 項目や ID で大文字・アンダースコアを使用できるわけではない。

@@ -222,7 +222,7 @@ function frontmatter(meta: ExecPlanMeta): string {
 // ---------------------------------------------------------------------------
 
 // レビュー観点 1 件ぶんの記述ブロック断片。prose ラベル（確認基準・チェック観点など）は
-// 言語別 docs/<lang>/.../templates のこの断片に置き、コードは値のみを供給する。
+// 言語別 docs/<lang>/.../exec-templates のこの断片に置き、コードは値のみを供給する。
 const REVIEW_VIEWPOINT_DETAIL_TEMPLATE = "xrp-viewpoint-detail-template.md";
 
 // Per-RVP fragment for a review *result* (section 1). Prose labels for result/evidence/notes
@@ -235,8 +235,8 @@ const REVIEW_RESULT_VIEWPOINT_DETAIL_TEMPLATE = "xrr-viewpoint-detail-template.m
 // files. Kept as a single fragment to avoid duplicating the rule across every plan template.
 const COMMON_CONVENTIONS_TEMPLATE = "xep-common-conventions-template.md";
 
-export function templatesDir(): string {
-  return join(specdojoRootDir(), "docs/ja/specdojo/templates");
+export function execTemplatesDir(): string {
+  return join(specdojoRootDir(), "docs/ja/specdojo/exec-templates");
 }
 
 function templatePrefix(mode: TaskMode): string {
@@ -256,10 +256,10 @@ function approachTemplateFileName(mode: TaskMode, approach: Approach): string {
 // next candidate so a plan is always produced.
 function resolvePlanTemplatePath(mode: TaskMode, approach: Approach | undefined): string {
   if (approach) {
-    const candidatePath = join(templatesDir(), approachTemplateFileName(mode, approach));
+    const candidatePath = join(execTemplatesDir(), approachTemplateFileName(mode, approach));
     if (existsSync(candidatePath)) return candidatePath;
   }
-  return join(templatesDir(), standardTemplateFileName(mode));
+  return join(execTemplatesDir(), standardTemplateFileName(mode));
 }
 
 function readTemplate(templatePath: string, cache: Map<string, string>): string {
@@ -282,7 +282,7 @@ function loadPlanTemplate(
 }
 
 function loadViewpointDetailTemplate(cache: Map<string, string>): string {
-  return readTemplate(join(templatesDir(), REVIEW_VIEWPOINT_DETAIL_TEMPLATE), cache);
+  return readTemplate(join(execTemplatesDir(), REVIEW_VIEWPOINT_DETAIL_TEMPLATE), cache);
 }
 
 // Marker a plan template places to control where the shared conventions fragment lands.
@@ -304,7 +304,7 @@ export function injectCommonConventions(
   cache: Map<string, string>,
 ): string {
   let conventions = readTemplate(
-    join(templatesDir(), COMMON_CONVENTIONS_TEMPLATE),
+    join(execTemplatesDir(), COMMON_CONVENTIONS_TEMPLATE),
     cache,
   ).trimEnd();
   conventions =
@@ -605,7 +605,7 @@ function reviewViewpointRows(criteria: CriteriaItem[]): string {
 // Per-RVP skeleton for a review result's section 1. Each block carries the role,
 // viewpoint_id and criterion as context so the result is self-contained, and leaves
 // result / evidence / notes as _TODO_ for the agent to fill. Prose labels live in the
-// detailTemplate (language-specific docs/<lang>/.../templates); code supplies only values.
+// detailTemplate (language-specific docs/<lang>/.../exec-templates); code supplies only values.
 export function reviewResultSections(criteria: CriteriaItem[], detailTemplate: string): string {
   if (criteria.length === 0) return MISSING;
   return criteria
@@ -633,7 +633,7 @@ export function reviewResultSectionsForDeliverable(
   const criteria = info?.deliverable.done_criteria ?? [];
   if (criteria.length === 0) return undefined;
   const detailTemplate = readTemplate(
-    join(templatesDir(), REVIEW_RESULT_VIEWPOINT_DETAIL_TEMPLATE),
+    join(execTemplatesDir(), REVIEW_RESULT_VIEWPOINT_DETAIL_TEMPLATE),
     new Map<string, string>(),
   );
   return reviewResultSections(criteria, detailTemplate);
@@ -740,7 +740,7 @@ export function reviewViewpointDetails(
 }
 
 // owner ロール視点の記述ガイドを構成するデータ値。prose ラベルや見出しは
-// テンプレート側（言語別 docs/<lang>/.../templates）に置き、ここでは値のみを供給する。
+// テンプレート側（言語別 docs/<lang>/.../exec-templates）に置き、ここでは値のみを供給する。
 type OwnerRoleFields = {
   // owner の Role code（role 名が pm-roles.yaml にあれば `code（name）` 形式）。
   label: string;
