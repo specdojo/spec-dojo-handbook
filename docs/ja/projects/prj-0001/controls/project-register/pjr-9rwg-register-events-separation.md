@@ -12,53 +12,6 @@ specdojo:
   owner: ARC
   registered_at: "2026-08-31T22:34:14Z"
   due_on: "2026-09-30"
-  register_events:
-    - v: 1
-      id: reg_6235426b8f0e47e69635e9581c499469
-      ts: "2026-08-31T22:34:14Z"
-      action: add
-      actor: manual
-      from_status: null
-      to_status: open
-      reason: item added
-      changes:
-        - field: status
-          from: ""
-          to: open
-        - field: title
-          from: ""
-          to: register のイベントを個票の Frontmatter から分離する
-        - field: description
-          from: ""
-          to: register_events が個票の Frontmatter を肥大化させている。PJR-AKJ4 では Frontmatter 174 行のうち 156 行がイベントで、本文 77 行の 2 倍に達する。イベントは状態遷移のたびに増えるため比率は悪化し続ける。状態遷移のたびに個票が変更されるため、本文の修正とイベント追記が同じ差分に混在してレビューしにくい。controls/project-register/events/ へ項目ごとに 1 ファイルとして分離する。pjr-rulebook が避けたいとする共有ログの競合は、全項目を 1 ファイルへ集約する形を否定したものであり、項目ごとに分ければ生じない。exec のようにイベント単位まで分けると 300 ファイルを超え、項目の履歴を通読できなくなる。register の状態遷移は項目あたり数個から十数個で並行更新もほぼ起きないため、項目ごとの粒度で足りる。ファイル名には topic を含めない。register update --topic で topic を変えたときに追随が不要になるためである。
-        - field: type
-          from: ""
-          to: todo
-        - field: priority
-          from: ""
-          to: medium
-        - field: owner
-          from: ""
-          to: ARC
-        - field: registered
-          from: ""
-          to: "2026-09-01"
-        - field: due
-          from: ""
-          to: "2026-09-30"
-    - v: 1
-      id: reg_3a443c04c2b94afaa229345baf7f33ef
-      ts: "2026-08-31T23:28:16Z"
-      action: start
-      actor: codex-expert-executor
-      from_status: open
-      to_status: in-progress
-      reason: work started
-      changes:
-        - field: status
-          from: open
-          to: in-progress
-      previous_event_id: reg_6235426b8f0e47e69635e9581c499469
 ---
 
 # PJR-9RWG register のイベントを個票の Frontmatter から分離する
@@ -90,13 +43,13 @@ PJR-AKJ4 では Frontmatter の 9 割がイベントで、本文の 2 倍にあ�
 
 ## 3. 作業内容
 
-| No  | 作業               | 担当   | 状態 | メモ                                    |
-| --- | ------------------ | ------ | ---- | --------------------------------------- |
-| 1   | 配置と形式の決定   | ARC    | open | ディレクトリ、ファイル名、YAML か JSONL |
-| 2   | 整合検証の設計     | ARC    | open | 個票の現在値とイベントの突き合わせ      |
-| 3   | 実装               | _TODO_ | open | 読み書きと `register build`             |
-| 4   | 既存イベントの移行 | _TODO_ | open | 全項目から抽出して分離                  |
-| 5   | 規範文書の更新     | _TODO_ | open | pjr-rulebook                            |
+| No  | 作業               | 担当 | 状態 | メモ                                              |
+| --- | ------------------ | ---- | ---- | ------------------------------------------------- |
+| 1   | 配置と形式の決定   | ARC  | done | `events/pjr-XXXX.yaml` の YAML 配列               |
+| 2   | 整合検証の設計     | ARC  | done | 1 対 1 対応、連鎖、最新状態と個票の一致を検証     |
+| 3   | 実装               | ARC  | done | 読み書き、履歴表示、runner 対象、`register build` |
+| 4   | 既存イベントの移行 | ARC  | done | 285 項目、864 イベントを抽出して分離              |
+| 5   | 規範文書の更新     | ARC  | done | rulebook、運用ガイド、参照文書、schema を更新     |
 
 ### 3.1. 既存の設計判断との関係
 
@@ -118,16 +71,19 @@ register の状態遷移は項目あたり数個から十数個であり、同�
 
 `register update --topic` で topic を変更したときに、イベントファイルまで追随させる必要がなくなる。個票のファイル名は `pjr-<NNNN>-<topic>.md` だが、イベントファイルは `pjr-<NNNN>` だけで識別する。
 
-### 3.4. 未決の論点
+### 3.4. 設計判断
 
-- 形式。YAML 配列は既存の `register_events` をそのまま移せる。JSONL は追記が単純になるが、既存構造からの変換が要る。
-- 整合検証の範囲。現在は個票内で完結しており、最新イベントと現在値の一致を検証している。分離後は 2 ファイルの突き合わせになる。片方だけが更新された状態を検出する必要がある。
-- 個票を削除した場合のイベントファイルの扱い。
-- Frontmatter の肥大化という点では grade も同じ問題を持つ（PJR-21E8）。register は分離し、grade は Frontmatter に残して短縮する方針の違いを規範文書で説明する必要がある。grade は評価の現在値であり履歴ではないため、現在値を保持する Frontmatter に置くことが適切である。
+- 形式は、既存の `register_events` を無変換で移せる YAML 配列とした。各ファイルは `register-events.schema.yaml` の modeline を持つ。
+- `register build` は個票とイベントファイルの 1 対 1 対応を要求し、孤立・欠落ファイル、イベント連鎖、最新イベントの状態と個票の `item_status` の不一致を検出する。
+- 個票を削除する場合はイベントファイルだけを残さず、同じ変更で扱う。孤立したイベントファイルは `register build` が拒否する。
+- register event は増え続ける監査履歴なので分離する。grade は評価の現在値であり、現在値を保持する Frontmatter に置く。
 
 ## 4. 対応結果
 
--
+- 個票 Frontmatter から `register_events` を除去し、`controls/project-register/events/pjr-XXXX.yaml` へ項目単位で分離した。ファイル名に topic を含めないため、`register update --topic` ではイベントファイルを改名しない。
+- `register add`、状態遷移、更新、topic 変更、再採番、Git 履歴移行が項目別イベントファイルを読み書きするよう変更した。exec runner の register 状態コミットもイベントファイルを対象に含める。
+- `register build` は個票とイベントファイルの対応、schema、イベント ID、時刻・直前参照・状態連鎖、最新イベントの状態と個票の `item_status` を検証する。
+- 既存 285 項目の 864 イベントを移行した。個票には現在値だけが残り、本文変更とイベント追記の差分が分離された。
 
 ## 5. 関連ドキュメント
 

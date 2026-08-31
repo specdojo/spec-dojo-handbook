@@ -32,7 +32,7 @@ Register Operation Guide
 プロジェクト登録簿は、プロジェクト立ち上げ時または進行中に発生する TODO、要確認事項、リスク、課題、変更要求、決定事項、備忘を一元管理する台帳です。
 
 - 正本は各個票（`pjr-XXXX-<topic>.md`）です。登録項目一覧（`generated/pjr-index.md`）は個票から生成される一覧ビューです。
-- 個票の通常フィールドは現在値、同じ個票の `register_events` は変更履歴の正本です。Git は両者の保存・配布・レビューを担いますが、コミット粒度を業務イベントの粒度として扱いません。
+- 個票の Frontmatter は現在値、`events/pjr-XXXX.yaml` は変更履歴の正本です。Git は両者の保存・配布・レビューを担いますが、コミット粒度を業務イベントの粒度として扱いません。
 - 文書 ID `<project-id>:pjr-index` の解決先は `project-register/generated/pjr-index.md` です。`controls/**/generated/` はdoc-indexの限定的な走査対象であり、一覧自身を `[[id]]` で参照できます。
 - 一覧と、状態別・優先度別・担当者別などの派生ビューは `generated/` 配下に生成される派生物であり、直接編集しません。
 - 立ち上げ時は、未整理の問題・判断を `issue` / `question` / `decision` で記録し、合意した成果物カタログの作成を `todo` で追跡できます。
@@ -263,7 +263,7 @@ specdojo register build --project <project-id>
 | 変更の妥当性をレビューする     | pull request の個票 Frontmatter 差分 | PR の Files changed で `project-register/pjr-*.md` の Frontmatter を確認する |
 | 1つの項目の経緯を追う          | `register history` の ID 指定        | `specdojo register history --project <project-id> --id <PJR-ID>`             |
 
-`register history` は個票内の追記型 event から項目単位の変更を古い順に再構成します。event 導入前または event 未移行の個票だけは Git 履歴へフォールバックします。比較する項目は登録項目一覧の列（ステータス・タイトル・説明・分類・優先度・担当・登録日・期限・完了日・結論）と `block_reason` です。登録日・完了日は保存された日時を `run.register_date_timezone` の暦日へ変換した表示値で比較します。
+`register history` は `events/pjr-XXXX.yaml` の追記型 event から項目単位の変更を古い順に再構成します。event 導入前または event 未移行の個票だけは Git 履歴へフォールバックします。比較する項目は登録項目一覧の列（ステータス・タイトル・説明・分類・優先度・担当・登録日・期限・完了日・結論）と `block_reason` です。登録日・完了日は保存された日時を `run.register_date_timezone` の暦日へ変換した表示値で比較します。
 
 ```bash
 # 期間を指定して台帳の変化を一覧する
@@ -286,17 +286,17 @@ specdojo register history --project <project-id> --since 2026-08-01 --json
 2026-08-09T08:20:00Z  reg_cd2  PJR-0012  updated  status: review -> done; completed: - -> 2026-08-09  # close by PO: accepted
 ```
 
-- `register add`、状態遷移、`register update`、`register renumber` は、現在値と event を同じ個票へまとめて書き込みます。`--by` と `--reason` を指定すると actor と理由を明示できます。
+- `register add`、状態遷移、`register update`、`register renumber` は、現在値を個票へ、event を項目別イベントファイルへ書き込みます。`--by` と `--reason` を指定すると actor と理由を明示できます。
 - 一覧の列に現れない変更（対応結果本文の追記、個票 `status` の昇格など）は event になりません。個票の全差分が必要な場合は `git log -p` を使います。
 - `--status-only` は追加・削除・状態遷移だけを残し、変更内容も遷移に関わる項目（`status` / `type` / `completed` / `conclusion`）へ絞ります。
 - `renumber` による ID 付け替えは、`id` の変更を含む `updated` イベントとして現れます。
-- 複数の遷移を1コミットへまとめたり squash したりしても、個票に残る各 event の発生日時・actor・変更内容は失われません。`register start` を含む遷移時の commit policy は別の運用判断であり、event 導入だけでは変更しません。
-- 書き込みは個票単位の一時ファイルを同一ディレクトリで完成させてから置換します。中断しても現在値だけ、または event だけの部分書き込みを残しません。同じ現在値への再実行は event を増やさず、`register build` がイベント ID・直前参照・状態連鎖・最新状態を検証します。
-- 異なる個票の並行実行は別ファイルへ追記するため共有ログ競合を起こしません。同じ個票を複数 worktree で変更した場合は通常の個票競合として統合を止め、片方の event を削除せず再実行または手動統合します。
-- exec event と共通化するのは UTC 秒精度、version、actor、reason、追記・検証の原則です。exec は task state の SSOT で1 event 1 JSON、Register は現在値を個票に維持し同じ個票内の配列を監査履歴とするため、保存形式と fold 処理は共通化しません。
-- 生成物（`generated/` 配下）は追跡対象外のため、PR の差分にも Git 履歴にも現れません。レビューと履歴の対象は常に個票です。
+- 複数の遷移を1コミットへまとめたり squash したりしても、項目別イベントファイルに残る各 event の発生日時・actor・変更内容は失われません。`register start` を含む遷移時の commit policy は別の運用判断です。
+- 個票とイベントログはそれぞれ一時ファイルを同一ディレクトリで完成させてから置換します。同じ現在値への再実行は event を増やさず、`register build` がファイルの 1 対 1 対応、イベント ID・直前参照・状態連鎖・最新状態を検証するため、中断による片側だけの更新も検出できます。
+- 異なる項目の並行実行は別の個票とイベントファイルへ書くため共有ログ競合を起こしません。同じ項目を複数 worktree で変更した場合は項目別イベントファイルの競合として統合を止め、片方の event を削除せず再実行または手動統合します。
+- exec event と共通化するのは UTC 秒精度、version、actor、reason、追記・検証の原則です。exec は task state の SSOT で 1 event 1 JSON、Register は現在値を個票に維持し項目別 YAML 配列を監査履歴とするため、保存形式と fold 処理は共通化しません。
+- 生成物（`generated/` 配下）は追跡対象外のため、PR の差分にも Git 履歴にも現れません。レビュー対象は個票と `events/` 配下の項目別ログです。
 - 既存プロジェクトは移行前でも動作し、event のない個票は Git 履歴から再構成します。`register migrate --dry-run` で件数を確認し、`register migrate` で復元可能な Git 履歴を決定的な event ID へ変換します。浅い clone などで履歴が不足する場合は無理に合成せず Git フォールバックを維持します。
-- ロールバックは event 対応版より前の CLI へ戻すだけで、通常フィールドは従来形式のまま読めます。旧 CLI は未知の `register_events` を schema 検証で拒否する可能性があるため、コードだけを戻して個票の event を削除しません。必要なら event 対応版を再適用します。
+- 分離前の CLI は `events/` を読まないため、ロールバック時も項目別ログを削除せず、分離対応版の CLI を再適用して履歴を維持します。
 - 個票へ移行する前（`pjr-index.md` の表が正本だった期間）の履歴は、削除済みの一覧ファイルの履歴に残ります。`git log -p --follow -- <登録簿ディレクトリ>/pjr-index.md` で参照します。
 
 ### 2.6. 承認フローと承認者

@@ -31,7 +31,11 @@ import {
   appendRegisterEvent,
   buildRegisterEvent,
   deterministicRegisterEventId,
+  readEmbeddedRegisterEvents,
   readRegisterEventsFromContent,
+  registerEventFilePath,
+  removeEmbeddedRegisterEvents,
+  serializeRegisterEvents,
   validateRegisterEventDocs,
   type RegisterEventAction,
   type RegisterEventV1,
@@ -106,6 +110,7 @@ function registerEventActor(opts: { by?: string }): string {
 }
 
 function atomicWriteFile(path: string, content: string): void {
+  mkdirSync(dirname(path), { recursive: true });
   const temporary = join(dirname(path), `.${basename(path)}.${randomUUID()}.tmp`);
   try {
     writeFileSync(temporary, content, { encoding: "utf8", flag: "wx" });
@@ -113,6 +118,16 @@ function atomicWriteFile(path: string, content: string): void {
   } finally {
     if (existsSync(temporary)) unlinkSync(temporary);
   }
+}
+
+function prepareRegisterEventFile(
+  projectRegisterPath: string,
+  displayId: string,
+  event: RegisterEventV1,
+): { path: string; content: string } {
+  const eventPath = registerEventFilePath(projectRegisterPath, displayId);
+  const content = existsSync(eventPath) ? readFileSync(eventPath, "utf8") : undefined;
+  return { path: eventPath, content: appendRegisterEvent(content, event) };
 }
 
 // ================================
@@ -1211,9 +1226,15 @@ function applyItemUpdate(opts: {
     process.stdout.write(`Unchanged: ${ticketPath} (${opts.updated.id})\n`);
     return;
   }
-  content = appendRegisterEvent(content, event);
+  const eventWrite = prepareRegisterEventFile(
+    opts.paths.projectRegisterPath,
+    opts.updated.id,
+    event,
+  );
   atomicWriteFile(ticketPath, content);
+  atomicWriteFile(eventWrite.path, eventWrite.content);
   process.stdout.write(`Updated: ${ticketPath} (${opts.updated.id} ${label})\n`);
+  process.stdout.write(`Updated: ${eventWrite.path}\n`);
 
   for (const view of writeDerivedViews(opts.paths, "all")) {
     process.stdout.write(`Generated: ${view.path}\n`);
@@ -1598,14 +1619,15 @@ export function retopicPjrItem(opts: {
     extraChanges: [{ field: "id", from: plan.fromDocId, to: plan.toDocId }],
   });
   if (!event) throw new Error(`Failed to build topic update event for ${opts.id}`);
-  ticketWrite.content = appendRegisterEvent(ticketWrite.content, event);
-
+  const eventWrite = prepareRegisterEventFile(opts.paths.projectRegisterPath, opts.id, event);
   for (const write of plan.writes) {
     atomicWriteFile(write.path, write.content);
     process.stdout.write(`Updated: ${write.path}\n`);
   }
   unlinkSync(plan.ticketRename.from);
   process.stdout.write(`Renamed: ${plan.ticketRename.from} → ${plan.ticketRename.to}\n`);
+  atomicWriteFile(eventWrite.path, eventWrite.content);
+  process.stdout.write(`Updated: ${eventWrite.path}\n`);
   for (const view of writeDerivedViews(opts.paths, "all")) {
     process.stdout.write(`Generated: ${view.path}\n`);
   }
@@ -1744,7 +1766,16 @@ export function renumberPjrItem(opts: {
       extraChanges: [{ field: "id", from: fromId, to: toId }],
     });
     if (!event) throw new Error(`Failed to build renumber event for ${fromId}`);
-    ticketWrite.content = appendRegisterEvent(ticketWrite.content, event);
+    const oldEventPath = registerEventFilePath(paths.projectRegisterPath, fromId);
+    const newEventPath = registerEventFilePath(paths.projectRegisterPath, toId);
+    if (!existsSync(oldEventPath)) {
+      throw new Error(`Register event file not found: ${oldEventPath}`);
+    }
+    if (existsSync(newEventPath)) {
+      throw new Error(`Target register event file already exists: ${newEventPath}`);
+    }
+    const eventContent = appendRegisterEvent(readFileSync(oldEventPath, "utf8"), event);
+    plan.writes.push({ path: newEventPath, content: eventContent });
   }
 
   if (dryRun) {
@@ -1765,6 +1796,11 @@ export function renumberPjrItem(opts: {
   if (plan.ticketRename) {
     unlinkSync(plan.ticketRename.from);
     process.stdout.write(`Renamed: ${plan.ticketRename.from} → ${plan.ticketRename.to}\n`);
+    const oldEventPath = registerEventFilePath(paths.projectRegisterPath, fromId);
+    unlinkSync(oldEventPath);
+    process.stdout.write(
+      `Renamed: ${oldEventPath} → ${registerEventFilePath(paths.projectRegisterPath, toId)}\n`,
+    );
   }
   for (const view of writeDerivedViews(paths, "all")) {
     process.stdout.write(`Generated: ${view.path}\n`);
@@ -1956,6 +1992,33 @@ export function legacyHistoryEventToRegisterEvent(
   };
 }
 
+function migrateEmbeddedRegisterEvents(
+  paths: RegisterPaths,
+  dryRun: boolean,
+): { items: number; events: number } {
+  let itemCount = 0;
+  let eventCount = 0;
+  for (const doc of loadRegisterItemDocs(paths.projectRegisterPath)) {
+    const ticketContent = readFileSync(doc.path, "utf8");
+    const embedded = readEmbeddedRegisterEvents(ticketContent, doc.filename);
+    if (embedded.length === 0) continue;
+    const eventPath = registerEventFilePath(paths.projectRegisterPath, doc.id);
+    if (existsSync(eventPath)) {
+      const existing = readRegisterEventsFromContent(readFileSync(eventPath, "utf8"), eventPath);
+      if (JSON.stringify(existing) !== JSON.stringify(embedded)) {
+        throw new Error(`${doc.filename}: embedded and external register events differ`);
+      }
+    }
+    if (!dryRun) {
+      atomicWriteFile(eventPath, serializeRegisterEvents(embedded));
+      atomicWriteFile(doc.path, removeEmbeddedRegisterEvents(ticketContent));
+    }
+    itemCount++;
+    eventCount += embedded.length;
+  }
+  return { items: itemCount, events: eventCount };
+}
+
 function migrateRegisterEventsFromGit(
   paths: RegisterPaths,
   dryRun: boolean,
@@ -1983,8 +2046,12 @@ function migrateRegisterEventsFromGit(
   let eventCount = 0;
   let skipped = 0;
   for (const doc of loadRegisterItemDocs(paths.projectRegisterPath)) {
-    let content = readFileSync(doc.path, "utf8");
-    if (readRegisterEventsFromContent(content, doc.filename).length > 0) {
+    const eventPath = registerEventFilePath(paths.projectRegisterPath, doc.id);
+    const ticketContent = readFileSync(doc.path, "utf8");
+    if (
+      existsSync(eventPath) ||
+      (dryRun && readEmbeddedRegisterEvents(ticketContent, doc.filename).length > 0)
+    ) {
       skipped++;
       continue;
     }
@@ -1993,18 +2060,19 @@ function migrateRegisterEventsFromGit(
 
     let currentStatus: string | null = null;
     let appended = 0;
+    let eventContent: string | undefined;
     for (const historyEvent of legacyEvents) {
       const event = legacyHistoryEventToRegisterEvent(historyEvent, {
         isFirst: appended === 0,
         currentStatus,
         fallbackStatus: doc.item.status,
       });
-      content = appendRegisterEvent(content, event);
+      eventContent = appendRegisterEvent(eventContent, event);
       currentStatus = event.to_status;
       appended++;
     }
     if (appended === 0) continue;
-    if (!dryRun) atomicWriteFile(doc.path, content);
+    if (!dryRun && eventContent) atomicWriteFile(eventPath, eventContent);
     itemCount++;
     eventCount += appended;
   }
@@ -2118,7 +2186,7 @@ export function registerRegisterCommands(program: Command): void {
       });
 
       const ticketPath = join(paths.projectRegisterPath, ticketFilename);
-      let content = buildRegisterItemContent({
+      const content = buildRegisterItemContent({
         projectId: paths.projectId,
         displayId,
         topic,
@@ -2134,20 +2202,30 @@ export function registerRegisterCommands(program: Command): void {
         reason: opts.reason?.trim() || "item added",
       });
       if (!addEvent) throw new Error(`Failed to build add event for ${displayId}`);
-      content = appendRegisterEvent(content, addEvent);
-
       if (opts.dryRun) {
         process.stdout.write(`Would create ${ticketPath}:\n${content}\n`);
+        process.stdout.write(
+          `Would create ${registerEventFilePath(paths.projectRegisterPath, displayId)}:\n` +
+            `${appendRegisterEvent(undefined, addEvent)}\n`,
+        );
         return;
       }
 
       if (!opts.force && existsSync(ticketPath)) {
         throw new Error(`Item file already exists (use --force to overwrite): ${ticketPath}`);
       }
+      const eventPath = registerEventFilePath(paths.projectRegisterPath, displayId);
+      if (!opts.force && existsSync(eventPath)) {
+        throw new Error(
+          `Register event file already exists (use --force to overwrite): ${eventPath}`,
+        );
+      }
 
       mkdirSync(paths.projectRegisterPath, { recursive: true });
       atomicWriteFile(ticketPath, content);
+      atomicWriteFile(eventPath, appendRegisterEvent(undefined, addEvent));
       process.stdout.write(`Created: ${ticketPath} (added ${displayId})\n`);
+      process.stdout.write(`Created: ${eventPath}\n`);
 
       if (existsSync(paths.pjrIndexPath)) {
         for (const view of writeDerivedViews(paths, "all")) {
@@ -2529,9 +2607,7 @@ export function registerRegisterCommands(program: Command): void {
   // --- migrate ---
   const migrateCmd = reg
     .command("migrate")
-    .description(
-      "Migrate legacy register data (pjr-index rows and registered_on / completed_on dates)",
-    );
+    .description("Migrate legacy register data (index rows, dates, and embedded register events)");
   addProjectOption(migrateCmd);
   migrateCmd.option("--dry-run", "Validate and print the migration summary without writing", false);
   migrateCmd.action((opts) => {
@@ -2564,11 +2640,15 @@ export function registerRegisterCommands(program: Command): void {
       const timestampSummary = summarizeTimestampMigration(timestampPlan);
 
       if (opts.dryRun) {
+        const embeddedMigration = migrateEmbeddedRegisterEvents(paths, true);
         const eventMigration = migrateRegisterEventsFromGit(paths, true);
         const eventSummary = eventMigration.available
           ? `items=${eventMigration.items}, events=${eventMigration.events}, skipped=${eventMigration.skipped}`
           : "unavailable (Git history not found; legacy fallback remains active)";
         process.stdout.write(`Would migrate register timestamps: ${timestampSummary}\n`);
+        process.stdout.write(
+          `Would separate embedded register events: items=${embeddedMigration.items}, events=${embeddedMigration.events}\n`,
+        );
         process.stdout.write(`Would migrate register events: ${eventSummary}\n`);
         return;
       }
@@ -2577,6 +2657,10 @@ export function registerRegisterCommands(program: Command): void {
         writeFileSync(file.path, file.content, "utf8");
       }
       process.stdout.write(`Migrated register timestamps: ${timestampSummary}\n`);
+      const embeddedMigration = migrateEmbeddedRegisterEvents(paths, false);
+      process.stdout.write(
+        `Separated embedded register events: items=${embeddedMigration.items}, events=${embeddedMigration.events}\n`,
+      );
       const eventMigration = migrateRegisterEventsFromGit(paths, false);
       const eventSummary = eventMigration.available
         ? `items=${eventMigration.items}, events=${eventMigration.events}, skipped=${eventMigration.skipped}`
@@ -2645,7 +2729,7 @@ export function registerRegisterCommands(program: Command): void {
   });
 
   // --- history ---
-  // 新しい変更は個票内の追記型 event、event 導入前の変更は Git 履歴から再構成する。
+  // 新しい変更は項目別の追記型 event、event 導入前の変更は Git 履歴から再構成する。
   const historyCmd = reg
     .command("history")
     .description("Show register item changes from append-only events and legacy Git history");

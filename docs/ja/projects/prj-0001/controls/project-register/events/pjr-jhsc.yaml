@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_3bc8fb4722f545d098a97bb0c8797644
+  ts: "2026-08-31T22:37:12Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: exec のイベント粒度の理由を確認し規範文書へ記録する
+    - field: description
+      from: ""
+      to: exec のイベントはイベント単位でファイルへ分けられ 606 ファイルに達しているが、この粒度を選んだ理由が文書にもコードにも残っていない。実装はファイル名にタイムスタンプと実行者とタスク ID と種別と乱数を含め、追記せず新規作成のみを行う。1 つのタスクを複数 agent が同時実行することは claim による排他で起こらないため、並行性は理由にならない。worktree での統合時に merge 競合を避けることが目的であればタスクごとに 1 ファイルでも成立する。理由が残っていないため将来の見直しが安全に行えない。現状の設計理由を調査して規範文書へ記載する。タスクごとに集約できるならファイル数を削減し、できないなら理由を残して不用意な変更を防ぐ。register 側は pjr-rulebook に配置の理由が明記されており、exec 側にも同等の記述が要る。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-01"
+    - field: due
+      from: ""
+      to: "2026-09-30"

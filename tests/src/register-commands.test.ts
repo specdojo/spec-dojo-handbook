@@ -5,7 +5,12 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { registerRegisterCommands } from "../../src/register.js";
-import { readRegisterEventsFromContent } from "../../src/register-events.js";
+import {
+  appendRegisterEvent,
+  buildRegisterEvent,
+  readRegisterEventsFromContent,
+  registerEventFilePath,
+} from "../../src/register-events.js";
 
 // register サブコマンドの読み書き先が個票 frontmatter であることを、CLI 経由で確認する。
 // 一時リポジトリを cwd にして specdojoRootDir() / loadConfig() を temp 内へ閉じ込める。
@@ -76,6 +81,32 @@ function buildTicket(id: string, extraFields: string[], body = "個票本文の�
 }
 
 type Fixture = { root: string; registerDir: string };
+
+function readEvents(registerDir: string, id: string) {
+  const path = registerEventFilePath(registerDir, id);
+  return readRegisterEventsFromContent(readFileSync(path, "utf8"), path);
+}
+
+function writeInitialEvent(
+  registerDir: string,
+  id: string,
+  filename: string,
+  ticket: string,
+): void {
+  const event = buildRegisterEvent({
+    afterContent: ticket,
+    filename,
+    timeZone: "UTC",
+    action: "add",
+    actor: "test",
+    reason: "item added",
+    ts: "2026-08-01T00:00:00Z",
+  });
+  if (!event) throw new Error("initial event not built");
+  const path = registerEventFilePath(registerDir, id);
+  mkdirSync(join(registerDir, "events"), { recursive: true });
+  writeFileSync(path, appendRegisterEvent(undefined, event), "utf8");
+}
 
 // テンプレート（個票・派生ビュー）は実リポジトリのものを temp へ複製し、生成処理を成立させる。
 function withRepo(fn: (fixture: Fixture) => Promise<void> | void): Promise<void> {
@@ -169,7 +200,7 @@ describe("register CLI — 個票 frontmatter への読み書き", () => {
       expect(ticket).toContain('  due_on: "2026-08-31"');
       expect(ticket).toContain("# PJR-AB12 在庫初期値を決める");
       expect(ticket).toContain("開店時の在庫初期値を決める。");
-      expect(readRegisterEventsFromContent(ticket, "pjr-ab12-inventory-seed.md")[0]).toMatchObject({
+      expect(readEvents(registerDir, "PJR-AB12")[0]).toMatchObject({
         action: "add",
         actor: "manual",
         from_status: null,
@@ -178,6 +209,7 @@ describe("register CLI — 個票 frontmatter への読み書き", () => {
       // 未定値（完了日時・結論）はキーを置かない。
       expect(ticket).not.toContain("completed_at");
       expect(ticket).not.toContain("conclusion");
+      expect(ticket).not.toContain("register_events:");
 
       // 一覧本体には行を追記しない（生成ビューとして扱う）。
       expect(readFileSync(join(registerDir, "pjr-index.md"), "utf8")).not.toContain("PJR-AB12");
@@ -295,7 +327,7 @@ describe("register CLI — 個票 frontmatter への読み書き", () => {
       await runRegister(["start", "--id", "PJR-AB12", "--by", "codex"]);
       const started = readFileSync(ticketPath, "utf8");
       expect(started).toContain("  item_status: in-progress");
-      expect(readRegisterEventsFromContent(started, ticketPath)[0]).toMatchObject({
+      expect(readEvents(registerDir, "PJR-AB12")[0]).toMatchObject({
         action: "start",
         actor: "codex",
         from_status: "open",
@@ -304,9 +336,7 @@ describe("register CLI — 個票 frontmatter への読み書き", () => {
 
       // 同じ遷移の再実行は現在値もイベント列も増やさない。
       await runRegister(["start", "--id", "PJR-AB12", "--by", "codex"]);
-      expect(
-        readRegisterEventsFromContent(readFileSync(ticketPath, "utf8"), ticketPath),
-      ).toHaveLength(1);
+      expect(readEvents(registerDir, "PJR-AB12")).toHaveLength(1);
 
       await runRegister([
         "close",
@@ -326,7 +356,7 @@ describe("register CLI — 個票 frontmatter への読み書き", () => {
       expect(closed).toContain("  conclusion: 初期値を決定した");
       // 文書成熟度（status）は登録項目の処理状態とは別軸で昇格する。
       expect(closed).toContain("  status: ready");
-      const events = readRegisterEventsFromContent(closed, ticketPath);
+      const events = readEvents(registerDir, "PJR-AB12");
       expect(events).toHaveLength(2);
       expect(events[1]).toMatchObject({
         action: "close",
@@ -528,7 +558,7 @@ describe("register CLI — 個票 frontmatter への読み書き", () => {
         "pjr-ab12-inventory-policy.md",
       );
 
-      const event = readRegisterEventsFromContent(updated, newTicketPath)[0];
+      const event = readEvents(registerDir, "PJR-AB12")[0];
       expect(event).toMatchObject({ action: "update", actor: "ARC", reason: "主題変更" });
       expect(event.changes).toContainEqual({
         field: "id",
@@ -694,6 +724,43 @@ describe("register CLI — 個票 frontmatter への読み書き", () => {
     });
   });
 
+  it("migrate は個票内の register_events を項目別 YAML へ分離する", async () => {
+    await withRepo(async ({ registerDir }) => {
+      const ticketPath = join(registerDir, "pjr-ab12-topic.md");
+      const legacy = buildTicket("PJR-AB12", ["item_status: open", "priority: high"]).replace(
+        "  priority: high\n",
+        [
+          "  priority: high",
+          "  register_events:",
+          "    - v: 1",
+          "      id: reg_00000000000000000000000000000001",
+          '      ts: "2026-08-01T00:00:00Z"',
+          "      action: add",
+          "      actor: test",
+          "      from_status: null",
+          "      to_status: open",
+          "      reason: item added",
+          "      changes:",
+          "        - field: status",
+          '          from: ""',
+          "          to: open",
+          "",
+        ].join("\n"),
+      );
+      writeFileSync(ticketPath, legacy, "utf8");
+      vi.spyOn(process.stdout, "write").mockReturnValue(true);
+
+      await runRegister(["migrate"]);
+
+      expect(readFileSync(ticketPath, "utf8")).not.toContain("register_events:");
+      expect(readEvents(registerDir, "PJR-AB12")).toHaveLength(1);
+      expect(readEvents(registerDir, "PJR-AB12")[0]).toMatchObject({
+        action: "add",
+        to_status: "open",
+      });
+    });
+  });
+
   it("migrate は旧 registered_on / completed_on を UTC の日時へ移し、表示日を変えない", async () => {
     await withRepo(async ({ registerDir }) => {
       // 一覧の個票化はすでに済んでいる旧構成（pjr-index.md は表を持たない案内ページ）を入力にする。
@@ -733,16 +800,14 @@ describe("register CLI — 個票 frontmatter への読み書き", () => {
   it("build は個票の走査から派生ビューを生成する", async () => {
     await withRepo(async ({ registerDir }) => {
       writeFileSync(join(registerDir, "pjr-index.md"), buildIndex([]), "utf8");
-      writeFileSync(
-        join(registerDir, "pjr-ab12-topic.md"),
-        buildTicket("PJR-AB12", [
-          "item_status: open",
-          "priority: high",
-          "owner: ARC",
-          'registered_at: "2026-08-01T12:00:00Z"',
-        ]),
-        "utf8",
-      );
+      const ticket = buildTicket("PJR-AB12", [
+        "item_status: open",
+        "priority: high",
+        "owner: ARC",
+        'registered_at: "2026-08-01T12:00:00Z"',
+      ]);
+      writeFileSync(join(registerDir, "pjr-ab12-topic.md"), ticket, "utf8");
+      writeInitialEvent(registerDir, "PJR-AB12", "pjr-ab12-topic.md", ticket);
       vi.spyOn(process.stdout, "write").mockReturnValue(true);
 
       await runRegister(["build", "--scope", "register"]);
