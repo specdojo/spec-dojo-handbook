@@ -82,12 +82,12 @@ grade の対象選択は `--path` と `--changed-only` しかなく、前回の�
 
 ## 3. 作業内容
 
-| No  | 作業               | 担当   | 状態 | メモ                                 |
-| --- | ------------------ | ------ | ---- | ------------------------------------ |
-| 1   | 条件の設計         | ARC    | open | オプション名と組み合わせ方           |
-| 2   | 未評価の定義の決定 | ARC    | open | grade が無い状態と失敗した状態の区別 |
-| 3   | 実装               | _TODO_ | open | `discoverGradeTargets` の拡張        |
-| 4   | 規範文書の更新     | _TODO_ | open | command-reference                    |
+| No  | 作業               | 担当 | 状態 | メモ                                 |
+| --- | ------------------ | ---- | ---- | ------------------------------------ |
+| 1   | 条件の設計         | ARC  | open | オプション名と組み合わせ方           |
+| 2   | 未評価の定義の決定 | ARC  | open | grade が無い状態と失敗した状態の区別 |
+| 3   | 実装               | ARC  | open | `discoverGradeTargets` の拡張        |
+| 4   | 規範文書の更新     | ARC  | open | command-reference                    |
 
 ### 3.1. 必要になった経緯
 
@@ -117,9 +117,21 @@ rulebook 9 件の実測で、判定結果による絞り込みが要る状況が
 - finding 件数の閾値をどこに置くか。0 件のみとするか、1 件以下とするか。実測では `ifx-index` が 0 件、`mm` が 1 件から 3 件であった。
 - severity を条件に含めるか。`major` が無く `minor` だけの文書は、`pass` でも見落としの疑いがある。
 
+### 3.4. 採用した設計
+
+- `--verdict <pass|needs-work|fail>` で最新の判定を指定する。
+- `--max-findings <count>` で `blocker` / `major` / `minor` / `note` の合計件数が閾値以下の文書を選ぶ。0 件か 1 件以下かは運用側で指定する。
+- `--ungraded` は `specdojo.grade` が存在しない文書を選ぶ。現状は失敗した評価試行が記録されないため、一度も試行していない状態と区別しない。
+- 複数の条件は AND とし、`--path` と `--changed-only` も同じ選択処理で併用する。
+- `--ungraded` と、保存済み grade を前提とする `--verdict` / `--max-findings` の併用は入力エラーにする。
+- severity 単位の絞り込みは今回の実測上の完了条件に含めず、合計件数で扱う。
+
 ## 4. 対応結果
 
--
+- `discoverGradeTargets` に verdict、finding 上限、未評価のフィルターを追加し、既存条件との AND 結合を実装した。
+- 判定結果フィルターの組み合わせ、finding 合計、未評価、変更有無、矛盾条件を単体テストへ追加した。
+- CLI の `grade plan` / `grade apply` / `grade validate` に共通オプションを公開した。
+- [[specdojo:command-reference]] にオプションと選択規則を追記した。
 
 ## 5. 関連ドキュメント
 
