@@ -228,8 +228,12 @@ else
   specdojo_command=(npx tsx src/specdojo.ts)
 fi
 
+# The run directory stays outside docs/ because `grade plan --out` writes a plan pair per
+# stage and the plan id is derived from the graded document, not from the stage. Three stages
+# therefore produce three files sharing one id, which makes `index build` fail on duplicate
+# document ids. `grade plan --out` still refuses paths outside the repository, so logs/ is used.
 if [[ -z "$work_dir" ]]; then
-  work_dir="docs/ja/projects/$project/execution/grade/runs/per-document/$run_id"
+  work_dir="logs/grade/runs/per-document/$run_id"
 fi
 validate_scalar "--work-dir" "$work_dir"
 

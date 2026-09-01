@@ -503,7 +503,7 @@ tools/grade/run-per-document.sh --run-id 20260901-rulebooks --kind rulebook
 
 各段は executor と reporter を個別に指定できます。1段目の比較リファレンスは既定で `prj-overview-rulebook.md` に固定し、`--stage-1-reference` で変更する場合も `prj-overview` 系の文書だけを受理します。2段目はリファレンスなし、3段目は `codex-expert-executor` によるリファレンスなしの確認が既定です。2段目が `pass`、score 96以上、finding 1件以下の3条件をすべて満たす場合だけ3段目を実行します。
 
-実行 state は既定で `docs/ja/projects/<project>/execution/grade/runs/per-document/<run-id>/documents/` に文書・段ごとに保存し、プロジェクトの配置が異なる場合は `--work-dir` で変更します。agent が rate limit を返した場合は終了コード75で中断し、その段の完了 state は書きません。同じ引数と `--run-id` で再実行すると、完了済みの段を再適用せず未完了の段から続行します。設定が保存済み state と異なる場合は、別条件の結果を混在させず、新しい `--run-id` を要求します。
+実行 state は既定で `logs/grade/runs/per-document/<run-id>/documents/` に文書・段ごとに保存し、保存先を変える場合は `--work-dir` で指定します。`docs/` の外へ置くのは、`grade plan --out` が段ごとに plan を書き出す一方で plan の ID が評価対象の文書から決まるため、3段分が同一 ID の Markdown となり `index build` が重複 ID で失敗するからです。`grade plan --out` はリポジトリ外のパスを拒否するため、保存先はリポジトリ内に置きます。agent が rate limit を返した場合は終了コード75で中断し、その段の完了 state は書きません。同じ引数と `--run-id` で再実行すると、完了済みの段を再適用せず未完了の段から続行します。設定が保存済み state と異なる場合は、別条件の結果を混在させず、新しい `--run-id` を要求します。
 
 各段の status、所要秒数、verdict、score、finding 件数、executor、reporter、reference は同ディレクトリの `results.tsv` で確認できます。通常の agent / apply 失敗も段の結果として保存し、1段目の失敗後は安定評価の2段目へ進みます。2段目の結果が得られなかった場合は条件を満たしたと推測せず、3段目を `skipped_condition` として記録します。
 

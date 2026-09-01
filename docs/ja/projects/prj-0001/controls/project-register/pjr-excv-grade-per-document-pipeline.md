@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-excv-grade-per-document-pipeline
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-01T12:02:27Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-01T15:26:53Z"
+  conclusion: 文書単位で3段を回す run-per-document.sh を追加した。受け入れ時に検出した作業ディレクトリ起因の重複ID不具合は orchestrator が修正し、実 agent で1件通して確認した。
 ---
 
 # PJR-EXCV grade の3段評価を文書単位で回す実行経路を作る
@@ -63,6 +65,26 @@ grade の 3 段評価（reference あり → reference なし → codex 確認�
 - 2段目の保存済み結果が `pass`、score 96以上、finding 1件以下をすべて満たした場合だけ3段目を実行する。2段目が失敗した場合は結果を推測せず、3段目のスキップ理由を記録する。
 - fake agent を用いた回帰テストで3段の順次適用、完了文書のスキップ、rate limit 後の段単位再開を確認した。実 agent を使う少数サンプルの時間・rate limit 測定と、測定結果に基づく CLI 内蔵判断は残課題である。
 - [[specdojo:command-reference]] に実行例、引数、再開 state、計測結果の確認方法を記載した。
+- 受け入れ時に orchestrator が実 agent で `bac-rulebook.md` を1件通した。1段目と2段目は
+  いずれも pass / score 100 / finding 0 で完了し、所要はそれぞれ465秒と419秒だった。
+  ローカル1段あたり約7.4分で、先行測定の6.5分と整合する。
+- 同じ検証で3段目は failed となった。原因は本経路ではなく `grade apply --analysis-from` の
+  忠実性検証にある。gemma-reporter が executor の finding 本文の読点「、」を半角カンマへ
+  書き換えたため、文字列一致で別 finding と判定されて拒否された。表記の揺れと内容の改変を
+  区別できない問題であり、[[prj-0001:pjr-3xnm-grade-fidelity-normalization]] として分離した。
+- 受け入れ検証で、既定の作業ディレクトリが `docs/` 配下にあることに起因する不具合を検出した。
+  `grade plan --out` は段ごとに plan を書き出すが、plan の ID は評価対象の文書から決まり段に
+  依存しない。そのため3段分が同一 ID の Markdown となり、1文書あたり2系統・計6ファイルが
+  衝突して `index build` が重複 ID で失敗する。実行のたびに再現する。
+- orchestrator が既定の作業ディレクトリを `logs/grade/runs/per-document/<run-id>` へ変更して
+  修正した。`grade plan --out` はリポジトリ外を拒否するため、リポジトリ内かつ `docs/` の外へ
+  置く。あわせて `.markdownlintignore` へ `logs/` を追加し、実行時の生成物が `lint:md` の
+  対象にならないようにした。
+- 修正後に実 agent で `bdd-rulebook.md` を1件通し、1段目669秒・2段目524秒でいずれも
+  needs-work / score 83 / finding 4件、3段目は閾値未満で `skipped_condition` となることを
+  確認した。`docs/` 配下に生成物がないこと、`index build` と単体テスト1320件が通ることも
+  確認した。
+- 残課題は、閾値96の妥当性を全件走査の分布で確かめることと、実績を踏まえた CLI 内蔵の判断である。
 
 ## 5. 関連ドキュメント
 

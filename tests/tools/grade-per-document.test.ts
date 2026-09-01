@@ -122,10 +122,7 @@ describe("grade per-document pipeline", () => {
     expect(readFileSync(fixture.stateFile, "utf8")).toBe("3");
 
     const results = readFileSync(
-      join(
-        fixture.root,
-        "docs/ja/projects/prj-0001/execution/grade/runs/per-document/fixture-run/results.tsv",
-      ),
+      join(fixture.root, "logs/grade/runs/per-document/fixture-run/results.tsv"),
       "utf8",
     );
     expect(results).toContain("\t1\tpassed\t");

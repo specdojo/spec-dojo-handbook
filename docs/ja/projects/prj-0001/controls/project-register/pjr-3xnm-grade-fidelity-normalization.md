@@ -1,0 +1,72 @@
+---
+specdojo:
+  id: prj-0001:pjr-3xnm-grade-fidelity-normalization
+  type: project
+  status: draft
+  rulebook: specdojo:pjr-rulebook
+  part_of:
+    - prj-0001:pjr-index
+  item_type: todo
+  item_status: open
+  priority: high
+  owner: ARC
+  registered_at: "2026-09-01T14:58:31Z"
+  due_on: "2026-09-30"
+---
+
+# PJR-3XNM grade の忠実性検証で表記の揺れと内容の改変を区別する
+
+## 1. 概要
+
+`grade apply --analysis-from` は、reporter の GradeSubmission と executor の marker 出力を
+機械照合し、finding の追加・欠落・改変を拒否する。判定主体は executor であり、reporter が
+判定を書き換えないことを保証するための検証である。
+
+現在の照合は finding の message を文字列の完全一致で比較する。そのため reporter が内容を
+変えずに表記だけ整えた場合も不一致となり、評価全体が拒否される。
+
+PJR-EXCV の実 agent 検証で実際に発生した。gemma-reporter が executor の finding 本文にある
+読点「、」を1文字だけ半角カンマへ書き換えたため、同一の指摘が別の finding として扱われ、
+3段目が failed で終わった。
+
+```text
+reporter finding count 0 differs from executor count 1: ...「一方、」...
+reporter finding count 1 differs from executor count 0: ...「一方,」...
+```
+
+判定内容は完全に同一であり、拒否すべき改変ではない。表記の揺れと内容の改変を区別できて
+いないため、reporter にローカルモデルを使う限り再発する。
+
+## 2. 完了条件
+
+- 内容が同一で表記だけが異なる finding を、改変として拒否しない。
+- 判定内容を変える改変（severity、line、指摘の対象や結論の変更）は従来どおり拒否する。
+- 拒否した場合は、どの差分を改変と判断したかが分かる形で報告する。
+- 正規化の対象と範囲が文書化され、何が許容されるか読み手に分かる。
+
+## 3. 検討事項
+
+- 正規化の範囲をどこまで広げるかは、緩めるほど改変の見逃しにつながる。句読点や空白の揺れ
+  に限るのか、表記ゆれ全般まで許すのかを決める必要がある。
+- 完全一致の代わりに類似度で判定する案は、閾値の設定次第で改変を通すため慎重に扱う。
+- reporter 側の plan で「executor の文言を1文字も変えない」ことをより強く指示する案も
+  あるが、モデルの遵守に依存するため検証の緩和とは別に扱う。
+
+## 4. 作業内容
+
+| No  | 作業                               | 担当 | 状態 | メモ                           |
+| --- | ---------------------------------- | ---- | ---- | ------------------------------ |
+| 1   | 実際に起きた表記の揺れを収集する   | ARC  | open | 句読点・空白・記号の実例       |
+| 2   | 正規化の範囲を決めて文書化する     | ARC  | open | 許容と拒否の境界を明示する     |
+| 3   | 照合処理へ正規化を実装する         | ARC  | open | 改変の検出力を落とさない       |
+| 4   | 拒否時の差分報告を分かりやすくする | ARC  | open | どこが改変かを示す             |
+| 5   | 単体テストを追加する               | ARC  | open | 揺れは許容し改変は拒否すること |
+
+## 5. 対応結果
+
+_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+
+## 6. 関連ドキュメント
+
+- [[prj-0001:pjr-excv-grade-per-document-pipeline]]: 本問題が発生した実行経路。
+- [[prj-0001:pjr-49d2-quality-assessment]]: grade コマンドの起点。
