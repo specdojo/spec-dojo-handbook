@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_ff39e91d31a14053bcbf146d7094c4f4
+  ts: "2026-09-01T13:48:32Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: PJR-TA5C の統合失敗で原因を特定できず再現も取れなかったため
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: 統合失敗時のエラーに git stderr を残す
+    - field: description
+      from: ""
+      to: コマンド行で切り詰められて git の失敗理由が失われるため、原因を事後に追跡できるようにする。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-01"
+    - field: due
+      from: ""
+      to: "2026-09-30"
