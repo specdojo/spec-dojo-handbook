@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_23e4e45b2def4e91b90df8ad948a972e
+  ts: "2026-09-01T14:04:03Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: codex 版の本文が SSOT から乖離しており、検証手段がないため再発する
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: orchestrator 本文の環境間同期を検証可能にする
+    - field: description
+      from: ""
+      to: SSOT と各環境ラッパーの本文一致を機械検証し、codex 版の乖離を解消する。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-01"
+    - field: due
+      from: ""
+      to: "2026-09-30"
