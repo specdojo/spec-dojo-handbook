@@ -4,11 +4,12 @@ specdojo:
   type: exec-result
   task_id: PJR-JHSC
   mode: edit
-  status: in_progress
+  status: complete
   project_id: prj-0001
   origin: register
   plan_ref: exec/plans/pjr-jhsc-20260901T111402Z-42ee-plan.md
   started_at: "2026-09-01T11:14:13.737Z"
+  completed_at: "2026-09-01T11:24:27.370Z"
   agent: codex-expert-executor
 ---
 
@@ -16,16 +17,18 @@ specdojo:
 
 ## 1. 実施内容
 
-_TODO_: 実施した内容の要約を記入する。
+- exec のイベント粒度（1 event 1 JSON）の設計理由および集約しない判断を、規範文書、運用ガイド、および個票に記録した。
 
 ## 2. 変更ファイル
 
-_TODO_: 変更したファイルのパスを記入する。
+- `docs/ja/product/040-system-design/sysd-cross-cutting-policy.md`: 設計理由を規範文書へ追記
+- `docs/ja/projects/prj-0001/controls/project-register/pjr-jhsc-exec-events-granularity.md`: 個票の作業内容・対応結果を更新
+- `docs/ja/specdojo/guides/exec-operation-guide.md`: 運用ガイドへの反映
 
 ## 3. 申し送り
 
-_TODO_: 後続タスクへの申し送り事項を記入する（なければ削除）。
+- なし
 
 ## 4. 進め方と実践の型の適用
 
-_TODO_: `approach` に従ってどう進めたか、その進め方の中で実践の型（rulebook / recipe / sample / template）をどう適用したかを記入する（`fully-guided` で rulebook / recipe / sample / template をどう使い分けたか、`recipe-guided` で recipe のみを基準にした内容、`freeform` で実践の型より優先した実例やプロジェクト文脈、`retrofit` で実際に参照した実装パス・抽出した現在動作・反映/新設判断・未反映の乖離・未確認範囲、`rulebook-maintenance` などの maintenance 系で見直した実践の型とその根拠、など）。実践の型を基準にしなかった場合は、その判断と代わりに根拠にした内容も記入する。複数文書間に矛盾があり rulebook を正として判断した箇所、参照範囲から外れていた文書とその代わりに根拠にした内容があれば、あわせて記録する。
+関連する規範文書・ガイドおよび個票を特定し、イベント粒度の設計根拠を明文化して記録した。その後、prettier および markdownlint による整形・静的検査を行い、さらにカタログ検証および index ビルド、exec 検証を実施して整合性を確認した。
