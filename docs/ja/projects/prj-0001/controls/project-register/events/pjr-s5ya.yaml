@@ -32,3 +32,32 @@
     - field: due
       from: ""
       to: "2026-09-30"
+- v: 1
+  id: reg_5f8eaf1f7f2d4cb39393bfb9f7803522
+  ts: "2026-08-31T23:56:36Z"
+  action: start
+  actor: codex-expert-executor
+  from_status: open
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: open
+      to: in-progress
+  previous_event_id: reg_306d7c368c7e43ebaa1a2701e268f542
+- v: 1
+  id: reg_9e06d5f708694e80803bf05fe17aa26b
+  ts: "2026-09-01T00:08:26Z"
+  action: wait
+  actor: codex-expert-executor
+  from_status: in-progress
+  to_status: waiting
+  reason: "agent exited with non-zero code: executorによる `node --import tsx src/specdojo.ts register build` の実行結果が `failed` となっており、「既存不整合: PJR-9RWGはevent=in-progress/item=review、PJR-S5YAはevent=open/item=in-progre…"
+  changes:
+    - field: status
+      from: in-progress
+      to: waiting
+    - field: block_reason
+      from: "-"
+      to: "agent exited with non-zero code: executorによる `node --import tsx src/specdojo.ts register build` の実行結果が `failed` となっており、「既存不整合: PJR-9RWGはevent=in-progress/item=review、PJR-S5YAはevent=open/item=in-progre…"
+  previous_event_id: reg_5f8eaf1f7f2d4cb39393bfb9f7803522

@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-21e8-grade-frontmatter-flow-style
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T11:26:50Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-01T00:10:52Z"
+  conclusion: grade の Frontmatter をフロースタイルで出力するようにした。categories と viewpoints は各項目の score や level をフローにし、findings は深さが異なるため個別に dump して差し込む。grade 以外の Frontmatter には影響しない。実測では 51 行から 26 行へ半減した。Prettier 適用後もフロースタイルが維持されること、連続適用がバイト単位で冪等であることをテストで固定している。
 ---
 
 # PJR-21E8 grade の Frontmatter をフロースタイルで出力する

@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-9rwg-register-events-separation
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T22:34:14Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-01T00:10:52Z"
+  conclusion: register のイベントを個票の Frontmatter から controls/project-register/events/ へ項目ごとのファイルとして分離した。285 件すべてを移行し、個票からは register_events が消えている。PJR-AKJ4 では個票が 251 行から 95 行、Frontmatter が 174 行から 18 行になった。ファイル名は topic を含めず pjr-xxxx.yaml とし、register update --topic での追随を不要にしている。
 ---
 
 # PJR-9RWG register のイベントを個票の Frontmatter から分離する

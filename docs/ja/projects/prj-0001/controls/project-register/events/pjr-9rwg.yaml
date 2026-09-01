@@ -45,3 +45,35 @@
       from: open
       to: in-progress
   previous_event_id: reg_6235426b8f0e47e69635e9581c499469
+- v: 1
+  id: reg_57ec4f2fbb564c7abd26373760b8bd92
+  ts: "2026-08-31T23:56:28Z"
+  action: review
+  actor: codex-expert-executor
+  from_status: in-progress
+  to_status: review
+  reason: ready for review
+  changes:
+    - field: status
+      from: in-progress
+      to: review
+  previous_event_id: reg_3a443c04c2b94afaa229345baf7f33ef
+- v: 1
+  id: reg_acbd5b09b169439bbbdb3f0d7cb449c1
+  ts: "2026-09-01T00:10:52Z"
+  action: close
+  actor: manual
+  from_status: review
+  to_status: done
+  reason: 実装・検証・レビューが完了したため
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-01"
+    - field: conclusion
+      from: "-"
+      to: register のイベントを個票の Frontmatter から controls/project-register/events/ へ項目ごとのファイルとして分離した。285 件すべてを移行し、個票からは register_events が消えている。PJR-AKJ4 では個票が 251 行から 95 行、Frontmatter が 174 行から 18 行になった。ファイル名は topic を含めず pjr-xxxx.yaml とし、register update --topic での追随を不要にしている。
+  previous_event_id: reg_57ec4f2fbb564c7abd26373760b8bd92
