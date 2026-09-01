@@ -3,6 +3,10 @@ import { existsSync, readFileSync } from "node:fs";
 import { basename, join, relative, resolve, sep } from "node:path";
 import { type Command } from "commander";
 import { selfRunArgs } from "./spawn-self.js";
+import { executeAgent, isRateLimitError, type AgentRunResult } from "./agent-process.js";
+
+// 既存の import 元を維持するための再エクスポート。実装は agent-process.ts が正本。
+export { isRateLimitError };
 import {
   defaultExecDefaultsPath,
   createProviderCapacityTracker,
@@ -12,7 +16,6 @@ import {
   resolveRateLimitDetection,
   resolveRateLimitPolicy,
   type ExecDefaultsConfig,
-  type RateLimitDetection,
 } from "./exec-agent-config.js";
 import { activateResolvedProjectPaths, resolveProjectPaths } from "./exec-project.js";
 import {
@@ -26,9 +29,7 @@ import {
 } from "./exec-events.js";
 import {
   limitEventMeta,
-  normalizeAgentLimit,
   selectDueDeferredLimitTasks,
-  type AgentLimitKind,
   type AgentLimitSignal,
 } from "./exec-limit.js";
 import { buildScheduleIndex, findStaleGeneratedTracks } from "./exec-schedule.js";
@@ -236,7 +237,7 @@ export type RunOpts = {
   cycleRebuildStaleTracks?: boolean;
 };
 
-type RunResult = "success" | "rate_limit" | "failure";
+type RunResult = AgentRunResult;
 
 // Mode-specific agent overrides from --edit-by / --review-by. Each value is an agent
 // nickname (not a raw command); the command is resolved from pm-members.yaml. undefined means
@@ -580,35 +581,6 @@ function collectBusyActors(schedulePath: string): Set<string> {
   return busy;
 }
 
-export function isRateLimitError(
-  exitCode: number | null,
-  output: string,
-  detection: RateLimitDetection | undefined,
-): boolean {
-  if (!detection) return false;
-  // exit_codes is a standalone signal: an exact configured code identifies a rate limit
-  // on its own. Keep this list minimal (see exec-defaults.yaml) since generic codes like 1
-  // also mean ordinary failure.
-  if (detection.exit_codes && exitCode !== null && detection.exit_codes.includes(exitCode)) {
-    return true;
-  }
-  if (detection.stderr_patterns) {
-    // `output` is the agent's combined stdout+stderr: some CLIs print the limit notice to
-    // stdout, not stderr (e.g. claude's "You've hit your session limit"), so scanning stderr
-    // alone misses it. By default a pattern only counts when the process also failed (non-zero
-    // or null exit). A successful run (exit 0) that merely echoes the phrase — e.g. an agent
-    // editing a file containing the literal text "rate limit" — is not a rate limit.
-    const requireNonzeroExit = detection.stderr_requires_nonzero_exit ?? true;
-    if (!requireNonzeroExit || exitCode !== 0) {
-      const lower = output.toLowerCase();
-      for (const pattern of detection.stderr_patterns) {
-        if (lower.includes(pattern.toLowerCase())) return true;
-      }
-    }
-  }
-  return false;
-}
-
 function resolveExecDefaultsPath(opts: RunOpts, schedulePath: string): string {
   if (opts.execDefaults) return opts.execDefaults;
   if (opts.agentConfig) return opts.agentConfig;
@@ -887,80 +859,6 @@ export function loadRosterForExecutionPath(executionPath: string): MemberRoster 
   return null;
 }
 
-async function executeAgent(
-  agentCommand: string,
-  prompt: string,
-  detection: RateLimitDetection | undefined,
-  provider: AgentProvider | undefined,
-  cooldownSeconds: Partial<Record<AgentLimitKind, number>> | undefined,
-  cwd: string,
-  env: NodeJS.ProcessEnv,
-): Promise<{
-  result: RunResult;
-  exitCode: number | null;
-  stdout: string;
-  stderr: string;
-  limit?: AgentLimitSignal;
-}> {
-  if (!agentCommand.trim()) {
-    return { result: "failure", exitCode: null, stdout: "", stderr: "Empty agent command" };
-  }
-
-  // stdout is piped (not inherited) so it can be scanned for rate-limit signals: some CLIs print
-  // the limit notice to stdout, not stderr (e.g. claude's "session limit"). Each chunk is teed to
-  // the parent's stdout so live output/logging is preserved.
-  const child = spawn(agentCommand, {
-    cwd,
-    env,
-    shell: true,
-    stdio: ["pipe", "pipe", "pipe"],
-  });
-  // stdin を読まずに即終了するコマンドへの書き込みは EPIPE になる。未処理だと
-  // プロセスごと落ちて失敗時の後処理（block 遷移・result 更新）が走らないため無視する。
-  // 実行結果は終了コードで判定する。
-  child.stdin.on("error", () => undefined);
-  let stdout = "";
-  let stderr = "";
-  child.stdout.setEncoding("utf8");
-  child.stdout.on("data", (chunk: string) => {
-    stdout += chunk;
-    process.stdout.write(chunk);
-  });
-  child.stderr.setEncoding("utf8");
-  child.stderr.on("data", (chunk: string) => {
-    stderr += chunk;
-    process.stderr.write(chunk);
-  });
-  child.stdin.end(prompt);
-
-  const exitCode = await new Promise<number | null>((resolveExit) => {
-    child.once("error", (error) => {
-      stderr += `${error.message}\n`;
-      resolveExit(null);
-    });
-    child.once("close", (code) => resolveExit(code));
-  });
-
-  const combinedOutput = `${stdout}\n${stderr}`;
-  if (isRateLimitError(exitCode, combinedOutput, detection)) {
-    return {
-      result: "rate_limit",
-      exitCode,
-      stdout,
-      stderr,
-      limit: normalizeAgentLimit({
-        output: combinedOutput,
-        provider,
-        cooldownSeconds,
-      }),
-    };
-  }
-  if (exitCode !== 0) {
-    return { result: "failure", exitCode, stdout, stderr };
-  }
-  return { result: "success", exitCode: 0, stdout, stderr: "" };
-}
-
 // Run the task's agent command, falling back through the remaining candidates on rate limit.
 // The next-priority candidate is assumed to be a different account/provider, so we switch to it
 // immediately (no wait). Only after every candidate is rate-limited do we wait+backoff and run
@@ -1009,15 +907,15 @@ async function runWithRetry(
       attempts++;
       const protectedConfigBefore = captureAgentProtectedConfigSnapshot(cwd);
       const gitStateBefore = captureAgentGitStateSnapshot(cwd);
-      const attempt = await executeAgent(
-        candidates[idx].command,
+      const attempt = await executeAgent({
+        command: candidates[idx].command,
         prompt,
         detection,
-        candidates[idx].provider,
-        policy?.cooldown_seconds,
+        provider: candidates[idx].provider,
+        cooldownSeconds: policy?.cooldown_seconds,
         cwd,
         env,
-      );
+      });
       const protectedConfigChanges = changedAgentProtectedConfigPaths(cwd, protectedConfigBefore);
       if (protectedConfigChanges.length > 0) {
         const reason = agentProtectedConfigViolation(protectedConfigChanges);

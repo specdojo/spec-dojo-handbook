@@ -487,7 +487,7 @@ reporter は executor の最終応答を `<grade_executor_output>` として rep
 
 移行期間中は `--analysis-from` を省略した従来の1段構成も受理します。既存の保存済み plan や GradeSubmission を適用するための互換経路であり、新しく生成した2段 plan では `--analysis-from` を指定します。旧 GradeSubmission の `graded_by` も入力互換性のため受理しますが、記録には使いません。
 
-複数対象は、生成された plan の組を順に処理し、executor 応答を保存して reporter へ引き渡し、1件の GradeSubmission を直ちに `grade apply --path <document> --analysis-from <executor-output>` で反映します。agent 起動と stage 間の応答受け渡しは Job / exec が担い、`grade` は plan の生成と結果の検証・反映に限定されます。この単位で処理すると、後続文書が失敗しても適用済みの grade は保持されます。保存済み executor plan は `exec trial` などで同じ入力を複数 agent へ渡す用途にも利用できます。
+複数対象は、生成された plan の組を順に処理し、executor 応答を保存して reporter へ引き渡し、1件の GradeSubmission を直ちに `grade apply --path <document> --analysis-from <executor-output>` で反映します。agent 起動は `agent run`、stage 間の応答受け渡しは呼び出し側が担い、`grade` は plan の生成と結果の検証・反映に限定されます。この単位で処理すると、後続文書が失敗しても適用済みの grade は保持されます。保存済み executor plan は `exec trial` などで同じ入力を複数 agent へ渡す用途にも利用できます。
 
 `apply` は level 3 以下に finding を要求し、`blocker` は level 0、`major` は最大 level 2、`minor` は最大 level 3 に制限します。category score は viewpoint score（`level × 25`）の平均、総合 score は対象種別ごとの重み付き平均です。verdict は `blocker` があれば `fail`、`major` があるか総合 score が 70 未満なら `needs-work`、それ以外を `pass` とします。
 
@@ -587,7 +587,28 @@ specdojo routine run --project prj-0001 --due --dry-run
 
 schedule / register / job / routine の使い分けの基準は [exec運用ガイド](../guides/exec-operation-guide.md) の `実行経路の使い分け` を参照します。
 
-## 14. 関連ガイド
+## 14. agent
+
+`agent` は、保存済みの plan を指定した1つの agent へ渡し、その標準出力を取得します。agent の選択は `pm-members.yaml` の nickname で一意に決まるため、実行のたびに担当が変わりません。決定論的な手順を shell script や CLI 側に置き、agent には判断だけを委ねるための最小の部品です。
+
+| コマンド    | 用途                                                        |
+| ----------- | ----------------------------------------------------------- |
+| `agent run` | plan を stdin で agent へ渡し、標準出力をファイルへ保存する |
+
+```bash
+specdojo agent run --plan <plan.md> --by <nickname> --out <response.txt>
+specdojo agent run --plan <plan.md> --by <nickname> --dry-run
+```
+
+`--plan` は agent へ標準入力で渡すファイルです。存在しない場合と内容が空の場合は、空のプロンプトを送らずにエラーにします。`--by` は `pm-members.yaml` の agent nickname で、`type: agent` 以外と `disabled: true` の member は拒否します。`capabilities` や `proficiency` による間接的な絞り込みは行わないため、候補が複数になって担当が揺れることがありません。
+
+`--out` を指定すると標準出力をそのファイルへ書き、親プロセスの標準出力には進捗だけを流します。指定しない場合は agent の出力をそのまま端末へ流します。`--out` の親ディレクトリは必要に応じて作成します。`--dry-run` は解決したコマンドを表示するだけで agent を起動しません。
+
+終了コードは、成功が `0`、agent の失敗が `1`、rate limit の検出が `75` です。rate limit は通常の失敗と区別する必要があります。呼び出し側は、対象を評価済みとして記録せずに中断し、後で再開できます。検出条件と cooldown は `exec run` と同じ `exec-defaults.yaml` の設定を使い、provider ごとに解決します。
+
+`exec run` と違い、`agent run` は claim や result の記帳を行いません。状態遷移を伴う実行は `exec run` を使い、`agent run` は plan と応答だけを扱う用途に限定します。
+
+## 15. 関連ガイド
 
 | 詳細                     | 参照先                                                                      |
 | ------------------------ | --------------------------------------------------------------------------- |

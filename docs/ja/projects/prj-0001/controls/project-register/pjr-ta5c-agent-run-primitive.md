@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-ta5c-agent-run-primitive
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: open
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-01T12:02:19Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-01T12:11:24Z"
+  conclusion: agent run を追加し、plan を指定 agent へ渡して stdout を得る primitive を公開した。
 ---
 
 # PJR-TA5C plan を agent へ渡し stdout を得る agent run を公開する
@@ -47,7 +49,20 @@ rate limit 検出にも用いている。しかし CLI から呼べないため�
 
 ## 4. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+`specdojo agent run --plan <path> --by <nickname> --out <file>` を追加した。
+
+`exec-run.ts` に閉じていた `executeAgent` と `isRateLimitError` を `src/agent-process.ts` へ
+切り出し、`exec run` と `agent run` が同じ実装を共有する。stdout の捕捉と rate limit 検出の
+挙動は従来と変わらない。`--out` 指定時は端末への tee を止め、親の標準出力を進捗表示に残す。
+
+agent は nickname で一意に解決し、`type: agent` 以外と `disabled: true` を拒否する。
+`capabilities` / `proficiency` による絞り込みを行わないため担当が揺れない。
+
+終了コードは成功 0、失敗 1、rate limit 75 とした。rate limit を通常の失敗と区別することで、
+呼び出し側は対象を評価済みとせずに中断し再開できる。
+
+検証は単体テスト 11 件の追加、既存 1315 件の通過、および `gemma-expert-executor` での
+end-to-end 実行（stdout のファイル保存）まで確認した。
 
 ## 5. 関連ドキュメント
 
