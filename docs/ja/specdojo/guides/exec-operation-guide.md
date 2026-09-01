@@ -108,7 +108,19 @@ specdojo exec run --project <project-id> --auto --if-busy skip
 specdojo exec run --project <project-id> --auto --if-busy wait
 ```
 
-### 1.5. 同一planによるagent比較
+### 1.5. 実行eventの保存粒度
+
+Schedule taskの状態eventは、`execution_path/exec/events/`へ1 event 1 JSONファイルで保存されます。ファイル名はUTC時刻、actor、task ID、event種別、衝突回避用の乱数を含みます。`exec refresh`などの読取処理は全eventを時系列に並べ、foldして現在状態を再構成します。この保存規範の正本は[[sysd-cross-cutting-policy|SpecDojo システム設計横断ルール]]の`scp-STA-001`です。
+
+この粒度の目的は並列数を増やすことではありません。project単位の実行ロックとtaskのclaimがあるため、taskごとの1ファイルへ集約しても排他は設計できます。1 event 1 JSONを維持する理由は、状態変更を既存ファイルのread-modify-writeではなく新規ファイルの追加として表し、次を保つためです。
+
+- 既存eventを変更せず、1回の状態遷移をGitの1ファイル追加として確認できます。
+- malformed eventをファイル単位で特定し、履歴全体へ暗黙にfoldすることを防げます。
+- `reopen`や`release`による訂正を過去eventの書換えではなく後続eventとして残せます。
+
+task単位への集約は技術的には可能ですが、現在の形式とは互換でない変更です。読取側の混在形式対応、既存eventの時系列を保つ移行、移行前後のfold結果の一致検証が必要になります。2026-09-01時点の対象projectでは606ファイル、JSON本文の合計は227,784 byteで、JSONはdoc-indexの走査対象外です。ファイル数に起因する検証時間、Git操作、ストレージなどの運用上の問題は確認されていないため、現時点では集約しません。将来、計測可能な問題が生じた場合は、ファイル数ではなく影響指標と移行時のfold結果一致を受入条件として別の変更で判断します。
+
+### 1.6. 同一planによるagent比較
 
 `exec trial run` は、既存planを生成し直さず、その同じ内容を複数agentへ渡して独立したworktreeで試行します。trialはSchedule eventとregisterの状態遷移を更新しないため、本来のタスクを完了・review・waitingへ進めません。
 
