@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_d06b801cdaa6455b869f321f082df067
+  ts: "2026-09-01T12:02:19Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: grade 全件走査の前提となる primitive が CLI 未公開のため
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: plan を agent へ渡し stdout を得る agent run を公開する
+    - field: description
+      from: ""
+      to: 決定論的な手順を script 化するために欠けている primitive を CLI として公開する。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: high
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-01"
+    - field: due
+      from: ""
+      to: "2026-09-30"

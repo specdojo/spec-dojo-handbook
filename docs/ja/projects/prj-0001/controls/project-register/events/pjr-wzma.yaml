@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_713eff5c4cc046f087d79d02f2e8bd84
+  ts: "2026-09-01T12:02:28Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: job の description が自然言語の shell script となり非決定的なため
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: job の責務を agent への委譲に限定する
+    - field: description
+      from: ""
+      to: 決定論的な CLI 手順を job の description から追い出し、判断のみを agent へ残す。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-01"
+    - field: due
+      from: ""
+      to: "2026-09-30"
