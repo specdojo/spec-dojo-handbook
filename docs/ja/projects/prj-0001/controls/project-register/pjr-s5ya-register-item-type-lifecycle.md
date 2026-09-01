@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T22:45:16Z"
   due_on: "2026-09-30"
+  block_reason: "agent exited with non-zero code: executorによる `node --import tsx src/specdojo.ts register build` の実行結果が `failed` となっており、「既存不整合: PJR-9RWGはevent=in-progress/item=review、PJR-S5YAはevent=open/item=in-progre…"
 ---
 
 # PJR-S5YA 登録簿の type 別に状態遷移の指針を定める
