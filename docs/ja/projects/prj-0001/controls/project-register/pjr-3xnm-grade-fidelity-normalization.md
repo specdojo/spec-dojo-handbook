@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-3xnm-grade-fidelity-normalization
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-01T14:58:31Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-01T21:42:04Z"
+  conclusion: finding message の忠実性照合に句読点・空白・NFC の正規化を追加し、表記の揺れと内容の改変を区別できるようにした。
 ---
 
 # PJR-3XNM grade の忠実性検証で表記の揺れと内容の改変を区別する
@@ -68,7 +70,12 @@ reporter finding count 1 differs from executor count 0: ...「一方,」...
 - 正規化しない英字大小、英数字の全角・半角、括弧・ダッシュ、語句の変更と、完全一致を維持する severity・line を拒否境界として定めた。詳細は [[specdojo:command-reference|コマンドリファレンス]] に記載した。
 - 不一致時は finding の単純な件数差ではなく、変更された severity、line、message の executor 値と reporter 値を報告するようにした。欠落と追加も個別に報告する。
 - 実際に発生した `、` と `,` の差、空白・句点の差を受理するテストと、severity・line・指摘内容の変更を拒否して差分を報告するテストを追加した。
-- 残課題はない。
+- 受け入れ時に orchestrator が、本項目の発端となった `bac-rulebook.md` の実失敗ケース
+  （読点「、」と半角カンマの1文字差）が正規化後に一致することと、同じ message の語尾を
+  否定へ変えた場合は一致しないことを確認した。単体テスト1322件の通過も確認した。
+- 実 agent を通した3段目の成功は未確認である。閾値96を超える文書がないと3段目へ到達
+  しないため、全件走査の初期に確認する。正規化は `grade apply` 内の処理であり agent の
+  種類に依存しないため、受け入れの条件とはしなかった。
 
 ## 6. 関連ドキュメント
 
