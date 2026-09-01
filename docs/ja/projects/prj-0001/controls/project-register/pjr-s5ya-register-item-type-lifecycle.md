@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-s5ya-register-item-type-lifecycle
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T22:45:16Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-01T00:25:14Z"
   block_reason: "agent exited with non-zero code: executorによる `node --import tsx src/specdojo.ts register build` の実行結果が `failed` となっており、「既存不整合: PJR-9RWGはevent=in-progress/item=review、PJR-S5YAはevent=open/item=in-progre…"
+  conclusion: pjr-rulebook へ type 別の通常終端と判定基準、例外的な rejected と deferred の使用条件を追加した。note は終端せず open が生きている記録を意味すること、対応や回答や判断が必要になった場合は別項目を起票して note 自体は参照元として保持することを明記した。question と decision は decided、todo と risk と issue と change-request は done を通常終端とする。register-operation-guide の状態遷移表にも note の例外を反映した。既存個票のうち終端済みだった note 3 件を内容に応じて todo または decision へ分類訂正している。
 ---
 
 # PJR-S5YA 登録簿の type 別に状態遷移の指針を定める

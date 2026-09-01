@@ -87,3 +87,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_8b5e053b099944069aec2d8e74555449
+- v: 1
+  id: reg_b05139569ab649e9b206cceb03193bb0
+  ts: "2026-09-01T00:25:14Z"
+  action: close
+  actor: manual
+  from_status: review
+  to_status: done
+  reason: 実装・検証・レビューが完了したため
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-01"
+    - field: conclusion
+      from: "-"
+      to: pjr-rulebook へ type 別の通常終端と判定基準、例外的な rejected と deferred の使用条件を追加した。note は終端せず open が生きている記録を意味すること、対応や回答や判断が必要になった場合は別項目を起票して note 自体は参照元として保持することを明記した。question と decision は decided、todo と risk と issue と change-request は done を通常終端とする。register-operation-guide の状態遷移表にも note の例外を反映した。既存個票のうち終端済みだった note 3 件を内容に応じて todo または decision へ分類訂正している。
+  previous_event_id: reg_9d5052b3abe9474691a0a73ccac7a12c
