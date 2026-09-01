@@ -61,3 +61,16 @@
       from: "-"
       to: "agent exited with non-zero code: executorによる `node --import tsx src/specdojo.ts register build` の実行結果が `failed` となっており、「既存不整合: PJR-9RWGはevent=in-progress/item=review、PJR-S5YAはevent=open/item=in-progre…"
   previous_event_id: reg_5f8eaf1f7f2d4cb39393bfb9f7803522
+- v: 1
+  id: reg_8b5e053b099944069aec2d8e74555449
+  ts: "2026-09-01T00:11:30Z"
+  action: start
+  actor: codex-expert-executor
+  from_status: waiting
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: waiting
+      to: in-progress
+  previous_event_id: reg_9e06d5f708694e80803bf05fe17aa26b

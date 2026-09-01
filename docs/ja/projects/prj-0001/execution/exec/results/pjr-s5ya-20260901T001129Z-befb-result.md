@@ -1,15 +1,14 @@
 ---
 specdojo:
-  id: prj-0001:xer-pjr-s5ya-20260831t235634z-18e1
+  id: prj-0001:xer-pjr-s5ya-20260901t001129z-befb
   type: exec-result
   task_id: PJR-S5YA
   mode: edit
-  status: superseded
+  status: in_progress
   project_id: prj-0001
   origin: register
-  plan_ref: exec/plans/pjr-s5ya-20260831T235634Z-18e1-plan.md
-  started_at: "2026-08-31T23:56:34.703Z"
-  completed_at: "2026-09-01T00:11:29.232Z"
+  plan_ref: exec/plans/pjr-s5ya-20260901T001129Z-befb-plan.md
+  started_at: "2026-09-01T00:11:29.232Z"
   agent: codex-expert-executor
 ---
 
