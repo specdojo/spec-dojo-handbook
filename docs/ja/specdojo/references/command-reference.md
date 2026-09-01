@@ -489,6 +489,24 @@ reporter は executor の最終応答を `<grade_executor_output>` として rep
 
 複数対象は、生成された plan の組を順に処理し、executor 応答を保存して reporter へ引き渡し、1件の GradeSubmission を直ちに `grade apply --path <document> --analysis-from <executor-output>` で反映します。agent 起動は `agent run`、stage 間の応答受け渡しは呼び出し側が担い、`grade` は plan の生成と結果の検証・反映に限定されます。この単位で処理すると、後続文書が失敗しても適用済みの grade は保持されます。保存済み executor plan は `exec trial` などで同じ入力を複数 agent へ渡す用途にも利用できます。
 
+### 8.1. 文書単位の3段評価
+
+3段評価を「文書を外側、段を内側」の順で実行する場合は、リポジトリルートから `tools/grade/run-per-document.sh` を実行します。`--kind` で `rulebook` / `recipe` / `sample` / `template` のいずれかへ対象を限定し、`--path` を繰り返すと明示した文書だけを処理できます。初回運用の既定対象は `rulebook` です。
+
+```bash
+# 対象と agent / reference の確認だけを行う
+tools/grade/run-per-document.sh --run-id 20260901-rulebooks --limit 3 --dry-run
+
+# rulebook を文書単位で3段評価する。同じ run-id で再実行すると中断箇所から再開する
+tools/grade/run-per-document.sh --run-id 20260901-rulebooks --kind rulebook
+```
+
+各段は executor と reporter を個別に指定できます。1段目の比較リファレンスは既定で `prj-overview-rulebook.md` に固定し、`--stage-1-reference` で変更する場合も `prj-overview` 系の文書だけを受理します。2段目はリファレンスなし、3段目は `codex-expert-executor` によるリファレンスなしの確認が既定です。2段目が `pass`、score 96以上、finding 1件以下の3条件をすべて満たす場合だけ3段目を実行します。
+
+実行 state は既定で `docs/ja/projects/<project>/execution/grade/runs/per-document/<run-id>/documents/` に文書・段ごとに保存し、プロジェクトの配置が異なる場合は `--work-dir` で変更します。agent が rate limit を返した場合は終了コード75で中断し、その段の完了 state は書きません。同じ引数と `--run-id` で再実行すると、完了済みの段を再適用せず未完了の段から続行します。設定が保存済み state と異なる場合は、別条件の結果を混在させず、新しい `--run-id` を要求します。
+
+各段の status、所要秒数、verdict、score、finding 件数、executor、reporter、reference は同ディレクトリの `results.tsv` で確認できます。通常の agent / apply 失敗も段の結果として保存し、1段目の失敗後は安定評価の2段目へ進みます。2段目の結果が得られなかった場合は条件を満たしたと推測せず、3段目を `skipped_condition` として記録します。
+
 `apply` は level 3 以下に finding を要求し、`blocker` は level 0、`major` は最大 level 2、`minor` は最大 level 3 に制限します。category score は viewpoint score（`level × 25`）の平均、総合 score は対象種別ごとの重み付き平均です。verdict は `blocker` があれば `fail`、`major` があるか総合 score が 70 未満なら `needs-work`、それ以外を `pass` とします。
 
 現行のインライン記録対象は Markdown です。YAML / JSON の kata・成果物はコメントと Frontmatter を同じ契約で保持できないため、`--path` で指定した場合は書き込まずエラーにします。非 Markdown の記録形式はサイドカー schema を導入する後続変更で扱います。
