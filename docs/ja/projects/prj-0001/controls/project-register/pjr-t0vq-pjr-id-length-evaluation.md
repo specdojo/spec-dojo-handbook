@@ -6,7 +6,7 @@ specdojo:
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
-  item_type: note
+  item_type: todo
   item_status: done
   priority: low
   registered_at: "2026-08-09T00:30:44Z"

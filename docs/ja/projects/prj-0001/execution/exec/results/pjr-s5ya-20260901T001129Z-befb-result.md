@@ -4,11 +4,12 @@ specdojo:
   type: exec-result
   task_id: PJR-S5YA
   mode: edit
-  status: in_progress
+  status: complete
   project_id: prj-0001
   origin: register
   plan_ref: exec/plans/pjr-s5ya-20260901T001129Z-befb-plan.md
   started_at: "2026-09-01T00:11:29.232Z"
+  completed_at: "2026-09-01T00:21:32.307Z"
   agent: codex-expert-executor
 ---
 
@@ -16,16 +17,23 @@ specdojo:
 
 ## 1. 実施内容
 
-_TODO_: 実施した内容の要約を記入する。
+- 登録簿の item_type 別に状態遷移の終端基準を定めるため、pjr-rulebook および運用ガイドを更新した。
+- 個票 PJR-S5YA の実施内容を更新し、既存の個票における分類矛盾を解消した。
+- prettier による整形および markdownlint による静的検査、カタログ検証、登録簿ビルド等の全検証に合格した。
 
 ## 2. 変更ファイル
 
-_TODO_: 変更したファイルのパスを記入する。
+- `docs/ja/specdojo/rulebooks/pjr-rulebook.md`: item_type ごとの状態遷移（終端基準）の定義を追加
+- `docs/ja/specdojo/guides/register-operation-guide.md`: 登録簿運用ガイドに type 別の遷移指針を反映
+- `docs/ja/projects/prj-0001/controls/project-register/pjr-s5ya-register-item-type-lifecycle.md`: 個票の作業内容および対応結果を更新
+- `docs/ja/projects/prj-0001/controls/project-register/pjr-0122-review-launch.md`: 定義した指針に基づき分類矛盾を解消
+- `docs/ja/projects/prj-0001/controls/project-register/pjr-1f46-kata-sc-01-sc-03.md`: 定義した指針に基づき分類矛盾を解消
+- `docs/ja/projects/prj-0001/controls/project-register/pjr-t0vq-pjr-id-length-evaluation.md`: 定義した指針に基づき分類矛盾を解消
 
 ## 3. 申し送り
 
-_TODO_: 後続タスクへの申し送り事項を記入する（なければ削除）。
+- なし
 
 ## 4. 進め方と実践の型の適用
 
-_TODO_: `approach` に従ってどう進めたか、その進め方の中で実践の型（rulebook / recipe / sample / template）をどう適用したかを記入する（`fully-guided` で rulebook / recipe / sample / template をどう使い分けたか、`recipe-guided` で recipe のみを基準にした内容、`freeform` で実践の型より優先した実例やプロジェクト文脈、`retrofit` で実際に参照した実装パス・抽出した現在動作・反映/新設判断・未反映の乖離・未確認範囲、`rulebook-maintenance` などの maintenance 系で見直した実践の型とその根拠、など）。実践の型を基準にしなかった場合は、その判断と代わりに根拠にした内容も記入する。複数文書間に矛盾があり rulebook を正として判断した箇所、参照範囲から外れていた文書とその代わりに根拠にした内容があれば、あわせて記録する。
+まず pjr-rulebook と運用ガイドに item_type ごとの状態遷移（終端）基準を明文化し、その基準を用いて既存の個票の矛盾を修正。最後に linter および specdojo の各種整合性チェック（catalog validate, register build, index build）を実行して品質を担保した。

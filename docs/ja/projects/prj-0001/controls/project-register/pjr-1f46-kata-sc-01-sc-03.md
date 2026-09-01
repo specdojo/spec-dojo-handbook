@@ -6,7 +6,7 @@ specdojo:
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
-  item_type: note
+  item_type: decision
   item_status: decided
   priority: medium
   registered_at: "2026-08-14T14:29:15Z"
