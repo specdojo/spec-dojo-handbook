@@ -1,15 +1,14 @@
 ---
 specdojo:
-  id: prj-0001:xer-pjr-jhsc-20260901t002200z-92f0
+  id: prj-0001:xer-pjr-jhsc-20260901t111402z-42ee
   type: exec-result
   task_id: PJR-JHSC
   mode: edit
-  status: superseded
+  status: in_progress
   project_id: prj-0001
   origin: register
-  plan_ref: exec/plans/pjr-jhsc-20260901T002200Z-92f0-plan.md
-  started_at: "2026-09-01T00:22:01.108Z"
-  completed_at: "2026-09-01T11:14:13.737Z"
+  plan_ref: exec/plans/pjr-jhsc-20260901T111402Z-42ee-plan.md
+  started_at: "2026-09-01T11:14:13.737Z"
   agent: codex-expert-executor
 ---
 
