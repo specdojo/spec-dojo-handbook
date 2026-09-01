@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T22:37:12Z"
   due_on: "2026-09-30"
+  block_reason: rate limit reached
 ---
 
 # PJR-JHSC exec のイベント粒度の理由を確認し規範文書へ記録する

@@ -45,3 +45,19 @@
       from: open
       to: in-progress
   previous_event_id: reg_3bc8fb4722f545d098a97bb0c8797644
+- v: 1
+  id: reg_1941b08ca932440d9f72dc5064405534
+  ts: "2026-09-01T00:23:47Z"
+  action: wait
+  actor: codex-expert-executor
+  from_status: in-progress
+  to_status: waiting
+  reason: rate limit reached
+  changes:
+    - field: status
+      from: in-progress
+      to: waiting
+    - field: block_reason
+      from: "-"
+      to: rate limit reached
+  previous_event_id: reg_7cab4af4e3ac4e73a186598efa03bc54
