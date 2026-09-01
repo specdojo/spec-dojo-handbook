@@ -485,6 +485,8 @@ executor plan は JSON 契約を持ちません。各 viewpoint を `[VIEWPOINT 
 
 reporter は executor の最終応答を `<grade_executor_output>` として reporter plan と一緒に受け取り、GradeSubmission JSON だけを返します。対象文書や参考資料を再評価せず、executor の level、severity、line、message を追加・省略・変更しません。`grade apply --analysis-from <executor-output>` は reporter JSON と executor marker を機械照合し、不一致、欠落、追加を拒否してから既存の GradeSubmission 検証を実行します。判定主体は reporter ではなく executor なので、`--by <executor-nickname>` がプロジェクトの `pm-members.yaml` に存在する nickname を検証して `specdojo.grade.graded_by` へ記録します。
 
+finding の忠実性照合では、message に限り、Unicode の正準等価（NFC）、連続・前後の空白、句読点周辺の空白、および `、。！？：；`（全角の `，．` を含む）と対応する ASCII 句読点を正規化します。これは reporter が内容を保ったまま起こす表記差だけを許容する境界です。英字の大小、英数字の全角・半角、括弧・ダッシュ、単語や文の言い換えは正規化しません。severity と line は常に完全一致が必要です。拒否時は、変更された severity、line、正規化後も異なる message の原文をエラーへ示します。
+
 移行期間中は `--analysis-from` を省略した従来の1段構成も受理します。既存の保存済み plan や GradeSubmission を適用するための互換経路であり、新しく生成した2段 plan では `--analysis-from` を指定します。旧 GradeSubmission の `graded_by` も入力互換性のため受理しますが、記録には使いません。
 
 複数対象は、生成された plan の組を順に処理し、executor 応答を保存して reporter へ引き渡し、1件の GradeSubmission を直ちに `grade apply --path <document> --analysis-from <executor-output>` で反映します。agent 起動は `agent run`、stage 間の応答受け渡しは呼び出し側が担い、`grade` は plan の生成と結果の検証・反映に限定されます。この単位で処理すると、後続文書が失敗しても適用済みの grade は保持されます。保存済み executor plan は `exec trial` などで同じ入力を複数 agent へ渡す用途にも利用できます。

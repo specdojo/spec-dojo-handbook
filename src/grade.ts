@@ -1078,21 +1078,86 @@ export function parseGradeExecutorAnalysis(raw: string): GradeExecutorAnalysis {
   return { viewpoints };
 }
 
+function normalizeFindingMessageForFidelity(message: string): string {
+  return message
+    .normalize("NFC")
+    .replace(/[、，]/gu, ",")
+    .replace(/[。．]/gu, ".")
+    .replace(/！/gu, "!")
+    .replace(/？/gu, "?")
+    .replace(/：/gu, ":")
+    .replace(/；/gu, ";")
+    .replace(/\s+/gu, " ")
+    .trim()
+    .replace(/\s*([,.;:!?])\s*/gu, "$1");
+}
+
 function findingFidelityKey(finding: GradeFindingInput): string {
   return JSON.stringify({
     severity: finding.severity,
     line: finding.line ?? null,
-    message: finding.message,
+    message: normalizeFindingMessageForFidelity(finding.message),
   });
 }
 
-function findingCounts(findings: readonly GradeFindingInput[]): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const finding of findings) {
+function unmatchedFindings(
+  declared: readonly GradeFindingInput[],
+  reported: readonly GradeFindingInput[],
+): { declared: GradeFindingInput[]; reported: GradeFindingInput[] } {
+  const remainingReported = reported.map((finding) => ({
+    finding,
+    matched: false,
+  }));
+  const unmatchedDeclared: GradeFindingInput[] = [];
+  for (const finding of declared) {
     const key = findingFidelityKey(finding);
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+    const match = remainingReported.find(
+      (candidate) => !candidate.matched && findingFidelityKey(candidate.finding) === key,
+    );
+    if (match) match.matched = true;
+    else unmatchedDeclared.push(finding);
   }
-  return counts;
+  return {
+    declared: unmatchedDeclared,
+    reported: remainingReported
+      .filter((candidate) => !candidate.matched)
+      .map((candidate) => candidate.finding),
+  };
+}
+
+function findingDifferenceMessage(
+  declared: GradeFindingInput,
+  reported: GradeFindingInput,
+): string {
+  const differences: string[] = [];
+  if (declared.severity !== reported.severity) {
+    differences.push(`severity executor=${declared.severity} reporter=${reported.severity}`);
+  }
+  if (declared.line !== reported.line) {
+    differences.push(
+      `line executor=${declared.line ?? "none"} reporter=${reported.line ?? "none"}`,
+    );
+  }
+  if (
+    normalizeFindingMessageForFidelity(declared.message) !==
+    normalizeFindingMessageForFidelity(reported.message)
+  ) {
+    differences.push(
+      `message executor=${JSON.stringify(declared.message)} reporter=${JSON.stringify(reported.message)}`,
+    );
+  }
+  return differences.join("; ");
+}
+
+function findingSimilarity(declared: GradeFindingInput, reported: GradeFindingInput): number {
+  return (
+    Number(declared.severity === reported.severity) +
+    Number(declared.line === reported.line) +
+    Number(
+      normalizeFindingMessageForFidelity(declared.message) ===
+        normalizeFindingMessageForFidelity(reported.message),
+    )
+  );
 }
 
 export function validateGradeReporterFidelity(opts: {
@@ -1157,18 +1222,35 @@ export function validateGradeReporterFidelity(opts: {
         message: `reporter level ${reported.level} differs from executor level ${declared.level}`,
       });
     }
-    const declaredFindings = findingCounts(declared.findings ?? []);
-    const reportedFindings = findingCounts(reported.findings ?? []);
-    const keys = new Set([...declaredFindings.keys(), ...reportedFindings.keys()]);
-    for (const key of keys) {
-      const declaredCount = declaredFindings.get(key) ?? 0;
-      const reportedCount = reportedFindings.get(key) ?? 0;
-      if (declaredCount !== reportedCount) {
-        issues.push({
-          path: `documents[0].viewpoints.${declared.id}.findings`,
-          message: `reporter finding count ${reportedCount} differs from executor count ${declaredCount}: ${key}`,
-        });
+    const unmatched = unmatchedFindings(declared.findings ?? [], reported.findings ?? []);
+    while (unmatched.declared.length > 0 && unmatched.reported.length > 0) {
+      const executorFinding = unmatched.declared.shift()!;
+      let bestIndex = 0;
+      for (let index = 1; index < unmatched.reported.length; index += 1) {
+        if (
+          findingSimilarity(executorFinding, unmatched.reported[index]) >
+          findingSimilarity(executorFinding, unmatched.reported[bestIndex])
+        ) {
+          bestIndex = index;
+        }
       }
+      const reporterFinding = unmatched.reported.splice(bestIndex, 1)[0];
+      issues.push({
+        path: `documents[0].viewpoints.${declared.id}.findings`,
+        message: `reporter changed executor finding: ${findingDifferenceMessage(executorFinding, reporterFinding)}`,
+      });
+    }
+    for (const finding of unmatched.declared) {
+      issues.push({
+        path: `documents[0].viewpoints.${declared.id}.findings`,
+        message: `reporter omitted executor finding: ${JSON.stringify(finding)}`,
+      });
+    }
+    for (const finding of unmatched.reported) {
+      issues.push({
+        path: `documents[0].viewpoints.${declared.id}.findings`,
+        message: `reporter added finding not declared by executor: ${JSON.stringify(finding)}`,
+      });
     }
   }
   return issues;
