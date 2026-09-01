@@ -594,10 +594,139 @@ LEVEL: 4
           message: expect.stringContaining("differs from executor level"),
         }),
         expect.objectContaining({
-          message: expect.stringContaining("differs from executor count"),
+          message: expect.stringContaining("severity executor=major reporter=blocker"),
         }),
       ]),
     );
+
+    const omitted = structuredClone(reporterSubmission);
+    omitted.documents[0].viewpoints[0].findings = [];
+    expect(
+      validateGradeReporterFidelity({
+        executorOutput,
+        submission: omitted,
+        viewpoints,
+        target: "kata",
+        expectedPath,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        message: expect.stringContaining("reporter omitted executor finding"),
+      }),
+    ]);
+
+    const added = structuredClone(reporterSubmission);
+    added.documents[0].viewpoints[0].findings!.push({
+      severity: "note",
+      message: "executor が申告していない指摘。",
+    });
+    expect(
+      validateGradeReporterFidelity({
+        executorOutput,
+        submission: added,
+        viewpoints,
+        target: "kata",
+        expectedPath,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        message: expect.stringContaining("reporter added finding not declared by executor"),
+      }),
+    ]);
+  });
+
+  it("accepts presentation-only punctuation and whitespace differences in finding messages", () => {
+    const executorOutput = `[VIEWPOINT vp-qe-kata-conformance]
+LEVEL: 2
+FINDING major line=7: 一方、 必須の禁止事項が欠落している。
+[END VIEWPOINT]
+[VIEWPOINT vp-arc-conciseness]
+LEVEL: 4
+[END VIEWPOINT]
+`;
+    const expectedPath = "docs/ja/specdojo/rulebooks/example-rulebook.md";
+    const reporterSubmission: GradeSubmission = {
+      rubric: "grade-rubric-v1",
+      documents: [
+        {
+          path: expectedPath,
+          viewpoints: [
+            {
+              id: "vp-qe-kata-conformance",
+              level: 2,
+              findings: [
+                {
+                  severity: "major",
+                  line: 7,
+                  message: "一方,必須の禁止事項が欠落している．",
+                },
+              ],
+            },
+            { id: "vp-arc-conciseness", level: 4, findings: [] },
+          ],
+        },
+      ],
+    };
+
+    expect(
+      validateGradeReporterFidelity({
+        executorOutput,
+        submission: reporterSubmission,
+        viewpoints,
+        target: "kata",
+        expectedPath,
+      }),
+    ).toEqual([]);
+  });
+
+  it("rejects semantic finding changes and reports the changed fields", () => {
+    const executorOutput = `[VIEWPOINT vp-qe-kata-conformance]
+LEVEL: 2
+FINDING major line=7: 必須の禁止事項が欠落している。
+[END VIEWPOINT]
+[VIEWPOINT vp-arc-conciseness]
+LEVEL: 4
+[END VIEWPOINT]
+`;
+    const expectedPath = "docs/ja/specdojo/rulebooks/example-rulebook.md";
+    const reporterSubmission: GradeSubmission = {
+      rubric: "grade-rubric-v1",
+      documents: [
+        {
+          path: expectedPath,
+          viewpoints: [
+            {
+              id: "vp-qe-kata-conformance",
+              level: 2,
+              findings: [
+                {
+                  severity: "minor",
+                  line: 8,
+                  message: "任意の推奨事項が記載されている。",
+                },
+              ],
+            },
+            { id: "vp-arc-conciseness", level: 4, findings: [] },
+          ],
+        },
+      ],
+    };
+
+    expect(
+      validateGradeReporterFidelity({
+        executorOutput,
+        submission: reporterSubmission,
+        viewpoints,
+        target: "kata",
+        expectedPath,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        message: expect.stringMatching(
+          /severity executor=major reporter=minor; line executor=7 reporter=8; message executor=/,
+        ),
+      }),
+    ]);
   });
 
   it("resolves declared and reverse-linked Kata references", () => {
