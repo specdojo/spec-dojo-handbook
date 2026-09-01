@@ -7,12 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: high
   owner: ARC
   registered_at: "2026-09-01T12:02:19Z"
   due_on: "2026-09-30"
-  block_reason: "agent exited with non-zero code: runner による検証 `test-unit` (npm run test:unit) が失敗しており、`tests/src/agent-command.test.ts` の3つのテストケースが fail しているため。"
+  block_reason: "integrate failed: git commit -m exec(register PJR-TA5C): plan を agent へ渡し stdout を得る agent run を公開する -- docs/ja/projects/prj-0001/controls/project-register/pjr-ta5c-agent-run-primitive.md docs/ja/proj…"
 ---
 
 # PJR-TA5C plan を agent へ渡し stdout を得る agent run を公開する
