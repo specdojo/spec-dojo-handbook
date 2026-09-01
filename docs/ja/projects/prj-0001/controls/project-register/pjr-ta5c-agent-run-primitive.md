@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-ta5c-agent-run-primitive
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-01T12:02:19Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-01T13:46:54Z"
   block_reason: "integrate failed: git commit -m exec(register PJR-TA5C): plan を agent へ渡し stdout を得る agent run を公開する -- docs/ja/projects/prj-0001/controls/project-register/pjr-ta5c-agent-run-primitive.md docs/ja/proj…"
+  conclusion: specdojo agent run を追加し、plan を指定 agent へ渡して stdout を得る primitive を公開した。
 ---
 
 # PJR-TA5C plan を agent へ渡し stdout を得る agent run を公開する
