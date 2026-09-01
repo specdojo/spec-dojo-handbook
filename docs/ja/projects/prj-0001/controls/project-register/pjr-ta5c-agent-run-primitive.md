@@ -61,17 +61,23 @@ for execution path: ...` で失敗する。例外は `commandError` が stderr �
 
 ## 3. 作業内容
 
-| No  | 作業                                       | 担当 | 状態 | メモ                           |
-| --- | ------------------------------------------ | ---- | ---- | ------------------------------ |
-| 1   | `runAgentCommand` の呼び出し境界を整理する | ARC  | open | 既存の exec run 経路を壊さない |
-| 2   | `agent run` サブコマンドを追加する         | ARC  | open | -                              |
-| 3   | rate limit 検出と終了コードの契約を定める  | ARC  | open | exec-limit を再利用する        |
-| 4   | 単体テストを追加する                       | ARC  | open | env 復元でケース間を独立させる |
-| 5   | command-reference へ追記する               | ARC  | open | -                              |
+| No  | 作業                                       | 担当 | 状態 | メモ                       |
+| --- | ------------------------------------------ | ---- | ---- | -------------------------- |
+| 1   | `runAgentCommand` の呼び出し境界を整理する | ARC  | done | 既存の exec run 経路を維持 |
+| 2   | `agent run` サブコマンドを追加する         | ARC  | done | `src/agent.ts`             |
+| 3   | rate limit 検出と終了コードの契約を定める  | ARC  | done | exec-limit を再利用        |
+| 4   | 単体テストを追加する                       | ARC  | done | env 復元でケース間を独立   |
+| 5   | command-reference へ追記する               | ARC  | done | agent 節を追加             |
 
 ## 4. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+`specdojo agent run --plan <path> --by <nickname> --out <file>` を追加した。
+
+既存の agent 実行関数を共有境界として公開し、`exec run` の挙動を維持したまま `agent run` からも利用する。agent は `pm-members.yaml` の nickname で完全一致させ、human、無効化された agent、コマンドを解決できない agent を拒否する。`--dry-run` では解決後のコマンドだけを表示する。
+
+agent の stdout は `--out` のファイルへ保存し、親ディレクトリが無ければ作成する。通常失敗は終了コード `1`、既存の rate limit 検出に一致した場合は専用の終了コード `75` とし、いずれの場合も捕捉済み stdout を保存する。
+
+実装は CLI の責務を `src/agent.ts` へ集約し、重複する `src/agent-run.ts` は設けなかった。project path は agent の子プロセス環境にだけ渡し、プロセス全体の環境変数を変更しない。単体テストも `SPECDOJO_PROJECT`、`SPECDOJO_SCHEDULE_PATH`、`SPECDOJO_EXECUTION_PATH` をケースごとに復元し、stdout 保存、nickname の決定性、dry-run、rate limit 終了コードを連続実行で検証する。
 
 ## 5. 関連ドキュメント
 

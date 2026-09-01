@@ -236,7 +236,15 @@ export type RunOpts = {
   cycleRebuildStaleTracks?: boolean;
 };
 
-type RunResult = "success" | "rate_limit" | "failure";
+export type RunResult = "success" | "rate_limit" | "failure";
+
+export type AgentExecution = {
+  result: RunResult;
+  exitCode: number | null;
+  stdout: string;
+  stderr: string;
+  limit?: AgentLimitSignal;
+};
 
 // Mode-specific agent overrides from --edit-by / --review-by. Each value is an agent
 // nickname (not a raw command); the command is resolved from pm-members.yaml. undefined means
@@ -887,7 +895,7 @@ export function loadRosterForExecutionPath(executionPath: string): MemberRoster 
   return null;
 }
 
-async function executeAgent(
+export async function executeAgent(
   agentCommand: string,
   prompt: string,
   detection: RateLimitDetection | undefined,
@@ -895,20 +903,15 @@ async function executeAgent(
   cooldownSeconds: Partial<Record<AgentLimitKind, number>> | undefined,
   cwd: string,
   env: NodeJS.ProcessEnv,
-): Promise<{
-  result: RunResult;
-  exitCode: number | null;
-  stdout: string;
-  stderr: string;
-  limit?: AgentLimitSignal;
-}> {
+  quiet = false,
+): Promise<AgentExecution> {
   if (!agentCommand.trim()) {
     return { result: "failure", exitCode: null, stdout: "", stderr: "Empty agent command" };
   }
 
   // stdout is piped (not inherited) so it can be scanned for rate-limit signals: some CLIs print
-  // the limit notice to stdout, not stderr (e.g. claude's "session limit"). Each chunk is teed to
-  // the parent's stdout so live output/logging is preserved.
+  // the limit notice to stdout, not stderr (e.g. claude's "session limit"). Unless quiet, each
+  // chunk is teed to the parent's stdout so live output/logging is preserved.
   const child = spawn(agentCommand, {
     cwd,
     env,
@@ -924,7 +927,7 @@ async function executeAgent(
   child.stdout.setEncoding("utf8");
   child.stdout.on("data", (chunk: string) => {
     stdout += chunk;
-    process.stdout.write(chunk);
+    if (!quiet) process.stdout.write(chunk);
   });
   child.stderr.setEncoding("utf8");
   child.stderr.on("data", (chunk: string) => {
