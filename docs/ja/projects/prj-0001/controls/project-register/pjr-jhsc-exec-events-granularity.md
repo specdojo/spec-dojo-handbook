@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-jhsc-exec-events-granularity
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-08-31T22:37:12Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-01T11:26:59Z"
   block_reason: rate limit reached
+  conclusion: exec のイベント粒度の理由を sysd-cross-cutting-policy の scp-STA-001 と exec-operation-guide へ記録した。並行性は理由ではない。project 単位の実行ロックと task の claim があるため、task ごとの 1 ファイルへ集約しても排他は設計できる。1 event 1 JSON を維持する理由は、状態変更を既存ファイルの read-modify-write ではなく新規ファイルの追加として表し、1 回の状態遷移を Git の 1 ファイル追加として確認でき、malformed event をファイル単位で特定でき、訂正を過去 event の書換えではなく後続 event として残せることにある。集約は技術的に可能だが互換でない変更であり、606 ファイル 227,784 byte で運用上の問題が確認されていないため現時点では行わない。将来はファイル数ではなく影響指標と移行時の fold 結果一致を受入条件として判断する。
 ---
 
 # PJR-JHSC exec のイベント粒度の理由を確認し規範文書へ記録する
