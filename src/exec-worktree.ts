@@ -57,11 +57,47 @@ export function gitResult(repoRoot: string, args: string[]): ReturnType<typeof s
   return result;
 }
 
+// git 失敗メッセージは register イベントの reason、result の block_reason、実行ログの一覧行の
+// いずれでも長さ上限で切り詰められて記録される。commit のように pathspec が全件並ぶコマンドでは、
+// 引数をそのまま連ねると失敗原因（stderr）が上限の外へ押し出されて残らない。原因を先頭付近へ置き、
+// 引数は pathspec を件数へ要約したうえで末尾に添える。
+const MAX_GIT_ARGUMENT_LENGTH = 40;
+const MAX_GIT_ARGUMENT_SUMMARY_LENGTH = 120;
+
+function abbreviate(value: string, limit: number): string {
+  return value.length <= limit ? value : `${value.slice(0, Math.max(0, limit - 1))}…`;
+}
+
+// `--` 以降の pathspec は件数へ、それ以外の引数は 1 件ずつ長さを制限して要約する。
+export function summarizeGitArguments(args: readonly string[]): string {
+  const separatorIndex = args.indexOf("--");
+  const head = separatorIndex === -1 ? args : args.slice(0, separatorIndex);
+  const parts = head.map((arg) => abbreviate(arg, MAX_GIT_ARGUMENT_LENGTH));
+  if (separatorIndex !== -1) {
+    const pathCount = args.length - separatorIndex - 1;
+    parts.push(`-- ${pathCount} ${pathCount === 1 ? "path" : "paths"}`);
+  }
+  return abbreviate(parts.join(" "), MAX_GIT_ARGUMENT_SUMMARY_LENGTH);
+}
+
+export function formatGitCommandFailure(args: readonly string[], stderr: string): string {
+  const subcommandIndex = args.findIndex((arg) => !arg.startsWith("-"));
+  const label = subcommandIndex === -1 ? "git" : `git ${args[subcommandIndex]}`;
+  const summary = summarizeGitArguments(
+    subcommandIndex === -1
+      ? args
+      : [...args.slice(0, subcommandIndex), ...args.slice(subcommandIndex + 1)],
+  );
+  const detail = summary ? ` (args: ${summary})` : "";
+  const cause = stderr.trim();
+  return cause ? `${label} failed: ${cause}${detail}` : `${label} failed${detail}`;
+}
+
 export function gitOutput(repoRoot: string, args: string[]): string {
   const result = gitResult(repoRoot, args);
   if (result.status !== 0) {
-    const stderr = typeof result.stderr === "string" ? result.stderr.trim() : "";
-    throw new Error(`git ${args.join(" ")} failed${stderr ? `: ${stderr}` : ""}`);
+    const stderr = typeof result.stderr === "string" ? result.stderr : "";
+    throw new Error(formatGitCommandFailure(args, stderr));
   }
   return typeof result.stdout === "string" ? result.stdout : "";
 }
