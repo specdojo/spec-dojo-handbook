@@ -530,6 +530,24 @@ export function mergeWorktreeIntoCurrent(params: {
   }
 }
 
+// Whether the task exec branch is already contained in the merge-target HEAD. The integrate
+// stage retry uses this to stay idempotent: when a previous attempt merged but failed afterwards
+// (for example while removing the worktree), re-running the merge would fail with "No commits to
+// merge", so the retry skips the merge and continues with the remaining integration steps.
+export function isExecBranchMergedIntoCurrent(params: {
+  context: WorktreeOpsContext;
+  worktree: ExecWorktree;
+}): boolean {
+  return (
+    gitResult(params.context.repoRoot, [
+      "merge-base",
+      "--is-ancestor",
+      params.worktree.branch,
+      "HEAD",
+    ]).status === 0
+  );
+}
+
 // Remove a task worktree once its commit-target changes are committed and merged.
 export function removeWorktree(params: {
   context: WorktreeOpsContext;

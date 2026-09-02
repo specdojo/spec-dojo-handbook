@@ -46,6 +46,7 @@ function makeState(
     updatedAt?: string;
     executorStatus?: PipelineState["stages"]["executor"]["status"];
     reporterStatus?: PipelineState["stages"]["reporter"]["status"];
+    integrateStatus?: PipelineState["stages"]["executor"]["status"];
     evidenceRef?: string | null;
   } = {},
 ): PipelineState {
@@ -75,6 +76,18 @@ function makeState(
         ...state.stages.reporter,
         status: overrides.reporterStatus ?? "failed",
       },
+      ...(overrides.integrateStatus
+        ? {
+            integrate: {
+              status: overrides.integrateStatus,
+              actor: "report-1",
+              attempts: 1,
+              started_at: "2026-08-20T00:20:00Z",
+              completed_at: "2026-08-20T00:21:00Z",
+              artifact_ref: null,
+            },
+          }
+        : {}),
     },
   };
 }
@@ -130,6 +143,7 @@ describe("selectResumableRegisterRun", () => {
 
     expect(actual.kind).toBe("resumable");
     if (actual.kind !== "resumable") return;
+    expect(actual.target.stage).toBe("reporter");
     expect(actual.target.runId).toBe("run-new");
     expect(actual.target.evidence.run_id).toBe("run-new");
     expect(actual.target.evidenceRef).toContain("run-new/evidence.json");
@@ -155,15 +169,41 @@ describe("selectResumableRegisterRun", () => {
     });
   });
 
-  it("reporter が既に succeeded の run は再開不可にする", () => {
+  it("reporter が succeeded の run は統合段からの再開対象にする", () => {
     const candidate = makeCandidate({ state: makeState({ reporterStatus: "succeeded" }) });
 
     const actual = selectResumableRegisterRun([candidate]);
 
-    expect(actual).toEqual({
-      kind: "not-resumable",
-      reason: `reporter already succeeded for run ${candidate.runId}`,
+    expect(actual.kind).toBe("resumable");
+    if (actual.kind !== "resumable") return;
+    expect(actual.target.stage).toBe("integrate");
+    expect(actual.target.runId).toBe(candidate.runId);
+  });
+
+  it("統合が失敗した run も統合段から再開できる", () => {
+    const candidate = makeCandidate({
+      state: makeState({ reporterStatus: "succeeded", integrateStatus: "failed" }),
     });
+
+    const actual = selectResumableRegisterRun([candidate]);
+
+    expect(actual.kind).toBe("resumable");
+    if (actual.kind !== "resumable") return;
+    expect(actual.target.stage).toBe("integrate");
+  });
+
+  it("統合が succeeded として記録済みでも、worktree が残る run は統合段から再開できる", () => {
+    // worktree は統合が完了したときにだけ撤去されるため、state 上の succeeded より
+    // worktree が残っている事実を優先する（merge 後の撤去失敗から回復するため）。
+    const candidate = makeCandidate({
+      state: makeState({ reporterStatus: "succeeded", integrateStatus: "succeeded" }),
+    });
+
+    const actual = selectResumableRegisterRun([candidate]);
+
+    expect(actual.kind).toBe("resumable");
+    if (actual.kind !== "resumable") return;
+    expect(actual.target.stage).toBe("integrate");
   });
 
   it("executor evidence が欠けている run は再開不可にする", () => {

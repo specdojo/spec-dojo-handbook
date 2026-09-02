@@ -203,7 +203,7 @@ agent起動時はhook由来の`GIT_DIR`などを継承せず、各trialのcwdか
 
 `release` は `doing` / `blocked` の試行を破棄して `todo` に戻します。`cancel` は `todo` のタスクを終端状態にする操作です。
 
-executor / reporter pipeline では、run ごとの `exec/evidence/<task>/<run>/pipeline-state.json` に両 stage の状態、agent、試行回数、evidence / result 参照を保存します。reporter 失敗の block event は `pipeline_stage=reporter`、`pipeline_state_ref`、`evidence_ref` を保持します。`exec resume --task <task-id>` はこの block を同じ task claim のまま再開し、state と succeeded executor evidence の task ID / run ID が一致する場合だけ executor を省略します。state または evidence が欠損・不整合なら executor を重複利用せず、新しい run として安全に実行し直します。
+executor / reporter pipeline では、run ごとの `exec/evidence/<task>/<run>/pipeline-state.json` に各段（executor / reporter と、runner が担う統合段 `integrate`）の状態、agent、試行回数、evidence / result 参照を保存します。reporter 失敗の block event は `pipeline_stage=reporter`、`pipeline_state_ref`、`evidence_ref` を保持します。`exec resume --task <task-id>` はこの block を同じ task claim のまま再開し、state と succeeded executor evidence の task ID / run ID が一致する場合だけ executor を省略します。state または evidence が欠損・不整合なら executor を重複利用せず、新しい run として安全に実行し直します。
 
 stage agent を明示する場合は次のように指定します。片方を省略すると、その stage は要件と優先度から自動選択されます。
 
@@ -347,9 +347,9 @@ specdojo exec resume \
   --reporter-by <reporter-nickname>
 ```
 
-### 2.7. register実行のreporter再開
+### 2.7. register実行の再開
 
-register 実行（`exec run --register --worktree`）を executor/reporter パイプラインで走らせた場合も、executor が成功したまま reporter だけが失敗した run は reporter 段から再開できます。register 実行は exec events を持たないため、再開は `exec resume` ではなく `exec run --register` の `--resume` で行います。
+register 実行（`exec run --register --worktree`）を executor/reporter パイプラインで走らせた場合、途中で止まった run は止まった段から再開できます。register 実行は exec events を持たないため、再開は `exec resume` ではなく `exec run --register` の `--resume` で行います。
 
 ```bash
 specdojo exec run \
@@ -359,20 +359,29 @@ specdojo exec run \
   --resume
 ```
 
-再開の入力は、対象 worktree に残っている最新 run の `pipeline-state.json`（stage 状態と plan / result の参照）と `evidence.json`（executor の変更・検証結果・最終メッセージ）です。`--reporter-by` を省略した場合は、その run で使った reporter agent を state から引き継ぎます。保存済みの親 runner 検証が失敗していれば、Schedule 実行と同様に再実行して evidence を更新します。再開が成功した後は通常実行と同じ経路で、result の記入と status 更新、成果物の commit、統合ブランチへの merge、`register review` までを行います。
+再開する段は、対象 worktree に残っている最新 run の `pipeline-state.json` から自動的に決まります。指定するオプションはどちらの段でも同じです。
+
+| 再開段      | 対象の状態                                        | 実行する内容                                             |
+| ----------- | ------------------------------------------------- | -------------------------------------------------------- |
+| `reporter`  | executor が `succeeded`、reporter が未完了        | reporter だけを起動し、成功後に統合まで進む              |
+| `integrate` | executor と reporter が `succeeded`、統合が未完了 | agent を起動せず、commit → merge → worktree 撤去だけ行う |
+
+reporter 段の再開の入力は、`pipeline-state.json`（stage 状態と plan / result の参照）と `evidence.json`（executor の変更・検証結果・最終メッセージ）です。`--reporter-by` を省略した場合は、その run で使った reporter agent を state から引き継ぎます。保存済みの親 runner 検証が失敗していれば、Schedule 実行と同様に再実行して evidence を更新します。再開が成功した後は通常実行と同じ経路で、result の記入と status 更新、成果物の commit、統合ブランチへの merge、`register review` までを行います。
+
+統合段の再開は、executor と reporter が成功したまま commit・merge・worktree 撤去のいずれかが失敗した run が対象です。worktree は統合が完了したときにだけ撤去されるため、reporter 成功済みの worktree が残っていること自体が統合の未完了を意味します。この再開では agent を1つも起動せず、worktree に残っている成果物と記入済み result をそのまま統合します。前回の試行で merge まで完了していた場合は、取り込み済みの exec ブランチを再 merge せずに残りの手順（worktree 撤去と `register review`）だけを進めます。再開の開始時に項目は `in-progress` へ戻り、成功なら `review`、失敗なら `waiting` へ遷移するため、再試行の成否は登録簿の状態とイベントに残ります。統合段の進捗（開始と失敗）は `pipeline-state.json` の `integrate` にも記録します。
 
 再開できるかどうかは、対象 worktree の最新 run だけで判定します。次の場合は worktree・exec ブランチ・未コミットの成果を一切変更せず、理由を出力して終了コード 1 で終わります。
 
-| 状況                                     | 扱い                                                       |
-| ---------------------------------------- | ---------------------------------------------------------- |
-| 項目の exec worktree が無い              | 再開せず、通常の再実行を促す                               |
-| 最新 run の executor が succeeded でない | 再開せず、通常の再実行を促す（古い run へは遡らない）      |
-| reporter が既に succeeded                | 再開不要として拒否する                                     |
-| `evidence.json` が欠損・不整合           | executor の記録を再利用できないため拒否する                |
-| 親検証の設定 ID が変更・欠損             | 古い検証を流用せず、明示的な再実行を促して拒否する         |
-| 再開した reporter が再び失敗した         | worktree と executor の成果を保持したまま `waiting` へ戻す |
+| 状況                                     | 扱い                                                              |
+| ---------------------------------------- | ----------------------------------------------------------------- |
+| 項目の exec worktree が無い              | 再開せず、通常の再実行を促す                                      |
+| 最新 run の executor が succeeded でない | 再開せず、通常の再実行を促す（古い run へは遡らない）             |
+| `evidence.json` が欠損・不整合           | executor の記録を再利用できないため拒否する                       |
+| 親検証の設定 ID が変更・欠損             | 古い検証を流用せず、明示的な再実行を促して拒否する（reporter 段） |
+| result を worktree から復元できない      | 再開の入力が揃わないため拒否する                                  |
+| 再開した段が再び失敗した                 | worktree と成果を保持したまま `waiting` へ戻す                    |
 
-executor が成功した run が残っている項目を `--resume` なしで再実行しようとした場合は、worktree を破棄する手前で中断します（未コミットの executor 成果を失わないための保護）。破棄したうえで最初からやり直す場合は `--force-restart` を明示します。
+再開可能な run が残っている項目を `--resume` なしで再実行しようとした場合は、worktree を破棄する手前で中断します（未統合の成果を失わないための保護）。破棄したうえで最初からやり直す場合は `--force-restart` を明示します。
 
 ```bash
 # executor の成果ごと破棄して、plan 生成からやり直す
