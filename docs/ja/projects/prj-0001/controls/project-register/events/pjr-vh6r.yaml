@@ -103,3 +103,16 @@
       from: rate limit reached
       to: "integrate failed: git merge-base failed: fatal: detected dubious ownership in repository at '/workspaces/specdojo-workspace/worktrees/prj-0001-PJR-VH6R' To add an exception for this directory, call:  …"
   previous_event_id: reg_37f204084d86418da89fd8f5147e45b2
+- v: 1
+  id: reg_a77490dd16ef443cbfd8633ea0b5542b
+  ts: "2026-09-02T21:52:27Z"
+  action: start
+  actor: claude-reporter
+  from_status: waiting
+  to_status: in-progress
+  reason: integration resumed
+  changes:
+    - field: status
+      from: waiting
+      to: in-progress
+  previous_event_id: reg_4814af57e14d44478e1fb402d3e146da
