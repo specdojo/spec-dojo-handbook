@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-qm88-rulebook-schema-enum-lint
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-02T12:16:43Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-02T13:25:58Z"
   block_reason: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=package.json; agent must record the required change in the result …"
+  conclusion: schema の enum 網羅を rulebook に対して検査する lint を追加し、validate:schema へ統合した。検出された既存の乖離2件も修正した。
 ---
 
 # PJR-QM88 schema の enum 網羅を rulebook に対して検査する
@@ -92,6 +94,14 @@ enum が有効なのは、機械可読で意味が一意であり、rulebook が
   `pjr-rulebook.md` に PJR-ID の除外文字と topic のハイフン制約を追記した。
 - 単体テストでは enum 抽出、欠落値と対象パスの報告、finding コメントの除外、独立トークンの
   判定を固定した。現時点の対象 rulebook で未解消の enum 欠落はない。
+- `package.json` への script 登録は `agent-config-write` が保護して block した。orchestrator が
+  差分を確認して適用した。既存の `validate:schema` へ連結するだけの変更であり、agent が
+  検証設定を自ら書き換えていないことを確認している。
+- orchestrator が worktree の成果物を統合して受け入れた。統合後に `validate:schema` が enum
+  検査を含めて成功すること、`pm-members-rulebook.md` から `report` の記載をすべて除くと
+  欠落した値と schema のパスを示して失敗することを確認した。単体テスト1327件も通過している。
+- agent は保護機構が要求する申し送りを result へ記入せずに block した。この規約違反は
+  [[prj-0001:pjr-vh6r-agent-config-write-handoff]] として分離した。
 
 ## 6. 関連ドキュメント
 
