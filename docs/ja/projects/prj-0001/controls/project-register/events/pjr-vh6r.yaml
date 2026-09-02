@@ -45,3 +45,16 @@
       from: agent-config-write の block 時に申し送りの記入を強制する
       to: 保護機構の block 時に申し送りの記入を強制する
   previous_event_id: reg_11e9ac270233442999749d5497552f37
+- v: 1
+  id: reg_274d356f5fb84d17939d91622ef9b3b8
+  ts: "2026-09-02T14:59:10Z"
+  action: start
+  actor: claude-expert-executor
+  from_status: open
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: open
+      to: in-progress
+  previous_event_id: reg_be05ce59c90541a4b049bb450a4fb65e
