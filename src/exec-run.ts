@@ -123,6 +123,7 @@ import {
   checkpointAndEnsureWorktree,
   commitWorktreeChanges,
   discardStaleExecWorktree,
+  isExecBranchMergedIntoCurrent,
   mergeWorktreeIntoCurrent,
   removeWorktree,
   stabilizeCommitTargets,
@@ -163,13 +164,16 @@ import { runReporterWithFormatRetry } from "./exec-reporter.js";
 import {
   findResumableRegisterRun,
   resolveRegisterResumeArtifacts,
+  type RegisterResumeTarget,
 } from "./exec-register-resume.js";
 import {
   createPipelineState,
   loadPipelineResumeCheckpoint,
   pipelineStateLocation,
+  readPipelineState,
   updatePipelineStage,
   writePipelineState,
+  type PipelineStageState,
   type PipelineState,
 } from "./exec-pipeline-state.js";
 
@@ -3948,9 +3952,31 @@ function registerWaitSummary(params: {
   };
 }
 
+// 統合段（commit → merge → worktree 撤去）の進捗を pipeline-state へ記録する。state は
+// worktree 内にあり、統合成功時は worktree ごと撤去されるため、記録するのは開始（running）と
+// 失敗（failed）だけにする。merge 後に書き込むと commit 対象が未コミットのまま残り、
+// removeWorktree のガードに掛かって撤去できなくなる。記帳の失敗で統合自体を止めない。
+function recordIntegrateStage(
+  statePath: string | undefined,
+  updatedAt: string,
+  buildPatch: (current: PipelineStageState | undefined) => Partial<PipelineStageState>,
+): void {
+  if (!statePath || !existsSync(statePath)) return;
+  try {
+    const state = readPipelineState(statePath);
+    const patch = buildPatch(state.stages.integrate);
+    writePipelineState(statePath, updatePipelineStage(state, "integrate", patch, updatedAt));
+  } catch (error) {
+    process.stderr.write(
+      `warning: could not record the integrate stage in ${statePath}: ` +
+        `${error instanceof Error ? error.message : String(error)}\n`,
+    );
+  }
+}
+
 // register worktree 実行の Phase 3（成果物統合と状態遷移）。成功なら worktree の成果物を
 // commit → 統合ブランチへ merge → worktree 撤去 → register review、失敗なら worktree を
-// 保持したまま waiting へ戻す。通常実行と reporter 再開で同じ後処理を通す。
+// 保持したまま waiting へ戻す。通常実行・reporter 再開・統合再開で同じ後処理を通す。
 async function finalizeRegisterWorktreeRun(params: {
   context: RegisterRunContext;
   registerPaths: RegisterPaths;
@@ -3963,6 +3989,11 @@ async function finalizeRegisterWorktreeRun(params: {
   agentResult: RunResult;
   stderr: string;
   actor: string;
+  // pipeline 実行の run state（統合段の記録先）。単一 agent 実行では未指定。
+  pipelineStatePath?: string;
+  // 統合段の再試行。前回の attempt が merge 済みで後段だけ失敗した場合に備え、
+  // 取り込み済みの exec ブランチを再 merge せず後続の手順を続ける。
+  resumedIntegration?: boolean;
 }): Promise<RegisterItemSummary> {
   const { context, registerPaths, item, ticketPath, worktree, stem, agentResult, actor } = params;
   const { projectId, schedulePath, executionPath, repoRoot } = context;
@@ -3982,6 +4013,14 @@ async function finalizeRegisterWorktreeRun(params: {
   if (effectiveResult === "success") {
     await updateResultStatus(worktreeResultPath, "complete", completedAt);
     const title = item.title.replace(/\r?\n/g, " ").trim();
+    const integrateStartedAt = new Date().toISOString();
+    recordIntegrateStage(params.pipelineStatePath, integrateStartedAt, (current) => ({
+      status: "running",
+      actor,
+      attempts: (current?.attempts ?? 0) + 1,
+      started_at: integrateStartedAt,
+      completed_at: null,
+    }));
     try {
       commitWorktreeChanges({
         context: wtContext,
@@ -3989,17 +4028,31 @@ async function finalizeRegisterWorktreeRun(params: {
         taskId: stem,
         message: `exec(register ${item.id}): ${title}`,
       });
-      mergeWorktreeIntoCurrent({ context: wtContext, worktree, taskId: stem });
+      if (
+        params.resumedIntegration &&
+        isExecBranchMergedIntoCurrent({ context: wtContext, worktree })
+      ) {
+        process.stdout.write(`  [integrate] already merged: ${worktree.branch} (skipping merge)\n`);
+      } else {
+        mergeWorktreeIntoCurrent({ context: wtContext, worktree, taskId: stem });
+      }
+      // 撤去も統合の一部として扱う。ここで失敗しても例外で run を落とさず、worktree を
+      // 残したまま waiting へ戻し、`--resume` が統合段からやり直せるようにする。
+      removeWorktree({ context: wtContext, worktree, taskId: stem, deleteBranch: true });
     } catch (error) {
       const reason = sanitizeRegisterConclusion(
         `integrate failed: ${error instanceof Error ? error.message : String(error)}`,
       );
+      const integrateFailedAt = new Date().toISOString();
+      recordIntegrateStage(params.pipelineStatePath, integrateFailedAt, () => ({
+        status: "failed",
+        completed_at: integrateFailedAt,
+      }));
       await updateResultStatus(worktreeResultPath, "blocked", completedAt, reason);
       process.stdout.write(`  Blocked: ${item.id} (worktree kept: ${worktree.path})\n`);
       const summary = waitSummary(reason);
       return { ...summary, commit: "incomplete" };
     }
-    removeWorktree({ context: wtContext, worktree, taskId: stem, deleteBranch: true });
 
     let transition: RegisterItemTransition = "review";
     let reason: string | undefined;
@@ -4181,6 +4234,8 @@ async function runSingleRegisterItemWorktree(
   const env = agentEnvironment(repoRoot, worktree.path, schedulePath, executionPath);
   let agentResult: RunResult;
   let stderr = "";
+  // pipeline 実行のみ run state を持つ。統合段の記録先として Phase 3 へ渡す。
+  let pipelineStatePath: string | undefined;
   if (pipelineAgents) {
     process.stdout.write(
       `Running ${item.id} in worktree (executor/reporter pipeline)\n  CWD: ${worktree.path}\n`,
@@ -4201,6 +4256,7 @@ async function runSingleRegisterItemWorktree(
     });
     agentResult = pipelineOutcome.runResult;
     stderr = pipelineOutcome.blockReason ?? "";
+    pipelineStatePath = resolve(worktree.path, pipelineOutcome.stateRef);
   } else {
     process.stdout.write(`Running ${item.id} in worktree: ${command}\n  CWD: ${worktree.path}\n`);
     const outcome = await runWithRetry(
@@ -4214,7 +4270,7 @@ async function runSingleRegisterItemWorktree(
     stderr = outcome.stderr;
   }
 
-  // Phase 3: 成果物統合と状態遷移（root で直列化）。通常実行と reporter 再開で共通化する。
+  // Phase 3: 成果物統合と状態遷移（root で直列化）。通常実行と再開経路で共通化する。
   const finalize = async (): Promise<RegisterItemSummary> =>
     finalizeRegisterWorktreeRun({
       context,
@@ -4228,14 +4284,15 @@ async function runSingleRegisterItemWorktree(
       agentResult,
       stderr,
       actor,
+      pipelineStatePath,
     });
 
   return lifecycleLock ? lifecycleLock.runExclusive(finalize) : finalize();
 }
 
-// 全体再実行が executor の未コミット成果を破棄しないための保護。既存 worktree に executor
-// 成功済み・reporter 未完了の run が残っている場合だけ理由を返し、呼び出し側が破壊的操作
-// （discardStaleExecWorktree）の手前で中断できるようにする。--force-restart で無効化できる。
+// 全体再実行が既存 run の未統合成果を破棄しないための保護。既存 worktree に再開可能な run
+// （executor 成功済みで reporter か統合が未完了）が残っている場合だけ理由を返し、呼び出し側が
+// 破壊的操作（discardStaleExecWorktree）の手前で中断できるようにする。--force-restart で無効化できる。
 function protectResumableRegisterWorktree(
   context: RegisterRunContext,
   opts: RunOpts,
@@ -4252,10 +4309,15 @@ function protectResumableRegisterWorktree(
     taskId,
   });
   if (lookup.kind !== "resumable") return null;
+  const { stage, runId } = lookup.target;
+  const stopped =
+    stage === "integrate"
+      ? `run ${runId} finished the reporter but not the integration`
+      : `executor already succeeded in run ${runId}`;
   return (
-    `refusing to re-run ${taskId}: executor already succeeded in run ${lookup.target.runId} and ` +
-    `its changes are still uncommitted in ${worktree.path}. ` +
-    `Resume the reporter with --resume, or discard the worktree with --force-restart.`
+    `refusing to re-run ${taskId}: ${stopped}; ` +
+    `its changes are still unintegrated in ${worktree.path}. ` +
+    `Resume the ${stage} stage with --resume, or discard the worktree with --force-restart.`
   );
 }
 
@@ -4293,8 +4355,60 @@ export function resolveRegisterResumeReporter(
   };
 }
 
-// register 項目1件の reporter 再開。executor が成功したまま reporter だけが失敗した run を、
-// worktree と executor の未コミット成果を保持したまま reporter 段からやり直す。入力は対象 run の
+// 統合段だけの再開。executor と reporter が成功済みで、commit → merge → worktree 撤去のいずれかが
+// 失敗した run を、agent を1つも起動せずに統合からやり直す。worktree の成果物と evidence をそのまま
+// 使い、成功なら通常実行と同じ review 遷移、失敗なら waiting へ戻す（worktree は保持する）。
+async function resumeRegisterIntegration(params: {
+  context: RegisterRunContext;
+  registerPaths: RegisterPaths;
+  item: PjrItem;
+  ticketPath: string | null;
+  worktree: ExecWorktree;
+  target: RegisterResumeTarget;
+  stem: string;
+  worktreeResultPath: string;
+  actor: string;
+  begin: (actor: string, transitionReason: string) => Promise<RegisterItemSummary | null>;
+  lifecycleLock?: AsyncLock;
+}): Promise<RegisterItemSummary> {
+  const { item, worktree, target, worktreeResultPath, actor } = params;
+
+  process.stdout.write(`Register item: ${item.id} — ${item.title}  [${item.type}]\n`);
+  process.stdout.write(
+    `  Resuming integration from run ${target.runId} (reporter result: ${params.stem}-result.md)\n` +
+      `  CWD: ${worktree.path}\n  Actor: ${actor} (runner-owned integration)\n`,
+  );
+
+  // waiting のまま統合しないよう、通常実行と同じく in-progress へ戻してから統合する。
+  const beginFailure = await params.begin(actor, "integration resumed");
+  if (beginFailure) return beginFailure;
+
+  // reporter が記入済みの result をそのまま使う。agent は起動しないため、成果は success 扱いで
+  // 統合だけを実行する（result が未記入なら finalize 側の downgrade が blocked に落とす）。
+  const resultScaffold = readResultFrontmatterSnapshot(worktreeResultPath);
+  const finalize = async (): Promise<RegisterItemSummary> =>
+    finalizeRegisterWorktreeRun({
+      context: params.context,
+      registerPaths: params.registerPaths,
+      item,
+      ticketPath: params.ticketPath,
+      worktree,
+      stem: params.stem,
+      worktreeResultPath,
+      resultScaffold,
+      agentResult: "success",
+      stderr: "",
+      actor,
+      pipelineStatePath: target.statePath,
+      resumedIntegration: true,
+    });
+
+  return params.lifecycleLock ? params.lifecycleLock.runExclusive(finalize) : finalize();
+}
+
+// register 項目1件の再開。途中で止まった run を、既存 worktree と evidence を保持したまま
+// 止まった段からやり直す。reporter 段の再開は reporter だけを起動し、統合段の再開は agent を
+// 起動せずに commit → merge → worktree 撤去だけをやり直す。入力は対象 run の
 // `pipeline-state.json`（plan / result の参照と stage 状態）と `evidence.json`（executor の記録）で、
 // 成功後の commit → merge → register review は通常実行と同じ finalizeRegisterWorktreeRun を通す。
 // 再開できない場合（worktree 不在、executor 未完了、evidence 欠損）は破壊的操作を行わず理由を返す。
@@ -4337,7 +4451,10 @@ async function resumeSingleRegisterItemWorktree(
   if (lookup.kind !== "resumable") return refuse(lookup.reason);
   const target = lookup.target;
 
+  // 親検証は executor evidence とともに reporter が消費する。reporter 段から再開する場合だけ、
+  // 設定と記録の突き合わせが必要になる（統合段の再開では reporter が消費済み）。
   if (
+    target.stage === "reporter" &&
     !hasRecordedParentValidations(
       target.evidence.validations,
       context.execDefaults.pipeline?.parent_validations,
@@ -4357,15 +4474,71 @@ async function resumeSingleRegisterItemWorktree(
   });
   if (!artifacts) return refuse(`cannot restore the plan/result of run ${target.runId}`);
 
+  const worktreeResultPath = resolve(worktree.path, artifacts.resultRef);
+  if (!existsSync(worktreeResultPath)) {
+    return refuse(`result not found in the worktree: ${artifacts.resultRef}`);
+  }
+
+  // waiting のまま再開しないよう、通常実行と同じく in-progress へ戻す。状態変更は root で
+  // 直列化し、merge 前に作業ツリーを清潔にするため即時 commit する。
+  const begin = async (
+    actor: string,
+    transitionReason: string,
+  ): Promise<RegisterItemSummary | null> => {
+    const start = (): RegisterItemSummary | null => {
+      if (
+        !spawnRegisterTransition(projectId, [
+          "start",
+          "--id",
+          item.id,
+          "--by",
+          actor,
+          "--reason",
+          transitionReason,
+        ])
+      ) {
+        return refuse(`register start failed: ${item.id}`);
+      }
+      commitRegisterState(repoRoot, registerPaths, `exec(register ${item.id}): resume`, ticketPath);
+      return null;
+    };
+    return lifecycleLock ? lifecycleLock.runExclusive(start) : start();
+  };
+
+  if (target.stage === "integrate") {
+    // 統合は runner の作業だが、register の遷移とイベントには実行者が必要になる。前回 run の
+    // reporter（無ければ executor）を引き継ぎ、--reporter-by で明示指定もできる。
+    const actor = (
+      opts.reporterBy ??
+      target.state.stages.reporter.actor ??
+      target.state.stages.executor.actor ??
+      ""
+    ).trim();
+    if (!actor) {
+      return refuse(
+        `the actor of run ${target.runId} is unknown; specify --reporter-by <nickname>`,
+      );
+    }
+    return resumeRegisterIntegration({
+      context,
+      registerPaths,
+      item,
+      ticketPath,
+      worktree,
+      target,
+      stem: artifacts.stem,
+      worktreeResultPath,
+      actor,
+      begin,
+      lifecycleLock,
+    });
+  }
+
   // plan は root（統合ブランチ）の checkpoint 済みファイルを正本にする。worktree 側の plan は
   // agent が書き換えられるため、再開のプロンプト入力には使わない。
   const planPath = resolve(repoRoot, artifacts.planRef);
   if (!existsSync(planPath))
     return refuse(`plan not found for the resumed run: ${artifacts.planRef}`);
-  const worktreeResultPath = resolve(worktree.path, artifacts.resultRef);
-  if (!existsSync(worktreeResultPath)) {
-    return refuse(`result not found in the worktree: ${artifacts.resultRef}`);
-  }
   const prompt = expandPromptRefs(readFileSync(planPath, "utf8"));
 
   const reporter = resolveRegisterResumeReporter(
@@ -4382,26 +4555,7 @@ async function resumeSingleRegisterItemWorktree(
       `  CWD: ${worktree.path}\n  Agent: ${reporter.candidate.actor} (reporter)\n`,
   );
 
-  // waiting のまま reporter を走らせないよう、通常実行と同じく in-progress へ戻す。状態変更は
-  // root で直列化し、merge 前に作業ツリーを清潔にするため即時 commit する。
-  const begin = (): RegisterItemSummary | null => {
-    if (
-      !spawnRegisterTransition(projectId, [
-        "start",
-        "--id",
-        item.id,
-        "--by",
-        reporter.candidate.actor,
-        "--reason",
-        "reporter resumed",
-      ])
-    ) {
-      return refuse(`register start failed: ${item.id}`);
-    }
-    commitRegisterState(repoRoot, registerPaths, `exec(register ${item.id}): resume`, ticketPath);
-    return null;
-  };
-  const beginFailure = lifecycleLock ? await lifecycleLock.runExclusive(begin) : begin();
+  const beginFailure = await begin(reporter.candidate.actor, "reporter resumed");
   if (beginFailure) return beginFailure;
 
   const evidence = await revalidateFailedParentValidationsForReporterResume({
@@ -4440,6 +4594,7 @@ async function resumeSingleRegisterItemWorktree(
       agentResult: outcome.runResult,
       stderr: outcome.blockReason ?? "",
       actor: reporter.candidate.actor,
+      pipelineStatePath: target.statePath,
     });
 
   return lifecycleLock ? lifecycleLock.runExclusive(finalize) : finalize();
@@ -4511,7 +4666,7 @@ async function runRegisterMode(opts: RunOpts): Promise<void> {
       });
       process.stdout.write(
         lookup.kind === "resumable"
-          ? `[dry-run]   ${item.id}: resume run ${lookup.target.runId} in ${worktree.path}\n`
+          ? `[dry-run]   ${item.id}: resume the ${lookup.target.stage} stage of run ${lookup.target.runId} in ${worktree.path}\n`
           : `[dry-run]   ${item.id}: not resumable (${lookup.reason})\n`,
       );
     }
@@ -4666,7 +4821,7 @@ export function registerRunCommand(exec: Command): void {
   );
   rcmd.option(
     "--resume",
-    "With --register --worktree: resume only the reporter stage of a run whose executor succeeded, reusing the existing worktree and evidence",
+    "With --register --worktree: resume the stage where a run stopped (reporter, or integrate when the reporter already succeeded), reusing the existing worktree and evidence",
     false,
   );
   rcmd.option(

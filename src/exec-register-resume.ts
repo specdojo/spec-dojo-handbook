@@ -4,10 +4,17 @@ import type { ExecEvidence } from "./exec-evidence.js";
 import { loadPipelineResumeCheckpoint, type PipelineState } from "./exec-pipeline-state.js";
 import { safeSlug } from "./exec-shared.js";
 
-// register 項目の executor/reporter pipeline を reporter 段から再開するための、
-// run 特定と入力復元。executor が成功したまま reporter だけが失敗した run は、worktree の
-// 未コミット成果と `pipeline-state.json` / `evidence.json` が残っている。ここではその run を
-// 特定し、reporter へ渡す plan / result / evidence を復元する（実行は exec-run 側が行う）。
+// register 項目の executor/reporter pipeline を、途中で止まった段から再開するための run 特定と
+// 入力復元。途中で止まった run は worktree の未コミット成果と `pipeline-state.json` /
+// `evidence.json` が残っている。ここではその run と再開段を特定し、reporter へ渡す
+// plan / result / evidence を復元する（実行は exec-run 側が行う）。
+//
+// 再開段は2つある。reporter が未完了なら reporter 段から、reporter も成功していて統合
+// （commit → merge → worktree 撤去）だけが残っているなら integrate 段から再開する。worktree は
+// 統合が完了したときにだけ撤去されるため、reporter 成功済みの worktree が残っていること自体が
+// 「統合が未完了」を意味する。
+
+export type RegisterResumeStage = "reporter" | "integrate";
 
 export type RegisterResumeCandidate = {
   runId: string;
@@ -18,6 +25,7 @@ export type RegisterResumeCandidate = {
 };
 
 export type RegisterResumeTarget = {
+  stage: RegisterResumeStage;
   runId: string;
   stateRef: string;
   statePath: string;
@@ -93,12 +101,6 @@ export function selectResumableRegisterRun(
     return a.runId < b.runId ? -1 : a.runId > b.runId ? 1 : 0;
   })[candidates.length - 1];
 
-  if (latest.state.stages.reporter.status === "succeeded") {
-    return {
-      kind: "not-resumable",
-      reason: `reporter already succeeded for run ${latest.runId}`,
-    };
-  }
   if (latest.state.stages.executor.status !== "succeeded") {
     return {
       kind: "not-resumable",
@@ -115,6 +117,8 @@ export function selectResumableRegisterRun(
   return {
     kind: "resumable",
     target: {
+      // reporter が成功済みなら残っているのは統合だけ。executor / reporter は起動しない。
+      stage: latest.state.stages.reporter.status === "succeeded" ? "integrate" : "reporter",
       runId: latest.runId,
       stateRef: latest.stateRef,
       statePath: latest.statePath,
