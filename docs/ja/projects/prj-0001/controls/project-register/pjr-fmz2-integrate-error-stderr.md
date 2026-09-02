@@ -39,15 +39,38 @@ PJR-TA5C の統合失敗では、register イベントの `reason`、result の 
 
 ## 3. 作業内容
 
-| No  | 作業                                         | 担当 | 状態 | メモ                               |
-| --- | -------------------------------------------- | ---- | ---- | ---------------------------------- |
-| 1   | git 失敗メッセージの構成を見直す             | ARC  | open | pathspec は件数などへ要約する      |
-| 2   | 記録先ごとの長さ制限と切り詰め位置を確認する | ARC  | open | 原因が先頭に来るようにする         |
-| 3   | 単体テストを追加する                         | ARC  | open | 長い pathspec で stderr が残ること |
+| No  | 作業                                         | 担当 | 状態 | メモ                                                        |
+| --- | -------------------------------------------- | ---- | ---- | ----------------------------------------------------------- |
+| 1   | git 失敗メッセージの構成を見直す             | ARC  | done | pathspec を件数へ要約し、stderr を先頭側へ移した            |
+| 2   | 記録先ごとの長さ制限と切り詰め位置を確認する | ARC  | done | 3 記録先とも `sanitizeRegisterConclusion` の 200 文字が上限 |
+| 3   | 単体テストを追加する                         | ARC  | done | `tests/src/exec-worktree.test.ts` を追加                    |
 
 ## 4. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+`src/exec-worktree.ts` の `gitOutput` が組み立てる失敗メッセージを、
+`git <引数全文> failed: <stderr>` から
+`git <サブコマンド> failed: <stderr> (args: <要約>)` へ変更した。
+
+- `summarizeGitArguments` を追加し、`--` 以降の pathspec を `-- <件数> paths` へ要約する。
+  個々の引数は 40 文字、要約全体は 120 文字を上限とする。
+- `formatGitCommandFailure` を追加し、失敗原因（stderr）をサブコマンド名の直後へ置く。
+  切り詰めが起きても先頭側に原因が残る。
+- stderr が空の場合は `git <サブコマンド> failed (args: ...)` とし、コロン以降を付けない。
+- 変更は失敗時のメッセージ構成のみで、成功時の出力は従来どおり変えていない。
+
+記録先の長さ制限は、register イベントの `reason`、result の `block_reason`、
+実行ログの一覧行（`formatRegisterRunSummary`）のいずれも
+`sanitizeRegisterConclusion` の 200 文字上限を共有していることを確認した。
+本変更後は、pathspec が 40 件でも
+`integrate failed: git commit failed: <stderr> (args: -m title -- 40 paths)` が
+200 文字に収まり、stderr 全文と引数要約の双方が記録される。
+
+単体テストは `tests/src/exec-worktree.test.ts` に追加し、pathspec の件数要約、
+引数の省略、stderr が空の場合、および長い pathspec を含む失敗理由が
+`sanitizeRegisterConclusion` 通過後も stderr を保持することを検証する。
+
+残課題として、pre-commit hook の出力のように stderr 自体が 200 文字を大きく超える場合は、
+先頭 200 文字のみが記録される。全文保存が必要になった場合は記録先ごとの上限見直しが必要になる。
 
 ## 5. 関連ドキュメント
 
