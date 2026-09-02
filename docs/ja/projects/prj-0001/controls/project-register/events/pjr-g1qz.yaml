@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_888bdb586fcd47af9f16af988e590c2d
+  ts: "2026-09-02T21:30:13Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: rulebook 走査中に cxd-rulebook.md で MD007 違反が発生し、全件走査で拡大するため
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: grade の finding コメントが Markdown lint を壊さないようにする
+    - field: description
+      from: ""
+      to: 本文へ挿入する specdojo:finding コメントが後続リストのインデント判定を狂わせ、lint:md が失敗する問題を解消する。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: high
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-03"
+    - field: due
+      from: ""
+      to: "2026-09-30"
