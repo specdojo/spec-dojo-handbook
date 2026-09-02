@@ -139,6 +139,7 @@ import {
   captureAgentGitStateSnapshot,
   changedAgentGitStateFields,
 } from "./exec-agent-git-state.js";
+import { recordGitStateBlock, recordProtectedConfigBlock } from "./exec-protection-handoff.js";
 import {
   buildPhaseModeIndex,
   resolveApproach,
@@ -977,12 +978,26 @@ export async function executeAgent(
 // Detection is resolved per candidate from its provider (e.g. claude's "session limit" vs
 // opencode's "timeout"/"out of memory"); the run-level retry/backoff policy is governed by the
 // primary (highest-priority) candidate's provider.
+// 保護機構が block したとき、result へ自動記録できたかを実行ログにも残す。記録できない場合
+// （result 未 scaffold など）は、申し送りが result に無いことが分かるよう理由を出力する。
+function reportProtectionHandoffRecord(recorded: boolean, resultPath?: string): void {
+  process.stdout.write(
+    recorded
+      ? `  Handoff recorded in result: ${resultPath}\n`
+      : "  Handoff not recorded: no writable result for this run\n",
+  );
+}
+
+//
+// resultPath は保護機構が block したときの申し送り記録先（agent が動く cwd 側の result）。
+// 未指定でも block と終了コードの扱いは変わらない。
 async function runWithRetry(
   candidates: AgentRunCandidate[],
   prompt: string,
   execDefaults: ExecDefaultsConfig,
   cwd: string,
   env: NodeJS.ProcessEnv,
+  resultPath?: string,
 ): Promise<{
   result: RunResult;
   exitCode: number | null;
@@ -1029,6 +1044,15 @@ async function runWithRetry(
       if (protectedConfigChanges.length > 0) {
         const reason = agentProtectedConfigViolation(protectedConfigChanges);
         process.stderr.write(`blocked: ${reason}\n`);
+        reportProtectionHandoffRecord(
+          recordProtectedConfigBlock({
+            resultPath,
+            repoRoot: cwd,
+            paths: protectedConfigChanges,
+            reason,
+          }),
+          resultPath,
+        );
         return {
           result: "failure",
           exitCode: 1,
@@ -1040,6 +1064,16 @@ async function runWithRetry(
       if (gitStateChanges.length > 0) {
         const reason = agentGitStateViolation(gitStateChanges);
         process.stderr.write(`blocked: ${reason}\n`);
+        reportProtectionHandoffRecord(
+          recordGitStateBlock({
+            resultPath,
+            repoRoot: cwd,
+            before: gitStateBefore,
+            fields: gitStateChanges,
+            reason,
+          }),
+          resultPath,
+        );
         return {
           result: "failure",
           exitCode: 1,
@@ -1570,6 +1604,7 @@ async function runPreparedTask(
       execDefaults,
       prepared.worktree.path,
       agentEnvironment(repoRoot, prepared.worktree.path, schedulePath, executionPath),
+      worktreeResultPath,
     );
     result = outcome.result;
     stderr = outcome.stderr;
@@ -1667,6 +1702,7 @@ async function runPreparedTask(
       execDefaults,
       prepared.worktree.path,
       agentEnvironment(repoRoot, prepared.worktree.path, schedulePath, executionPath),
+      worktreeResultPath,
     );
     result = executorOutcome.result;
     stderr = executorOutcome.stderr;
@@ -1755,6 +1791,7 @@ async function runPreparedTask(
             execDefaults,
             prepared.worktree.path,
             agentEnvironment(repoRoot, prepared.worktree.path, schedulePath, executionPath),
+            worktreeResultPath,
           );
           reporterAttempts += outcome.attempts;
           if (outcome.limit) reporterLimit = outcome.limit;
@@ -2591,6 +2628,7 @@ async function spawnAgentInPlace(
   cwd: string,
   schedulePath: string,
   executionPath: string,
+  resultPath?: string,
 ): Promise<number> {
   const protectedConfigBefore = captureAgentProtectedConfigSnapshot(cwd);
   const gitStateBefore = captureAgentGitStateSnapshot(cwd);
@@ -2613,12 +2651,33 @@ async function spawnAgentInPlace(
   });
   const protectedConfigChanges = changedAgentProtectedConfigPaths(cwd, protectedConfigBefore);
   if (protectedConfigChanges.length > 0) {
-    process.stderr.write(`blocked: ${agentProtectedConfigViolation(protectedConfigChanges)}\n`);
+    const reason = agentProtectedConfigViolation(protectedConfigChanges);
+    process.stderr.write(`blocked: ${reason}\n`);
+    reportProtectionHandoffRecord(
+      recordProtectedConfigBlock({
+        resultPath,
+        repoRoot: cwd,
+        paths: protectedConfigChanges,
+        reason,
+      }),
+      resultPath,
+    );
     return 1;
   }
   const gitStateChanges = changedAgentGitStateFields(cwd, gitStateBefore);
   if (gitStateChanges.length > 0) {
-    process.stderr.write(`blocked: ${agentGitStateViolation(gitStateChanges)}\n`);
+    const reason = agentGitStateViolation(gitStateChanges);
+    process.stderr.write(`blocked: ${reason}\n`);
+    reportProtectionHandoffRecord(
+      recordGitStateBlock({
+        resultPath,
+        repoRoot: cwd,
+        before: gitStateBefore,
+        fields: gitStateChanges,
+        reason,
+      }),
+      resultPath,
+    );
     return 1;
   }
   return exitCode;
@@ -2845,6 +2904,7 @@ async function runInPlaceMode(opts: RunOpts): Promise<void> {
         SPECDOJO_SCHEDULE_PATH: schedulePath,
         SPECDOJO_EXECUTION_PATH: executionPath,
       },
+      resultPath,
     );
     const parentValidations =
       outcome.result === "success"
@@ -2922,6 +2982,7 @@ async function runInPlaceMode(opts: RunOpts): Promise<void> {
               SPECDOJO_SCHEDULE_PATH: schedulePath,
               SPECDOJO_EXECUTION_PATH: executionPath,
             },
+            resultPath,
           );
           reporterAttempts += reporterOutcome.attempts;
           return {
@@ -2994,7 +3055,14 @@ async function runInPlaceMode(opts: RunOpts): Promise<void> {
       exitCode = outcome.exitCode && outcome.exitCode !== 0 ? outcome.exitCode : 1;
     }
   } else {
-    exitCode = await spawnAgentInPlace(command, prompt, repoRoot, schedulePath, executionPath);
+    exitCode = await spawnAgentInPlace(
+      command,
+      prompt,
+      repoRoot,
+      schedulePath,
+      executionPath,
+      resultPath,
+    );
   }
 
   // Some agents (notably `claude -p`) exit 0 even when they conclude they are blocked: a
@@ -3355,6 +3423,7 @@ async function runRegisterReporterStage(params: {
         execDefaults,
         cwd,
         env,
+        params.resultPath,
       );
       reporterAttempts += reporterOutcome.attempts;
       return {
@@ -3488,7 +3557,14 @@ async function runRegisterAgentPipeline(params: {
 
   const env = agentEnvironment(repoRoot, cwd, schedulePath, executionPath);
   const executorPrompt = buildExecutorPrompt(planPrompt, execDefaults.pipeline?.parent_validations);
-  const outcome = await runWithRetry([executor], executorPrompt, execDefaults, cwd, env);
+  const outcome = await runWithRetry(
+    [executor],
+    executorPrompt,
+    execDefaults,
+    cwd,
+    env,
+    resultPath,
+  );
   const parentValidations =
     outcome.result === "success" ? await runConfiguredParentValidations(execDefaults, cwd) : [];
 
@@ -3756,7 +3832,14 @@ async function runSingleRegisterItem(
     }
   } else {
     process.stdout.write(`Running ${item.id} in place: ${command}\n`);
-    exitCode = await spawnAgentInPlace(command, prompt, repoRoot, schedulePath, executionPath);
+    exitCode = await spawnAgentInPlace(
+      command,
+      prompt,
+      repoRoot,
+      schedulePath,
+      executionPath,
+      resultPath,
+    );
   }
 
   // in-place 実行と同じ補助判定: agent が result 必須節を埋めずに終了コード 0 で
@@ -4265,6 +4348,7 @@ async function runSingleRegisterItemWorktree(
       context.execDefaults,
       worktree.path,
       env,
+      pathInsideWorktree(repoRoot, worktree.path, resultPath),
     );
     agentResult = outcome.result;
     stderr = outcome.stderr;

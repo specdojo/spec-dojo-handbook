@@ -24,6 +24,7 @@ import {
   captureAgentProtectedConfigSnapshot,
   changedAgentProtectedConfigPaths,
 } from "./exec-agent-protected-config.js";
+import { recordGitStateBlock, recordProtectedConfigBlock } from "./exec-protection-handoff.js";
 import {
   buildTaskPhaseMap,
   loadPrompt,
@@ -359,18 +360,35 @@ async function agent(opts: AgentOpts): Promise<void> {
     child.once("error", () => resolveExit(1));
     child.once("close", (code) => resolveExit(code ?? 1));
   });
+  // 保護機構が block した場合も、対象と提案差分を worktree 側 result の申し送りへ残す。
+  const worktreeResultPath = resolve(worktree.path, taskPaths(context, opts.task).resultRel);
   const protectedConfigChanges = changedAgentProtectedConfigPaths(
     worktree.path,
     protectedConfigBefore,
   );
   if (protectedConfigChanges.length > 0) {
-    process.stderr.write(`blocked: ${agentProtectedConfigViolation(protectedConfigChanges)}\n`);
+    const reason = agentProtectedConfigViolation(protectedConfigChanges);
+    process.stderr.write(`blocked: ${reason}\n`);
+    recordProtectedConfigBlock({
+      resultPath: worktreeResultPath,
+      repoRoot: worktree.path,
+      paths: protectedConfigChanges,
+      reason,
+    });
     process.exitCode = 1;
     return;
   }
   const gitStateChanges = changedAgentGitStateFields(worktree.path, gitStateBefore);
   if (gitStateChanges.length > 0) {
-    process.stderr.write(`blocked: ${agentGitStateViolation(gitStateChanges)}\n`);
+    const reason = agentGitStateViolation(gitStateChanges);
+    process.stderr.write(`blocked: ${reason}\n`);
+    recordGitStateBlock({
+      resultPath: worktreeResultPath,
+      repoRoot: worktree.path,
+      before: gitStateBefore,
+      fields: gitStateChanges,
+      reason,
+    });
     process.exitCode = 1;
     return;
   }

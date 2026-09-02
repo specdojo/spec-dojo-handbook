@@ -67,17 +67,30 @@ agent-git-state-write: Git state changes detected; fields=HEAD, local-config
 
 ## 4. 作業内容
 
-| No  | 作業                                     | 担当 | 状態 | メモ                           |
-| --- | ---------------------------------------- | ---- | ---- | ------------------------------ |
-| 1   | 現行の block 経路と result 更新を調べる  | ARC  | open | どこで申し送りを書く想定か     |
-| 2   | 機構側で記録する情報の範囲を決める       | ARC  | open | 差分と対象パスは自動記録できる |
-| 3   | agent への要求と機構の記録を組み合わせる | ARC  | open | 未記入時も最低限を残す         |
-| 4   | 単体テストを追加する                     | ARC  | open | 未記入時の挙動を固定する       |
-| 5   | 規約の記述を実態へ合わせる               | ARC  | open | 何が保証されるかを明記する     |
+| No  | 作業                                     | 担当 | 状態 | メモ                                                             |
+| --- | ---------------------------------------- | ---- | ---- | ---------------------------------------------------------------- |
+| 1   | 現行の block 経路と result 更新を調べる  | ARC  | done | block は stderr 出力と `updateResultStatus` のみで本文は未更新   |
+| 2   | 機構側で記録する情報の範囲を決める       | ARC  | done | 対象・block メッセージ・提案差分を自動、理由と検証は agent 由来  |
+| 3   | agent への要求と機構の記録を組み合わせる | ARC  | done | agent 記入があれば残し、未記入なら「記入なし」と明示して記録する |
+| 4   | 単体テストを追加する                     | ARC  | done | `tests/src/exec-protection-handoff.test.ts`                      |
+| 5   | 規約の記述を実態へ合わせる               | ARC  | done | `exec-config-guide.md` の該当節へ保証内容を追記                  |
 
 ## 5. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+`src/exec-protection-handoff.ts` を追加し、保護機構が block した時点で機構側から result の
+申し送りへ最低限の情報を記録するようにした。記録内容は保護機構名、block メッセージ、対象
+パス / フィールド、提案差分（`agent-config-write` は `git diff`、未追跡ファイルは現在の内容、
+`agent-git-state-write` は HEAD の before / after と local config の増減キー）である。変更理由と
+変更後に必要な検証は機構では復元できないため、agent 記入の有無を明示する。
+
+適用範囲は `exec run` の worktree 実行・in-place 実行・executor / reporter pipeline・register 実行、
+`exec worktree agent`、および commit 直前の再検査（`assertNoAgentProtectedConfigChanges`）である。
+`exec trial` は exec result を持たないため対象外とし、違反は従来どおり trial の evidence と標準
+エラーに残る。
+
+frontmatter と `実施内容` / `変更ファイル` のプレースホルダは変更しないため、未記入 result を
+block として扱う判定と終了コードの契約は維持している。記録先 result が無い run では記録せず、
+その旨を実行ログへ出力する。
 
 ## 6. 関連ドキュメント
 

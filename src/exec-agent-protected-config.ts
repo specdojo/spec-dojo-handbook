@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readdirSync, readFileSync, readlinkSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { gitEnvironment } from "./exec-worktree.js";
+import { gitEnvironment, gitResult } from "./exec-worktree.js";
 
 // PJR-3S8Q で agent の書き込み対象外とした、親 runner / hook / CI の実行内容を
 // 変えられる設定パス。provider 設定から注入できない固定定義として CLI 側に持つ。
@@ -129,6 +129,68 @@ export function changedAgentProtectedConfigPaths(
   return [...allPaths]
     .filter((path) => before.get(path) !== after.get(path))
     .sort((a, b) => a.localeCompare(b));
+}
+
+// block した変更を人が判断できるよう、対象パスごとの差分を git から取得する。
+// diff は差分ありで status 1 を返すため、0 と 1 のみ結果として採用する。
+function gitDiffText(repoRoot: string, args: readonly string[]): string {
+  const result = gitResult(repoRoot, [...args]);
+  if (result.error || (result.status !== 0 && result.status !== 1)) return "";
+  return typeof result.stdout === "string" ? result.stdout : "";
+}
+
+function untrackedProtectedPaths(repoRoot: string, paths: readonly string[]): ReadonlySet<string> {
+  const result = gitResult(repoRoot, ["status", "--porcelain", "-z", "--", ...paths]);
+  if (result.error || result.status !== 0) return new Set();
+  const stdout = typeof result.stdout === "string" ? result.stdout : "";
+  const untracked = new Set<string>();
+  for (const entry of stdout.split("\0")) {
+    if (!entry.startsWith("?? ")) continue;
+    untracked.add(normalizeRepoPath(entry.slice(3)));
+  }
+  return untracked;
+}
+
+// git が差分を出せない場合（未追跡の新規ファイル、agent が commit 済み、repository 未初期化）
+// でも、適用者が内容を判断できるよう現在の内容を追加行として組み立てる。
+function addedFileDiff(repoRoot: string, path: string, note: string): string {
+  const absolutePath = join(repoRoot, path);
+  if (!existsSync(absolutePath)) return "";
+  let content: string;
+  try {
+    content = readFileSync(absolutePath, "utf8");
+  } catch {
+    return "";
+  }
+  const header = `# ${path}: ${note}\n--- /dev/null\n+++ b/${path}`;
+  if (content.includes("\0")) return `${header}\n# binary content omitted`;
+  const lines = content.split("\n");
+  if (lines.at(-1) === "") lines.pop();
+  return [header, ...lines.map((line) => `+${line}`)].join("\n");
+}
+
+// 対象パスごとの提案差分を1つのテキストにまとめる。差分を取得できないパスは、
+// 取得できなかったことが分かる注記を残し、他パスの差分は落とさない。
+export function describeAgentProtectedConfigChanges(
+  repoRoot: string,
+  paths: readonly string[],
+): string {
+  if (paths.length === 0) return "";
+  const untracked = untrackedProtectedPaths(repoRoot, paths);
+  const sections: string[] = [];
+  for (const path of paths) {
+    const diff = untracked.has(path)
+      ? addedFileDiff(repoRoot, path, "新規ファイル（未追跡）の内容")
+      : gitDiffText(repoRoot, ["diff", "HEAD", "--unified=3", "--", path]) ||
+        gitDiffText(repoRoot, ["diff", "--unified=3", "--", path]) ||
+        addedFileDiff(repoRoot, path, "git 差分を取得できなかったため現在の内容を出力");
+    sections.push(
+      diff.trim() === ""
+        ? `# ${path}: 差分を取得できませんでした（削除、またはバイナリ・非 Git 環境の可能性があります）`
+        : diff.trimEnd(),
+    );
+  }
+  return sections.join("\n");
 }
 
 export function agentProtectedConfigViolation(paths: readonly string[]): string {
