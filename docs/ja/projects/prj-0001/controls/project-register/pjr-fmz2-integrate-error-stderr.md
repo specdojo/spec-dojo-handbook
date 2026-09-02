@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-fmz2-integrate-error-stderr
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-01T13:48:32Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-02T14:37:56Z"
   block_reason: "agent exited with non-zero code: agent exited with non-zero code: agent-git-state-write: Git state changes detected; fields=HEAD, local-config; agent must leave commits and repository configuration ch…"
+  conclusion: git 失敗メッセージで stderr を先頭付近へ置き、pathspec を件数へ要約した。切り詰めが起きても失敗原因が残る。
 ---
 
 # PJR-FMZ2 統合失敗時のエラーに git stderr を残す
@@ -72,6 +74,22 @@ PJR-TA5C の統合失敗では、register イベントの `reason`、result の 
 
 残課題として、pre-commit hook の出力のように stderr 自体が 200 文字を大きく超える場合は、
 先頭 200 文字のみが記録される。全文保存が必要になった場合は記録先ごとの上限見直しが必要になる。
+
+- 受け入れ時に orchestrator が、PJR-TA5C で実際に失敗した commit と同じ引数構成
+  （メッセージ1件と pathspec 10件）で検証した。従来はパス列に埋もれて失われた stderr が、
+  134文字のメッセージの先頭に現れる。
+
+```text
+git commit failed: error: pathspec did not match any file known to git (args: -m exec(register PJR-TA5C): plan を agent へ… -- 10 paths)
+```
+
+- 実行時に `agent-git-state-write` が block した。agent が `git reset` とリポジトリ設定の変更を
+  行ったためである。`reflog` に残るのは `reset: moving to HEAD` のみで agent の commit はなく、
+  成果物は `src/exec-worktree.ts` と新規テストに限られていた。orchestrator が内容を確認して
+  統合し、統合後に単体テスト1334件の通過と上記の出力を再確認した。
+- この block でも agent は申し送りを記入しなかった。[[prj-0001:pjr-vh6r-agent-config-write-handoff]]
+  で起票した問題が `agent-config-write` に限らないことが判明したため、同項目の対象を保護機構
+  全体へ広げた。
 
 ## 5. 関連ドキュメント
 

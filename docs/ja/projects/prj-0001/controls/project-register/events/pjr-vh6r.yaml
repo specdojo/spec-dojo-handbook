@@ -32,3 +32,16 @@
     - field: due
       from: ""
       to: "2026-09-30"
+- v: 1
+  id: reg_be05ce59c90541a4b049bb450a4fb65e
+  ts: "2026-09-02T14:37:57Z"
+  action: update
+  actor: orchestrator
+  from_status: open
+  to_status: open
+  reason: fields updated
+  changes:
+    - field: title
+      from: agent-config-write の block 時に申し送りの記入を強制する
+      to: 保護機構の block 時に申し送りの記入を強制する
+  previous_event_id: reg_11e9ac270233442999749d5497552f37

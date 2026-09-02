@@ -14,7 +14,7 @@ specdojo:
   due_on: "2026-09-30"
 ---
 
-# PJR-VH6R agent-config-write の block 時に申し送りの記入を強制する
+# PJR-VH6R 保護機構の block 時に申し送りの記入を強制する
 
 ## 1. 概要
 
@@ -34,6 +34,17 @@ agent-config-write: protected configuration changes detected; paths=package.json
 
 そのため orchestrator は、何をどう変更しようとしたのかを worktree の `git diff` から直接
 読み取る必要があった。申し送りが機能していれば、result を読むだけで判断できたはずである。
+
+同じことが PJR-FMZ2 の実行でも起きた。こちらは `agent-config-write` ではなく
+`agent-git-state-write` が block したが、申し送りは同様に `_TODO_` のままだった。
+
+```text
+agent-git-state-write: Git state changes detected; fields=HEAD, local-config
+```
+
+問題は特定の保護機構に固有ではなく、block 経路全体で申し送りの記入が保証されていない点に
+ある。本項目の対象は `agent-config-write` に限らず、agent の変更を止めて人の判断へ引き渡す
+保護機構全体とする。
 
 保護機構の目的は変更を止めることではなく、人の判断へ引き渡すことにある。引き渡す情報が
 欠けると、止めた意味が半減する。
@@ -69,4 +80,5 @@ _TODO_: 完了時に、実施内容・成果物・残課題を記載する。未
 
 ## 6. 関連ドキュメント
 
-- [[prj-0001:pjr-qm88-rulebook-schema-enum-lint]]: 本問題が発生した実行。
+- [[prj-0001:pjr-qm88-rulebook-schema-enum-lint]]: `agent-config-write` で発生した実行。
+- [[prj-0001:pjr-fmz2-integrate-error-stderr]]: `agent-git-state-write` で発生した実行。
