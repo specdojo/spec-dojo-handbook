@@ -73,16 +73,25 @@ enum が有効なのは、機械可読で意味が一意であり、rulebook が
 
 | No  | 作業                                  | 担当 | 状態 | メモ                          |
 | --- | ------------------------------------- | ---- | ---- | ----------------------------- |
-| 1   | rulebook と schema の対応付けを決める | ARC  | open | 命名規則か frontmatter 宣言か |
-| 2   | enum 抽出と本文照合を実装する         | ARC  | open | コメント内は除外する          |
-| 3   | 全 rulebook で誤検出の有無を確認する  | ARC  | open | 既知2件の検出も確認する       |
-| 4   | lint / hook から実行する              | ARC  | open | 既存の lint 系へ寄せる        |
-| 5   | 単体テストを追加する                  | ARC  | open | 欠落の検出と正常系            |
-| 6   | 検出された既存の乖離を整理する        | ARC  | open | 修正は別項目でもよい          |
+| 1   | rulebook と schema の対応付けを決める | ARC  | done | 同一 prefix の命名規則を採用  |
+| 2   | enum 抽出と本文照合を実装する         | ARC  | done | finding と Frontmatter を除外 |
+| 3   | 全 rulebook で誤検出の有無を確認する  | ARC  | done | ready の YAML/JSON を検査     |
+| 4   | lint / hook から実行する              | ARC  | done | validate:schema へ統合        |
+| 5   | 単体テストを追加する                  | ARC  | done | 欠落・正常・境界条件を追加    |
+| 6   | 検出された既存の乖離を整理する        | ARC  | done | 既知2文書の規則を修正         |
 
 ## 5. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- `validate-rulebook-schema-enums.ts` を追加し、ready の YAML/JSON rulebook と同一 prefix の schema を
+  対応付けて、schema 内の文字列 enum が規範本文に網羅されることを検査するようにした。
+- Frontmatter と `specdojo:finding` コメントを網羅判定から除外し、`reporter` のような長い語に
+  含まれる部分文字列も enum 値の記載とはみなさない。
+- `validate:schema:rulebook-enums` を `validate:schema` に統合し、hook / CI の既存検証経路から
+  自動実行されるようにした。
+- 既知の乖離について、`pm-members-rulebook.md` に `report` 起動プロファイルを追記し、
+  `pjr-rulebook.md` に PJR-ID の除外文字と topic のハイフン制約を追記した。
+- 単体テストでは enum 抽出、欠落値と対象パスの報告、finding コメントの除外、独立トークンの
+  判定を固定した。現時点の対象 rulebook で未解消の enum 欠落はない。
 
 ## 6. 関連ドキュメント
 

@@ -61,10 +61,13 @@ Project Register Documentation Rules
 <!-- specdojo:finding id=F001 severity=major rule=vp-qe-verifiability PJR-ID の `XXXX` に使える文字集合と `＜topic＞` の先頭・末尾・連続ハイフン制約が明記されておらず、本文だけでは `register add` / `register update —topic` が受理する名前を pass / fail 判定できない。 -->
 <!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency `register-item-frontmatter.schema.yaml` が除外する I・L・O・U を含む PJR-IDや, CLI が拒否する先頭・末尾・連続ハイフンを含む topic を規則上排除できないため, schema とコマンドに一致する完全な命名条件を追記する必要がある。 -->
 
-- 個別登録項目の表示 ID は `PJR-XXXX` 形式とする。例: `PJR-AB12`。
+- 個別登録項目の表示 ID は `PJR-XXXX` 形式とする。`XXXX` には数字と英字から
+  `I` / `L` / `O` / `U` を除いた4文字を使う。例: `PJR-AB12`。
 - 個別登録項目の文書 ID は `<project-id>:pjr-XXXX-<topic>` 形式とする。例: `prj-0001:pjr-ab12-auth-boundary`。
 - 個別登録項目のファイル名は `pjr-XXXX-<topic>.md` 形式とし、文書 ID のローカル部分と拡張子を除くファイル名を一致させる。
-- `<topic>` は英小文字・数字・ハイフンのみとし、対象領域や論点が分かる短い名称にする。
+- 文書 ID とファイル名では `XXXX` を小文字にする。
+- `<topic>` は英小文字または数字で始まり、英小文字・数字・単一ハイフンだけで構成し、
+  ハイフンで終えたり連続ハイフンを含めたりしない。対象領域や論点が分かる短い名称にする。
 - イベントファイル名は `pjr-XXXX.yaml` とし、topic を含めない。ID の小文字表記を用いる。
 
 ### 2.2. 配置規約
