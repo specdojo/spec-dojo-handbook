@@ -141,7 +141,7 @@ YAML 成果物のため、Markdown Frontmatter ではなく YAML 先頭のメタ
 
 <!-- specdojo:finding id=F003 severity=major rule=vp-qe-verifiability `priority`、`proficiency`、`capabilities`を「agent 推奨」としているが、schemaは全ての`type: agent`で3項目を必須としているため, rulebookに従った成果物がschema検証に失敗し得る。 -->
 
-| `mode` | agent 推奨 | `edit` または `review`。担当できる実行モードを表す |
+| `mode` | agent 推奨 | `edit` / `review` / `report`。agent の起動プロファイルを表す |
 
 <!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency `members[].mode`を`edit`または`review`のみと定義しているが、schemaと生成物`prj-0001:pm-members`はreporter用の`report`を許可・使用しており、pipeline reporterの実行プロファイル定義と矛盾している。 -->
 <!-- specdojo:finding id=F005 severity=major rule=vp-qe-omissions-consistency `members[].mode`の許容値から`report`が欠落しており、schemaおよび実際の`claude-reporter`で使用される値と矛盾している。 -->
@@ -184,7 +184,7 @@ YAML 成果物のため、Markdown Frontmatter ではなく YAML 先頭のメタ
 
 - 人間の実行主体は `human`、自動化または生成 AI 支援主体は `agent` とする。
 - `type: agent` の member には `provider` を必ず記載する。値は `opencode`、`claude`、`codex`、`copilot`、`custom` から選ぶ。
-- `exec run --auto` の候補にする agent には、`priority`、`mode`、`proficiency`、`capabilities` を記載する。
+- `exec run --auto` の候補にする agent には、`priority`、`mode`、`proficiency`、`capabilities` を記載する。`mode` は executor に `edit` / `review`、reporter に `report` を指定する。
 - `capabilities` はツールアクセスの能力だけを表し、成果物の責務や承認権限を表さない。
 - `stage_role` は pipeline 専用 agent にだけ指定し、`executor` または `reporter` とする。人間 member には指定しない。
 - `stage_role` を省略した agent は従来の単一 agent フロー専用とする。`stage_role` を持つ agent と持たない agent は、自動選択時に相互の代替候補にしない。
