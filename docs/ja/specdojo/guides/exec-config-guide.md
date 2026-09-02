@@ -510,6 +510,15 @@ executor / reporter pipelineのexecutor promptは、commitとrepository設定を
 
 設定変更が必要なタスクでは、agent は対象パス、変更理由、提案差分、変更後に必要な検証を result の申し送りへ記載して block します。人間または対話型 orchestrator は agent 実行外で提案を確認して適用し、対象設定に対応する test / hook / CI 検証を実行して commit します。agent 用の解除フラグはありません。
 
+ただし block は agent の記入を待たずに成立するため、記入を agent の遵守だけに委ねると申し送りが `_TODO_` のまま残ります。そのため `src/exec-protection-handoff.ts` が、block した時点で機構側から result の申し送り節へ次を自動記録します（`agent-config-write` / `agent-git-state-write` の双方が対象です）。
+
+- 保護機構名と、標準エラーへ出力するものと同じ block メッセージ。
+- 対象パス（`agent-config-write`）または対象フィールド（`agent-git-state-write`）。
+- 提案差分。`agent-config-write` は対象パスの `git diff` を、未追跡ファイルは現在の内容を追加行として記録します。`agent-git-state-write` は HEAD の before / after と local config の増減キーを記録します。local config は値に資格情報を含みうるためキー名だけを出力します。
+- 変更理由と変更後に必要な検証。これらは機構では復元できないため、agent が申し送りを書いていれば「agent 記入を参照」と示し、未記入なら「agent の記入なし」と明示します。
+
+自動記録は edit result の申し送り節（無い場合は末尾に専用節）へ書き込み、agent が書いた申し送りは残したまま自動記録を後ろへ追加します。同じ result へ再度 block した場合は前回の自動記録を置き換えます。frontmatter と他節（`実施内容` / `変更ファイル` のプレースホルダを含む）は変更しないため、未記入 result を block として扱う判定と終了コードの契約はそのままです。記録先の result が無い run では自動記録を行わず、その旨を実行ログへ出力します。`exec trial` は exec result を持たないため、違反は trial の evidence と標準エラーにのみ残ります。
+
 ### 8.5. pm-members.yaml の値検証（nickname インジェクション対策）
 
 `nickname` は `providers.<provider>.command_template` の `{nickname}` へ無エスケープで展開され、展開後のコマンドは `shell: true` で実行されます。`pm-members.yaml` を書き換えられる者が `nickname` にシェルメタ文字を仕込むと、command 起動時にコマンドインジェクションが成立し得ます。これを次の 2 層で防ぎます。

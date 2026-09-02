@@ -13,6 +13,7 @@ import {
   agentProtectedConfigViolation,
   isAgentProtectedConfigPath,
 } from "./exec-agent-protected-config.js";
+import { recordProtectedConfigBlock } from "./exec-protection-handoff.js";
 import {
   ensureExecWorktree,
   execBranchExists,
@@ -184,6 +185,7 @@ function assertNoAgentProtectedConfigChanges(
 ): void {
   if (isHumanWorktreeExecution(context, worktree, taskId)) return;
 
+  const { resultRel } = taskPaths(context, taskId);
   const rootHead = gitOutput(context.repoRoot, ["rev-parse", "HEAD"]).trim();
   const compareBase = gitOutput(worktree.path, ["merge-base", "HEAD", rootHead]).trim();
   const committed = zeroSeparatedPaths(worktree.path, [
@@ -197,7 +199,15 @@ function assertNoAgentProtectedConfigChanges(
     .filter(isAgentProtectedConfigPath)
     .sort((a, b) => a.localeCompare(b));
   if (protectedPaths.length > 0) {
-    throw new Error(agentProtectedConfigViolation(protectedPaths));
+    const reason = agentProtectedConfigViolation(protectedPaths);
+    // commit 前の再検査でも、対象と提案差分を result の申し送りへ残してから block する。
+    recordProtectedConfigBlock({
+      resultPath: resolve(worktree.path, resultRel),
+      repoRoot: worktree.path,
+      paths: protectedPaths,
+      reason,
+    });
+    throw new Error(reason);
   }
 }
 
