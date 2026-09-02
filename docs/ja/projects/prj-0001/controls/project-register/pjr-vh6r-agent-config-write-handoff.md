@@ -7,12 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-09-02T13:25:25Z"
   due_on: "2026-09-30"
-  block_reason: rate limit reached
+  block_reason: "integrate failed: git merge-base failed: fatal: detected dubious ownership in repository at '/workspaces/specdojo-workspace/worktrees/prj-0001-PJR-VH6R' To add an exception for this directory, call:  …"
 ---
 
 # PJR-VH6R 保護機構の block 時に申し送りの記入を強制する
