@@ -58,3 +58,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_223d39ede1cf41e7846d94d861ef20ae
+- v: 1
+  id: reg_3834f1edb9324100bcb14959da132b4a
+  ts: "2026-09-02T14:58:18Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: executor と reporter が成功済みで統合だけ失敗した run を、agent を起動せず統合段から再試行できるようにした。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-02"
+    - field: conclusion
+      from: "-"
+      to: executor と reporter が成功済みで統合だけ失敗した run を、agent を起動せず統合段から再試行できるようにした。
+  previous_event_id: reg_dfd4c1d9881149eea5d1259c298b5608

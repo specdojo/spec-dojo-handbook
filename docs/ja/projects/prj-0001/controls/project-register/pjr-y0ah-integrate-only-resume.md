@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-y0ah-integrate-only-resume
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-01T13:48:31Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-02T14:58:18Z"
+  conclusion: executor と reporter が成功済みで統合だけ失敗した run を、agent を起動せず統合段から再試行できるようにした。
 ---
 
 # PJR-Y0AH 統合段のみを再試行できる再開経路を設ける
@@ -62,6 +64,15 @@ runner では回復できず orchestrator が手動で commit と merge を行�
 制約として、統合成功時の `integrate: succeeded` は永続化しない。state は worktree 内にあり、merge 後に書き込むと commit 対象が未コミットのまま残って worktree を撤去できなくなるため、記録するのは開始（`running`）と失敗（`failed`）に限る。
 
 残課題は、統合段再開の E2E（統合失敗を注入して `--resume` で回復する経路）の追加。executor 実行環境では統合テストを起動できないため、本タスクでは単体テストのみを追加した。
+
+- 受け入れ時に orchestrator が、本項目の発端となった PJR-TA5C の状態（executor と reporter が
+  成功済みで統合だけ失敗）に対する判定を確認した。当時は `reporter already succeeded` を理由に
+  `not-resumable` として拒否されたが、同じ条件で `integrate` 段からの再開を返すようになっている。
+  executor と reporter は起動しない。
+- `--resume` の説明文も「reporter、または reporter が成功済みなら integrate」を示す記述へ更新
+  されている。typecheck、lint:ts、単体テスト1337件の通過を確認した。
+- 本項目により、成果物が揃っているのに全面再実行しか選べない状態は解消された。PJR-TA5C では
+  この欠落のため orchestrator による手動統合が必要だった。
 
 ## 5. 関連ドキュメント
 
