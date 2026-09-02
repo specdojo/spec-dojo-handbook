@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_66c9386aef084f90b4d41ddb98d5415c
+  ts: "2026-09-02T12:16:43Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: ready の rulebook 2 件で schema との矛盾が見つかり、うち enum 欠落は機械検査で誤検出なく捕捉できたため
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: schema の enum 網羅を rulebook に対して検査する
+    - field: description
+      from: ""
+      to: schema が定義する enum 値が対応 rulebook 本文に列挙されているかを lint で検査し、実装変更への追従漏れを機械的に検出する。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: high
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-02"
+    - field: due
+      from: ""
+      to: "2026-09-30"

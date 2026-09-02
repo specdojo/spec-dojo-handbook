@@ -6,6 +6,31 @@ specdojo:
   recipe: undecided
   sample: specdojo:cop-index-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    reference: specdojo:prj-overview-rulebook
+    target: kata
+    verdict: needs-work
+    score: 91
+    graded_at: "2026-09-02T02:46:57.724Z"
+    graded_by: gemma-expert-executor
+    content_hash: eee5b4551b50b794d92a497132af6c5c1e1119a96bb1cce1fa362dc90d048c32
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 0, note: 0 }
 ---
 
 # カットオーバー計画（本番切替手順） 作成ルール
@@ -66,6 +91,8 @@ Frontmatter は共通スキーマに従う。
 
 - `based_on` には切替判断に直接利用した成果物のみを列挙する。
 - `based_on` と `supersedes` は配列で記載する。
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance サンプル specdojo:cop-index-sample の Frontmatter type が project となっており、ルールで定義された migration と矛盾している。 -->
 
 ## 5. 本文構成（標準テンプレ）
 

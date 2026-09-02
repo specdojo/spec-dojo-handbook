@@ -9,6 +9,30 @@ specdojo:
   template: specdojo:pm-members-template
   based_on:
     - specdojo:people-and-organization-definition-standard
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 66
+    graded_at: "2026-09-02T11:49:22.106Z"
+    graded_by: codex-expert-executor
+    content_hash: 789f88cbd498afc81732ad34c5da8ac5bdc3253e131a15e547516c5870f6481a
+    categories:
+      consistency: { score: 50 }
+      usability: { score: 75 }
+      architecture: { score: 100 }
+      quality: { score: 50 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 2, score: 50 }
+      vp-arc-conciseness: { level: 3, score: 75 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 2, score: 50 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 3, score: 75 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 4, minor: 5, note: 0 }
 ---
 
 # プロジェクトメンバー定義 作成ルール
@@ -57,12 +81,17 @@ agent の起動コマンドは `pm-members.yaml` には置かず、`.specdojo/ex
 - 推奨パス: `docs/ja/projects/<project-id>/030-project-management/pm-members.yaml`
 - `project_id` は配置先プロジェクト ID と一致させる。例: `prj-0001`
 - `id` は `<project-id>:pm-members` 形式を推奨する。例: `prj-0001:pm-members`
+
+<!-- specdojo:finding id=F004 severity=minor rule=vp-qe-verifiability `members[].nickname`の許容文字だけを示し、先頭を英小文字または数字とする条件と最大63文字のschema制約を示していないため、rulebook上は許容されてもschemaでrejectされる値を作成できる。 -->
+
 - `members[].nickname` は英小文字、数字、ハイフン、アンダースコアで記述する。
 - 一度実行ログに記録した `nickname` は変更せず、改名が必要な場合は新しい member を追加する。
 
 ## 4. 推奨メタ項目
 
 YAML 成果物のため、Markdown Frontmatter ではなく YAML 先頭のメタ項目として記載する。
+
+<!-- specdojo:finding id=F006 severity=minor rule=vp-qe-omissions-consistency schemaが任意のルートメタ項目として許可する`supersedes`が「推奨メタ項目」とルート構造の双方から欠落しており、置き換え関係の記述可否をrulebookから判断できない。 -->
 
 | 項目         | 説明                                      | 必須 |
 | ------------ | ----------------------------------------- | ---- |
@@ -74,6 +103,9 @@ YAML 成果物のため、Markdown Frontmatter ではなく YAML 先頭のメタ
 | `based_on`   | 根拠ドキュメント ID の配列                | 任意 |
 | `version`    | データバージョン。初期値は `1`            | ○    |
 | `project_id` | プロジェクト ID                           | ○    |
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-arc-conciseness 4節の「推奨メタ項目」と 5節の「本文構成（標準テンプレ）」で共通メタ項目の定義が重複しており、YAML 形式において冗長な記述となっている。 -->
+<!-- specdojo:finding id=F008 severity=minor rule=vp-ux-readability 「推奨メタ項目」と「本文構成（標準テンプレ）」で同じ8個のメタ項目を再掲しているため、読者が二つの表を比較しなければ差分の有無を判断できない。 -->
 
 ## 5. 本文構成（標準テンプレ）
 
@@ -94,25 +126,36 @@ YAML 成果物のため、Markdown Frontmatter ではなく YAML 先頭のメタ
 
 `members[]` は次のフィールドを標準とする。
 
-| フィールド           | 必須       | 内容                                                |
-| -------------------- | ---------- | --------------------------------------------------- |
-| `nickname`           | ○          | `--by` で指定する安定識別子                         |
-| `display_name`       | ○          | 表示名。公開文書では個人名を避けてよい              |
-| `email`              | 任意       | 公開可能な連絡先。非公開または不要なら `null`       |
-| `roles`              | ○          | 対応する Role code のリスト。汎用 agent は `[]` 可  |
-| `type`               | ○          | `human` または `agent`                              |
-| `provider`           | agent 必須 | agent を実行する CLI 種別（`opencode` など）        |
-| `priority`           | agent 推奨 | 同条件の agent 候補間での優先度。小さい値を優先する |
-| `mode`               | agent 推奨 | `edit` または `review`。担当できる実行モードを表す  |
-| `stage_role`         | 任意       | pipeline 専用 agent の `executor` / `reporter`      |
-| `proficiency`        | agent 推奨 | `normal` / `expert` などの品質 tier                 |
-| `persona`            | 任意       | 実行姿勢やレビュー観点を表す短いラベル              |
-| `focus`              | 任意       | 重視する観点の配列                                  |
-| `capabilities`       | agent 推奨 | `web_search` などのツール能力                       |
-| `command`            | 任意       | provider の command template を使わない場合の上書き |
-| `disabled`           | 任意       | `true` で `exec run --auto` の候補から一時除外する  |
-| `scheduler_strategy` | 任意       | 既定の scheduler 戦略                               |
-| `note`               | 任意       | 補足。責務境界や公開上の注意を簡潔に書く            |
+<!-- specdojo:finding id=F007 severity=major rule=vp-qe-kata-conformance YAML rulebookのフィールド定義がschema必須のagent項目を推奨扱いとし、現行の`report`起動プロファイルも定義していないため、Rulebook記述標準が求める実装可能な必須キー・型制約の正本として機能していない。 -->
+
+| フィールド     | 必須 | 内容                                   |
+| -------------- | ---- | -------------------------------------- |
+| `nickname`     | ○    | `--by` で指定する安定識別子            |
+| `display_name` | ○    | 表示名。公開文書では個人名を避けてよい |
+
+| `email` | 任意 | 公開可能な連絡先。非公開または不要なら `null` |
+| `roles` | ○ | 対応する Role code のリスト。汎用 agent は `[]` 可 |
+| `type` | ○ | `human` または `agent` |
+| `provider` | agent 必須 | agent を実行する CLI 種別（`opencode` など） |
+| `priority` | agent 推奨 | 同条件の agent 候補間での優先度。小さい値を優先する |
+
+<!-- specdojo:finding id=F003 severity=major rule=vp-qe-verifiability `priority`、`proficiency`、`capabilities`を「agent 推奨」としているが、schemaは全ての`type: agent`で3項目を必須としているため, rulebookに従った成果物がschema検証に失敗し得る。 -->
+
+| `mode` | agent 推奨 | `edit` または `review`。担当できる実行モードを表す |
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency `members[].mode`を`edit`または`review`のみと定義しているが、schemaと生成物`prj-0001:pm-members`はreporter用の`report`を許可・使用しており、pipeline reporterの実行プロファイル定義と矛盾している。 -->
+<!-- specdojo:finding id=F005 severity=major rule=vp-qe-omissions-consistency `members[].mode`の許容値から`report`が欠落しており、schemaおよび実際の`claude-reporter`で使用される値と矛盾している。 -->
+<!-- specdojo:finding id=F009 severity=minor rule=vp-ux-language-consistency `mode`を担当できる「実行モード」と説明する一方、実運用ではreporter権限を選ぶ「起動プロファイル」としても使うため、task modeとlaunch profileの用語を区別できていない。 -->
+
+| `stage_role` | 任意 | pipeline 専用 agent の `executor` / `reporter` |
+| `proficiency` | agent 推奨 | `normal` / `expert` などの品質 tier |
+| `persona` | 任意 | 実行姿勢やレビュー観点を表す短いラベル |
+| `focus` | 任意 | 重視する観点の配列 |
+| `capabilities` | agent 推奨 | `web_search` などのツール能力 |
+| `command` | 任意 | provider の command template を使わない場合の上書き |
+| `disabled` | 任意 | `true` で `exec run --auto` の候補から一時除外する |
+| `scheduler_strategy` | 任意 | 既定の scheduler 戦略 |
+| `note` | 任意 | 補足。責務境界や公開上の注意を簡潔に書く |
 
 ## 6. 記述ガイド
 

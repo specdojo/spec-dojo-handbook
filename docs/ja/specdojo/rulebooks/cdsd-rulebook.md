@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:cdsd-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 67
+    graded_at: "2026-09-02T01:43:13.691Z"
+    graded_by: gemma-expert-executor
+    content_hash: 6c77ad8c95eef88d92149674ca756d225c40838f8e9991fc3e2f559e53554ceb
+    categories:
+      consistency: { score: 75 }
+      usability: { score: 75 }
+      architecture: { score: 100 }
+      quality: { score: 38 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 2, score: 50 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-kata-conformance: { level: 1, score: 25 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 2, score: 50 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 4, minor: 1, note: 0 }
 ---
 
 # 概念データストア定義 作成ルール
@@ -15,19 +39,22 @@ Conceptual Data Stores Definition (CDSD) Documentation Rules
 本ドキュメントは、業務分析・要求定義・システム設計のために **概念データストア定義を記述する標準ルール** です。
 業務で扱うデータストア（帳簿・台帳・記録など）を一覧で定義します。各データストアの役割・粒度・用途・更新タイミングなどを明確に記載し、データの流れや管理単位を俯瞰できるようにします。
 
+<!-- specdojo:finding id=F003 severity=major rule=vp-qe-kata-conformance 指定されているサンプル `specdojo:cdsd-sample` が、本ルールで定義した標準列（line 80-92）を一切使用しておらず、整合性が完全に欠如している。 -->
+
 ## 0. 概要
 
 概念データストアとは、業務上継続的に保持・参照される情報の集合（帳簿・台帳・記録）を表す。DB やファイル形式などの物理構造ではなく、「業務単位としての情報管理のまとまり」を定義する。
 
 ## 1. メタデータ
 
-| 項目       | 説明                                   | 必須 |
-| ---------- | -------------------------------------- | ---- |
-| id         | 概念データストア一覧ID (cdsl-xxx-xxxx) | ○    |
-| type       | `domain` 固定                          | ○    |
-| title      | 概念データストア一覧名                 | ○    |
-| status     | `draft`/`ready`/`deprecated`           | ○    |
-| supersedes | 置き換え関係（古仕様→新仕様）          | 任意 |
+| 項目 | 説明                                   | 必須 |
+| ---- | -------------------------------------- | ---- |
+| id   | 概念データストア一覧ID (cdsl-xxx-xxxx) | ○    |
+| type | `domain` 固定                          | ○    |
+
+| title | 概念データストア一覧名 | ○ |
+| status | `draft`/`ready`/`deprecated` | ○ |
+| supersedes | 置き換え関係（古仕様→新仕様） | 任意 |
 
 ### 1.1 ID規約
 
@@ -42,6 +69,7 @@ Conceptual Data Stores Definition (CDSD) Documentation Rules
 
 - **日本語の単数形**を基本とする（例：売上台帳、在庫台帳）
 - 略語のみや実装名（SalesTbl など）は禁止
+
 - 「〜台帳」「〜帳簿」「〜一覧表」など、業務慣用名称はそのまま使用してよい
 
 ### 2.2 標準列の定義
@@ -49,15 +77,22 @@ Conceptual Data Stores Definition (CDSD) Documentation Rules
 | 列名               | 説明                                                   |
 | ------------------ | ------------------------------------------------------ |
 | **データストア名** | 業務での名称。日本語単数形。慣用的名称はそのまま使用可 |
-| **対応プロセス**   | 調達／販売／会計など複数可（複数の場合は「、」区切り） |
-| **主な内容**       | 記録項目の代表例を名詞句で簡潔に                       |
-| **更新タイミング** | 発生イベント・日次・月次などの処理基準                 |
-| **粒度**           | データの最小記録単位（例：仕入取引毎／商品×在庫時点）  |
-| **主な用途**       | 管理・分析・会計などの目的                             |
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency 「位置づけ」節および「禁止事項」節が欠落しており、成果物の役割定義と制約事項の提示が不十分である。 -->
+<!-- specdojo:finding id=F004 severity=minor rule=vp-ux-readability 「位置づけ」の記述がないため、初見の読者がプロジェクトのどのタイミングで、どのような目的で本書を扱うべきか把握しにくい。 -->
+
+| **対応プロセス** | 調達／販売／会計など複数可（複数の場合は「、」区切り） |
+| **主な内容** | 記録項目の代表例を名詞句で簡潔に |
+| **更新タイミング** | 発生イベント・日次・月次などの処理基準 |
+| **粒度** | データの最小記録単位（例：仕入取引毎／商品×在庫時点） |
+| **主な用途** | 管理・分析・会計などの目的 |
 
 ※ 列順は **データストア名 → 対応プロセス → 主な内容 → 更新タイミング → 粒度 → 主な用途** の順に統一する。
 
 ### 2.3 更新タイミングの標準語彙（改訂）
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-verifiability メタデータ項目 `type` の指定値について、表（line 54）と説明文（line 65）で矛盾があり、正誤判定が不能である。 -->
+<!-- specdojo:finding id=F005 severity=major rule=vp-ux-language-consistency メタデータの `type` 項目の値について、「domain」と「data」という異なる表記が混在しており、統一されていない。 -->
 
 使用可能なカテゴリ：
 

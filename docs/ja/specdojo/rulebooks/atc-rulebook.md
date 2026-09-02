@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:atc-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 91
+    graded_at: "2026-09-01T22:17:25.415Z"
+    graded_by: gemma-expert-executor
+    content_hash: d07f1b64cca9602d72acebbba93262e3022ed482da7c1087b5794b8973d8eb61
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 0, note: 0 }
 ---
 
 # 受入テストカタログ 対象別 作成ルール
@@ -47,9 +71,10 @@ flowchart BT
   TC -->|based_on| TSP
   Code -->|based_on| TC
 
-
   classDef target stroke-width:4px
   class TCDetail target
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 指定サンプル `docs/ja/specdojo/samples/atc-sample.md` が、本ルールで定義した構成（見出し1〜6）および type (`test`) に準拠しておらず、整合性が取れていない。 -->
 ```
 
 ## 3. ファイル命名・ID規則

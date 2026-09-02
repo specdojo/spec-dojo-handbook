@@ -11,17 +11,17 @@ specdojo:
     rubric: grade-rubric-v1
     target: kata
     verdict: needs-work
-    score: 83
-    graded_at: "2026-09-01T15:25:07.609Z"
+    score: 78
+    graded_at: "2026-09-01T22:46:40.744Z"
     graded_by: gemma-expert-executor
-    content_hash: 0c6d50a78e2d89e951d3836e9a34b70700b379c51111736a43027d8882ff4677
+    content_hash: 9f92080ab86c72dd004a4ff0bf52410579286d4f57e436ff8a256f85980de251
     categories:
-      consistency: { score: 88 }
+      consistency: { score: 63 }
       usability: { score: 92 }
       architecture: { score: 100 }
       quality: { score: 63 }
     viewpoints:
-      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-cross-document-consistency: { level: 2, score: 50 }
       vp-arc-conciseness: { level: 4, score: 100 }
       vp-arc-single-responsibility: { level: 4, score: 100 }
       vp-qe-verifiability: { level: 4, score: 100 }
@@ -30,7 +30,7 @@ specdojo:
       vp-ux-readability: { level: 4, score: 100 }
       vp-ux-language-consistency: { level: 3, score: 75 }
       vp-arc-document-structure: { level: 4, score: 100 }
-    findings: { blocker: 0, major: 2, minor: 2, note: 0 }
+    findings: { blocker: 0, major: 3, minor: 2, note: 0 }
 ---
 
 # 業務データ辞書 作成ルール
@@ -82,9 +82,13 @@ Frontmatter と同等の以下の項目をYAMLドキュメントの先頭に必�
 
 ## 5. 本文構成（標準テンプレ）
 
-| キー     | 説明                         | 必須 |
-| -------- | ---------------------------- | ---- |
-| entities | 業務データエンティティの一覧 | ○    |
+| キー | 説明 | 必須 |
+| ---- | ---- | ---- |
+
+<!-- specdojo:finding id=F003 severity=major rule=vp-qe-kata-conformance 成果物の種別（type: data）と、メタデータ項目としての設定値（type: domain）の内容が矛盾しており、正解の設定値が不明確である。 -->
+<!-- specdojo:finding id=F005 severity=minor rule=vp-ux-language-consistency 「type」という用語が成果物の種別とメタデータ項目名の両義的に使用されており、混同を招く恐れがある。 -->
+
+| entities | 業務データエンティティの一覧 | ○ |
 
 ### 5.1. entities の標準構成
 
@@ -93,17 +97,18 @@ Frontmatter と同等の以下の項目をYAMLドキュメントの先頭に必�
 | logical_name  | 業務上の論理名（日本語単数形）     | ○    |
 | physical_name | DB互換の物理名（lower_snake_case） | ○    |
 
-<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance IDの正規表現 `^bdd-[a-z0-9-]+$` が、サンプル (`specdojo:bdd-sample`) のID形式（コロンを含む形式）と矛盾している。 -->
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency IDの正規表現 `^bdd-[a-z0-9-]+$` が、サンプル (`specdojo:bdd-sample`) のID形式（コロンを含む形式）と矛盾している。 -->
+<!-- specdojo:finding id=F004 severity=major rule=vp-qe-kata-conformance IDの正規表現 `^bdd-[a-z0-9-]+$` が、サンプル (`specdojo:bdd-sample`) のID形式（コロンを含む形式）と矛盾している。 -->
 
 | description | 業務データの説明 | 任意 |
-
-<!-- specdojo:finding id=F003 severity=major rule=vp-qe-kata-conformance 成果物の種別（type: data）と、メタデータ項目としての設定値（type: domain）の内容が矛盾しており、正解の設定値が不明確である。 -->
-<!-- specdojo:finding id=F004 severity=minor rule=vp-ux-language-consistency 「type」という用語が成果物の種別とメタデータ項目名の両義的に使用されており、混同を招く恐れがある。 -->
 
 | glossary_term_id | 用語集の用語ID | 任意 |
 | related_terms | 関連用語IDリスト | 任意 |
 | key_fields | キー項目（`physical_name` のリスト） | ○ |
+
 | fields | 業務データフィールドの一覧 | ○ |
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-omissions-consistency 推奨される配置ディレクトリの記述が不足しており、プロジェクト内での標準的な配置場所が不明である。 -->
 
 ### 5.2. fields の標準構成
 
@@ -111,8 +116,6 @@ Frontmatter と同等の以下の項目をYAMLドキュメントの先頭に必�
 | ------------- | ---------------------------------- | ---- |
 | logical_name  | 業務上の論理名（日本語単数形）     | ○    |
 | physical_name | DB互換の物理名（lower_snake_case） | ○    |
-
-<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-omissions-consistency 推奨される配置ディレクトリの記述が不足しており、プロジェクト内での標準的な配置場所が不明である。 -->
 
 | glossary_term_id | 用語集の用語ID | 任意 |
 | type | データ型（integer / string / boolean / date / datetime / enum / money） | ○ |

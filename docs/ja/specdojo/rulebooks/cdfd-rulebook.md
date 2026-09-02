@@ -11,6 +11,30 @@ specdojo:
     - specdojo:cdfd-mermaid-rulebook
   based_on:
     - specdojo:rulebook-authoring-standard
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 81
+    graded_at: "2026-09-02T01:27:52.080Z"
+    graded_by: codex-expert-executor
+    content_hash: 15b09fc4d752a8c81caa7e2db29bbf39f704bea73116839c05dd8de0444e45a9
+    categories:
+      consistency: { score: 50 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 2, score: 50 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 3, minor: 0, note: 0 }
 ---
 
 # 概念データフロー図（領域別）作成ルール
@@ -22,6 +46,11 @@ Conceptual Data Flow Diagram Area Documentation Rulebook
 ## 1. 全体方針
 
 - 領域別 CDFD は、全体概要で定めた一領域の起点、主要入力・出力、データストア、委譲境界を引き継ぐ概念仕様です。実装方式や操作手順ではなく、領域内プロセスの業務目的と受け渡しを記述します。
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency sample または overview sample の境界を揃えないと、全体概要の委譲境界を引き継ぐという規則の準拠例として矛盾し、利用者が領域外処理を領域内へ取り込む誤用を招く。 -->
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency sample が上位概要で対象外とされた実際の入荷まで扱っているため、参照・責務境界の整合を回復する必要がある。 -->
+<!-- specdojo:finding id=F003 severity=major rule=vp-qe-kata-conformance 完成例の cdfd-sample を上位概要の境界へ合わせるか、上位概要側の `P-02` 境界を変更しないと, rulebook が定義する型の適用方法を sample で正しく示せない。 -->
+
 - 一つのプロセスノードは一つの業務目的と完了条件を持つプロセスだけを表します。複数の判断・更新・生成を一ノードに詰め込まず、コマンドの一操作を無条件に一プロセスへ分割しません。
 - プロセス一覧を用語・起動条件・必須性の正本、個別プロセス主要入出力を主要入力・主要出力・データストアの正本、図を順序と分岐の正本として併用します。同じ対象には表と図で同じプロセス ID と名称を使います。
 - 正常系だけでなく、業務結果を変える主要例外を、検出条件、扱い、継続・再開条件で定義します。ログや内部エラーの全列挙は行いません。

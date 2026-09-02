@@ -9,6 +9,30 @@ specdojo:
   template: not-needed
   based_on:
     - specdojo:rulebook-authoring-standard
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 55
+    graded_at: "2026-09-02T00:38:56.575Z"
+    graded_by: codex-expert-executor
+    content_hash: 7756271c98fc7885e3eae8d775f99832456fc1cad941f2a789ace757ee92a49d
+    categories:
+      consistency: { score: 25 }
+      usability: { score: 67 }
+      architecture: { score: 100 }
+      quality: { score: 38 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 1, score: 25 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 2, score: 50 }
+      vp-qe-omissions-consistency: { level: 1, score: 25 }
+      vp-qe-kata-conformance: { level: 1, score: 25 }
+      vp-ux-readability: { level: 2, score: 50 }
+      vp-ux-language-consistency: { level: 2, score: 50 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 10, minor: 6, note: 0 }
 ---
 
 # Mermaid を用いた概念データフロー図 作成ルール
@@ -20,22 +44,39 @@ Mermaid の `flowchart` 構文で CDFD のプロセス、イベント、デー�
 ## 1. 全体方針
 
 - Mermaid の `flowchart` を使用し、方向は全体概要・領域別を問わず `LR` を基本とします。CDFD は時系列・因果の流れを表すため、横書き言語で自然な左から右の視線移動に合わせます。`TB` は、対象が時系列・因果の流れではなく階層構造（組織・分類など）を表す場合にだけ使用します。
+
+<!-- specdojo:finding id=F012 severity=minor rule=vp-qe-kata-conformance `rulebook-authoring-standard` は章をタイトルで参照するよう求めているが、「6.4 の分割指針」および後出の「6.4節」は番号だけで参照しているため、「凡例と可読性」のような章タイトル参照へ改める必要がある。 -->
+<!-- specdojo:finding id=F014 severity=minor rule=vp-ux-readability 「6.4 の分割指針」という参照先には「業務の性質が近いプロセス」への分割が記載されておらず、参照をたどっても手順を確認できないため、包含元別の分割方針と正しい参照先を示す必要がある。 -->
+
 - 図が読みにくくなる原因は方向ではなく規模です。ノード数が多く一画面で関係を追いにくい場合は、方向を変えるのではなく、6.4 の分割指針に従って業務の性質が近いプロセスへ図を分けます。
 - 全体概要では一つのプロセス領域を一つの代表プロセスノードで表し、領域内の処理へ展開しません。領域別 CDFD では、対象領域内の一つのプロセスを一つのプロセスノードで表します。
 - 一つの記号へ一つの意味を割り当て、ノード形状だけでプロセス、イベント、データストア、外部主体を区別できるようにします。
+
+<!-- specdojo:finding id=F016 severity=minor rule=vp-ux-language-consistency 同じ線種 `==＞` を「現物の流れ」「物の流れ」「情報・現物の流れ」と呼び分けているため、包含元で使用する「物の流れ」など一つの正式名称へ統一する必要がある。 -->
+
 - 情報の流れと現物の流れは線種で区別し、すべてのエッジへ内容を表す名詞形のラベルを付けます。
 - 図の目的は業務上の合意であり、装飾や実装構造の再現ではありません。ノード形状で意味を区別することを基本とし、色は形状だけでは判別しにくい場合の視認性向上に、プロセス／イベント／データストア／外部主体という概念の大分類単位でのみ付けます。物理名、詳細な操作は使用しません。
 
-| 概念             | Mermaid 表現              | 表示例                                        |
-| ---------------- | ------------------------- | --------------------------------------------- |
-| プロセス         | 角丸長方形 `("...")`      | `販売記録("P-01 販売記録<br>（担当: 店員）")` |
-| プロセスグループ | `subgraph ... end`        | `subgraph 販売領域["販売領域"]`               |
-| データストア     | 円柱 `[(...)]`            | `販売記録簿[("販売記録簿")]`                  |
-| 物理保管         | スタジアム形 `(["..."])`  | `売場棚(["売場棚"])`                          |
-| 外部主体         | 四角 `[...]`              | `顧客["顧客"]`                                |
-| イベント         | 六角形 `{{...}}`          | `購入要求{{"顧客が商品を購入する"}}`          |
-| 情報の流れ       | ラベル付き `-->\|"..."\|` | `販売記録 -->\|"販売情報"\| 販売記録簿`       |
-| 物の流れ         | ラベル付き `==>\|"..."\|` | `売場棚 ==>\|"商品"\| 販売記録`               |
+| 概念     | Mermaid 表現         | 表示例                                        |
+| -------- | -------------------- | --------------------------------------------- |
+| プロセス | 角丸長方形 `("...")` | `販売記録("P-01 販売記録<br>（担当: 店員）")` |
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency プロセスグループを `subgraph` と定義しているが、`cdfd-overview-rulebook` はプロセスグループを一つの代表プロセスノードで表し、本書自身も `subgraph` は代表ノードの代替にならないとしているため、形状とグルーピングの責務を分離して定義する必要がある。 -->
+<!-- specdojo:finding id=F007 severity=major rule=vp-qe-omissions-consistency 概念表ではプロセスグループを `subgraph` としている一方、ノード規則では `subgraph` を代表プロセスノードの代替にできないとしており、プロセスグループをノードと囲みのどちらで表すかが矛盾している。 -->
+<!-- specdojo:finding id=F010 severity=major rule=vp-qe-kata-conformance `cdfd-overview-rulebook` と対応 template/sample はプロセスグループを角丸の代表ノードとして扱うのに、本書は `subgraph` として定義しており、包含先への適用結果が一致しない。 -->
+<!-- specdojo:finding id=F013 severity=major rule=vp-ux-readability プロセスグループを `subgraph` とする表と、`subgraph` は代表プロセスノードの代替にならないとする後続説明が両立せず、読者がプロセスグループをノードと囲みのどちらで描くべきか判断できない。 -->
+<!-- specdojo:finding id=F015 severity=major rule=vp-ux-language-consistency 「プロセスグループ」を `subgraph` の同義語として扱う表と、「サブグラフ」を単なる視覚的なまとまりとする用語定義・ノード規則が競合しているため、業務上のプロセスグループと Mermaid のサブグラフを別用語として統一する必要がある。 -->
+
+| プロセスグループ | `subgraph ... end` | `subgraph 販売領域["販売領域"]` |
+| データストア | 円柱 `[(...)]` | `販売記録簿[("販売記録簿")]` |
+
+<!-- specdojo:finding id=F009 severity=minor rule=vp-qe-omissions-consistency 物理保管を概念一覧で定義しているが、用語定義、ノード規則、凡例の必須形状、色分類に対応する規則がなく、スタジアム形を使用した場合の完全な適用方法を補う必要がある。 -->
+
+| 物理保管 | スタジアム形 `(["..."])` | `売場棚(["売場棚"])` |
+| 外部主体 | 四角 `[...]` | `顧客["顧客"]` |
+| イベント | 六角形 `{{...}}` | `購入要求{{"顧客が商品を購入する"}}` |
+| 情報の流れ | ラベル付き `-->\|"..."\|` | `販売記録 -->\|"販売情報"\| 販売記録簿` |
+| 物の流れ | ラベル付き `==>\|"..."\|` | `売場棚 ==>\|"商品"\| 販売記録` |
 
 ## 2. 位置づけと用語定義
 
@@ -65,7 +106,13 @@ Mermaid の `flowchart` 構文で CDFD のプロセス、イベント、デー�
 
 ## 5. 本文構成（標準テンプレ）
 
+<!-- specdojo:finding id=F005 severity=major rule=vp-qe-verifiability 「存在しない要素の区分は省略できる」という規則と、イベントおよびデータストアを必須とする表が衝突し、これらを持たない図を pass / fail のどちらにするか判定できないため、図種別の適用条件と許容する省略を明示する必要がある。 -->
+<!-- specdojo:finding id=F008 severity=major rule=vp-qe-omissions-consistency 存在しない区分を省略可能とする直後にイベントとデータストアを必須としており、必須事項の例外条件が内部で矛盾している。 -->
+
 Mermaid コードブロック内は、次の順序を基本とします。存在しない要素の区分は省略できます。
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-arc-cross-document-consistency イベントとデータストアを全 Mermaid コードブロックの必須要素としているが、`cdfd-overview-rulebook` とその template/sample は概要図で起点イベントを省略し, 物理保管向け分割図ではデータストアも配置しないため, 図種別ごとの必須条件に分ける必要がある。 -->
+<!-- specdojo:finding id=F011 severity=major rule=vp-qe-kata-conformance 対応 template/sample が意図的にイベントまたはデータストアを省略する図を提供しているのに、本書は両者を一律必須としており、rulebook と完成例・骨組みを同時に満たせない。 -->
 
 | 順序 | 区分             | 必須 | 内容                                         |
 | ---- | ---------------- | ---- | -------------------------------------------- |
@@ -140,6 +187,10 @@ flowchart LR
 
 - 図の直後に、角丸長方形、六角形、円柱、四角と、使用した線種の意味を記述します。
 - 現物の流れを使わない場合は「`-->` は情報の流れ。本図は現物の流れを対象外とする」と記述します。
+
+<!-- specdojo:finding id=F003 severity=major rule=vp-arc-cross-document-consistency 分割先を領域関係図とデータストア関係図に固定しているが、領域別 CDFD は業務の性質で分け、全体概要は外部主体・物理保管図とデータストア図に分けるため、包含元ごとの分割規則へ委譲する必要がある。 -->
+<!-- specdojo:finding id=F006 severity=minor rule=vp-qe-verifiability 「一画面で関係を追えない」の表示条件やノード数が定義されておらず分割要否が確認者ごとに変わるため、包含元 rulebook の件数目安を参照するなど判定方法を明示する必要がある。 -->
+
 - 一画面で関係を追えない場合は、領域関係図とデータストア関係図に分け、同じプロセス ID を維持します。
 - ノードの表示ラベルは1行あたり全角20字（半角40字）程度を目安にし、超える場合は `<br>` で改行して2行程度に収めます。LR ではラベルの行の長さがそのままノード幅となり横方向の占有幅に直結するため、特にイベント・データストアで長い説明文になりやすい箇所に注意します。エッジラベルは改行に頼らず短い名詞句に収めます。
 
@@ -147,6 +198,9 @@ flowchart LR
 
 - ノード形状による意味区別を優先し、色は形状だけでは見分けにくい場合の補助として使います。
 - 色を付ける場合は `classDef` のみを使用し、`style` によるノード単位の個別指定はしません。
+
+<!-- specdojo:finding id=F004 severity=minor rule=vp-arc-cross-document-consistency 色の大分類から物理保管が欠落している一方、overview の template/sample は物理保管へデータストア用の `store` class を割り当てているため、物理保管がどの色分類に属するかを明記する必要がある。 -->
+
 - 色は必ずプロセス／イベント／データストア／外部主体という概念の大分類単位で色相（Hue）を統一し、異なる大分類の間で色相を混同しません。
 - 大分類の中に業務上意味のあるサブ分類がある場合（例: データストアにおけるマスタ・構成データとトランザクションデータの違い）は、大分類の色相を保ったまま、濃淡・彩度を変えた同系統色でサブ分類を塗り分けられます。サブ分類の色分けを行う場合は、直後の凡例（6.4節）にサブ分類の名称と対応する色を明記します。
 - サブ分類の色分けは、業務上の判断（変更頻度、更新契機、参照される側か更新される側かなど）で区別できる場合にだけ使います。区別基準を説明できないサブ分類の塗り分けはしません。

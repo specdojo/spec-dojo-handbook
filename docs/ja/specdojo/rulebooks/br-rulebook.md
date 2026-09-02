@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:br-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 89
+    graded_at: "2026-09-02T00:01:15.625Z"
+    graded_by: gemma-expert-executor
+    content_hash: 129ca3dc972f548d2fc630927a27e01b19fe4ed01164b69d557d7f893d745427
+    categories:
+      consistency: { score: 88 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 3, score: 75 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 1, note: 0 }
 ---
 
 # ビジネスルール 作成ルール
@@ -40,15 +64,16 @@ Business Rule (BR) Documentation Rules
 
 ## 4. 推奨 Frontmatter 項目
 
-| 項目       | 説明                                   | 必須 |
-| ---------- | -------------------------------------- | ---- |
-| id         | ルールID (br-xxx-xxxx)                 | ○    |
-| type       | `rule` 固定                            | ○    |
-| title      | ルール名                               | ○    |
-| status     | `draft`/`ready`/`deprecated`           | ○    |
-| part_of    | 親ルールID（サブルールの場合）         | 任意 |
-| based_on   | 根拠となる仕様ID（BPS/UIS/BEL/BES 等） | 任意 |
-| supersedes | 置き換え関係（古仕様→新仕様）          | 任意 |
+| 項目 | 説明 | 必須 |
+| ---- | ---- | ---- |
+
+| id | ルールID (br-xxx-xxxx) | ○ |
+| type | `rule` 固定 | ○ |
+| title | ルール名 | ○ |
+| status | `draft`/`ready`/`deprecated` | ○ |
+| part_of | 親ルールID（サブルールの場合） | 任意 |
+| based_on | 根拠となる仕様ID（BPS/UIS/BEL/BES 等） | 任意 |
+| supersedes | 置き換え関係（古仕様→新仕様） | 任意 |
 
 ### NG/OK例（抜粋）
 
@@ -77,6 +102,9 @@ Business Rule (BR) Documentation Rules
 - 業務データ辞書のエンティティ・論理名を列挙し、利用目的を簡潔に付記。
   - 例: エンティティ:在庫、項目:在庫数・予約数、目的:不足判定の基準
 - 必要に応じて用語集の用語ID（tm-xxx-xxx）や外部 IF 仕様の ID を併記。
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-omissions-consistency 第4節の ID 形式の記述 `(br-xxx-xxxx)` が、第3節や第11節で例示されているセマンティックな ID 形式 `br-low-stock-judgment` と矛盾している。 -->
+
 - 入力は概念レベルで記述する（詳細は「9. 禁止事項」参照）。
 
 ### 6.3 ルール（判定/計算）
@@ -92,6 +120,8 @@ Business Rule (BR) Documentation Rules
 擬似コード例：
 
 ```ts
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance 参照されているサンプル `specdojo:br-sample` が、本ルールブックの第5節で定義された「本文構成（標準テンプレ）」に従っておらず、具体例として機能していない。 -->
 type 商品 = { 商品ID: string; 定番: boolean; 発注点: number };
 type 在庫 = { 商品ID: string; 在庫数: number; 予約数: number };
 

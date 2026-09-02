@@ -7,6 +7,30 @@ specdojo:
   recipe: specdojo:prj-charter-recipe
   sample: specdojo:prj-charter-sample
   template: specdojo:prj-charter-template
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: pass
+    score: 100
+    graded_at: "2026-09-02T12:13:47.462Z"
+    graded_by: codex-expert-executor
+    content_hash: 31191f05dc1dceaf77b4828ffe31ac35ef7ebb97a459e19e63b141786f3119a0
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 100 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 0, note: 0 }
 ---
 
 # プロジェクト憲章 作成ルール
