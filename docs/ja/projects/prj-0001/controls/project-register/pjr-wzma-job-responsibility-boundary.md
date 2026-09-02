@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-09-01T12:02:27Z"
   due_on: "2026-09-30"
+  block_reason: "checkpoint failed: git worktree failed: Preparing worktree (new branch 'exec/prj-0001-PJR-WZMA') Updating files:  40% (1320/3222)\rUpdating files:  41% (1322/3222)\rUpdating files:  42% (1354/3222)\rUpda…"
 ---
 
 # PJR-WZMA job の責務を agent への委譲に限定する
