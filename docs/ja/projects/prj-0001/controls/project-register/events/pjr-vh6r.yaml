@@ -129,3 +129,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_a77490dd16ef443cbfd8633ea0b5542b
+- v: 1
+  id: reg_345345b7553a422fa28d22dc632f5776
+  ts: "2026-09-02T21:54:58Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: 保護機構が block した時点で対象と提案差分を result へ自動記録し、agent 由来の理由と検証は未記入であることを明示するようにした。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-03"
+    - field: conclusion
+      from: "-"
+      to: 保護機構が block した時点で対象と提案差分を result へ自動記録し、agent 由来の理由と検証は未記入であることを明示するようにした。
+  previous_event_id: reg_22782cbd1e08467ab64550d3c2d85602

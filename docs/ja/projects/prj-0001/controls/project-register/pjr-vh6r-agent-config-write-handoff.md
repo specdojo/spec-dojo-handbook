@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-vh6r-agent-config-write-handoff
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-02T13:25:25Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-02T21:54:58Z"
   block_reason: "integrate failed: git merge-base failed: fatal: detected dubious ownership in repository at '/workspaces/specdojo-workspace/worktrees/prj-0001-PJR-VH6R' To add an exception for this directory, call:  …"
+  conclusion: 保護機構が block した時点で対象と提案差分を result へ自動記録し、agent 由来の理由と検証は未記入であることを明示するようにした。
 ---
 
 # PJR-VH6R 保護機構の block 時に申し送りの記入を強制する
@@ -91,6 +93,13 @@ agent-git-state-write: Git state changes detected; fields=HEAD, local-config
 frontmatter と `実施内容` / `変更ファイル` のプレースホルダは変更しないため、未記入 result を
 block として扱う判定と終了コードの契約は維持している。記録先 result が無い run では記録せず、
 その旨を実行ログへ出力する。
+
+- 受け入れ時に orchestrator が typecheck、lint:ts、単体テスト1350件の通過を確認した。
+- 本項目の実行自体が、直前に完了した2項目の効果を実地で示した。1回目は executor が rate limit
+  で中断し、`--force-restart` した2回目は executor と reporter が成功して統合だけ失敗した。
+  失敗理由は `git merge-base failed: fatal: detected dubious ownership ...` と表示され、
+  PJR-FMZ2 の変更により原因が切り詰められずに読めた。続けて `--resume` が統合段からの再開を
+  選び、agent を起動せず統合を完了した。PJR-Y0AH の変更がなければ全面再実行しか選べなかった。
 
 ## 6. 関連ドキュメント
 
