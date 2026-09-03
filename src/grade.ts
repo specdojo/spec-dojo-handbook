@@ -3,6 +3,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, extname, isAbsolute, join, relative, resolve } from "node:path";
 import { type Command } from "commander";
 import yaml from "js-yaml";
+import remarkParse from "remark-parse";
+import { unified } from "unified";
 import { extractJsonText } from "./agent-response.js";
 import { collectResolvedDeliverables, loadCatalogDocs } from "./catalog-build.js";
 import { resolveBasePath } from "./catalog-paths.js";
@@ -40,7 +42,7 @@ export type GradeFindingInput = {
   line?: number;
 };
 
-type PreviousGradeFinding = Pick<GradeFindingInput, "severity" | "message"> & {
+type PreviousGradeFinding = Pick<GradeFindingInput, "severity" | "message" | "line"> & {
   rule: string;
 };
 
@@ -74,7 +76,7 @@ type MarkdownDocument = {
 };
 
 const FINDING_RE =
-  /^[ \t]*<!--[ \t]*specdojo:finding[ \t]+id=([^ \t]+)[ \t]+severity=(blocker|major|minor|note)[ \t]+rule=([^ \t]+)[ \t]+(.*?)[ \t]*-->[ \t]*(?:\r?\n|$)/gm;
+  /^[ \t]*<!--[ \t]*specdojo:finding[ \t]+id=([^ \t]+)[ \t]+severity=(blocker|major|minor|note)[ \t]+rule=([^ \t]+)(?:[ \t]+line=([1-9][0-9]*))?[ \t]+(.*?)[ \t]*-->[ \t]*(?:\r?\n|$)/gm;
 const KATA_DIRS = ["rulebooks", "recipes", "samples", "templates"] as const;
 const KATA_REFERENCE_EXTENSIONS = new Set([".md", ".yaml", ".yml", ".json"]);
 const KATA_REFERENCE_FIELDS = ["rulebook", "recipe", "sample", "template"] as const;
@@ -194,7 +196,8 @@ function previousGradeFindings(body: string): PreviousGradeFinding[] {
   return [...body.matchAll(FINDING_RE)].map((match) => ({
     severity: match[2] as GradeSeverity,
     rule: match[3],
-    message: match[4].trim(),
+    ...(match[4] ? { line: Number(match[4]) } : {}),
+    message: match[5].trim(),
   }));
 }
 
@@ -226,11 +229,35 @@ function findingComment(
   finding: Required<Pick<GradeFindingInput, "id">> & GradeFindingInput,
   rule: string,
 ): string {
-  return `<!-- specdojo:finding id=${finding.id} severity=${finding.severity} rule=${rule} ${sanitizeCommentText(finding.message)} -->`;
+  return `<!-- specdojo:finding id=${finding.id} severity=${finding.severity} rule=${rule} line=${finding.line ?? 1} ${sanitizeCommentText(finding.message)} -->`;
+}
+
+function markdownBlockRanges(body: string): Array<{ startLine: number; endLine: number }> {
+  const root = unified().use(remarkParse).parse(body);
+  return root.children.flatMap((node) => {
+    const startLine = node.position?.start.line;
+    const endLine = node.position?.end.line;
+    return startLine === undefined || endLine === undefined ? [] : [{ startLine, endLine }];
+  });
+}
+
+function safeFindingInsertionIndex(
+  blocks: readonly { startLine: number; endLine: number }[],
+  requestedIndex: number,
+): number {
+  const requestedLine = requestedIndex + 1;
+  for (const block of blocks) {
+    if (block.startLine <= requestedLine && requestedLine <= block.endLine) {
+      return block.startLine - 1;
+    }
+  }
+  return requestedIndex;
 }
 
 function insertFindings(body: string, viewpoints: GradeViewpointInput[]): string {
-  const lines = withoutFindingComments(body).split("\n");
+  const bodyWithoutFindings = withoutFindingComments(body);
+  const lines = bodyWithoutFindings.split("\n");
+  const blocks = markdownBlockRanges(bodyWithoutFindings);
   const insertions = new Map<number, string[]>();
   const usedIds = new Set(
     viewpoints.flatMap((viewpoint) =>
@@ -248,7 +275,11 @@ function insertFindings(body: string, viewpoints: GradeViewpointInput[]): string
         } while (usedIds.has(id));
         usedIds.add(id);
       }
-      const index = Math.max(0, Math.min(lines.length, (finding.line ?? 1) - 1));
+      const requestedIndex = Math.max(0, Math.min(lines.length, (finding.line ?? 1) - 1));
+      // finding は対象行を含む最上位 Markdown ブロックの直前へ置く。これにより、
+      // 入れ子リスト、表、引用、コードフェンス、複数行段落の内部を分断しない。
+      // 対象行そのものはコメントの line 属性に残す。
+      const index = safeFindingInsertionIndex(blocks, requestedIndex);
       const existing = insertions.get(index) ?? [];
       existing.push(findingComment({ ...finding, id }, viewpoint.id));
       insertions.set(index, existing);
