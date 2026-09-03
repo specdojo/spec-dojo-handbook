@@ -58,3 +58,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_ff63d2170b2b46a48c63af3abb465983
+- v: 1
+  id: reg_f43c4053d1ed40f8b69ce164032b3c27
+  ts: "2026-09-03T10:07:14Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: staged 済みの削除を git add の対象から除外し、削除を含む変更を統合できるようにした。commit の pathspec は HEAD も照合するため削除は記録される。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-03"
+    - field: conclusion
+      from: "-"
+      to: staged 済みの削除を git add の対象から除外し、削除を含む変更を統合できるようにした。commit の pathspec は HEAD も照合するため削除は記録される。
+  previous_event_id: reg_d107ac44aa9040ec98e7d5ee6c9cfe07

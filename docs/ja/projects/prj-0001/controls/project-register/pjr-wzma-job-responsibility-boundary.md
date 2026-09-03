@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-wzma-job-responsibility-boundary
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-01T12:02:27Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-03T10:07:15Z"
   block_reason: "integrate failed: git add failed: fatal: pathspec 'docs/ja/projects/prj-0001/jobs/job-grade-kata-expert-check.yaml' did not match any files (args: -A -- 19 paths)"
+  conclusion: job の責務を判断へ限定し、決定論的な手順を script へ移した。agent は task.agent で構造化して指定する。
 ---
 
 # PJR-WZMA job の責務を agent への委譲に限定する
@@ -56,6 +58,16 @@ job の責務を「agent へ委譲する判断の定義」に限定し、決定�
 - `rtn-grade-kata` を単一 action へ変更した。再開キーに使う値は script の `--run-id` 書式（`^[A-Za-z0-9._-]+$`）を満たす必要があるため、記号を含む `scheduled_at` ではなく `{{scheduled_at | iso_week}}` の `period` を入力にした。
 - 検証は `job validate`（3 件 0 エラー）、`routine validate`（6 件 0 エラー）、`exec run --job job-grade-kata --dry-run`（executor `claude-expert-executor` / reporter `claude-reporter` を解決）、`routine run --id rtn-grade-kata --dry-run`（`--input period=2026-W36` を解決）で行った。
 - 残課題は次の2点である。1つ目は、VitePress の sidebar（`.vitepress/sidebar-config.ts`）へ新標準の項目を追加できていないこと。実行環境の書き込み範囲外のため未反映で、人手での追加が要る。2つ目は、統合後の `job-grade-kata` を実 agent で通した所要時間と rate limit の実測で、これは [[prj-0001:pjr-excv-grade-per-document-pipeline]] の残課題と同じ測定に含まれる。
+
+- 受け入れ時に orchestrator が、job の description から決定論的な手順が消え、script 1行の実行と
+  結果の判断だけが残っていることを確認した。agent の指定は `task.agent.executor` /
+  `task.agent.reporter` として構造化され、自然言語からの解釈に依存しない。routine も3段の配列
+  action から単一 job へ整理されている。
+- 統合は本項目の実装とは別の欠陥で2度失敗した。1度目と2度目は executor が rate limit で中断し、
+  3度目は削除ファイルを含む変更を統合できない欠陥に当たった。後者は
+  [[prj-0001:pjr-reds-integrate-staged-deletion]] として分離し、修正後に `--resume` で統合段から
+  再開して完了した。本項目の成果物自体に問題はない。
+- validate:schema、typecheck、lint:ts、単体テスト1356件の通過を確認した。
 
 ## 5. 関連ドキュメント
 

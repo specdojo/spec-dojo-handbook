@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-reds-integrate-staged-deletion
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-03T09:50:00Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-03T10:07:14Z"
+  conclusion: staged 済みの削除を git add の対象から除外し、削除を含む変更を統合できるようにした。commit の pathspec は HEAD も照合するため削除は記録される。
 ---
 
 # PJR-REDS 統合処理が削除ファイルを含む変更を commit できない
@@ -95,6 +97,14 @@ HEAD も照合し、index から消えたパスを削除として記録できる
 
 残課題は作業内容の No.5（PJR-WZMA の統合を `--resume` で再開して確認する）である。本変更が
 統合ブランチへ入った後に実施する。
+
+- 受け入れ時に orchestrator が、本欠陥で止まっていた PJR-WZMA の統合を `--resume` で再開し、
+  成功することを確認した。削除された2つの job ファイルが commit に記録されている。修正前は
+  同じ操作が `git add failed: fatal: pathspec ... did not match any files` で失敗していた。
+- `git add` の pathspec が作業ツリーと index だけを照合するのに対し、`git commit` の pathspec は
+  HEAD も照合するという違いを利用している。staged 済みの削除を add の対象から外しても、
+  commit では削除として記録される。commit 対象の限定という目的は損なわれていない。
+- typecheck、lint:ts、validate:schema、単体テスト1356件の通過を確認した。
 
 ## 6. 関連ドキュメント
 

@@ -145,3 +145,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_ff52564bb18b481fb38b9bb37b4b8552
+- v: 1
+  id: reg_9be08a37e4b048fea84d130ec0c87e37
+  ts: "2026-09-03T10:07:15Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: job の責務を判断へ限定し、決定論的な手順を script へ移した。agent は task.agent で構造化して指定する。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-03"
+    - field: conclusion
+      from: "-"
+      to: job の責務を判断へ限定し、決定論的な手順を script へ移した。agent は task.agent で構造化して指定する。
+  previous_event_id: reg_016a116808e048f685ffa586ddebc573
