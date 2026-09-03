@@ -340,6 +340,7 @@ describe("grade markdown update", () => {
     expect(first).toContain("vp-qe-kata-conformance: { level: 4, score: 100 }");
     expect(first).toContain("findings: { blocker: 0, major: 0, minor: 1, note: 0 }");
     expect(first.match(/specdojo:finding/g)).toHaveLength(1);
+    expect(first).toContain("rule=vp-arc-conciseness line=3 前置きが重複している。");
     expect(validateGradedMarkdown(first, submission.documents[0].path)).toEqual([]);
     const formatted = await format(first, { parser: "markdown" });
     expect(formatted).toContain("architecture: { score: 100 }");
@@ -379,6 +380,56 @@ describe("grade markdown update", () => {
         first: one
         second: two`);
     expect(graded).not.toContain("remains: { first: one, second: two }");
+  });
+
+  it.each([
+    {
+      name: "nested list",
+      body: "- Frontmatter:\n\n  - `id`: example\n  - `title`: Example",
+      line: 5,
+      blockStart: "- Frontmatter:",
+    },
+    {
+      name: "table",
+      body: "| key | value |\n| --- | --- |\n| id | example |",
+      line: 5,
+      blockStart: "| key | value |",
+    },
+    {
+      name: "fenced code",
+      body: "```ts\nconst example = true;\n```",
+      line: 4,
+      blockStart: "```ts",
+    },
+  ])("places a finding before the containing $name block", ({ body, line, blockStart }) => {
+    const content = markdown.replace("本文です。", body);
+    const input = structuredClone(submission.documents[0]);
+    input.viewpoints[1].findings![0].line = line;
+
+    const graded = gradeMarkdownContent({
+      content,
+      path: input.path,
+      input,
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-29T00:00:00.000Z"),
+    });
+    const repeated = gradeMarkdownContent({
+      content: graded,
+      path: input.path,
+      input,
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-29T00:00:00.000Z"),
+    });
+
+    expect(graded).toContain(
+      `rule=vp-arc-conciseness line=${line} 前置きが重複している。 -->\n${blockStart}`,
+    );
+    expect(graded).not.toMatch(/\n{3,}/);
+    expect(repeated).toBe(graded);
   });
 
   it("detects count drift and edits after grading", () => {
@@ -430,7 +481,7 @@ describe("grade markdown update", () => {
     });
 
     expect(graded).toContain(
-      "severity=major rule=vp-arc-conciseness 必須の禁止事項が欠落している。",
+      "severity=major rule=vp-arc-conciseness line=1 必須の禁止事項が欠落している。",
     );
     expect(graded).toContain("vp-arc-conciseness: { level: 2, score: 50 }");
     expect(graded).toContain("major: 1");
@@ -450,7 +501,7 @@ describe("grade markdown update", () => {
     });
 
     expect(repeated).toContain(
-      "severity=major rule=vp-arc-conciseness 必須の禁止事項が欠落している。",
+      "severity=major rule=vp-arc-conciseness line=1 必須の禁止事項が欠落している。",
     );
     expect(repeated).toContain("vp-arc-conciseness: { level: 2, score: 50 }");
     expect(repeated).toContain("major: 1");
@@ -482,7 +533,7 @@ describe("grade markdown update", () => {
     });
 
     expect(graded).toContain(
-      "severity=minor rule=vp-arc-conciseness 必須の禁止事項は追加済みだが、例示が一部不足しているため軽微な問題だけが残る。",
+      "severity=minor rule=vp-arc-conciseness line=1 必須の禁止事項は追加済みだが、例示が一部不足しているため軽微な問題だけが残る。",
     );
     expect(graded).toContain("minor: 1");
   });

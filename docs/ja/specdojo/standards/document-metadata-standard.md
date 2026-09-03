@@ -267,10 +267,15 @@ Markdown 文書の最新の継続品質評価は `specdojo.grade` に記録し�
 
 Frontmatter の肥大化を抑えつつ観点単位の差分を保つため、`categories` と `viewpoints` は項目ごとの値（score または level / score）をフロースタイルで記録し、collection 自体はブロックスタイルを維持します。`findings` は severity 別件数のマッピング全体をフロースタイルで記録します。この書式は `specdojo.grade` だけに適用し、同じ Frontmatter の他の項目には波及させません。
 
-要修正箇所の直前には独立行で次のコメントを置きます。`rule` は共通 viewpoint ID です。`grade validate` は Frontmatter の severity 別件数、本文コメント数、内容ハッシュを突き合わせます。
+要修正箇所を含む最上位 Markdown ブロックの直前には、独立行で次のコメントを置きます。
+リスト、表、引用、コードフェンス、複数行段落の内部へコメントを挿入してはなりません。`rule` は
+共通 viewpoint ID、`line` は Frontmatter を除く本文での指摘行（1始まり）です。構造上安全な
+位置へコメントを移しても、`line` により指摘行との対応を維持します。`grade validate` は
+Frontmatter の severity 別件数、本文コメント数、内容ハッシュを突き合わせます。`line` を持たない
+既存コメントも引き続き読み取り対象とします。
 
 ```markdown
-<!-- specdojo:finding id=F001 severity=major rule=vp-qe-omissions-consistency 必須の禁止事項が欠落している。 -->
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-omissions-consistency line=42 必須の禁止事項が欠落している。 -->
 ```
 
 再評価で同じ message の finding が残る場合は未解消として扱い、severity を前回より引き下げません。前回の問題が解消され、別の軽微な問題だけが残る場合は、新しい finding の message に severity を引き下げる根拠を含めます。
