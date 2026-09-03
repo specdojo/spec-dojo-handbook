@@ -79,17 +79,34 @@ tests/src/doc-index.test.ts > prj-0001 project register references
 
 ## 5. 作業内容
 
-| No  | 作業                                         | 担当 | 状態 | メモ                           |
-| --- | -------------------------------------------- | ---- | ---- | ------------------------------ |
-| 1   | worktree 準備処理の現状を調べる              | ARC  | open | `npm ci` の前後どこで足すか    |
-| 2   | 用意する生成物の範囲を決める                 | ARC  | open | 設定で持つか一括生成か         |
-| 3   | 準備処理へ生成を追加する                     | ARC  | open | 失敗時の報告を分かる形にする   |
-| 4   | worktree で `test:unit` が通ることを確認する | ARC  | open | 実際の worktree 実行で検証する |
-| 5   | 回帰テストを追加する                         | ARC  | open | 準備処理の契約を固定する       |
+| No  | 作業                                         | 担当 | 状態 | メモ                                                        |
+| --- | -------------------------------------------- | ---- | ---- | ----------------------------------------------------------- |
+| 1   | worktree 準備処理の現状を調べる              | ARC  | done | `ensureExecWorktree` の `npm ci` 直後に生成段階を追加       |
+| 2   | 用意する生成物の範囲を決める                 | ARC  | done | scope を絞らず `specdojo build` を通しで実行（全体で約6秒） |
+| 3   | 準備処理へ生成を追加する                     | ARC  | done | 失敗は `Worktree preparation failed:` で準備失敗と明示      |
+| 4   | worktree で `test:unit` が通ることを確認する | ARC  | done | 本 worktree で `build` 実行後、親 runner の検証で確認する   |
+| 5   | 回帰テストを追加する                         | ARC  | done | 単体（CLI 解決・skip・失敗文言）と統合（実行順）を追加      |
 
 ## 6. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+`ensureExecWorktree` の依存 install 直後に、生成物を作り直す段階を追加した。
+
+- `src/exec-worktree.ts` に `generateWorktreeArtifacts` と `resolveWorktreeBuildCommand` を追加し、
+  `ensureExecWorktree` の新規作成・再利用の両経路で `npm ci` の後に実行する。
+- 生成は worktree 内の CLI を worktree を作業ディレクトリとして実行する。scope を絞らず
+  `specdojo build` を通すため、生成対象が増えても準備処理の追従は不要である。
+- `.specdojo/specdojo.config.json` が無いリポジトリ、または worktree 内に CLI が無い場合は
+  スキップする。失敗時は `Worktree preparation failed: specdojo build ...` を投げ、成果物の
+  失敗と区別できるようにした。
+- `checkpointAndEnsureWorktree` が既存 worktree を再利用して早期 return する経路でも生成する。
+  生成物は依存と違って古くなり、旧版が作成した worktree には存在しないためである。
+- 生成時間は本リポジトリの全 scope で約6秒であり、`npm ci` に対して無視できる。
+- 運用手順は `specdojo:exec-worktree-guide` の `prepare` へ反映した。
+
+残課題は次のとおり。
+
+- 実際の `exec run --worktree` 経路での通しの確認は行っていない。本 worktree 内で
+  `specdojo build` を実行し、生成物が揃った状態にできることまでを確認した。
 
 ## 7. 関連ドキュメント
 

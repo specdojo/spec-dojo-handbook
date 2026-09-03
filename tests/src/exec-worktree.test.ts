@@ -1,5 +1,14 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { formatGitCommandFailure, summarizeGitArguments } from "../../src/exec-worktree.js";
+import {
+  formatGitCommandFailure,
+  formatWorktreeBuildFailure,
+  generateWorktreeArtifacts,
+  resolveWorktreeBuildCommand,
+  summarizeGitArguments,
+} from "../../src/exec-worktree.js";
 import { sanitizeRegisterConclusion } from "../../src/exec-register.js";
 
 describe("summarizeGitArguments", () => {
@@ -65,5 +74,118 @@ describe("formatGitCommandFailure", () => {
 
     expect(reason).toContain(stderr);
     expect(reason).toContain("-- 40 paths");
+  });
+});
+
+describe("generateWorktreeArtifacts", () => {
+  function createWorktreeDirectory(withSpecdojoConfig: boolean): string {
+    const worktree = mkdtempSync(join(tmpdir(), "specdojo-worktree-artifacts-"));
+    if (withSpecdojoConfig) {
+      mkdirSync(join(worktree, ".specdojo"), { recursive: true });
+      writeFileSync(
+        join(worktree, ".specdojo", "specdojo.config.json"),
+        `${JSON.stringify({ version: 1, projects: {} }, null, 2)}\n`,
+        "utf8",
+      );
+    }
+    return worktree;
+  }
+
+  it("builds generated artifacts in the worktree when it holds a SpecDojo config", () => {
+    const worktree = createWorktreeDirectory(true);
+    const built: string[] = [];
+
+    try {
+      generateWorktreeArtifacts(worktree, (worktreePath) => built.push(worktreePath));
+
+      expect(built).toEqual([resolve(worktree)]);
+    } finally {
+      rmSync(worktree, { recursive: true, force: true });
+    }
+  });
+
+  it("skips the build when the worktree has no SpecDojo config", () => {
+    const worktree = createWorktreeDirectory(false);
+    const built: string[] = [];
+
+    try {
+      generateWorktreeArtifacts(worktree, (worktreePath) => built.push(worktreePath));
+
+      expect(built).toEqual([]);
+    } finally {
+      rmSync(worktree, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("resolveWorktreeBuildCommand", () => {
+  function createWorktree(entries: readonly string[]): string {
+    const worktree = mkdtempSync(join(tmpdir(), "specdojo-worktree-cli-"));
+    for (const entry of entries) {
+      const target = join(worktree, entry);
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, "", "utf8");
+    }
+    return worktree;
+  }
+
+  it("prefers the worktree's own source entry run through its local tsx", () => {
+    const worktree = createWorktree([
+      join("src", "specdojo.ts"),
+      join("node_modules", ".bin", "tsx"),
+      join("dist", "specdojo.js"),
+    ]);
+
+    try {
+      expect(resolveWorktreeBuildCommand(worktree)).toEqual({
+        command: process.execPath,
+        args: [
+          join(worktree, "node_modules", ".bin", "tsx"),
+          join(worktree, "src", "specdojo.ts"),
+          "build",
+        ],
+      });
+    } finally {
+      rmSync(worktree, { recursive: true, force: true });
+    }
+  });
+
+  it("falls back to the installed CLI binary, then to the built entry", () => {
+    const consumer = createWorktree([join("node_modules", ".bin", "specdojo")]);
+    const built = createWorktree([join("dist", "specdojo.js")]);
+
+    try {
+      expect(resolveWorktreeBuildCommand(consumer)).toEqual({
+        command: join(consumer, "node_modules", ".bin", "specdojo"),
+        args: ["build"],
+      });
+      expect(resolveWorktreeBuildCommand(built)).toEqual({
+        command: process.execPath,
+        args: [join(built, "dist", "specdojo.js"), "build"],
+      });
+    } finally {
+      rmSync(consumer, { recursive: true, force: true });
+      rmSync(built, { recursive: true, force: true });
+    }
+  });
+
+  it("returns null when the worktree holds no runnable SpecDojo CLI", () => {
+    const worktree = createWorktree([join("src", "specdojo.ts")]);
+
+    try {
+      expect(resolveWorktreeBuildCommand(worktree)).toBeNull();
+    } finally {
+      rmSync(worktree, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("formatWorktreeBuildFailure", () => {
+  it("names the preparation step so the failure is not read as a deliverable failure", () => {
+    const actual = formatWorktreeBuildFailure("/tmp/worktrees/prj-0001-PJR-E6QJ", "exited with 1");
+
+    expect(actual).toContain("Worktree preparation failed: specdojo build exited with 1");
+    expect(actual).toContain("/tmp/worktrees/prj-0001-PJR-E6QJ");
+    expect(actual).toContain("not a task deliverable failure");
   });
 });
