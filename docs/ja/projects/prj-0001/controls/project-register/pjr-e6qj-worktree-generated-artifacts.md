@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-e6qj-worktree-generated-artifacts
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-03T10:21:23Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-03T10:37:47Z"
+  conclusion: worktree の依存インストール直後に生成物をまとめて作るようにし、生成物を前提とする検証が成果物と無関係に失敗する状態を解消した。
 ---
 
 # PJR-E6QJ worktree 実行で生成物が用意されず親検証が失敗する
@@ -107,6 +109,11 @@ tests/src/doc-index.test.ts > prj-0001 project register references
 
 - 実際の `exec run --worktree` 経路での通しの確認は行っていない。本 worktree 内で
   `specdojo build` を実行し、生成物が揃った状態にできることまでを確認した。
+
+- 受け入れ時に orchestrator が単体テスト1362件の通過を確認した。生成対象を scope で絞らず
+  build を実行する設計のため、生成物が増えても準備処理の追従が要らない。SpecDojo の設定を
+  持たないリポジトリでは生成を試みない。
+- 本項目により、PJR-5ERG が着手前に停止した原因は解消された。同項目を再実行して確認する。
 
 ## 7. 関連ドキュメント
 
