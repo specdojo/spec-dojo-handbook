@@ -230,12 +230,94 @@ export function installWorktreeDependencies(
   }
 }
 
+export type WorktreeArtifactBuilder = (worktreePath: string) => void;
+
+const SPECDOJO_CONFIG_REL = join(".specdojo", "specdojo.config.json");
+
+// 生成物の失敗は成果物の失敗と混同されやすい。準備段階であることと、生成物が worktree ごとに
+// 作り直しになる理由をメッセージ本体へ含める。
+export function formatWorktreeBuildFailure(worktreePath: string, detail: string): string {
+  return (
+    `Worktree preparation failed: specdojo build ${detail} in ${worktreePath}. ` +
+    `Generated docs are gitignored and must be rebuilt per worktree, so this is a ` +
+    `preparation failure, not a task deliverable failure.`
+  );
+}
+
+export type WorktreeCommand = { command: string; args: string[] };
+
+// build は worktree 内で完結させる。依存と同じく、worktree の checkout にある CLI を使うため、
+// 実行元プロセスの entry（テストランナー等）へは依存しない。SpecDojo 自身のリポジトリでは
+// src の entry を worktree の tsx で、CLI を依存として使うリポジトリでは
+// node_modules/.bin/specdojo を使う。
+export function resolveWorktreeBuildCommand(worktreePath: string): WorktreeCommand | null {
+  const root = resolve(worktreePath);
+  const sourceEntry = join(root, "src", "specdojo.ts");
+  const localTsx = join(root, "node_modules", ".bin", "tsx");
+  if (existsSync(sourceEntry) && existsSync(localTsx)) {
+    return { command: process.execPath, args: [localTsx, sourceEntry, "build"] };
+  }
+  const installedCli = join(
+    root,
+    "node_modules",
+    ".bin",
+    process.platform === "win32" ? "specdojo.cmd" : "specdojo",
+  );
+  if (existsSync(installedCli)) return { command: installedCli, args: ["build"] };
+  const builtEntry = join(root, "dist", "specdojo.js");
+  if (existsSync(builtEntry)) return { command: process.execPath, args: [builtEntry, "build"] };
+  return null;
+}
+
+// worktree を cwd にして build を実行する。child は cwd から .specdojo/specdojo.config.json を
+// 辿るため、生成先は worktree 側になる。
+function runWorktreeBuild(worktreePath: string): void {
+  const resolved = resolveWorktreeBuildCommand(worktreePath);
+  if (!resolved) {
+    process.stdout.write(
+      `Skipping worktree artifact generation: no SpecDojo CLI in ${worktreePath}\n`,
+    );
+    return;
+  }
+  process.stdout.write("Generating worktree artifacts: specdojo build\n");
+  const result = spawnSync(resolved.command, resolved.args, {
+    cwd: worktreePath,
+    env: { ...gitEnvironment(), CI: "true", LEFTHOOK: "0" },
+    stdio: "inherit",
+  });
+  if (result.error) {
+    throw new Error(
+      formatWorktreeBuildFailure(worktreePath, `could not start: ${result.error.message}`),
+    );
+  }
+  if (result.status !== 0) {
+    throw new Error(
+      formatWorktreeBuildFailure(worktreePath, `exited with ${result.status ?? "unknown"}`),
+    );
+  }
+}
+
+// 生成物（docs/**/generated と .specdojo/doc-index.json）は .gitignore 済みで worktree へ
+// 複製されない。生成物の存在を前提とする検証は、成果物と無関係に失敗するため、依存の install
+// 直後にまとめて生成する。生成対象が増えても追従が要らないよう、scope を絞らず build を通しで
+// 実行する（全 scope で数秒。npm ci に対して無視できる）。
+export function generateWorktreeArtifacts(
+  worktreePath: string,
+  build: WorktreeArtifactBuilder = runWorktreeBuild,
+): void {
+  const root = resolve(worktreePath);
+  // SpecDojo の設定を持たないリポジトリには生成物が無い。build は失敗するだけなので実行しない。
+  if (!existsSync(join(root, SPECDOJO_CONFIG_REL))) return;
+  build(root);
+}
+
 export function ensureExecWorktree(opts: {
   repoRoot: string;
   worktreeBase: string;
   taskId: string;
   startPoint?: string;
   installDependencies?: (worktreePath: string) => void;
+  generateArtifacts?: (worktreePath: string) => void;
 }): ExecWorktree {
   const repoRoot = resolve(opts.repoRoot);
   const baseRelative = relative(repoRoot, resolve(opts.worktreeBase));
@@ -258,6 +340,7 @@ export function ensureExecWorktree(opts: {
       );
     }
     (opts.installDependencies ?? installWorktreeDependencies)(worktreePath);
+    (opts.generateArtifacts ?? generateWorktreeArtifacts)(worktreePath);
     return { path: worktreePath, branch, name, created: false };
   }
 
@@ -281,5 +364,6 @@ export function ensureExecWorktree(opts: {
   gitOutput(repoRoot, args);
 
   (opts.installDependencies ?? installWorktreeDependencies)(worktreePath);
+  (opts.generateArtifacts ?? generateWorktreeArtifacts)(worktreePath);
   return { path: worktreePath, branch, name, created: true };
 }

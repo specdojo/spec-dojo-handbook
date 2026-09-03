@@ -252,6 +252,58 @@ describe("exec worktree", () => {
     }
   });
 
+  it("generates worktree artifacts after installing dependencies, for new and reused worktrees", () => {
+    const repo = createGitRepository();
+    const base = mkdtempSync(join(tmpdir(), "specdojo-worktree-base-"));
+    const taskId = "prj-0001:T-LAUNCH-pm-plan-010";
+    try {
+      const steps: string[] = [];
+      const options = {
+        repoRoot: repo,
+        worktreeBase: base,
+        taskId,
+        installDependencies: () => steps.push("install"),
+        generateArtifacts: () => steps.push("generate"),
+      };
+
+      const created = ensureExecWorktree(options);
+      const reused = ensureExecWorktree(options);
+
+      expect(created.created).toBe(true);
+      expect(reused.created).toBe(false);
+      expect(steps).toEqual(["install", "generate", "install", "generate"]);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
+  it("keeps a newly created worktree when artifact generation fails", () => {
+    const repo = createGitRepository();
+    const base = mkdtempSync(join(tmpdir(), "specdojo-worktree-base-"));
+    const taskId = "prj-0001:T-LAUNCH-pm-plan-010";
+    try {
+      expect(() =>
+        ensureExecWorktree({
+          repoRoot: repo,
+          worktreeBase: base,
+          taskId,
+          installDependencies: () => undefined,
+          generateArtifacts: () => {
+            throw new Error("Worktree preparation failed: specdojo build exited with 1");
+          },
+        }),
+      ).toThrow("Worktree preparation failed");
+
+      const worktree = findExecWorktree(repo, taskId);
+      expect(worktree).not.toBeNull();
+      expect(existsSync(worktree?.path ?? "")).toBe(true);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
   it("keeps a newly created worktree when dependency installation fails", () => {
     const repo = createGitRepository();
     const base = mkdtempSync(join(tmpdir(), "specdojo-worktree-base-"));

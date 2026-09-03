@@ -18,6 +18,7 @@ import {
   ensureExecWorktree,
   execBranchExists,
   findExecWorktree,
+  generateWorktreeArtifacts,
   gitOutput,
   gitResult,
   worktreeNameFromTaskId,
@@ -679,7 +680,12 @@ export function checkpointAndEnsureWorktree(params: {
   const branch = `exec/${worktreeNameFromTaskId(worktreeTaskId)}`;
 
   const existing = findExecWorktree(context.repoRoot, worktreeTaskId);
-  if (existing) return existing;
+  if (existing) {
+    // 依存と違い、生成物は前回実行時のまま古くなる。生成段階を持たない版が作成した
+    // worktree では存在すらしない。再利用時も作り直し、生成物起因の検証失敗を避ける。
+    generateWorktreeArtifacts(existing.path);
+    return existing;
+  }
 
   if (!execBranchExists(context.repoRoot, worktreeTaskId)) {
     if (currentBranch(context.repoRoot) === branch) {

@@ -112,12 +112,17 @@ specdojo exec worktree prepare \
 6. plan、result、claim event を checkpoint commit します。
 7. checkpoint commit から exec branch と worktree を作成します。
 8. root と、tracked `package-lock.json` を持つ独立 package で `npm ci` を実行します。
+9. worktree 内で `specdojo build` を実行し、生成物を用意します。
 
 root にある無関係な未commit変更は checkpoint commit に含めません。ただし、stage 済み変更がある場合は停止します。
 
 作成または再利用した task worktree では、tracked `package-lock.json` ごとに `npm ci --include=dev` を実行し、root と独立 package の `node_modules` を worktree 内へ実体として配置します。依存関係を元 worktree と共有しないため、agent の sandbox は task worktree 内だけへの書き込みで build、typecheck、依存更新を実行できます。
 
 過去のバージョンが作成した `node_modules` シンボリックリンクを検出した場合は、リンク先へ変更を加えずリンクだけを削除してから `npm ci` で置き換えます。install に失敗した場合は agent を起動せず、調査できるよう task worktree を保持したままエラー終了します。依存取得に必要な registry と npm cache は、`exec run` を起動する環境から利用できる必要があります。
+
+依存の install に続けて、`docs/**/generated` と `.specdojo/doc-index.json` の生成物を worktree 内で作り直します。これらは `.gitignore` の対象で worktree の checkout に含まれないため、生成物の存在を前提とするテストや検証が、タスクの成果物と無関係に失敗するからです。生成は worktree 内の CLI（SpecDojo 自身のリポジトリでは `src/specdojo.ts`、依存として利用するリポジトリでは `node_modules/.bin/specdojo`）を worktree を作業ディレクトリとして実行し、scope を絞らず全ステップを通します。生成対象が増えても準備処理側の追従は不要です。
+
+既存の task worktree を再利用する場合も生成をやり直します。生成物は依存と違って前回実行時のまま古くなり、生成段階を持たない版が作成した worktree には存在しないためです。`.specdojo/specdojo.config.json` を持たないリポジトリ、または worktree 内に CLI が無い場合は生成をスキップします。生成に失敗した場合は `Worktree preparation failed: specdojo build ...` として、成果物の失敗ではなく準備の失敗と分かる形でエラー終了します。
 
 ### 2.2. status
 
