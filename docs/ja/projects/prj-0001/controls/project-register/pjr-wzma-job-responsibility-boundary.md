@@ -7,12 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-09-01T12:02:27Z"
   due_on: "2026-09-30"
-  block_reason: rate limit reached
+  block_reason: "integrate failed: git add failed: fatal: pathspec 'docs/ja/projects/prj-0001/jobs/job-grade-kata-expert-check.yaml' did not match any files (args: -A -- 19 paths)"
 ---
 
 # PJR-WZMA job の責務を agent への委譲に限定する

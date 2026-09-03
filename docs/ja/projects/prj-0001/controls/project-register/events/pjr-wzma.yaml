@@ -103,3 +103,19 @@
       from: waiting
       to: in-progress
   previous_event_id: reg_ef7cef6bb3ee4adfbc5ef41242990de5
+- v: 1
+  id: reg_953fbb56befa42d09f88157789aec6d1
+  ts: "2026-09-03T03:51:16Z"
+  action: wait
+  actor: claude-expert-executor
+  from_status: in-progress
+  to_status: waiting
+  reason: "integrate failed: git add failed: fatal: pathspec 'docs/ja/projects/prj-0001/jobs/job-grade-kata-expert-check.yaml' did not match any files (args: -A -- 19 paths)"
+  changes:
+    - field: status
+      from: in-progress
+      to: waiting
+    - field: block_reason
+      from: rate limit reached
+      to: "integrate failed: git add failed: fatal: pathspec 'docs/ja/projects/prj-0001/jobs/job-grade-kata-expert-check.yaml' did not match any files (args: -A -- 19 paths)"
+  previous_event_id: reg_8f17564060554d869e12de92e62056c8
