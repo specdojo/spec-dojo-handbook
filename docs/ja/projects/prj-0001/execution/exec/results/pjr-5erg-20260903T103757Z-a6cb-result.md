@@ -1,15 +1,14 @@
 ---
 specdojo:
-  id: prj-0001:xer-pjr-5erg-20260903t100738z-e048
+  id: prj-0001:xer-pjr-5erg-20260903t103757z-a6cb
   type: exec-result
   task_id: PJR-5ERG
   mode: edit
-  status: superseded
+  status: in_progress
   project_id: prj-0001
   origin: register
-  plan_ref: exec/plans/pjr-5erg-20260903T100738Z-e048-plan.md
-  started_at: "2026-09-03T10:07:38.475Z"
-  completed_at: "2026-09-03T10:37:57.347Z"
+  plan_ref: exec/plans/pjr-5erg-20260903T103757Z-a6cb-plan.md
+  started_at: "2026-09-03T10:37:57.347Z"
   agent: claude-expert-executor
 ---
 

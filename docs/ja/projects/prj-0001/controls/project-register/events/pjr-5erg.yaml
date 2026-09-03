@@ -61,3 +61,16 @@
       from: "-"
       to: "agent exited with non-zero code: 親 runner 検証 test-unit（npm run test:unit）が status=failed（tests/src/doc-index.test.ts の1テストが失敗）であるため、この結果を上書きせず outcome=blocked とする。加えて executor 自身も、本タスクに必要な変更対象（.codex/…"
   previous_event_id: reg_b49de42a398a4f1eac1159d9c27b995c
+- v: 1
+  id: reg_7c6bce3867d0496b953cd0788ec130dc
+  ts: "2026-09-03T10:37:57Z"
+  action: start
+  actor: claude-expert-executor
+  from_status: waiting
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: waiting
+      to: in-progress
+  previous_event_id: reg_bfaec1d6803d42869d47c53ac203c367
