@@ -10,6 +10,30 @@ specdojo:
   based_on:
     - specdojo:rulebook-authoring-standard
   supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: pass
+    score: 93
+    graded_at: "2026-09-03T07:33:12.652Z"
+    graded_by: codex-expert-executor
+    content_hash: e3b73abd73beee7c94a77001dfeefeac2efe62642476e291ece3b5e18d711673
+    categories:
+      consistency: { score: 88 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 88 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 3, score: 75 }
+      vp-qe-kata-conformance: { level: 3, score: 75 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 2, note: 0 }
 ---
 
 # プロジェクト課題と解決アプローチ 作成ルール
@@ -124,21 +148,26 @@ specdojo:
 ---
 ```
 
+<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-kata-conformance recipe・template・sample が導入部に求める承認者、利用ロールごとの利用目的、合意対象・非合意対象を rulebook の本文要件にも追加し、各成果物の必須内容を正本から追跡できるようにする。 -->
+
 ## 5. 本文構成（標準テンプレ）
 
 プロジェクト課題と解決アプローチは以下の見出し構成を **順序固定** で配置します。
 
 ### 5.1. プロジェクト課題と解決アプローチ（Project Issues and Approach）
 
-| 番号 | 見出し               | 必須 | 内容（要点）                                 |
-| ---- | -------------------- | ---- | -------------------------------------------- |
-| 1    | 課題一覧             | ○    | 課題、影響、優先度（最小でも課題の列挙）     |
-| 2    | 原因（仮説でも可）   | ○    | 課題の原因（事実と仮説を分ける）             |
-| 3    | 解決策候補           | ○    | 複数の方針、案の関係、対応する課題・原因     |
-| 4    | 採用アプローチと理由 | ○    | 採用方針、組み合わせる理由、非採用案と理由   |
-| 5    | トレードオフ/リスク  | 任意 | 代償、リスク、前提が崩れた場合の対応         |
-| 6    | 次の検討事項（ToDo） | 任意 | 未確定事項、追加調査、意思決定が必要な事項等 |
-| 7    | 見直しと変更管理     | 任意 | 見直しの契機、確認観点、対応方針、記録先     |
+| 番号 | 見出し | 必須 | 内容（要点） |
+| ---- | ------ | ---- | ------------ |
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-omissions-consistency 「最小でも課題の列挙」は課題だけでも成立すると読める一方、記述ガイドでは各課題の「影響」と「優先度」を最低要件としているため、「各課題に課題・影響・優先度を記載する」など一意な必須条件へ統一する。 -->
+
+| 1 | 課題一覧 | ○ | 課題、影響、優先度（最小でも課題の列挙） |
+| 2 | 原因（仮説でも可） | ○ | 課題の原因（事実と仮説を分ける） |
+| 3 | 解決策候補 | ○ | 複数の方針、案の関係、対応する課題・原因 |
+| 4 | 採用アプローチと理由 | ○ | 採用方針、組み合わせる理由、非採用案と理由 |
+| 5 | トレードオフ/リスク | 任意 | 代償、リスク、前提が崩れた場合の対応 |
+| 6 | 次の検討事項（ToDo） | 任意 | 未確定事項、追加調査、意思決定が必要な事項等 |
+| 7 | 見直しと変更管理 | 任意 | 見直しの契機、確認観点、対応方針、記録先 |
 
 ## 6. 記述ガイド
 

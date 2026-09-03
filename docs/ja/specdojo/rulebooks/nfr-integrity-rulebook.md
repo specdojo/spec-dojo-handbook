@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:nfr-integrity-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 89
+    graded_at: "2026-09-02T22:30:37.393Z"
+    graded_by: gemma-expert-executor
+    content_hash: 058f441f4927bf6a7e9ebd45281f951051840e05cfcf911e277cf553296790a9
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 92 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 3, score: 75 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 1, note: 0 }
 ---
 
 # 非機能要件 / 完全性 作成ルール
@@ -49,6 +73,8 @@ Non-Functional Requirements Integrity Documentation Rules
 ### 4.1. 設定内容
 
 Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schemas/v1/deliverable-frontmatter.schema.yaml](../../../specdojo/schemas/v1/deliverable-frontmatter.schema.yaml) / [document-metadata-standard.md](../standards/document-metadata-standard.md)）。
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 指定されたサンプルの構成が本ルールの必須見出し構成（5章）に準拠していない。 -->
 
 | 項目    | 説明                                | 必須 |
 | ------- | ----------------------------------- | ---- |
@@ -162,15 +188,16 @@ supersedes: []
 
 ### 8.4. 測定・検証方法（例）
 
-| 要件ID      | 測定方法                                   | 判定タイミング   | 判定者    |
-| ----------- | ------------------------------------------ | ---------------- | --------- |
-| nfr-int-001 | 日次整合チェックバッチで不整合を検出       | 日次自動実行     | DBA / SRE |
-| nfr-int-002 | 監査ログ収集基盤で欠落操作を検知           | リアルタイム監視 | SRE       |
-| nfr-int-003 | 受注↔在庫クロスチェックスクリプト          | 日次バッチ完了後 | Ops       |
-| nfr-int-004 | 署名検証テストを CI で実行                 | merge 毎         | QA        |
-| nfr-int-005 | 履歴テーブルの before/after 網羅率を検査   | 四半期監査       | QA / DBA  |
-| nfr-int-006 | 重複トランザクション検知アラートのカウント | リアルタイム監視 | SRE       |
-| nfr-int-007 | 外部データ取り込み時の検証ログを確認       | 日次確認         | Ops       |
+| 要件ID      | 測定方法                             | 判定タイミング   | 判定者    |
+| ----------- | ------------------------------------ | ---------------- | --------- |
+| nfr-int-001 | 日次整合チェックバッチで不整合を検出 | 日次自動実行     | DBA / SRE |
+| nfr-int-002 | 監査ログ収集基盤で欠落操作を検知     | リアルタイム監視 | SRE       |
+| nfr-int-003 | 受注↔在庫クロスチェックスクリプト    | 日次バッチ完了後 | Ops       |
+
+| nfr-int-004 | 署名検証テストを CI で実行 | merge 毎 | QA |
+| nfr-int-005 | 履歴テーブルの before/after 網羅率を検査 | 四半期監査 | QA / DBA |
+| nfr-int-006 | 重複トランザクション検知アラートのカウント | リアルタイム監視 | SRE |
+| nfr-int-007 | 外部データ取り込み時の検証ログを確認 | 日次確認 | Ops |
 
 ### 8.5. 関連ドキュメント導線（例）
 
@@ -181,3 +208,5 @@ supersedes: []
 | システム試験 | stc-\*           | 整合性検証・改ざん検知試験   | 必須 |
 | 判断記録     | dec-\*           | 完全性に関する例外判断の追跡 | 必須 |
 | 監査文書     | （外部監査基準） | SOC2 等の適合確認            | 任意 |
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-ux-language-consistency 「冔等キー」は「冪等キー」の誤記である。 -->

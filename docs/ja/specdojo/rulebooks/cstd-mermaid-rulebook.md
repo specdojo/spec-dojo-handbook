@@ -9,6 +9,30 @@ specdojo:
   template: undecided
   based_on:
     - specdojo:rulebook-authoring-standard
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 80
+    graded_at: "2026-09-02T14:02:02.671Z"
+    graded_by: gemma-expert-executor
+    content_hash: 6ee2dd2cbe45d37c418500ded11b0561f190d43c30a9a07cb256cb70e5d46d30
+    categories:
+      consistency: { score: 75 }
+      usability: { score: 92 }
+      architecture: { score: 100 }
+      quality: { score: 63 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 3, score: 75 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-kata-conformance: { level: 1, score: 25 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 2, minor: 1, note: 0 }
 ---
 
 # Mermaid を用いた概念状態遷移図（Conceptual State Transition Diagram）作成ルール
@@ -55,6 +79,8 @@ stateDiagram-v2
 
 ## 3. 状態（state）のルール
 
+<!-- specdojo:finding id=F003 severity=major rule=vp-qe-kata-conformance 指定されているサンプル(specdojo:cstd-sample)に概念状態遷移図（Mermaid記述）が含まれておらず、本ルールの適用例として機能していない。 -->
+
 ### 3.1 状態名のルール
 
 - 状態は **日本語の名詞句**で表現する。
@@ -63,6 +89,8 @@ stateDiagram-v2
 - 図内では、同じ意味の状態に対して名前を統一する（「販売中」と「販売可能」を混在させない）。
 
 ### 3.2 状態の宣言方法
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency 成果物のファイル命名規則、ID定義、および推奨されるFrontmatterや本文構成（章立て）のガイドラインが欠落している。 -->
 
 - 単純状態は、遷移だけ定義してもよい（`state` 宣言は必須ではない）。
 
@@ -186,6 +214,8 @@ stateDiagram-v2
 ### 9.1 商品の状態遷移（AS-IS の例）
 
 ```mermaid
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness 状態名の命名ルール（日本語・名詞句）に関する記述が、第3章(3.1)と第6章で重複している。 -->
 stateDiagram-v2
   [*] --> 未入荷
   未入荷     --> 入荷済み     : 納品伝票の登録

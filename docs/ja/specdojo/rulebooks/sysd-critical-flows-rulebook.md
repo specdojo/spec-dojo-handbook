@@ -4,6 +4,30 @@ specdojo:
   type: rulebook
   status: draft
   sample: specdojo:sysd-critical-flows-sample
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 71
+    graded_at: "2026-09-03T11:27:21.981Z"
+    graded_by: codex-expert-executor
+    content_hash: c3c96f18af44a7370289edd225834d4ff9d5d59dd9b3cc2f9f5af063663943e8
+    categories:
+      consistency: { score: 50 }
+      usability: { score: 75 }
+      architecture: { score: 100 }
+      quality: { score: 63 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 2, score: 50 }
+      vp-arc-conciseness: { level: 3, score: 75 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 3, score: 75 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 3, score: 75 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 3, minor: 11, note: 0 }
 ---
 
 # システム設計 重要フロー 作成ルール
@@ -11,6 +35,7 @@ specdojo:
 System Design Critical Flows (SYSD-CF) Documentation Rules
 
 本ドキュメントは、システム設計情報を **コード（定義ファイル）へ寄せる運用（Code as Spec）** を前提に、
+
 「読まないと事故る」重要フローだけを最小限で記述する **System Design Critical Flows (SYSD-CF)** の記述ルールを定義する。
 
 SYSD Critical Flows は詳細設計書ではない。**実装・テスト・運用の共通理解が必要な“難所”** に限定して可視化する。
@@ -21,6 +46,10 @@ SYSD-CF は、以下を目的とする。
 
 - **誤解や事故が起きやすい処理**（冪等・非同期・補償・整合性・外部障害など）を最小限で共有する
 - 実装が拡張されても崩れにくい **境界・永続化点・失敗時挙動** をSSOTとして残す
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-arc-cross-document-consistency テスト導線を `ITS/ETS` および `its-index/ets-index` と記載しているが、成果物体系の正本は `ITC/ETC` および `itc-index/etc-index` であり、参照先を一意に解決できない。 -->
+<!-- specdojo:finding id=F014 severity=minor rule=vp-ux-language-consistency 内部・外部結合テストを `ITS/ETS`、`ITC/ETC`、`its-index/ets-index`、`itc-*/etc-*` と混在させているため、正本に合わせて `ITC/ETC` と `itc-/etc-` 系へ統一する必要がある。 -->
+
 - テスト（ITS/ETS/STC）および運用（OPD/OPR）へ **観点と導線** を提供する
 
 基本方針:
@@ -41,11 +70,12 @@ SYSD-CF は、以下を目的とする。
 
 ### 2.2. 用語定義
 
-| 用語       | 定義                                                         |
-| ---------- | ------------------------------------------------------------ |
-| 重要フロー | 実装・運用事故に直結しやすく、共通理解が必須な処理フロー     |
-| 永続化点   | commit / outbox / enqueue など、状態確定や配送起点となる地点 |
-| 補償       | 一部成功後の不整合を是正するための戻し・取り消し・代替処理   |
+| 用語       | 定義                                                     |
+| ---------- | -------------------------------------------------------- |
+| 重要フロー | 実装・運用事故に直結しやすく、共通理解が必須な処理フロー |
+
+| 永続化点 | commit / outbox / enqueue など、状態確定や配送起点となる地点 |
+| 補償 | 一部成功後の不整合を是正するための戻し・取り消し・代替処理 |
 
 ## 3. ファイル命名・ID規則
 
@@ -59,14 +89,19 @@ SYSD-CF は、以下を目的とする。
 
 Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schemas/v1/deliverable-frontmatter.schema.yaml](../../../specdojo/schemas/v1/deliverable-frontmatter.schema.yaml) / [document-metadata-standard.md](../standards/document-metadata-standard.md)）。
 
-| 項目       | 説明                                            | 必須 |
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency 共通スキーマへの準拠を宣言しているが、必須の `specdojo:` 名前空間と `rulebook` を定義せず、スキーマで許可されない `title` を必須としているため、記載どおりの成果物はスキーマ不適合になる。 -->
+
+| 項目 | 説明 | 必須 |
+
+<!-- specdojo:finding id=F006 severity=major rule=vp-qe-omissions-consistency Frontmatter 必須項目から成果物スキーマ必須の `rulebook` と `specdojo:` 名前空間が欠落し、反対に未定義の `title` を必須としているため, 項目表を正本の必須キーへ合わせる必要がある。 -->
+
 | ---------- | ----------------------------------------------- | ---- |
-| id         | SYSD-CF ID（推奨: `sysd-critical-flows`）       | ○    |
-| type       | `architecture` など共通スキーマで許容される種別 | ○    |
-| title      | システム設計: 重要フロー                        | ○    |
-| status     | `draft` / `ready` / `deprecated`                | ○    |
-| based_on   | 根拠となる仕様ID（ID配列。未指定は `[]` 可）    | 任意 |
-| supersedes | 置き換え関係（ID配列。未指定は `[]` 可）        | 任意 |
+| id | SYSD-CF ID（推奨: `sysd-critical-flows`） | ○ |
+| type | `architecture` など共通スキーマで許容される種別 | ○ |
+| title | システム設計: 重要フロー | ○ |
+| status | `draft` / `ready` / `deprecated` | ○ |
+| based_on | 根拠となる仕様ID（ID配列。未指定は `[]` 可） | 任意 |
+| supersedes | 置き換え関係（ID配列。未指定は `[]` 可） | 任意 |
 
 ### 4.2. 推奨ルール
 
@@ -77,6 +112,9 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 
 `sysd-critical-flows` は以下の見出し構成を **順序固定** で配置する。
 
+<!-- specdojo:finding id=F003 severity=minor rule=vp-arc-cross-document-consistency 対応 sample は、本行で順序固定としている5章構成ではなく独自の「目的と適用範囲」「入力情報」「最小記述例」構成になっており、rulebook と整合していない。 -->
+<!-- specdojo:finding id=F012 severity=minor rule=vp-qe-kata-conformance 指定されたサンプルファイルが rulebook の定義する構成に従っておらず、具体的な完成例として機能していない。 -->
+
 | 番号 | 見出し                                      | 必須 |
 | ---- | ------------------------------------------- | ---- |
 | 1    | 概要（対象・運用方針）                      | ○    |
@@ -86,6 +124,9 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 | 5    | 関連ドキュメント導線（SDI/テスト/運用/DEC） | ○    |
 
 `3. フロー詳細` は、フローIDごとに以下の構成で記述する。
+
+<!-- specdojo:finding id=F004 severity=minor rule=vp-arc-conciseness フロー詳細の必須項目一覧が「本文構成」と「記述ガイド」でほぼ同文のまま反復されているため、前者を要件一覧、後者を判断基準と例に分担して重複を削減する必要がある。 -->
+<!-- specdojo:finding id=F013 severity=minor rule=vp-ux-readability フロー詳細の同一項目一覧が「本文構成」と「記述ガイド」に重複し、どちらが必須要件でどちらが補足説明か判別しにくいため、要件と具体化ガイドの役割を分ける必要がある。 -->
 
 - ヘッダ：ID、フロー名、目的、トリガー、範囲（含む/含まない）
 - フロー概要：図（推奨Mermaid）または箇条書き、登場要素、永続化点
@@ -114,6 +155,10 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 
 - フローID、フロー名、事故論点、優先度、備考を表形式で記載する。
 - 一覧は最大5件までとし、6件目以降は統合・削減の検討結果を反映してから追加する。
+
+<!-- specdojo:finding id=F005 severity=minor rule=vp-qe-verifiability 「一覧は最大5件まで」としながら「6件目以降は検討結果を反映してから追加する」としているため、整理後も6件以上を許容するのか、総数5件を厳守するのかを pass / fail 判定できる形で明確化する必要がある。 -->
+<!-- specdojo:finding id=F007 severity=minor rule=vp-qe-omissions-consistency 最大5件という上限と6件目以降を追加できるように読める手順が併存しているため、例外の有無と整理後の許容件数を統一する必要がある。 -->
+
 - 事故論点は「冪等」「非同期整合性」「補償」「外部I/F障害」「再実行性」などで明示する。
 
 重要フロー選定の判断基準（いずれか該当）:
@@ -147,6 +192,8 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 - 概要図の粒度は **C4コンポーネント図レベル相当** とし、実装クラス/メソッド詳細には踏み込まない
 
 ```mermaid
+
+<!-- specdojo:finding id=F011 severity=minor rule=vp-qe-kata-conformance 記法例および埋め込み完成例の図が、必須としたシステム内外・サービス境界と主要識別子を示しておらず、図の適用例が自身の規約を満たしていない。 -->
 flowchart LR
   UI[UI] -->|POST /sales| API[Sales API]
   API --> SVC[Sales Service]
@@ -169,6 +216,9 @@ flowchart LR
 生成する本文の見出しは **## 4. 観測性と運用連携**
 
 - 各フローで trace_id 伝搬範囲を明記する。
+
+<!-- specdojo:finding id=F009 severity=minor rule=vp-qe-omissions-consistency 各フローで `trace_id` 伝搬範囲を必須としているが、埋め込み例の scf-002 と scf-003 には伝搬範囲がなく、必須事項を満たす例になっていない。 -->
+
 - 必須ログ項目（`flow_id`, `request_id`, `entity_id`, `result` 等）を最低限定義する。
 - 監視条件（アラート閾値）、手動介入条件、OPR手順への導線を明記する。
 - 業務影響の大きい失敗は OPD の停止判断基準に接続する。
@@ -176,6 +226,8 @@ flowchart LR
 ### 6.5. 関連ドキュメント導線
 
 生成する本文の見出しは **## 5. 関連ドキュメント導線**
+
+<!-- specdojo:finding id=F008 severity=minor rule=vp-qe-omissions-consistency 順序固定の構成では第5章を「関連ドキュメント導線（SDI/テスト/運用/DEC）」としている一方、生成見出しは「関連ドキュメント導線」とされているため、固定対象となる見出し名を統一する必要がある。 -->
 
 - 各フローごとに SDI（一次情報）、テスト仕様（ITS/ETS/STC）、運用（OPD/OPR）、DEC を明記する。
 - 参照先は「ID」または「リポジトリ相対パス」で一意に辿れる形にする。
@@ -197,6 +249,8 @@ flowchart LR
 注：以下はルール文書内の例示です。生成する `sysd-critical-flows` では `## 1...` から始まります。
 
 ```yaml
+
+<!-- specdojo:finding id=F010 severity=major rule=vp-qe-kata-conformance 埋め込み完成例の Frontmatter が `specdojo:` 名前空間と必須 `rulebook` を欠き、許可されない `title` を含むため、rulebook を適用した正しい成果物例として機能しない。 -->
 ---
 id: sysd-critical-flows
 type: architecture

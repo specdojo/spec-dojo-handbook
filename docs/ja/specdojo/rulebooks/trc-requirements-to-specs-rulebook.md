@@ -4,6 +4,30 @@ specdojo:
   type: rulebook
   status: draft
   sample: specdojo:trc-requirements-to-specs-sample
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: pass
+    score: 93
+    graded_at: "2026-09-03T13:03:15.710Z"
+    graded_by: gemma-expert-executor
+    content_hash: 250cd3889e8a16d0c58c9767e42bf7f6c51e2064607c5060d1ebd2ca16548448
+    categories:
+      consistency: { score: 75 }
+      usability: { score: 92 }
+      architecture: { score: 100 }
+      quality: { score: 100 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 3, score: 75 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 3, score: 75 }
+      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 3, note: 0 }
 ---
 
 # トレーサビリティ（要求→仕様）作成ルール
@@ -21,18 +45,24 @@ Requirements Traceability (Requirements to Specs) Rulebook
 - 充足状況とギャップは、レビュー時に即時判定できる語彙で統一する。
 - 本ビューは必要なプロジェクトで生成する任意の管理ビューとし、独立した成果物ドメインやトラックを持たない。
 
+<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-omissions-consistency 成果物間の関係性やプロジェクトフロー上の位置づけを明記する「位置づけ」節が不足しており、作成タイミングや目的の把握が不十分である（prj-overview-rulebook の第 2 章を参照）。 -->
+
 ## 2. 位置づけと用語定義（必要に応じて）
 
 | 用語       | 定義                                                            |
 | ---------- | --------------------------------------------------------------- |
 | 要求ID     | 要求を一意に識別する ID（例: `req-` 系）                        |
 | 対応仕様ID | 要求を実現する仕様を一意に識別する ID（例: `bac-` / `bes-` 系） |
-| 充足状況   | 要求に対する仕様整備の達成状態（未着手 / 一部充足 / 充足）      |
-| ギャップ   | 要求と仕様の間に残る不足・不整合・未確定事項                    |
+
+| 充足状況 | 要求に対する仕様整備の達成状態（未着手 / 一部充足 / 充足） |
+| ギャップ | 要求と仕様の間に残る不足・不整合・未確定事項 |
 
 ## 3. ファイル命名・ID規則
 
 - 対象ドキュメント ID は `trc-requirements-to-specs` とする。
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-cross-document-consistency 対象ドキュメントIDが`＜project-id＞:ID`形式ではなく固定文字列で定義されており、プロジェクト間でのID一意性の担保という命名規則に反している。 -->
+
 - 推奨ファイル名は `trc-requirements-to-specs.md` とする。
 - 本 rulebook の ID は `specdojo:trc-requirements-to-specs-rulebook` とする。
 - 追加分割が必要な場合は `trc-requirements-to-specs-<term>` 形式を用いる。
@@ -104,6 +134,9 @@ Requirements Traceability (Requirements to Specs) Rulebook
 ## 7. 禁止事項
 
 - 要求本文・仕様本文の全文転記を行わない。
+
+<!-- specdojo:finding id=F003 severity=minor rule=vp-ux-readability 禁止事項に理由が添えられていないため、著者がルールの意図を理解しにくく、適用判断に迷う可能性がある。理由を添えた表形式への変更を推奨する。 -->
+
 - 要求IDまたは対応仕様IDが空の行を作成しない。
 - 充足状況に曖昧語（例: ほぼ対応、だいたい完了）を使用しない。
 - ギャップを「なし」としながら対応仕様IDが未記載の状態を許容しない。

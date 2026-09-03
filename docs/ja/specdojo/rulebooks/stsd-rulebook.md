@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:stsd-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 82
+    graded_at: "2026-09-03T11:05:53.989Z"
+    graded_by: gemma-expert-executor
+    content_hash: 6de3792cc933870e50cb7a42cc0846efa42ba1dd703b4b742a05f7f2c1c3c42a
+    categories:
+      consistency: { score: 75 }
+      usability: { score: 83 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 2, score: 50 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 3, minor: 0, note: 0 }
 ---
 
 # ステータス一覧（Status List）作成ルール
@@ -14,6 +38,8 @@ specdojo:
 
 - 各ステータスの正式名称・通称・状態の説明・管理場所などを明記し、業務プロセスにおける状態や管理単位を明確にします。
 - 詳細な状態遷移については、別途、概念状態遷移図(Conceptual State Transition Diagram, CSTD)で表現しますので、本一覧では状態の定義に集中します。
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance 指定されたサンプルファイル specdojo:stsd-sample が、本ルールブックで定義した本文構成に従っておらず、成果物の正本例となっていない。 -->
 
 ## 1. メタデータ
 
@@ -29,6 +55,9 @@ specdojo:
 
 - ステータス一覧IDは `^stl-[a-z0-9-]+$` に合致する一意IDを用いる。
 - `type: data` は業務ドメイン仕様であることを示す。
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-omissions-consistency type の固定値が 「domain」 とされており、後続の ID規約 (31行目) やサンプル (79行目) の 「data」 と矛盾している。 -->
+<!-- specdojo:finding id=F003 severity=major rule=vp-ux-language-consistency 成果物種別を表す type の値が 「domain」 と 「data」 で矛盾しており、表記が統一されていない。 -->
 
 ## 2. 記述ルール
 

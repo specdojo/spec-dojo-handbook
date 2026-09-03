@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:dmd-index-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 93
+    graded_at: "2026-09-02T16:18:52.722Z"
+    graded_by: gemma-expert-executor
+    content_hash: cc348f1a3fc263ae1070b34ee69e2fc9b4c25beeb8833abce8c463f676a15672
+    categories:
+      consistency: { score: 75 }
+      usability: { score: 92 }
+      architecture: { score: 100 }
+      quality: { score: 100 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 2, score: 50 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 3, score: 75 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 1, note: 0 }
 ---
 
 # データ移行設計 作成ルール
@@ -35,25 +59,27 @@ Data Migration Design Documentation Rules
 
 ## 4. 推奨 Frontmatter 項目
 
-| 項目       | 説明                                         | 必須 |
-| ---------- | -------------------------------------------- | ---- |
-| id         | `dmd-index`                                  | ○    |
-| type       | `migration` 固定                             | ○    |
-| title      | `データ移行設計: 全体`                       | ○    |
-| status     | `draft` / `ready` / `deprecated`             | ○    |
-| based_on   | 根拠となる仕様ID（ID配列。未指定は `[]` 可） | 任意 |
-| supersedes | 置き換え関係（ID配列。未指定は `[]` 可）     | 任意 |
+| 項目  | 説明                   | 必須 |
+| ----- | ---------------------- | ---- |
+| id    | `dmd-index`            | ○    |
+| type  | `migration` 固定       | ○    |
+| title | `データ移行設計: 全体` | ○    |
+
+| status | `draft` / `ready` / `deprecated` | ○ |
+| based_on | 根拠となる仕様ID（ID配列。未指定は `[]` 可） | 任意 |
+| supersedes | 置き換え関係（ID配列。未指定は `[]` 可） | 任意 |
 
 ## 5. 本文構成（標準テンプレ）
 
-| 番号 | 見出し                                            | 必須 |
+| 番号 | 見出し | 必須 |
+
 | ---- | ------------------------------------------------- | ---- |
-| 1    | 概要（index）                                     | ○    |
-| 2    | 共通方針（抽出/変換/除外/冪等性/ログ）            | ○    |
-| 3    | run_id 規約（命名/採番/記録/参照方法）            | ○    |
-| 4    | 検証の共通方針（種別/基準/証跡/保管）             | ○    |
-| 5    | 対象一覧（スコープ/非対象/担当/対応ドキュメント） | ○    |
-| 6    | 関連ドキュメント（必須）                          | ○    |
+| 1 | 概要（index） | ○ |
+| 2 | 共通方針（抽出/変換/除外/冪等性/ログ） | ○ |
+| 3 | run_id 規約（命名/採番/記録/参照方法） | ○ |
+| 4 | 検証の共通方針（種別/基準/証跡/保管） | ○ |
+| 5 | 対象一覧（スコープ/非対象/担当/対応ドキュメント） | ○ |
+| 6 | 関連ドキュメント（必須） | ○ |
 
 ## 6. 記述ガイド
 
@@ -64,6 +90,8 @@ Data Migration Design Documentation Rules
 
 ### 6.2. 共通方針（抽出/変換/除外/冪等性/ログ）
 
+<!-- specdojo:finding id=F002 severity=minor rule=vp-ux-language-consistency ID規則において、プロジェクトIDを含む具体的な命名パターン（例: ＜project-id＞:dmd-index）が明示されていない。 -->
+
 - 抽出（フル/増分）の採用方針と増分基準を定義する。
 - 変換/除外の原則（再実行で同一結果）と根拠リンクの方針を定義する。
 - 冪等性とログ要件（最低限残す項目）を定義する。
@@ -71,6 +99,9 @@ Data Migration Design Documentation Rules
 ### 6.3. run_id 規約（命名/採番/記録/参照方法）
 
 - 命名規則（例: `DMD-YYYYMMDD-<term>-NN`）と採番方法を定義する。
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency Frontmatter の type, title, id の定義が、対応するサンプル成果物 dmd-index-sample.md と矛盾している。 -->
+
 - run_id をログ/投入データ/照合レポートに紐づける。
 
 ### 6.4. 検証の共通方針（種別/基準/証跡/保管）

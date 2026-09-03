@@ -15,26 +15,26 @@ specdojo:
     rubric: grade-rubric-v1
     target: kata
     verdict: needs-work
-    score: 84
-    graded_at: "2026-09-02T11:24:15.110Z"
+    score: 93
+    graded_at: "2026-09-03T02:14:11.547Z"
     graded_by: codex-expert-executor
-    content_hash: d2dedfe61339926fd9636f6c4512484d472cdad0fb2968c715f78df95f365e3b
+    content_hash: d5ba848980808561369da1b378216c353e75d40b16caaf685bc720a7e5ed9d4f
     categories:
       consistency: { score: 75 }
       usability: { score: 92 }
       architecture: { score: 100 }
-      quality: { score: 75 }
+      quality: { score: 100 }
     viewpoints:
-      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-cross-document-consistency: { level: 2, score: 50 }
       vp-arc-conciseness: { level: 4, score: 100 }
       vp-arc-single-responsibility: { level: 4, score: 100 }
-      vp-qe-verifiability: { level: 2, score: 50 }
-      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
       vp-qe-kata-conformance: { level: 4, score: 100 }
       vp-ux-readability: { level: 3, score: 75 }
       vp-ux-language-consistency: { level: 4, score: 100 }
       vp-arc-document-structure: { level: 4, score: 100 }
-    findings: { blocker: 0, major: 2, minor: 1, note: 0 }
+    findings: { blocker: 0, major: 1, minor: 1, note: 0 }
 ---
 
 # プロジェクト登録簿 作成ルール
@@ -58,9 +58,6 @@ Project Register Documentation Rules
 
 ### 2.1. ID規約
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-qe-verifiability PJR-ID の `XXXX` に使える文字集合と `＜topic＞` の先頭・末尾・連続ハイフン制約が明記されておらず、本文だけでは `register add` / `register update —topic` が受理する名前を pass / fail 判定できない。 -->
-<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency `register-item-frontmatter.schema.yaml` が除外する I・L・O・U を含む PJR-IDや, CLI が拒否する先頭・末尾・連続ハイフンを含む topic を規則上排除できないため, schema とコマンドに一致する完全な命名条件を追記する必要がある。 -->
-
 - 個別登録項目の表示 ID は `PJR-XXXX` 形式とする。`XXXX` には数字と英字から
   `I` / `L` / `O` / `U` を除いた4文字を使う。例: `PJR-AB12`。
 - 個別登録項目の文書 ID は `<project-id>:pjr-XXXX-<topic>` 形式とする。例: `prj-0001:pjr-ab12-auth-boundary`。
@@ -80,9 +77,10 @@ Project Register Documentation Rules
 
 ## 3. 推奨 Frontmatter 項目
 
-<!-- specdojo:finding id=F003 severity=minor rule=vp-ux-readability `register-item-frontmatter.schema.yaml` と `register-events.schema.yaml` がファイル名だけで参照先パスまたはリンクを持たず、コマンドの選択基準を扱う register operation guide への案内もないため、初見の読者が次に確認すべき正本へ直接移動できる導線を追加する必要がある。 -->
-
 個票には `register-item-frontmatter.schema.yaml` が定義する次の項目を置く。未定の担当、期限、完了日時、結論は表用のプレースホルダを保存せず、該当キーを省略する（期限なしだけは `due_on: null`）。
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency 本文と schema は未定の owner / due を省略し、`deferred` では `completed_at` を持たない規則だが、`register-operation-guide.md` は Frontmatter に `_TODO_` を残し、`defer` 時にも完了日時を記録すると説明しているため、関連ガイドを正本と同じ保存規則へ修正しないと schema 違反または誤った履歴を生成する。 -->
+<!-- specdojo:finding id=F002 severity=minor rule=vp-ux-readability `register-item-frontmatter.schema.yaml` と `register-events.schema.yaml` がファイル名だけで参照先パスまたはリンクを持たず、コマンドの選択基準を扱う register operation guide への案内もないため, 初見の読者が次に確認すべき正本へ直接移動できる導線を追加する必要がある。 -->
 
 | 項目            | 説明                                         | 必須 |
 | --------------- | -------------------------------------------- | ---- |

@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:nfr-usability-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 89
+    graded_at: "2026-09-02T23:56:53.009Z"
+    graded_by: gemma-expert-executor
+    content_hash: 3d1e7be5208ce5a4e1467da53648915016e8680d786d9612a00808685deeb579
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 92 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 1, note: 0 }
 ---
 
 # 非機能要件 / 操作性 作成ルール
@@ -99,6 +123,8 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 
 生成する本文の見出しは **## 4. 測定・検証方法**
 
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 指定サンプル `specdojo:nfr-usability-sample` が、第5節で定義された必須の見出し構成（概要、適用範囲、要件一覧、検証方法、導線）に従っていない。 -->
+
 - ユーザ検証、受入試験、ログ分析で判定する。
 
 ### 6.5. 関連ドキュメント導線
@@ -109,11 +135,14 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 
 ## 7. 禁止事項
 
-| 禁止事項                             | 理由                   |
-| ------------------------------------ | ---------------------- |
-| 「使いやすい」だけで指標を定義しない | 判定不能のため         |
-| 画面詳細仕様を丸ごと再掲する         | 役割重複になるため     |
-| 利用者前提を書かない                 | 評価条件が揃わないため |
+| 禁止事項 | 理由 |
+| -------- | ---- |
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-ux-readability 第6節の各項目の記述ガイドが簡素であり、良質な要件を定義するための具体的な判断基準や書き方の指針が不足している。 -->
+
+| 「使いやすい」だけで指標を定義しない | 判定不能のため |
+| 画面詳細仕様を丸ごと再掲する | 役割重複になるため |
+| 利用者前提を書かない | 評価条件が揃わないため |
 
 ## 8. サンプル
 

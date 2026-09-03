@@ -8,6 +8,30 @@ specdojo:
   based_on:
     - specdojo:rulebook-authoring-standard
     - specdojo:tsd-rulebook
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: pass
+    score: 93
+    graded_at: "2026-09-03T12:27:21.713Z"
+    graded_by: gemma-expert-executor
+    content_hash: c567ea105ce142df66b01871894fdd7c0a6269b2afefd160a22f3241f8dfe982
+    categories:
+      consistency: { score: 88 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 88 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 3, score: 75 }
+      vp-qe-kata-conformance: { level: 3, score: 75 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 2, note: 0 }
 ---
 
 # 個別システム設計（SYSD）作成ルール
@@ -15,6 +39,8 @@ specdojo:
 System Design Topic Documentation Rulebook
 
 `sysd-<term>.md` を、システム設計の個別トピックまたは複数の子設計を束ねる hub として記述するためのルールです。`sysd-index` が設計 SSOT 全体への入口であるのに対し、本 rulebook は一つの設計関心事に絞った構造、責務、制約、検証観点を定義します。
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-omissions-consistency rulebook としての完備性を確保するため、作成者が参照すべき recipe および sample の定義を Frontmatter に追加することを推奨する。 -->
 
 ## 1. 全体方針
 
@@ -70,8 +96,12 @@ hub の子設計一覧と `part_of` の参照は一致させます。作成途�
 | 全体構成・主要フロー         | 推奨     | ○                | 構成要素、データ・制御の流れ、永続化点 |
 | 設定・インターフェース       | 導線のみ | 必要時○          | SSOT の所在、解決規則、互換性          |
 | 失敗時・再実行・セキュリティ | 導線のみ | 必要時○          | 失敗境界、復旧条件、権限制約           |
-| 子設計一覧                   | ○        | -                | 選択条件、責務、参照先                 |
-| 検証観点・関連文書           | ○        | ○                | テスト、運用、横断ルールへの導線       |
+
+| 子設計一覧 | ○ | - | 選択条件、責務、参照先 |
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-kata-conformance 「標準テンプレ」という表記と、「章構成は柔軟に決められる」という記述が矛盾しているため、整合性をとり「推奨構成」や「必須観点」等の適切な表記に修正すべきである。 -->
+
+| 検証観点・関連文書 | ○ | ○ | テスト、運用、横断ルールへの導線 |
 
 ## 6. 記述ガイド
 

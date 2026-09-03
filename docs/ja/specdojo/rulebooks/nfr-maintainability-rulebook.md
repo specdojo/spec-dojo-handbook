@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:nfr-maintainability-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 89
+    graded_at: "2026-09-02T22:46:39.386Z"
+    graded_by: gemma-expert-executor
+    content_hash: 35c6efbcc3635d0efa74b35aa88f3909f8df351c022a532e671dfb441e191d80
+    categories:
+      consistency: { score: 88 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 3, score: 75 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 1, note: 0 }
 ---
 
 # 非機能要件 / 保守性 作成ルール
@@ -50,6 +74,8 @@ Non-Functional Requirements Maintainability Documentation Rules
 
 Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schemas/v1/deliverable-frontmatter.schema.yaml](../../../specdojo/schemas/v1/deliverable-frontmatter.schema.yaml) / [document-metadata-standard.md](../standards/document-metadata-standard.md)）。
 
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance 指定されているサンプル成果物 `specdojo:nfr-maintainability-sample` が、本書で定義した標準テンプレの構成に従っていない。 -->
+
 | 項目    | 説明                                | 必須 |
 | ------- | ----------------------------------- | ---- |
 | id      | `nfr-maintainability`               | ○    |
@@ -83,6 +109,8 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 - どの変更・障害対応の効率を担保するかを示す。
 
 ### 6.2. 適用範囲・前提条件
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-cross-document-consistency スキーマへの相対パスが誤っており、正しくは `../../../../specdojo/schemas/v1/deliverable-frontmatter.schema.yaml` となる。 -->
 
 生成する本文の見出しは **## 2. 適用範囲・前提条件**
 

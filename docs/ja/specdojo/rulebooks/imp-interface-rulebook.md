@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:imp-interface-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: pass
+    score: 96
+    graded_at: "2026-09-02T19:48:47.613Z"
+    graded_by: gemma-expert-executor
+    content_hash: 8b974082aa870aa2708f76b9d48535b8415b7c13fb4903664af7adb4978be0bb
+    categories:
+      consistency: { score: 88 }
+      usability: { score: 92 }
+      architecture: { score: 100 }
+      quality: { score: 100 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 3, score: 75 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 2, note: 0 }
 ---
 
 # 影響調査（I/F）作成ルール
@@ -43,15 +67,16 @@ Impact Analysis (Interface) Rulebook
 
 影響調査（I/F）ドキュメントでは、[document-metadata-standard.md](../standards/document-metadata-standard.md) に準拠し、以下を推奨する。
 
-| 項目       | 説明                                   | 必須 |
+| 項目 | 説明 | 必須 |
+
 | ---------- | -------------------------------------- | ---- |
-| id         | ドキュメント ID（例: `imp-interface`） | ○    |
-| type       | `project`                              | ○    |
-| status     | `draft` / `ready` / `deprecated`       | ○    |
-| rulebook   | `specdojo:imp-interface-rulebook` 固定 | ○    |
-| part_of    | 一覧/親ドキュメントへの所属 ID 配列    | 任意 |
-| based_on   | 変更要求や根拠資料の ID 配列           | 任意 |
-| supersedes | 置き換え対象ドキュメント ID 配列       | 任意 |
+| id | ドキュメント ID（例: `imp-interface`） | ○ |
+| type | `project` | ○ |
+| status | `draft` / `ready` / `deprecated` | ○ |
+| rulebook | `specdojo:imp-interface-rulebook` 固定 | ○ |
+| part_of | 一覧/親ドキュメントへの所属 ID 配列 | 任意 |
+| based_on | 変更要求や根拠資料の ID 配列 | 任意 |
+| supersedes | 置き換え対象ドキュメント ID 配列 | 任意 |
 
 ## 5. 本文構成（標準テンプレ）
 
@@ -67,6 +92,10 @@ Impact Analysis (Interface) Rulebook
 | 6   | 未解決事項     | ○    | 意思決定待ちや調査不足を明示する              |
 
 ## 6. 記述ガイド
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-cross-document-consistency ドキュメントIDを固定値 `imp-interface` としているが、プロジェクト固有のIDとなるよう `＜project-id＞:imp-interface` 形式で定義すべきである。 -->
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-ux-readability 推奨ファイル名の記述はあるが、作成者が適切に配置できるよう、推奨されるディレクトリパス（例: `docs/ja/projects/＜project-id＞/` 配下など）を明記すべきである。 -->
 
 ### 6.1. 目的と適用範囲
 

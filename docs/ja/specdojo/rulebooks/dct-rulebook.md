@@ -5,6 +5,30 @@ specdojo:
   status: draft
   target_format: yaml
   sample: specdojo:dct-sample
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 77
+    graded_at: "2026-09-02T15:51:38.568Z"
+    graded_by: codex-expert-executor
+    content_hash: 27c079c025819e5f6083cb316c9059b0d11c42a9cbb5626dc22323a809e6f582
+    categories:
+      consistency: { score: 50 }
+      usability: { score: 83 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 2, score: 50 }
+      vp-arc-conciseness: { level: 3, score: 75 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 3, minor: 4, note: 0 }
 ---
 
 # 成果物カタログ（ドメイン別）作成ルール
@@ -86,24 +110,33 @@ YAML 成果物のため、Markdown Frontmatter ではなくファイル先頭の
 
 ## 5. 本文構成（標準テンプレ）
 
+<!-- specdojo:finding id=F002 severity=minor rule=vp-arc-conciseness 「4. 推奨メタ項目」と「5.1. ルート構造」でトップレベルキーの定義が重複しており, 冗長であるため。 -->
+<!-- specdojo:finding id=F006 severity=minor rule=vp-ux-readability 「推奨メタ項目」と「ルート構造」が同じトップレベルキーを連続して再掲し、両節の役割差を読み分けにくいため。 -->
+
 ### 5.1. ルート構造
 
 `dct-<domain>.yaml` は次のルート構造を標準とする。
 
-| キー         | 必須           | 内容                        |
-| ------------ | -------------- | --------------------------- |
-| `id`         | ○              | 成果物 ID                   |
-| `type`       | ○              | `project` / `template`      |
-| `status`     | ○              | 状態                        |
-| `title`      | ○              | ドキュメント名              |
-| `rulebook`   | ○              | 参照する rulebook ID        |
-| `part_of`    | 任意           | 親 `dct-index` の `id` 配列 |
-| `project_id` | ○（`project`） | プロジェクト ID             |
-| `domain`     | ○              | ドメイン識別子              |
-| `base_path`  | 任意           | ドメインの既定ディレクトリ  |
-| `groups`     | ○              | グループ（章）の配列        |
+| キー       | 必須 | 内容                        |
+| ---------- | ---- | --------------------------- |
+| `id`       | ○    | 成果物 ID                   |
+| `type`     | ○    | `project` / `template`      |
+| `status`   | ○    | 状態                        |
+| `title`    | ○    | ドキュメント名              |
+| `rulebook` | ○    | 参照する rulebook ID        |
+| `part_of`  | 任意 | 親 `dct-index` の `id` 配列 |
+
+<!-- specdojo:finding id=F007 severity=minor rule=vp-ux-readability 「5.1」の空行と「5.3」の finding コメントがフィールド表を途中で分断し、`domain` 以降および `depends_on` 以降が列見出しに結び付かない表示になるため。 -->
+
+| `project_id` | ○（`project`） | プロジェクト ID |
+
+| `domain` | ○ | ドメイン識別子 |
+| `base_path` | 任意 | ドメインの既定ディレクトリ |
+| `groups` | ○ | グループ（章）の配列 |
 
 ### 5.2. `groups[]`（グループ）
+
+<!-- specdojo:finding id=F003 severity=major rule=vp-qe-omissions-consistency `groups` と `deliverables` はどちらか一方だけを持つと規定しているが、`dct.schema.yaml` は `anyOf` のため両方を持つ構造も検証に合格し、rulebook 上の親・葉グループ境界を機械検証できないため。 -->
 
 各グループは Markdown カタログの章に対応する。葉グループは `deliverables` を、親グループは子 `groups` を持つ（どちらか一方が必須）。
 
@@ -117,19 +150,20 @@ YAML 成果物のため、Markdown Frontmatter ではなくファイル先頭の
 
 ### 5.3. `deliverables[]`（成果物エントリ）
 
-| フィールド            | 必須        | 内容                                                              |
-| --------------------- | ----------- | ----------------------------------------------------------------- |
-| `local_id`            | ○           | 成果物の論理名（例: `prj-overview`）                              |
-| `instance_id_pattern` | 任意        | 反復成果物の実体ID規則（例: `pjr-{sequence}-{term}`）             |
-| `name`                | ○           | 業務ユーザーが理解可能な日本語名                                  |
-| `kind`                | ○           | `work` / `control` / `generated`                                  |
-| `depends_on`          | 任意        | 依存する成果物の `local_id` 配列。なければ空配列 `[]`             |
-| `overview`            | ○           | 成果物の目的を1文で記述                                           |
-| `path`                | ○（`work`） | 成果物のファイルパス                                              |
-| `rulebook`            | 任意        | rulebook の文書 ID、未判断なら `undecided`、不要なら `not-needed` |
-| `evidence_refs`       | 任意        | `retrofit` で読む非成果物エビデンス                               |
-| `done_criteria`       | ○（`work`） | 完了条件の配列                                                    |
-| `note`                | 任意        | 構造化フィールドで表せない補足                                    |
+| フィールド            | 必須 | 内容                                                  |
+| --------------------- | ---- | ----------------------------------------------------- |
+| `local_id`            | ○    | 成果物の論理名（例: `prj-overview`）                  |
+| `instance_id_pattern` | 任意 | 反復成果物の実体ID規則（例: `pjr-{sequence}-{term}`） |
+| `name`                | ○    | 業務ユーザーが理解可能な日本語名                      |
+| `kind`                | ○    | `work` / `control` / `generated`                      |
+
+| `depends_on` | 任意 | 依存する成果物の `local_id` 配列。なければ空配列 `[]` |
+| `overview` | ○ | 成果物の目的を1文で記述 |
+| `path` | ○（`work`） | 成果物のファイルパス |
+| `rulebook` | 任意 | rulebook の文書 ID、未判断なら `undecided`、不要なら `not-needed` |
+| `evidence_refs` | 任意 | `retrofit` で読む非成果物エビデンス |
+| `done_criteria` | ○（`work`） | 完了条件の配列 |
+| `note` | 任意 | 構造化フィールドで表せない補足 |
 
 ### 5.4. `evidence_refs[]`（非成果物エビデンス）
 
@@ -167,6 +201,9 @@ YAML 成果物のため、Markdown Frontmatter ではなくファイル先頭の
 
 - 人または agent が判断して更新する `tml-index`、`dct-index`、`dct-plan-<domain>`、`sch-strategy-<track>`、`sch-defaults` は `work` とする。
 - `sch-track-<track>` と `sch-milestones` は strategy から再生成できるため `generated` とし、対応する `sch-strategy-<track>` を `depends_on` に宣言する。
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency `sch-track-＜track＞` は対応する `sch-strategy-＜track＞` を `depends_on` に宣言すると規定しているが、`dct-project-management-template` の `sch-track-launch` は `depends_on: []` であり、生成元 `sch-strategy-launch` へのトレーサビリティが欠落しているため。 -->
+
 - 計画成果物を所有するトラック自身の `sch-strategy` は、自己生成の循環を避けるため `control` とするか、そのトラックの scope 外へ置く。
 - `dct-<domain>.yaml` 自身と `generated/` 配下の表示用生成物は、カタログ定義との二重管理を避けるため登録しない。
 - トラック別の strategy、track は、Timeline で当該トラックが `catalog_status: primary` になった時点で具体的な `local_id` を追加し、未着手トラックの分を先行登録しない。
@@ -180,6 +217,9 @@ YAML 成果物のため、Markdown Frontmatter ではなくファイル先頭の
 ### 6.4. 実践の型の要否宣言
 
 - 成果物カタログは成果物と rulebook の対応だけを `rulebook` に宣言する。recipe / sample / template の要否と所在は、参照先 rulebook の frontmatter を正本とする。
+
+<!-- specdojo:finding id=F005 severity=major rule=vp-qe-kata-conformance recipe・sample・template の要否と所在は rulebook Frontmatter を正本とすると定義している一方、既存の DCT template 群が本 rulebook を参照しているのに `template` 宣言がなく、fully-guided の参照ハブから適用テンプレートを解決できないため。 -->
+
 - `rulebook` には、必要と判断して実在する rulebook の完全 ID を記載する。要否未判断は `undecided`、不要は `not-needed`、項目省略は必要だが未整備を表す。`catalog validate` は完全 ID に対応する文書の実在を検証する。
 - `rulebook: none` は成果物本体のメタ情報で「準拠 rulebook なし」を表す値であり、カタログの要否宣言には使わない。カタログで不要と判断した場合は `rulebook: not-needed` を使う。
 - `kind: generated` では `rulebook` 宣言の有無にかかわらず4種すべてを適用しない。成果物ごとの型宣言を追加せず、`kind` から導出する。
@@ -217,6 +257,9 @@ YAML 成果物のため、Markdown Frontmatter ではなくファイル先頭の
 ### 6.9. テンプレート固有項目
 
 - `type: template` のファイルでのみ `min_size`（`small` / `medium` / `large`）を使用できる。
+
+<!-- specdojo:finding id=F004 severity=minor rule=vp-qe-omissions-consistency `min_size` は `type: template` でのみ使用可能と規定しているが、`dct.schema.yaml` は project の group と deliverable でも受理するため、禁止条件と schema 検証結果が一致しないため。 -->
+
 - `min_size` は規模に応じた取捨選択のための項目であり、scaffold 時に除去される。
 - テンプレートでは `local_id` や `part_of` にアンダースコアで囲んだプレースホルダ（例: `_PROJECT_ID_:dct-index`）を使用できる。
 

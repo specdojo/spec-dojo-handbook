@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:itc-index-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 82
+    graded_at: "2026-09-02T20:44:19.739Z"
+    graded_by: gemma-expert-executor
+    content_hash: b5374de3d63cff8f7e62c9bc9c9e953236d434223a5c74a3040df382686c8e68
+    categories:
+      consistency: { score: 75 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 63 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 2, score: 50 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 1, score: 25 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 2, minor: 0, note: 0 }
 ---
 
 # 内部結合テストカタログ概要 作成ルール
@@ -49,7 +73,6 @@ flowchart BT
   TC -->|based_on| TSP
   Code -->|based_on| TC
 
-
   classDef target stroke-width:4px
   class TCIndex target
 ```
@@ -85,18 +108,21 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 
 `itc-index` は以下の見出し構成を **順序固定**で配置します。
 
-| 番号 | 見出し                                          | 必須 |
-| ---- | ----------------------------------------------- | ---- |
-| 1    | 本ドキュメントの目的と適用対象                  | ○    |
-| 2    | テスト対象の括り方と分割基準                    | ○    |
-| 3    | 対象外・除外理由（共通）                        | ○    |
-| 4    | 観点の立て方（共通）                            | ○    |
-| 5    | 条件の立て方（共通）                            | ○    |
-| 6    | 観点/条件の採用基準と対象別への分配方針（共通） | ○    |
-| 7    | 内部結合テスト共通の境界/依存の扱い             | ○    |
-| 8    | テスト環境・データの共通方針                    | ○    |
-| 9    | ケース表の共通カラム                            | ○    |
-| 10   | メモ / 将来課題                                 | 任意 |
+| 番号 | 見出し                         | 必須 |
+| ---- | ------------------------------ | ---- |
+| 1    | 本ドキュメントの目的と適用対象 | ○    |
+| 2    | テスト対象の括り方と分割基準   | ○    |
+| 3    | 対象外・除外理由（共通）       | ○    |
+| 4    | 観点の立て方（共通）           | ○    |
+| 5    | 条件の立て方（共通）           | ○    |
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency IDを `itc-index` 固定とする指定は、プロジェクト一意性を担保する `＜project-id＞:id` 形式の命名慣習と矛盾している。 -->
+
+| 6 | 観点/条件の採用基準と対象別への分配方針（共通） | ○ |
+| 7 | 内部結合テスト共通の境界/依存の扱い | ○ |
+| 8 | テスト環境・データの共通方針 | ○ |
+| 9 | ケース表の共通カラム | ○ |
+| 10 | メモ / 将来課題 | 任意 |
 
 注意：次章の記述ガイドのMarkdown見出しはルール文章内の参照用であり、
 生成する `itc-index` 本文の見出しは各章で指定された **番号付き** の形式
@@ -120,6 +146,9 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 
 - SSOTの一次情報は `itc-index` / `itc-<term>` とし、テストコード／CIは **実装と実行結果の証跡（Evidence）** として扱う。
 - 本書が扱う粒度：**判断基準・共通ルールまで**（個別ケースの列挙は禁止）
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance 参照サンプル `specdojo:itc-index-sample` が、本文第5章で定義した必須構成（固定見出し順）に従っておらず、完成例として不整合である。 -->
+
 - ITで保証する範囲（例）：
   - コンポーネント間の結合（I/F、変換、永続化、トランザクション境界）
   - UTでMockしていた依存の「実装妥当性」の一部（例：Repository実装、SQL、マイグレーション、シリアライズ）

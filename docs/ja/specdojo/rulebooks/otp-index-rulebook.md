@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:otp-index-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 76
+    graded_at: "2026-09-03T01:37:37.628Z"
+    graded_by: gemma-expert-executor
+    content_hash: 80a0911777991f5a1dacad2a5ac4ba51f447bcd3e8ae0a4777bd25ae5b5e807b
+    categories:
+      consistency: { score: 75 }
+      usability: { score: 92 }
+      architecture: { score: 100 }
+      quality: { score: 50 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 2, score: 50 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 3, minor: 1, note: 0 }
 ---
 
 # 運用切替計画（ハイパーケア含む） 作成ルール
@@ -35,34 +59,45 @@ Operations Transition Plan Documentation Rules
 
 ## 4. 推奨 Frontmatter 項目
 
-| 項目       | 説明                                         | 必須 |
-| ---------- | -------------------------------------------- | ---- |
-| id         | `otp-index`                                  | ○    |
-| type       | `migration` 固定                             | ○    |
-| title      | `運用切替計画: 全体`                         | ○    |
-| status     | `draft` / `ready` / `deprecated`             | ○    |
-| based_on   | 根拠となる仕様ID（ID配列。未指定は `[]` 可） | 任意 |
-| supersedes | 置き換え関係（ID配列。未指定は `[]` 可）     | 任意 |
+| 項目 | 説明 | 必須 |
+| ---- | ---- | ---- |
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency ID指定が `otp-index` とのみされており、プロジェクト識別子（`＜project-id＞:`）を付与する標準的な ID 命名規則に準拠していない。 -->
+
+| id | `otp-index` | ○ |
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-verifiability Frontmatter `type` に `migration` 固定と記述されているが、提供サンプル では `project` となっており、正解が不明確で検証不能である。 -->
+<!-- specdojo:finding id=F003 severity=major rule=vp-qe-kata-conformance サンプル `specdojo:otp-index-sample` が、本ルールブックで定義した Frontmatter の `type: migration` 固定の制約を遵守していない。 -->
+
+| type | `migration` 固定 | ○ |
+| title | `運用切替計画: 全体` | ○ |
+
+| status | `draft` / `ready` / `deprecated` | ○ |
+| based_on | 根拠となる仕様ID（ID配列。未指定は `[]` 可） | 任意 |
+| supersedes | 置き換え関係（ID配列。未指定は `[]` 可） | 任意 |
 
 ## 5. 本文構成（標準テンプレ）
 
-| 番号 | 見出し                          | 必須 |
-| ---- | ------------------------------- | ---- |
-| 1    | 概要（index）                   | ○    |
-| 2    | 監視/アラート                   | ○    |
-| 3    | バックアップ/リストア           | ○    |
-| 4    | 権限/アカウント移行             | ○    |
-| 5    | 運用手順の変更点                | ○    |
-| 6    | 問合せ窓口/一次対応             | ○    |
-| 7    | 障害対応フロー                  | ○    |
-| 8    | 初期増員体制（期間・当番・SLA） | ○    |
-| 9    | 旧システムの停止/参照方針       | ○    |
-| 10   | 移行完了後のクローズ条件        | ○    |
-| 11   | 関連ドキュメント（必須）        | ○    |
+| 番号 | 見出し | 必須 |
+| ---- | ------ | ---- |
+
+| 1 | 概要（index） | ○ |
+| 2 | 監視/アラート | ○ |
+| 3 | バックアップ/リストア | ○ |
+| 4 | 権限/アカウント移行 | ○ |
+| 5 | 運用手順の変更点 | ○ |
+| 6 | 問合せ窓口/一次対応 | ○ |
+| 7 | 障害対応フロー | ○ |
+| 8 | 初期増員体制（期間・当番・SLA） | ○ |
+| 9 | 旧システムの停止/参照方針 | ○ |
+| 10 | 移行完了後のクローズ条件 | ○ |
+| 11 | 関連ドキュメント（必須） | ○ |
 
 ## 6. 記述ガイド
 
 ### 6.1. 概要（index）
+
+<!-- specdojo:finding id=F004 severity=minor rule=vp-ux-readability 記述ガイドが項目の列挙に留まっており、良例（`prj-overview-rulebook.md`）のような「事実と仮説を混ぜない」等の具体的な記述品質への指針が不足している。 -->
 
 - 運用安定化の目的と適用範囲を 1〜3 行で示す。
 - 本書が入口（SSOT）であり、詳細は `otp-<term>` にあることを明記する。

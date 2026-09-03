@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-g1qz-grade-finding-comment-lint
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-02T21:30:13Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-03T22:35:51Z"
   block_reason: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=package.json; agent must record the required change in the result …"
+  conclusion: finding コメントの挿入位置を Markdown AST のブロック境界へ変更し、構造を分断しないようにした。既存7文書の違反は orchestrator が修正した。
 ---
 
 # PJR-G1QZ grade の finding コメントが Markdown lint を壊さないようにする

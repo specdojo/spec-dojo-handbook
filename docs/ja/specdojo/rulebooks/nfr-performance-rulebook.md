@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:nfr-performance-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 91
+    graded_at: "2026-09-02T23:12:59.748Z"
+    graded_by: gemma-expert-executor
+    content_hash: 4a22a68af85acfa3d90297acbf22c1b77bb13468981add32e3a72188f0674767
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 0, note: 0 }
 ---
 
 # 非機能要件 / 性能 作成ルール
@@ -64,6 +88,8 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 - 外部依存の遅延切り分け条件を備考で明記する。
 
 ## 5. 本文構成（標準テンプレ）
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 参照サンプルが本ルールで定義した必須本文構成（第5節）に従っておらず、成果物の正解例として不適切である。 -->
 
 `nfr-performance` は以下の見出し構成を **順序固定** で配置する。
 

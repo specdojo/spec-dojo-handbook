@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:sac-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 87
+    graded_at: "2026-09-03T09:13:28.609Z"
+    graded_by: gemma-expert-executor
+    content_hash: 94c770854ea711a65760146321ffe847ced88675c7ba851fd2f93a3dee183d34
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 83 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 3, score: 75 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 2, note: 0 }
 ---
 
 # システム受入条件仕様（SAC）作成ルール
@@ -15,6 +39,8 @@ SAC は「システム全体としての合格基準（機能・非機能・障�
 
 ## 1. 全体方針
 
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance 参照している `specdojo:sac-sample` が SAC の具体例ではなくサンプルの解説書となっており、定義した構成に従っていない。 -->
+
 - SAC は **システム全体としての出口条件（合格基準）** です。
   - 例: 「性能試験で全ての NFR を満たし、重大障害 0 件であること」
 - 受入条件は **観測・計測できる事実**として書きます。
@@ -23,6 +49,7 @@ SAC は「システム全体としての合格基準（機能・非機能・障�
   - クリック手順や画面遷移の逐語列挙は避け、**システムに与える入力/操作**と**期待結果**を要約します。
 - 実装詳細（例: 物理テーブル名、SQL全文、実装クラス/関数名、特定ライブラリの設定値）は記載しません。
 - 1ファイル = 1 受入対象（合格基準のまとまり）を基本とします。
+
   - 例: `性能（主要API/画面）`, `障害復旧`, `セキュリティ（権限/監査）`, `移行（初期データ）` など
 
 ## 2. 用語定義
@@ -46,6 +73,10 @@ SAC は「システム全体としての合格基準（機能・非機能・障�
 推奨:
 
 - 受入対象が肥大化する場合は、カテゴリやサブシステム単位で分割し、下位文書側で `part_of` に上位SACを指定します。
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness 全体方針の内容が「7. 禁止事項」の表とほぼ同一であり、冗長である。 -->
+<!-- specdojo:finding id=F003 severity=minor rule=vp-ux-readability 全体方針と禁止事項の間で同様の制約が繰り返されており、読者が情報を整理する際のノイズとなる。 -->
+
 - `based_on` には、根拠となる仕様 ID（例: `nfr-...`, `bac-...`, `br-...`, `bps-...`）を列挙します。
 
 ## 4. 推奨 Frontmatter 項目

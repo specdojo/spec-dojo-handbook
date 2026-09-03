@@ -12,27 +12,27 @@ specdojo:
   grade:
     rubric: grade-rubric-v1
     target: kata
-    verdict: pass
-    score: 93
-    graded_at: "2026-09-02T12:49:07.759Z"
+    verdict: needs-work
+    score: 87
+    graded_at: "2026-09-03T09:26:42.823Z"
     graded_by: gemma-expert-executor
     content_hash: 2e8ce07a6b2a7ca9b578db4edc23109496dbf9217cb9da981d9f4944ef063529
     categories:
       consistency: { score: 100 }
-      usability: { score: 83 }
-      architecture: { score: 88 }
+      usability: { score: 67 }
+      architecture: { score: 75 }
       quality: { score: 100 }
     viewpoints:
       vp-arc-cross-document-consistency: { level: 4, score: 100 }
-      vp-arc-conciseness: { level: 3, score: 75 }
-      vp-arc-single-responsibility: { level: 3, score: 75 }
+      vp-arc-conciseness: { level: 2, score: 50 }
+      vp-arc-single-responsibility: { level: 2, score: 50 }
       vp-qe-verifiability: { level: 4, score: 100 }
       vp-qe-omissions-consistency: { level: 4, score: 100 }
       vp-qe-kata-conformance: { level: 4, score: 100 }
-      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-readability: { level: 2, score: 50 }
       vp-ux-language-consistency: { level: 4, score: 100 }
       vp-arc-document-structure: { level: 4, score: 100 }
-    findings: { blocker: 0, major: 0, minor: 3, note: 0 }
+    findings: { blocker: 0, major: 3, minor: 0, note: 0 }
 ---
 
 # スケジュール作成ルール
@@ -161,6 +161,6 @@ schema で機械検証できない記述規範だけを定める。設計の考�
 - intent の欠落・重複、必須パラメータ不足、参照切れ、必要な grade の欠落を暫定値で補って strategy を生成すること。
 - ジェネレーターが管理する標準 phase の ID・suffix・duration を track ごとに複製実装すること。
 
-<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness Section 5.5 describes generation flow, contradicting the statement in line 45 that refers to `specdojo:schedule-design-guide`. -->
-<!-- specdojo:finding id=F002 severity=minor rule=vp-arc-single-responsibility The document mixes detailed tool generator logic (Section 5.5) with authoring rules; this belongs in a design guide or tool specification. -->
-<!-- specdojo:finding id=F003 severity=minor rule=vp-ux-readability Contradiction between line 45 and section 5.5 creates confusion regarding the authoritative source for generation flow and logic. -->
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-conciseness Section 5.5 describes generation flow, contradicting the statement in line 45 and 49 that refers to `specdojo:schedule-design-guide`. -->
+<!-- specdojo:finding id=F002 severity=major rule=vp-arc-single-responsibility The document mixes detailed tool generator logic (Section 5.5) with authoring rules; this belongs in a design guide or tool specification. -->
+<!-- specdojo:finding id=F003 severity=major rule=vp-ux-readability Contradiction between line 45/49 and section 5.5 creates confusion regarding the authoritative source for generation flow and logic. -->

@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:cstd-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: pass
+    score: 98
+    graded_at: "2026-09-02T14:18:47.495Z"
+    graded_by: gemma-expert-executor
+    content_hash: 57a968cab106a3eb1b486a11d92fd027674d89ef69b1b641e0e3bdab7fe73141
+    categories:
+      consistency: { score: 88 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 100 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 3, score: 75 }
+      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 2, note: 0 }
 ---
 
 # 概念状態遷移図（Conceptual State Transition Diagram: CSTD）ドキュメント作成ルール
@@ -154,7 +178,11 @@ based_on: []
 
 ## 概要
 
+<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-omissions-consistency Frontmatterの `id` が、第3節の例 (`cstd-...`) と異なる形式 (`product-cstd-...`) になっている。 -->
+
 この図は、現状業務における「商品」の概念的な状態遷移を表します。
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-omissions-consistency Frontmatterの `type` が、第4節の定義（domain固定）と矛盾して `data` となっている。 -->
 
 ## 概念状態遷移図（CSTD）
 

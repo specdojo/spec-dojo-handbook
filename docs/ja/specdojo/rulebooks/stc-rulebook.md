@@ -6,6 +6,30 @@ specdojo:
   recipe: undecided
   sample: specdojo:stc-sample
   template: undecided
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 91
+    graded_at: "2026-09-03T10:51:03.286Z"
+    graded_by: gemma-expert-executor
+    content_hash: 56363d2645f3410425f782fc056abe1878b73a92168ed5c5333757c579ef1053
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 0, note: 0 }
 ---
 
 # 総合テストカタログ 対象別 作成ルール
@@ -14,6 +38,8 @@ System Test Catalog (STC) Documentation Rules
 
 本ドキュメントは、総合テストカタログ（STC）の対象別 `stc-<term>` を統一形式で記述するためのルールです。
 `stc-index` を前提に、SSOTの本体として、対象ごとの **総合テストの目的・責務・境界・環境前提、観点 x 条件=ケース、トレース、証跡** を明文化します。
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 参照されるサンプル `specdojo:stc-sample` が rulebook で定義された必須構成（章番号および項目）に従っておらず, 実例としての役割を果たしていない。 -->
 
 ## 1. 全体方針
 
@@ -46,7 +72,6 @@ flowchart BT
 
   TC -->|based_on| TSP
   Code -->|based_on| TC
-
 
   classDef target stroke-width:4px
   class TCDetail target

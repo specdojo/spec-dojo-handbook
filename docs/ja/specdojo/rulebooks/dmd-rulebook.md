@@ -4,6 +4,30 @@ specdojo:
   type: rulebook
   status: draft
   sample: specdojo:dmd-sample
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 91
+    graded_at: "2026-09-02T16:34:44.934Z"
+    graded_by: gemma-expert-executor
+    content_hash: e92a6eadca8742a79640aa51c34fab08bb18bd78f694f465f548ef30ce4c5948
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 0, note: 0 }
 ---
 
 # データ移行設計 作成ルール
@@ -89,6 +113,8 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 ## 6. 記述ガイド
 
 ### 6.1. 概要（`<term>`）
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 推奨 Frontmatter の type が「migration 固定」と定義されている一方で、本書内のサンプルおよび `dmd-sample.md` では「project」となっており矛盾している。 -->
 
 生成する `dmd-<term>` 本文の見出しは **## 1. 概要（`<term>`）**
 
@@ -227,6 +253,7 @@ based_on:
   - mip-index
 supersedes: []
 ---
+
 ```
 
 #### 1. 概要（order-data）
