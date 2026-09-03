@@ -127,5 +127,6 @@ specdojo サブコマンドと引数へマッピング（必要なら --help で
 ## 7. 保守
 
 - 本文を変更する場合は SSOT（`.agents/specdojo-orchestrator.agent.md`）を編集し、全ラッパー本文（OpenCode の Qwen / Gemma を含む）を同期する。ラッパー本文が SSOT とバイト一致していることを確認する。
-- Markdown ラッパー（Claude / Copilot / OpenCode）は pre-commit の Markdown 整形（prettier）で表の列幅が整形されうる。Codex の TOML は Markdown 整形対象外のため、埋め込み表の空白が Markdown 側と異なる場合があるが、内容は同一とみなす。
+- 同期後は `npm run lint:orchestrator-sync` を実行する。この検証は Markdown ラッパーの frontmatter と Codex の `developer_instructions` を除いた本文を抽出し、SSOT とバイト単位で比較する。対象ファイルの変更時には pre-commit hook からも自動実行する。
+- Markdown ラッパー（Claude / Copilot / OpenCode）は pre-commit の Markdown 整形（prettier）で表の列幅が整形されうる。整形後の本文を Codex の TOML にも反映し、全ラッパーを再検証する。
 - モデル・権限・provider の変更は本文ではなく各ラッパーの frontmatter / TOML 側で行い、共通設定の各子設計と整合させる。
