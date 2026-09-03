@@ -51,17 +51,30 @@ orchestrator の指示本文は `.agents/specdojo-orchestrator.agent.md` を正�
 
 ## 4. 作業内容
 
-| No  | 作業                                 | 担当 | 状態 | メモ                        |
-| --- | ------------------------------------ | ---- | ---- | --------------------------- |
-| 1   | 本文抽出と一致検証のスクリプトを書く | ARC  | open | TOML の文字列も対象にする   |
-| 2   | 検証を lint / hook から実行する      | ARC  | open | 既存の lint 系へ寄せる      |
-| 3   | codex 版の乖離を解消する             | ARC  | open | commit 方針の差分に注意する |
-| 4   | 単体テストを追加する                 | ARC  | open | 不一致を検出できること      |
-| 5   | 同期手順を文書化する                 | ARC  | open | 変更時の更新対象を明記する  |
+| No  | 作業                                 | 担当 | 状態 | メモ                       |
+| --- | ------------------------------------ | ---- | ---- | -------------------------- |
+| 1   | 本文抽出と一致検証のスクリプトを書く | ARC  | done | TOML の文字列も対象にする  |
+| 2   | 検証を lint / hook から実行する      | ARC  | done | 既存の lint 系へ寄せる     |
+| 3   | codex 版の乖離を解消する             | ARC  | open | 書き込み権限が必要         |
+| 4   | 単体テストを追加する                 | ARC  | done | 不一致を検出できること     |
+| 5   | 同期手順を文書化する                 | ARC  | done | 変更時の更新対象を明記する |
 
 ## 5. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- `tools/validate-orchestrator-sync.mjs` を追加し、Markdown frontmatter と TOML の `developer_instructions` から本文を抽出して SSOT とバイト単位で比較できるようにした。
+- npm lint スクリプトと pre-commit hook を追加し、対象ファイルの変更時に同期漏れを自動検出するようにした。
+- Markdown / TOML 両形式の一致・不一致を確認する単体テストを追加した。
+- 設計書と運用ガイドに、SSOT 更新、全ラッパーへの反映、検証コマンド実行の同期手順を記載した。
+- `.codex/agents/specdojo-orchestrator.toml` の同期は executor（codex）の実行環境では行えなかった。
+  ファイル自体は書き込み可能だが、codex の sandbox が自身の設定ディレクトリ `.codex/` を保護する
+  ためである。agent の種類に由来する制約で、再実行しても同じ結果になる。
+- orchestrator が SSOT 本文を `developer_instructions` へ反映し、`npm run lint:orchestrator-sync` が
+  5 ラッパーすべての一致を報告することを確認した。TOML の解析とキー構成が壊れていないことも
+  確認している。乖離していたのは commit 方針の記述とコマンド地図で、`grade` / `job` / `dashboard`
+  などが欠落していた。
+- `lefthook.yml` と `package.json` への hook / script 登録は `agent-config-write` が block したため、
+  orchestrator が差分を確認して適用した。保護機構が対象パスと提案差分を result へ自動記録して
+  いたため、worktree の差分を直接読む必要はなかった。
 
 ## 6. 関連ドキュメント
 

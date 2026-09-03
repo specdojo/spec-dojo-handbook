@@ -114,4 +114,10 @@ worktree 付きは、固定名の worktree を使い、無ければ起動時に�
 | OpenCode / Qwen    | `.opencode/agents/qwen-orchestrator.md`    |
 | OpenCode / Gemma   | `.opencode/agents/gemma-orchestrator.md`   |
 
-本文を変更する場合は SSOT を編集し、各ラッパーの本文を同期します。モデル・権限・provider の変更は本文ではなく、各ラッパーの frontmatter / TOML 側で行います。
+本文を変更する場合は、次の手順で全環境を同期します。
+
+1. SSOT の `.agents/specdojo-orchestrator.agent.md` を編集します。
+2. Markdown ラッパー4ファイルでは frontmatter より後を、Codex ラッパーでは `developer_instructions` の複数行文字列を、SSOT と同じ本文に更新します。
+3. `npm run lint:orchestrator-sync` を実行し、5つのラッパーが SSOT とバイト単位で一致することを確認します。
+
+この検証は対象ファイルの変更時に pre-commit hook からも自動実行され、不一致があれば commit を停止します。モデル・権限・provider の変更は本文ではなく、各ラッパーの frontmatter / TOML 側で行います。
