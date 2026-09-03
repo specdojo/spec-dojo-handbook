@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-09-01T14:04:03Z"
   due_on: "2026-09-30"
+  block_reason: "agent exited with non-zero code: 親 runner 検証 test-unit（npm run test:unit）が status=failed（tests/src/doc-index.test.ts の1テストが失敗）であるため、この結果を上書きせず outcome=blocked とする。加えて executor 自身も、本タスクに必要な変更対象（.codex/…"
 ---
 
 # PJR-5ERG orchestrator 本文の環境間同期を検証可能にする
