@@ -32,3 +32,16 @@
     - field: due
       from: ""
       to: "2026-09-30"
+- v: 1
+  id: reg_fb230f6d29b245a7b5df0bf9cebe07e2
+  ts: "2026-09-03T10:24:13Z"
+  action: start
+  actor: claude-expert-executor
+  from_status: open
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: open
+      to: in-progress
+  previous_event_id: reg_875fd22533c948568c8c44ed37078226
