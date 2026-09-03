@@ -39,16 +39,23 @@ job の責務を「agent へ委譲する判断の定義」に限定し、決定�
 
 ## 3. 作業内容
 
-| No  | 作業                                     | 担当 | 状態 | メモ                            |
-| --- | ---------------------------------------- | ---- | ---- | ------------------------------- |
-| 1   | job の責務境界を standard へ記述する     | ARC  | open | 判断と手順の切り分けを示す      |
-| 2   | job schema へ agent の直接指定を追加する | ARC  | open | executor / reporter の nickname |
-| 3   | grade 系 3 job を整理する                | ARC  | open | PJR-EXCV の経路へ寄せる         |
-| 4   | `rtn-grade-kata` を追従させる            | ARC  | open | -                               |
+| No  | 作業                                     | 担当 | 状態 | メモ                                          |
+| --- | ---------------------------------------- | ---- | ---- | --------------------------------------------- |
+| 1   | job の責務境界を standard へ記述する     | ARC  | done | `job-definition-standard` を新設              |
+| 2   | job schema へ agent の直接指定を追加する | ARC  | done | `task.agent.executor` / `task.agent.reporter` |
+| 3   | grade 系 3 job を整理する                | ARC  | done | 1 job へ統合し script の入口を呼ぶ            |
+| 4   | `rtn-grade-kata` を追従させる            | ARC  | done | 単一 action へ変更                            |
 
 ## 4. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- job の責務境界を `[[specdojo:job-definition-standard]]` として新設した。判断と手順の切り分け基準、`task.description` の規約、agent 指名の規約、粒度と禁止事項を判定可能な形で定義し、決定論的手順を description へ書かないことを規範とした。
+- `job.schema.yaml` と `job validate` に `task.agent` を追加した。`executor` を必須、`reporter` を任意とする mapping で、nickname は `pm-members.yaml` と同じ書式に限定し、未知のキーは typo による reporter 欠落を防ぐため拒否する。
+- `capabilities` による間接指定に依存できない理由を実装から確認した。auto 選択は stage_role を持たない member だけを候補にするが、本プロジェクトの roster は全 agent が stage_role を持つため、指名なしの Job Run は候補 0 件で解決できない。
+- `exec run --job` を、executor と reporter の双方を指名した場合に register 項目と同じ executor/reporter pipeline で実行するようにした。result は reporter が書き、evidence と pipeline state は既存の `exec/evidence/<taskId>/<runId>/` 形式へ記録する。reporter 未指名時は従来の単一 agent 実行を維持する。
+- grade 系 3 job を `job-grade-kata` 1 件へ統合した。段の順序・対象の選択・`grade apply` の逐次実行は `tools/grade/run-per-document.sh`（[[prj-0001:pjr-excv-grade-per-document-pipeline]]）の責務とし、job は入口の1回起動と、未完了段・失敗の切り分け・3段目スキップ理由・閾値見直し要否の判断だけを委譲する。`job-grade-kata-local-confirmation` と `job-grade-kata-expert-check` は削除した。
+- `rtn-grade-kata` を単一 action へ変更した。再開キーに使う値は script の `--run-id` 書式（`^[A-Za-z0-9._-]+$`）を満たす必要があるため、記号を含む `scheduled_at` ではなく `{{scheduled_at | iso_week}}` の `period` を入力にした。
+- 検証は `job validate`（3 件 0 エラー）、`routine validate`（6 件 0 エラー）、`exec run --job job-grade-kata --dry-run`（executor `claude-expert-executor` / reporter `claude-reporter` を解決）、`routine run --id rtn-grade-kata --dry-run`（`--input period=2026-W36` を解決）で行った。
+- 残課題は次の2点である。1つ目は、VitePress の sidebar（`.vitepress/sidebar-config.ts`）へ新標準の項目を追加できていないこと。実行環境の書き込み範囲外のため未反映で、人手での追加が要る。2つ目は、統合後の `job-grade-kata` を実 agent で通した所要時間と rate limit の実測で、これは [[prj-0001:pjr-excv-grade-per-document-pipeline]] の残課題と同じ測定に含まれる。
 
 ## 5. 関連ドキュメント
 

@@ -61,6 +61,22 @@ properties:
         items:
           type: string
           minLength: 1
+      agent:
+        description: >
+          Nicknames of the pm-members.yaml agents the Job delegates to. Takes
+          precedence over capabilities/proficiency based auto selection. With
+          reporter the Run executes as an executor/reporter pipeline; without it
+          the executor runs alone and fills the Run result itself.
+        type: object
+        additionalProperties: false
+        required: [executor]
+        properties:
+          executor:
+            type: string
+            pattern: "^[a-z0-9][a-z0-9_-]{0,62}$"
+          reporter:
+            type: string
+            pattern: "^[a-z0-9][a-z0-9_-]{0,62}$"
       capabilities:
         type: array
         minItems: 1

@@ -58,6 +58,9 @@ function setupRepo(): string {
       "task:",
       "  mode: edit",
       "  description: translate {{inputs.from_revision}}..{{inputs.to_revision}}",
+      "  agent:",
+      "    executor: gemma-executor",
+      "    reporter: gemma-reporter",
       "  paths: [docs/ja, docs/en]",
       "run:",
       '  idempotency_key: "{{job_id}}:{{inputs.from_revision}}:{{inputs.to_revision}}"',
@@ -92,6 +95,68 @@ describe("Job Definition", () => {
     expect(parsed.job?.id).toBe("job-report");
   });
 
+  it("keeps the delegated executor and reporter nicknames on the task", () => {
+    const parsed = parseJobDefinition(
+      {
+        id: "job-report",
+        name: "Report",
+        task: {
+          mode: "edit",
+          description: "write",
+          targets: ["report"],
+          agent: { executor: "claude-expert-executor", reporter: "claude-reporter" },
+        },
+        run: { idempotency_key: "{{job_id}}" },
+      },
+      "job-report.yaml",
+    );
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.job?.task.agent).toEqual({
+      executor: "claude-expert-executor",
+      reporter: "claude-reporter",
+    });
+  });
+
+  it("rejects an executor value that is not a nickname", () => {
+    const parsed = parseJobDefinition(
+      {
+        id: "job-report",
+        name: "Report",
+        task: {
+          mode: "edit",
+          description: "write",
+          targets: ["report"],
+          agent: { executor: "Expert Executor" },
+        },
+        run: { idempotency_key: "{{job_id}}" },
+      },
+      "job-report.yaml",
+    );
+    expect(parsed.job).toBeUndefined();
+    expect(parsed.errors).toContain(
+      "job-report.yaml: task.agent.executor must be an agent nickname from pm-members.yaml",
+    );
+  });
+
+  it("rejects an unknown key under agent so a typo cannot drop the reporter stage", () => {
+    const parsed = parseJobDefinition(
+      {
+        id: "job-report",
+        name: "Report",
+        task: {
+          mode: "edit",
+          description: "write",
+          targets: ["report"],
+          agent: { executor: "claude-expert-executor", reporters: "claude-reporter" },
+        },
+        run: { idempotency_key: "{{job_id}}" },
+      },
+      "job-report.yaml",
+    );
+    expect(parsed.job).toBeUndefined();
+    expect(parsed.errors).toContain("job-report.yaml: task.agent has unknown key(s): reporters");
+  });
+
   it("parses key=value inputs and rejects duplicates", () => {
     expect(parseJobInputs(["period=2026-W32", "lang=en"])).toEqual({
       period: "2026-W32",
@@ -113,6 +178,12 @@ describe("Job Run lifecycle", () => {
       });
       expect(first.duplicateComplete).toBe(false);
       expect(first.record.inputs).toEqual({ from_revision: "initial", to_revision: "abc123" });
+      // The delegation target is frozen into the Run so a later definition change cannot
+      // silently move a running Job to another agent.
+      expect(first.record.task.agent).toEqual({
+        executor: "gemma-executor",
+        reporter: "gemma-reporter",
+      });
       expect(readFileSync(first.planPath, "utf8")).toContain("translate initial..abc123");
 
       completeJobRun({ projectId: "test", runPath: first.runPath, status: "succeeded" });

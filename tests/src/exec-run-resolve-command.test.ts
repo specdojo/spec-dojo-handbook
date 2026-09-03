@@ -78,6 +78,32 @@ describe("resolveInPlaceCommand actor derivation", () => {
     expect(result.actor).toBe("opencode-edit-agent");
   });
 
+  it("uses the nickname pinned by the task when --by is omitted", () => {
+    const result = resolveInPlaceCommand(
+      buildTask({ agent: "executor", capabilities: [] }),
+      buildRoster(),
+      {} as RunOpts,
+    );
+
+    // The pinned nickname wins over capability-based auto selection, so a Job definition
+    // decides its own delegation target.
+    expect(result).toEqual({ command: "run executor", actor: "executor" });
+  });
+
+  it("lets --by override the nickname pinned by the task", () => {
+    const result = resolveInPlaceCommand(buildTask({ agent: "executor" }), buildRoster(), {
+      by: "opencode-edit-agent",
+    } as RunOpts);
+
+    expect(result.actor).toBe("opencode-edit-agent");
+  });
+
+  it("rejects a pinned nickname that is not a registered agent", () => {
+    expect(() =>
+      resolveInPlaceCommand(buildTask({ agent: "missing-agent" }), buildRoster(), {} as RunOpts),
+    ).toThrow(/Agent command not found for actor: missing-agent/);
+  });
+
   it("rejects an unknown --by nickname instead of accepting a raw command", () => {
     expect(() =>
       resolveInPlaceCommand(buildTask(), buildRoster(), {

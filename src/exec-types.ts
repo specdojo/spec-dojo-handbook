@@ -187,6 +187,9 @@ export type ReadyTaskView = {
   mode?: TaskMode;
   execution?: "agent" | "human";
   approach?: Approach;
+  // Nickname pinned by the task definition (Job `task.agent`). Used when the run has no
+  // explicit --by, and takes precedence over capability based auto selection.
+  agent?: string;
   capabilities?: string[];
   proficiency?: Proficiency;
   agent_pipeline?: AgentPipeline;
