@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-5erg-orchestrator-body-sync
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-01T14:04:03Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-03T22:55:54Z"
   block_reason: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=lefthook.yml, package.json; agent must record the required change …"
+  conclusion: SSOT と5ラッパーの本文一致を機械検証する lint を追加し、乖離していた codex 版を同期した。
 ---
 
 # PJR-5ERG orchestrator 本文の環境間同期を検証可能にする
