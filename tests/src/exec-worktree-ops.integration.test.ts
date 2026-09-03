@@ -10,6 +10,7 @@ import {
   discardStaleExecWorktree,
   mergeWorktreeIntoCurrent,
   removeWorktree,
+  selectStageablePaths,
   type WorktreeOpsContext,
 } from "../../src/exec-worktree-ops.js";
 
@@ -723,6 +724,100 @@ describe("exec worktree ops", () => {
     removeWorktree({ context: fixture.context, worktree, taskId, deleteBranch: true });
 
     expect(findExecWorktree(fixture.repo, taskId)).toBeNull();
+  });
+
+  it("commits a deletion alongside an addition and an edit", () => {
+    const fixture = setupRepository();
+    const taskId = "PJR-0140";
+    writeFile(join(fixture.repo, "docs", "removed.yaml"), "id: removed\nstatus: draft\n");
+    writeFile(join(fixture.repo, "docs", "kept.yaml"), "id: kept\nstatus: draft\n");
+    git(fixture.repo, "add", "docs/removed.yaml", "docs/kept.yaml");
+    git(fixture.repo, "commit", "-m", "add deliverables");
+
+    const worktree = prepare(
+      fixture,
+      taskId,
+      taskId,
+      planWithIdentity(taskId, { mode: "edit", origin: "register", targets: [] }),
+    );
+
+    // 統合（3つの成果物を1つへ）のように、削除・変更・追加が同時に起きる変更。
+    rmSync(join(worktree.path, "docs", "removed.yaml"));
+    writeFile(join(worktree.path, "docs", "kept.yaml"), "id: kept\nstatus: draft\nbody: merged\n");
+    writeFile(join(worktree.path, "docs", "added.yaml"), "id: added\nstatus: draft\n");
+
+    const committed = commitWorktreeChanges({ context: fixture.context, worktree, taskId });
+
+    expect(committed.committed).toBe(true);
+    expect(committed.targets).toEqual(
+      expect.arrayContaining(["docs/added.yaml", "docs/kept.yaml", "docs/removed.yaml"]),
+    );
+    expect(git(worktree.path, "status", "--porcelain", "-uall")).toBe("");
+    expect(() => git(worktree.path, "cat-file", "-e", "HEAD:docs/removed.yaml")).toThrow();
+    expect(git(worktree.path, "show", "HEAD:docs/added.yaml")).toContain("id: added");
+  });
+
+  it("commits a deletion that a previously failed attempt already staged", () => {
+    const fixture = setupRepository();
+    const taskId = "PJR-0141";
+    writeFile(join(fixture.repo, "docs", "removed.yaml"), "id: removed\nstatus: draft\n");
+    git(fixture.repo, "add", "docs/removed.yaml");
+    git(fixture.repo, "commit", "-m", "add deliverable");
+
+    const worktree = prepare(
+      fixture,
+      taskId,
+      taskId,
+      planWithIdentity(taskId, { mode: "edit", origin: "register", targets: [] }),
+    );
+
+    // commit 前に中断した統合の残骸: 削除だけが index に入っている。このパスは作業ツリー
+    // にも index にも無いため、`git add -A -- <path>` は pathspec 不一致で fatal になる。
+    rmSync(join(worktree.path, "docs", "removed.yaml"));
+    git(worktree.path, "add", "-A", "--", "docs/removed.yaml");
+    expect(git(worktree.path, "status", "--porcelain")).toBe("D  docs/removed.yaml");
+
+    const committed = commitWorktreeChanges({ context: fixture.context, worktree, taskId });
+
+    expect(committed.committed).toBe(true);
+    expect(committed.targets).toEqual(["docs/removed.yaml"]);
+    expect(git(worktree.path, "status", "--porcelain")).toBe("");
+    expect(() => git(worktree.path, "cat-file", "-e", "HEAD:docs/removed.yaml")).toThrow();
+
+    mergeWorktreeIntoCurrent({ context: fixture.context, worktree, taskId });
+    expect(existsSync(join(fixture.repo, "docs", "removed.yaml"))).toBe(false);
+  });
+});
+
+describe("selectStageablePaths", () => {
+  it("keeps tracked, modified, and untracked paths but drops already-staged deletions", () => {
+    const fixture = setupRepository();
+    writeFile(join(fixture.repo, "docs", "tracked.md"), "tracked\n");
+    writeFile(join(fixture.repo, "docs", "removed.md"), "removed\n");
+    writeFile(join(fixture.repo, "docs", "unstaged-removal.md"), "unstaged removal\n");
+    git(fixture.repo, "add", "docs/tracked.md", "docs/removed.md", "docs/unstaged-removal.md");
+    git(fixture.repo, "commit", "-m", "add docs");
+
+    rmSync(join(fixture.repo, "docs", "removed.md"));
+    git(fixture.repo, "add", "-A", "--", "docs/removed.md");
+    rmSync(join(fixture.repo, "docs", "unstaged-removal.md"));
+    writeFile(join(fixture.repo, "docs", "tracked.md"), "tracked v2\n");
+    writeFile(join(fixture.repo, "docs", "untracked.md"), "untracked\n");
+
+    expect(
+      selectStageablePaths(fixture.repo, [
+        "docs/removed.md",
+        "docs/tracked.md",
+        "docs/unstaged-removal.md",
+        "docs/untracked.md",
+      ]),
+    ).toEqual(["docs/tracked.md", "docs/unstaged-removal.md", "docs/untracked.md"]);
+  });
+
+  it("returns an empty list for no paths", () => {
+    const fixture = setupRepository();
+
+    expect(selectStageablePaths(fixture.repo, [])).toEqual([]);
   });
 });
 
