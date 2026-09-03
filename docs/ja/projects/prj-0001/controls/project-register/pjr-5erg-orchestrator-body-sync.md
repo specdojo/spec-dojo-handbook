@@ -7,12 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-09-01T14:04:03Z"
   due_on: "2026-09-30"
-  block_reason: rate limit reached
+  block_reason: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=lefthook.yml, package.json; agent must record the required change …"
 ---
 
 # PJR-5ERG orchestrator 本文の環境間同期を検証可能にする
