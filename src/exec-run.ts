@@ -127,6 +127,7 @@ import {
   mergeWorktreeIntoCurrent,
   removeWorktree,
   stabilizeCommitTargets,
+  stageCommitTargets,
   worktreeStatusPaths,
 } from "./exec-worktree-ops.js";
 import {
@@ -3685,7 +3686,7 @@ export function commitRegisterItemChanges(
   const paths = remainingPaths();
   if (paths.length === 0) return { committed: false };
 
-  gitOutput(repoRoot, ["add", "-A", "--", ...paths]);
+  stageCommitTargets(repoRoot, paths);
   const staged = gitResult(repoRoot, ["diff", "--cached", "--quiet", "--", ...paths]);
   if (staged.status === 0) return { committed: false };
   if (staged.status !== 1) throw new Error("Failed to inspect staged register changes.");
@@ -3987,7 +3988,7 @@ function commitRegisterState(
 ): void {
   const paths = registerStatePaths(repoRoot, registerPaths, ticketPath);
   if (paths.length === 0) return;
-  gitOutput(repoRoot, ["add", "--", ...paths]);
+  stageCommitTargets(repoRoot, paths);
   const staged = gitResult(repoRoot, ["diff", "--cached", "--quiet", "--", ...paths]);
   if (staged.status === 0) return;
   if (staged.status !== 1) throw new Error("Failed to inspect staged register-state changes.");

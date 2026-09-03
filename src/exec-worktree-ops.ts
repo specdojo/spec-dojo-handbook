@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { relative, resolve, sep } from "node:path";
 import { load } from "js-yaml";
 import { acquireSchedulerLock, releaseSchedulerLock } from "./exec-events.js";
@@ -366,6 +366,30 @@ export function commitTargetPaths(
   return partitionCommitTargets(context, worktree, taskId).targets;
 }
 
+// `git add` の pathspec は作業ツリーと index だけを照合する。削除が既に index へ入っている
+// パスはそのどちらにも存在しないため、`-A` を付けても「pathspec did not match any files」で
+// fatal になる。このようなパスは追加で stage する内容が無いので、add の対象から除外する。
+// commit / commit --amend の pathspec は HEAD も照合するため、対象から外さずに削除を記録できる。
+export function selectStageablePaths(repoRoot: string, paths: readonly string[]): string[] {
+  if (paths.length === 0) return [];
+  const indexed = new Set(
+    zeroSeparatedPaths(repoRoot, ["ls-files", "--full-name", "-z", "--", ...paths]),
+  );
+  // 作業ツリー側の存在確認は lstat で行う。git は symlink 自体を追跡するため、リンク先が
+  // 無い symlink も add の対象になる（existsSync はリンク先を辿るため false になる）。
+  const existsInWorktree = (path: string): boolean =>
+    lstatSync(resolve(repoRoot, path), { throwIfNoEntry: false }) !== undefined;
+  return paths.filter((path) => indexed.has(path) || existsInWorktree(path));
+}
+
+// commit 対象を stage する。stage できる対象が無い場合（staged 済みの削除だけが残る場合）は
+// git add を実行しない。commit 対象の限定は呼び出し側の paths が担うため、範囲は変わらない。
+export function stageCommitTargets(repoRoot: string, paths: readonly string[]): void {
+  const stageable = selectStageablePaths(repoRoot, paths);
+  if (stageable.length === 0) return;
+  gitOutput(repoRoot, ["add", "-A", "--", ...stageable]);
+}
+
 export function stabilizeCommitTargets(
   repoRoot: string,
   listRemainingPaths: () => string[],
@@ -375,7 +399,7 @@ export function stabilizeCommitTargets(
     const paths = listRemainingPaths();
     if (paths.length === 0) return;
 
-    gitOutput(repoRoot, ["add", "-A", "--", ...paths]);
+    stageCommitTargets(repoRoot, paths);
     const staged = gitResult(repoRoot, ["diff", "--cached", "--quiet", "--", ...paths]);
     if (staged.status === 0) {
       // pathspec commit は hook が再stageした内容を commit した後、元の index を復元して
@@ -444,7 +468,7 @@ export function commitWorktreeChanges(params: {
   process.stdout.write(`commit-targets:\n${paths.map((path) => `  ${path}`).join("\n")}\n`);
   if (params.dryRun) return { targets: paths, committed: false };
 
-  gitOutput(worktree.path, ["add", "-A", "--", ...paths]);
+  stageCommitTargets(worktree.path, paths);
   const staged = gitResult(worktree.path, ["diff", "--cached", "--quiet", "--", ...paths]);
   if (staged.status === 0) {
     process.stdout.write("No staged commit-target changes.\n");
@@ -671,7 +695,7 @@ export function checkpointAndEnsureWorktree(params: {
     if (staged.status !== 0) throw new Error("Failed to inspect staged changes in root worktree.");
 
     const paths = params.checkpointPaths.map((path) => repoRelative(context.repoRoot, path));
-    gitOutput(context.repoRoot, ["add", "--", ...paths]);
+    stageCommitTargets(context.repoRoot, paths);
     const checkpoint = gitResult(context.repoRoot, ["diff", "--cached", "--quiet", "--", ...paths]);
     if (checkpoint.status === 1) {
       const committed = gitResult(context.repoRoot, [

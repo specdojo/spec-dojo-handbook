@@ -64,17 +64,37 @@ PJR-TA5C の統合失敗も同じ原因の可能性が高い。当時は失敗�
 
 ## 4. 作業内容
 
-| No  | 作業                                   | 担当 | 状態 | メモ                     |
-| --- | -------------------------------------- | ---- | ---- | ------------------------ |
-| 1   | 統合経路で削除パスが通る箇所を洗い出す | ARC  | open | add と commit の両方     |
-| 2   | 削除パスの扱いを決めて実装する         | ARC  | open | 対象限定の目的は維持する |
-| 3   | 再試行時に失敗しないことを確認する     | ARC  | open | staged 済みでも通ること  |
-| 4   | 回帰テストを追加する                   | ARC  | open | 削除・追加・変更の混在   |
-| 5   | PJR-WZMA の統合を再開して確認する      | ARC  | open | `--resume` で統合段から  |
+| No  | 作業                                   | 担当 | 状態 | メモ                                     |
+| --- | -------------------------------------- | ---- | ---- | ---------------------------------------- |
+| 1   | 統合経路で削除パスが通る箇所を洗い出す | ARC  | done | pathspec 付き `git add` は4箇所          |
+| 2   | 削除パスの扱いを決めて実装する         | ARC  | done | add 対象のみ絞り、commit 対象は変えない  |
+| 3   | 再試行時に失敗しないことを確認する     | ARC  | done | staged 済み削除の回帰テストで確認        |
+| 4   | 回帰テストを追加する                   | ARC  | done | 削除単独・削除/変更/追加の混在・helper   |
+| 5   | PJR-WZMA の統合を再開して確認する      | ARC  | open | 本変更のマージ後に `--resume` で統合段へ |
 
 ## 5. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+`git add` の pathspec は作業ツリーと index だけを照合するため、削除が既に index へ入っている
+パスはどちらにも存在せず fatal になる。一方 `git commit` / `git commit --amend` の pathspec は
+HEAD も照合し、index から消えたパスを削除として記録できる（git 本体の
+`t7501-commit-basic-functionality.sh` の `partial commit that involves removal (2)` が同じ条件を
+検証している）。そこで、commit 対象の集合は変えずに `git add` へ渡すパスだけを絞る方針とした。
+
+- `src/exec-worktree-ops.ts` に `selectStageablePaths` と `stageCommitTargets` を追加した。
+  `git ls-files` の結果と作業ツリーの存在確認で「stage できるパス」を選び、該当が無ければ
+  `git add` 自体を実行しない。
+- pathspec 付き `git add` の呼び出し4箇所を `stageCommitTargets` へ置き換えた。
+  `stabilizeCommitTargets`（hook 再整形後の再 stage）、`commitWorktreeChanges`（worktree の
+  commit）、`checkpointAndEnsureWorktree`（checkpoint）、`src/exec-run.ts` の
+  `commitRegisterItemChanges` と `commitRegisterState`（in-place register の commit）。
+- commit 対象は従来どおり許可リスト・除外リストで限定したままで、全件 `git add -A` へは戻して
+  いない。未 staged の削除、変更、新規追加、リネームの扱いも変わらない。
+- 回帰テストを `tests/src/exec-worktree-ops.integration.test.ts` に追加した。削除・変更・追加が
+  混在する commit、削除が staged 済みの状態からの再試行（本件の再現条件）と merge、
+  `selectStageablePaths` の選別を検証する。
+
+残課題は作業内容の No.5（PJR-WZMA の統合を `--resume` で再開して確認する）である。本変更が
+統合ブランチへ入った後に実施する。
 
 ## 6. 関連ドキュメント
 
