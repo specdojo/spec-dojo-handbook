@@ -2584,7 +2584,11 @@ export function resolveInPlaceCommand(
   if (!task?.agent_pipeline && (opts.executorBy || opts.reporterBy)) {
     throw new Error("--executor-by / --reporter-by require an agent_pipeline task.");
   }
-  const by = (task?.agent_pipeline ? (opts.executorBy ?? opts.by) : opts.by)?.trim();
+  // A task definition can pin the delegated agent by nickname (Job `task.agent`). An explicit
+  // --by still wins so an operator can redirect a single run without editing the definition.
+  const by = (
+    task?.agent_pipeline ? (opts.executorBy ?? opts.by) : (opts.by ?? task?.agent)
+  )?.trim();
   if (by) {
     const member = roster?.members.find((m) => m.nickname === by && m.type === "agent");
     if (task?.agent_pipeline && member?.stage_role !== "executor") {
@@ -3165,6 +3169,7 @@ async function runJobMode(opts: RunOpts): Promise<void> {
     name: definition.name,
     owner: record.task.owner,
     mode: record.task.mode,
+    agent: record.task.agent?.executor,
     capabilities: record.task.capabilities,
     proficiency: record.task.proficiency,
     schedule_file: "",
@@ -3176,13 +3181,36 @@ async function runJobMode(opts: RunOpts): Promise<void> {
     resolveExecDefaultsPath(opts, schedulePath),
     executionPath,
   );
-  const { command, actor } = resolveInPlaceCommand(task, roster, opts, execDefaults);
+  // Job Definition が executor と reporter の双方を指名した場合は、register 項目と同じ
+  // executor/reporter pipeline で実行する（result は reporter が書く）。reporter が無い
+  // 場合は従来どおり単一 agent 実行で、その agent が result まで記入する。
+  // --by は運用者による単発の差し替えとして単一 agent 実行を選ぶ。
+  const executorBy = opts.executorBy?.trim() || record.task.agent?.executor;
+  const reporterBy = opts.reporterBy?.trim() || record.task.agent?.reporter;
+  const pipelineAgents =
+    !opts.by?.trim() && executorBy && reporterBy
+      ? resolveRegisterPipelineCommand(roster, { executorBy, reporterBy }, execDefaults)
+      : undefined;
+  const { command, actor } = pipelineAgents
+    ? { command: pipelineAgents.executor.command, actor: pipelineAgents.executor.actor }
+    : resolveInPlaceCommand(
+        task,
+        roster,
+        { ...opts, executorBy: undefined, reporterBy: undefined },
+        execDefaults,
+      );
 
   if (opts.dryRun) {
     process.stdout.write(`[dry-run] job: ${definition.id}\n`);
     process.stdout.write(`[dry-run] run: ${record.run_id}\n`);
     process.stdout.write(`[dry-run] scheduled_at: ${record.scheduled_at}\n`);
+    process.stdout.write(`[dry-run] agent: ${actor}${pipelineAgents ? " (executor)" : ""}\n`);
     process.stdout.write(`[dry-run] command: ${command}\n`);
+    if (pipelineAgents) {
+      const reporter = pipelineAgents.reporterCandidates[0];
+      process.stdout.write(`[dry-run] agent: ${reporter?.actor ?? ""} (reporter)\n`);
+      process.stdout.write(`[dry-run] reporter command: ${reporter?.command ?? ""}\n`);
+    }
     process.stdout.write(`[dry-run] plan: ${planPath}\n`);
     return;
   }
@@ -3202,16 +3230,33 @@ async function runJobMode(opts: RunOpts): Promise<void> {
   });
   const resultScaffold = readResultFrontmatterSnapshot(resultPath);
   const prompt = expandPromptRefs(readFileSync(planPath, "utf8"));
-  process.stdout.write(`Running Job Run ${record.run_id} in place: ${command}\n`);
-  const exitCode = await spawnAgentInPlace(
-    command,
-    prompt,
-    specdojoRootDir(),
-    schedulePath,
-    executionPath,
-  );
-  let effectiveExit = exitCode;
+  const repoRoot = specdojoRootDir();
+  let exitCode: number;
   let reason: string | undefined;
+  if (pipelineAgents) {
+    process.stdout.write(
+      `Running Job Run ${record.run_id} in place (executor/reporter pipeline): ${command}\n`,
+    );
+    const pipelineOutcome = await runAgentPipeline({
+      repoRoot,
+      cwd: repoRoot,
+      schedulePath,
+      executionPath,
+      taskId: record.run_id,
+      executor: pipelineAgents.executor,
+      reporterCandidates: pipelineAgents.reporterCandidates,
+      planPath,
+      planPrompt: prompt,
+      resultPath,
+      execDefaults,
+    });
+    exitCode = pipelineOutcome.exitCode;
+    reason = pipelineOutcome.blockReason;
+  } else {
+    process.stdout.write(`Running Job Run ${record.run_id} in place: ${command}\n`);
+    exitCode = await spawnAgentInPlace(command, prompt, repoRoot, schedulePath, executionPath);
+  }
+  let effectiveExit = exitCode;
   if (exitCode === 0 && isResultUnfilled(resultPath, record.task.mode, resultScaffold)) {
     effectiveExit = 1;
     reason =
@@ -3374,7 +3419,7 @@ export function resolveRegisterPipelineCommand(
 // register pipeline の reporter 段だけを実行する。executor 直後の通常経路と、executor が
 // 成功したまま reporter だけが失敗した run の再開経路の双方から共有し、reporter 起動・
 // result 描画・pipeline-state 更新のみを担う（register の状態遷移と commit は呼び出し側）。
-async function runRegisterReporterStage(params: {
+async function runReporterStage(params: {
   repoRoot: string;
   cwd: string;
   schedulePath: string;
@@ -3489,12 +3534,13 @@ async function runRegisterReporterStage(params: {
   return { exitCode, runResult, blockReason, state };
 }
 
-// register 項目1件を executor→reporter の2段階で実行する。in-place（cwd: repoRoot）・
-// worktree（cwd: worktree.path）の双方から共有する。evidence・pipeline-state の記録先は
+// 1件の plan/result を executor→reporter の2段階で実行する。register 項目と Job Run の
+// 双方が使い、in-place（cwd: repoRoot）・worktree（cwd: worktree.path）から共有する。
+// evidence・pipeline-state の記録先は
 // Schedule タスクの pipeline と同じ形式（exec/evidence/<taskId>/<runId>/）にすることで、
 // 監査証跡のフォーマットを実行経路によらず統一する。state には plan / result の参照も
 // 記録し、reporter だけが失敗した場合に `--resume` が入力を復元できるようにする。
-async function runRegisterAgentPipeline(params: {
+async function runAgentPipeline(params: {
   repoRoot: string;
   cwd: string;
   schedulePath: string;
@@ -3625,7 +3671,7 @@ async function runRegisterAgentPipeline(params: {
     };
   }
 
-  const reporterOutcome = await runRegisterReporterStage({
+  const reporterOutcome = await runReporterStage({
     repoRoot,
     cwd,
     schedulePath,
@@ -3811,7 +3857,7 @@ async function runSingleRegisterItem(
   let pipelineBlockReason: string | undefined;
   if (pipelineAgents) {
     process.stdout.write(`Running ${item.id} in place (executor/reporter pipeline)\n`);
-    const pipelineOutcome = await runRegisterAgentPipeline({
+    const pipelineOutcome = await runAgentPipeline({
       repoRoot,
       cwd: repoRoot,
       schedulePath,
@@ -4325,7 +4371,7 @@ async function runSingleRegisterItemWorktree(
       `Running ${item.id} in worktree (executor/reporter pipeline)\n  CWD: ${worktree.path}\n`,
     );
     const worktreeResultPathForPipeline = pathInsideWorktree(repoRoot, worktree.path, resultPath);
-    const pipelineOutcome = await runRegisterAgentPipeline({
+    const pipelineOutcome = await runAgentPipeline({
       repoRoot,
       cwd: worktree.path,
       schedulePath,
@@ -4651,7 +4697,7 @@ async function resumeSingleRegisterItemWorktree(
   });
 
   const resultScaffold = readResultFrontmatterSnapshot(worktreeResultPath);
-  const outcome = await runRegisterReporterStage({
+  const outcome = await runReporterStage({
     repoRoot,
     cwd: worktree.path,
     schedulePath,

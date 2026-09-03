@@ -2,24 +2,17 @@
 # 運用開始時に enabled を true へ変更する。
 id: rtn-grade-kata
 name: 実践の型の週次品質評価
-description: 毎週月曜日2時（Asia/Tokyo）にローカル2回と条件付き expert の順で実践の型を grade する。
+description: 毎週月曜日2時（Asia/Tokyo）に、その週の実践の型を文書単位の3段評価へ委譲する。
 enabled: false
 trigger:
   cron: "0 2 * * 1"
   timezone: Asia/Tokyo
 action:
-  - kind: job
-    job: job-grade-kata
-    inputs:
-      scheduled_at: "{{scheduled_at}}"
-  - kind: job
-    job: job-grade-kata-local-confirmation
-    inputs:
-      scheduled_at: "{{scheduled_at}}"
-  - kind: job
-    job: job-grade-kata-expert-check
-    inputs:
-      scheduled_at: "{{scheduled_at}}"
+  kind: job
+  job: job-grade-kata
+  inputs:
+    period: "{{scheduled_at | iso_week}}"
+    kind: rulebook
 policy:
   missed_run: latest
   overlap: skip

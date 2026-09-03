@@ -30,12 +30,21 @@ export type JobInputDefinition = {
   git_revision?: boolean;
 };
 
+// Nicknames of the agents a Job delegates to. Pinning nicknames keeps the delegation
+// target explicit in the definition instead of depending on capability based auto
+// selection. With a reporter the Run executes as an executor/reporter pipeline.
+export type JobAgentDefinition = {
+  executor: string;
+  reporter?: string;
+};
+
 export type JobTaskDefinition = {
   mode: TaskMode;
   owner?: string;
   description: string;
   targets?: string[];
   paths?: string[];
+  agent?: JobAgentDefinition;
   capabilities?: string[];
   proficiency?: Proficiency;
 };
@@ -120,6 +129,45 @@ function validStringList(value: unknown): value is string[] {
   );
 }
 
+// Same nickname shape as pm-members.schema.yaml. The roster is not loaded here, so a
+// definition only guarantees the format; an unknown nickname fails when the Run resolves
+// the agent command.
+function isAgentNickname(value: unknown): value is string {
+  return typeof value === "string" && /^[a-z0-9][a-z0-9_-]{0,62}$/.test(value.trim());
+}
+
+function isJobAgentDefinition(value: unknown): value is JobAgentDefinition {
+  return (
+    isRecord(value) &&
+    isAgentNickname(value.executor) &&
+    (value.reporter === undefined || isAgentNickname(value.reporter))
+  );
+}
+
+// Parses task.agent and reports why it was rejected. Unknown keys are refused so a typo
+// (for example `reporters`) cannot silently drop the reporter stage.
+function parseJobAgent(value: unknown): { agent?: JobAgentDefinition; error?: string } {
+  if (!isRecord(value)) {
+    return { error: "task.agent must be a mapping with executor and optional reporter" };
+  }
+  const unknownKeys = Object.keys(value).filter((key) => key !== "executor" && key !== "reporter");
+  if (unknownKeys.length > 0) {
+    return { error: `task.agent has unknown key(s): ${unknownKeys.sort().join(", ")}` };
+  }
+  if (!isAgentNickname(value.executor)) {
+    return { error: "task.agent.executor must be an agent nickname from pm-members.yaml" };
+  }
+  if (value.reporter !== undefined && !isAgentNickname(value.reporter)) {
+    return { error: "task.agent.reporter must be an agent nickname from pm-members.yaml" };
+  }
+  return {
+    agent: {
+      executor: value.executor.trim(),
+      ...(isAgentNickname(value.reporter) ? { reporter: value.reporter.trim() } : {}),
+    },
+  };
+}
+
 function isJobRunState(value: unknown): value is JobRunState {
   return value === "running" || value === "succeeded" || value === "failed" || value === "noop";
 }
@@ -129,6 +177,7 @@ function isJobTaskDefinition(value: unknown): value is JobTaskDefinition {
   if (value.mode !== "edit" && value.mode !== "review") return false;
   if (typeof value.description !== "string") return false;
   if (value.owner !== undefined && typeof value.owner !== "string") return false;
+  if (value.agent !== undefined && !isJobAgentDefinition(value.agent)) return false;
   return (["targets", "paths", "capabilities"] as const).every(
     (field) => value[field] === undefined || validStringList(value[field]),
   );
@@ -253,6 +302,12 @@ export function parseJobDefinition(
       errors.push("task.paths must be a non-empty string list");
     if (value.task.owner !== undefined && typeof value.task.owner !== "string")
       errors.push("task.owner must be a string");
+    let agent: JobAgentDefinition | undefined;
+    if (value.task.agent !== undefined) {
+      const parsedAgent = parseJobAgent(value.task.agent);
+      if (parsedAgent.error) errors.push(parsedAgent.error);
+      agent = parsedAgent.agent;
+    }
     if (value.task.capabilities !== undefined && !validStringList(value.task.capabilities)) {
       errors.push("task.capabilities must be a non-empty string list");
     }
@@ -270,6 +325,7 @@ export function parseJobDefinition(
         ...(targets ? { targets: targets.map((target) => target.trim()) } : {}),
         ...(paths ? { paths: paths.map((path) => path.trim()) } : {}),
         ...(typeof value.task.owner === "string" ? { owner: value.task.owner.trim() } : {}),
+        ...(agent ? { agent } : {}),
         ...(validStringList(value.task.capabilities)
           ? { capabilities: value.task.capabilities }
           : {}),

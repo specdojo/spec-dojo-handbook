@@ -13,7 +13,7 @@ Routine Operation Guide
 
 routineは、既存の未完了Schedule/Register項目を探索するほか、再利用可能なJob Definitionから期間・revisionごとのJob Runを生成できます。週報や変更文書の翻訳は[Job実行設計](../../product/040-system-design/sysd-job-execution.md)を参照してください。
 
-継続品質評価は `job-grade-kata` のような Job Definition に、選択条件を付けた `grade plan` と、各文書の executor / reporter 実行・`grade apply --path --analysis-from` の逐次処理を記述し、`action.kind: job` の routine から定期起動します。executor は自由記述で判定し、reporter は判定を変更せず JSON へ構造化します。これにより routine は時刻条件、Job は agent 実行履歴・stage 間の応答受け渡し・ループ、grade は文書単位の plan と冪等な品質状態という既存の責務分担を維持します。
+継続品質評価は `job-grade-kata` のような Job Definition から `action.kind: job` の routine で定期起動します。文書の選択、段の順序、各文書の executor / reporter 実行、`grade apply --path --analysis-from` の逐次処理は `tools/grade/run-per-document.sh` が持ち、Job はその入口の起動と実行結果の判断だけを agent へ委譲します。責務の切り分け基準は [Job定義標準](../standards/job-definition-standard.md) を参照します。これにより routine は時刻条件、Job は agent への委譲単位、script は決定論的な手順、grade は文書単位の plan と冪等な品質状態という責務分担になります。
 
 **対象読者**
 
@@ -89,19 +89,19 @@ action:
 
 ### 1.2. grade の段階評価
 
-Kata の定期評価は、ローカル評価を2回行った後、見落としの疑いが強い文書だけを expert で再確認します。`rtn-grade-kata` は次の3つの Job を配列 action として同期実行します。
+Kata の定期評価は、ローカル評価を2回行った後、見落としの疑いが強い文書だけを expert で再確認します。この3段は文書ごとに通しで実行し、`rtn-grade-kata` は単一の `job-grade-kata` を起動するだけです。段の順序と対象の繰り返しは `tools/grade/run-per-document.sh` が持ちます。
 
-| 回  | Job                                 | executor / reporter                        | 対象と役割                                                                  |
-| --- | ----------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------- |
-| 1   | `job-grade-kata`                    | `gemma-expert-executor` / `gemma-reporter` | Markdown の Kata 全件を比較リファレンスありで評価し、具体的な不足を検出する |
-| 2   | `job-grade-kata-local-confirmation` | `gemma-expert-executor` / `gemma-reporter` | 同じ全件をリファレンスなしで再評価し、1回目の失敗を補完する                 |
-| 3   | `job-grade-kata-expert-check`       | `codex-expert-executor` / `gemma-reporter` | ローカルの高信頼 pass と未評価だけを再確認し、見落としを検出する            |
+| 段  | executor / reporter                        | 対象と役割                                                  |
+| --- | ------------------------------------------ | ----------------------------------------------------------- |
+| 1   | `gemma-expert-executor` / `gemma-reporter` | 比較リファレンスありで評価し、具体的な不足を検出する        |
+| 2   | `gemma-expert-executor` / `gemma-reporter` | 同じ文書をリファレンスなしで再評価し、1段目の失敗を補完する |
+| 3   | `codex-expert-executor` / `gemma-reporter` | 2段目が高信頼 pass の文書だけを再確認し、見落としを検出する |
 
-3回目の高信頼 pass は、2回目の保存結果に対して `--verdict pass --min-score 96 --max-findings 1` を AND 適用した集合です。96点は、ローカルが `dec-rulebook.md` を finding 1件で pass とした一方、expert が12件を検出した実測上の偽陰性境界です。9件のサンプル評価でも pass の score は91、96、100に分かれ、96点以上かつ finding 1件以下を「問題がない」だけでなく「検出できていない」可能性がある層として扱います。score 96でも `needs-work` なら修正対象が既に確定しているため、verdict 条件で除外します。
+3段目の高信頼 pass は、2段目の保存結果に対して `--verdict pass --min-score 96 --max-findings 1` を AND 適用した集合です。96点は、ローカルが `dec-rulebook.md` を finding 1件で pass とした一方、expert が12件を検出した実測上の偽陰性境界です。9件のサンプル評価でも pass の score は91、96、100に分かれ、96点以上かつ finding 1件以下を「問題がない」だけでなく「検出できていない」可能性がある層として扱います。score 96でも `needs-work` なら修正対象が既に確定しているため、verdict 条件で除外します。
 
-1回目と2回目のどちらでも grade を保存できなかった文書は `--ungraded` で3回目へ加えます。`--ungraded` と保存済み結果の条件は OR ですが、CLI の複数条件は AND なので、expert Job 内で2回に分けて plan を生成し、対象パスを重複排除して処理します。
+Job が担うのは、この入口を1回起動し、実行結果（未完了の段、失敗の切り分け、3段目がスキップされた理由、閾値の見直し要否）を判断することだけです。段ごとの agent、リファレンス、対象種別、件数上限は script の引数であり、Job の `inputs` から解決します。
 
-各回は直前の `grade apply` 後の文書を入力にします。未解消 finding は次の plan へ引き継がれ、後段の agent が severity を下げて提出しても `grade apply` が前回値を維持します。途中の Job が失敗しても routine は後続を実行し、全体結果と `last_action_results` で失敗段を識別します。閾値は固定の永続値ではなく、expert 再確認の対象率と偽陰性を定期レビューし、変更時は Job、routine、本節、根拠となる登録項目を同時に更新します。
+各段は直前の `grade apply` 後の文書を入力にします。未解消 finding は次の plan へ引き継がれ、後段の agent が severity を下げて提出しても `grade apply` が前回値を維持します。rate limit や中断で段が未完了になった場合は、同じ `--run-id` で再実行すると完了済みの段を飛ばして再開します。閾値は固定の永続値ではなく、expert 再確認の対象率と偽陰性を定期レビューし、変更時は Job、routine、本節、根拠となる登録項目を同時に更新します。
 
 ## 2. due判定と実行
 

@@ -1,27 +1,46 @@
 # yaml-language-server: $schema=../../../../specdojo/schemas/v1/job.schema.yaml
 id: job-grade-kata
-name: 実践の型のローカル比較評価
-description: Markdown の実践の型を比較リファレンス付きのローカル構成で全件評価する。
+name: 実践の型の品質評価
+description: 文書単位の3段評価を起動し、その実行結果に異常がないかを判断する。
 inputs:
-  scheduled_at:
+  period:
     type: string
     required: true
+  kind:
+    type: string
+    default: rulebook
+  limit:
+    type: integer
+    default: 0
 task:
   mode: edit
   owner: ARC
+  agent:
+    executor: claude-expert-executor
+    reporter: claude-reporter
   description: |
-    `specdojo grade plan --target kata --random-reference --project prj-0001` で Markdown の
-    Kata 全件について1文書単位の executor plan と reporter plan を保存する。各 executor plan を
-    `gemma-expert-executor` へ渡して marker 付き自由記述の最終応答を保存し、reporter plan と応答を
-    `<grade_executor_output>` として `gemma-reporter` へ渡す。1件ごとに `specdojo grade apply
-    --target kata --path <document> --analysis-from <executor-output> --from <json>
-    --by gemma-expert-executor --reference <planに記録されたreference>` を実行する。比較リファレンスが
-    ない plan では `--reference` を省略する。level・severity・finding の忠実性検証、スコア計算、
-    finding 配置を完了してから次へ進み、対象がなければ result に no-op と記録する。
+    次のコマンドをリポジトリルートで1回だけ実行する。対象文書の選択、段の順序、
+    各段の agent 呼び出し、`grade apply` の実行はこのスクリプトの責務であるため、
+    手順を分解して個別のコマンドへ置き換えない。
+
+    tools/grade/run-per-document.sh --run-id {{job_id}}-{{inputs.kind}}-{{inputs.period}} --kind {{inputs.kind}} --limit {{inputs.limit}}
+
+    実行後に `logs/grade/runs/per-document/{{job_id}}-{{inputs.kind}}-{{inputs.period}}/results.tsv`
+    と終了コードを読み、次を判断して報告する。
+
+    - 終了コード75（rate limit）または中断で未完了の段が残っているか。残る場合は同じ
+      `--run-id` で再開できる状態かを確認する。
+    - `failed` の段があるか。ある場合は rate limit、agent 側の失敗、`grade apply` の
+      忠実性検証による拒否のいずれかへ切り分ける。
+    - 3段目が実行されなかった文書について、閾値未満と2段目の失敗のどちらが理由か。
+    - verdict と score の分布に、3段目の閾値の見直しを要する偏りがあるか。
+
+    選択された文書が0件の場合は no-op と判断する。判断できない事象は推測で埋めず、
+    観測した事実と未確認の範囲を分けて報告する。
   paths:
     - docs/ja/specdojo/rulebooks
     - docs/ja/specdojo/recipes
     - docs/ja/specdojo/samples
     - docs/ja/specdojo/templates
 run:
-  idempotency_key: "{{job_id}}:{{inputs.scheduled_at}}"
+  idempotency_key: "{{job_id}}:{{inputs.kind}}:{{inputs.period}}"

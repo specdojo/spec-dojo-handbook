@@ -33,6 +33,18 @@ Jobは新しいagent実行エンジンを持たない。Job Runをplanへ解決�
 - 課題、リスク、判断、計画外対応の台帳管理。registerで扱う。
 - 起動時刻そのものの管理。routineまたは外部CIが扱う。
 - Job内での常駐監視。CLIは1回のRunを処理して終了する。
+- 決定論的な手順（対象の列挙、繰り返し、実行順序の制御）。scriptまたはCLIで扱う。
+
+### 1.1. 責務境界
+
+Jobの責務は「agentへ委譲する判断の定義」に限る。`task.description`へ決定論的な手順を自然言語で書くと、agentが手順の解釈に判断力を使い、実行の有無や引数の正しさがagent依存になる。手順はscriptまたはCLIへ実装し、Jobからはその入口を1つ呼ぶ。判定可能な規約は`job-definition-standard`をSSOTとする。
+
+| 関心事                    | 担当                       |
+| ------------------------- | -------------------------- |
+| 起動時刻・実行枠          | routine / 外部スケジューラ |
+| agentへ委譲する判断の定義 | Job Definition             |
+| 決定論的な手順と繰り返し  | script / CLI               |
+| agent実行・result・commit | exec実行基盤               |
 
 ## 2. 概念モデル
 
@@ -96,6 +108,9 @@ inputs:
 task:
   mode: edit
   owner: PM
+  agent:
+    executor: claude-expert-executor
+    reporter: claude-reporter
   description: |
     対象期間の完了事項、進行中事項、課題、翌週予定を根拠とともにまとめる。
   targets:
@@ -106,6 +121,8 @@ run:
 ```
 
 `task`の実行要件はSchedule taskと同じ語彙を再利用する。`mode`、`owner`、`capabilities`、`proficiency`をJob固有の別概念として増やさず、plan生成後は同じmember選択処理へ渡す。
+
+`task.agent`はJobが委譲するagentを`pm-members.yaml`のnicknameで直接指名する。`capabilities`による間接指定は、要求を満たすmemberが複数あると選択が実行時の優先度に依存し、Jobの定義から委譲先を読み取れない。さらにroster全体がstage_roleを持つpipeline memberである場合、stage_roleなしのmemberだけを対象とする自動選択では候補が0件になる。`reporter`を併記したRunはexecutor→reporterの2段で実行し、resultはreporterが書く。`reporter`を省略した場合は単一agent実行となり、そのagentがresultまで記入する。`exec run --by`は単一agent実行としての差し替え、`--executor-by` / `--reporter-by`は段ごとの差し替えとして、いずれも指名より優先する。
 
 テンプレート式で参照できる値は、`job_id`、検証済み`inputs`、トリガーが渡した`scheduled_at`、読み取り専用の前回成功checkpointに限定する。任意コード実行や環境変数の無制限な展開は許可しない。
 
@@ -264,6 +281,7 @@ Runの状態変更とattemptは上書きだけで失われない履歴として�
 ## 8. 現在の実装境界
 
 - Job Runはin-place実行に対応する。`exec run --job --worktree`は未対応で、指定時にエラーとする。
+- `task.agent`でexecutorとreporterを指名したJob Runは、register項目と同じexecutor/reporter pipelineで実行し、evidenceとpipeline stateを`exec/evidence/<taskId>/<runId>/`へ記録する。reporterだけが失敗したRunの`--resume`はregister経路のみが対応し、Jobでは次のattemptとして再実行する。
 - cronは5フィールド形式を扱い、数値、`*`、リスト、範囲、stepを受け付ける。
 - `missed_run`は`latest`と`all`、`overlap`は`skip`に対応する。
 - agentが変更不要と判断して正常終了したRunは現在`succeeded`として記録する。`noop`はデータモデルとcheckpoint規則に予約しているが、agent resultからの自動分類は未対応である。
