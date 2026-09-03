@@ -90,3 +90,16 @@
       from: "checkpoint failed: git worktree failed: Preparing worktree (new branch 'exec/prj-0001-PJR-WZMA') Updating files:  40% (1320/3222)\rUpdating files:  41% (1322/3222)\rUpdating files:  42% (1354/3222)\rUpda…"
       to: rate limit reached
   previous_event_id: reg_8ac49585bcea4589a9a70b4a6271fda9
+- v: 1
+  id: reg_8f17564060554d869e12de92e62056c8
+  ts: "2026-09-03T03:31:42Z"
+  action: start
+  actor: claude-expert-executor
+  from_status: waiting
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: waiting
+      to: in-progress
+  previous_event_id: reg_ef7cef6bb3ee4adfbc5ef41242990de5
