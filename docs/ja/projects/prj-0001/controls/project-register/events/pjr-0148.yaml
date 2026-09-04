@@ -184,3 +184,22 @@
       from: "agent exited with non-zero code: runner検証「npm run test:unit」が失敗したため。tests/src/exec-run-lock.test.tsの「heartbeat で lock の更新時刻を進める」が失敗しており、runner validationのfailed状態は完了結果を支持できない。"
       to: "integrate failed: git merge failed (args: --no-ff --no-edit exec/prj-0001-PJR-0148)"
   previous_event_id: reg_98ffc416c97041b58a72779ff7864913
+- v: 1
+  id: reg_5f8772c135e9434bbd21bb1415662f83
+  ts: "2026-09-04T15:07:30Z"
+  action: close
+  actor: orchestrator
+  from_status: waiting
+  to_status: done
+  reason: docs/ 外への wikilink 拡張は現時点では行わない。参照需要は実在するが、改名実績が 6 ファイル中 1 件と少なく、追従は一括置換で対処できるため。
+  changes:
+    - field: status
+      from: waiting
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-05"
+    - field: conclusion
+      from: docs/ 外への wikilink 拡張は現時点では行わない。生パス参照の需要は確認できるが、改名時の機械的な追従費用は、外部 ID の所有・重複検査・表示互換性を恒久的に維持する費用を下回るため。再評価条件と限定拡張案を記録した。
+      to: docs/ 外への wikilink 拡張は現時点では行わない。参照需要は実在するが、改名実績が 6 ファイル中 1 件と少なく、追従は一括置換で対処できるため。
+  previous_event_id: reg_35c8468aaad24290a01bceb6c68e98d3
