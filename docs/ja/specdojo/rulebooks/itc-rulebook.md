@@ -55,6 +55,8 @@ Internal Integration Test Catalog (ITC) Documentation Rules
 
 個別 ITC（`itc-<term>`）と他ドキュメントの関係を示します。
 
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 参照サンプル `specdojo:itc-sample` が本ルールブックで定義した構成（第5節）に従っておらず、実例として不適切である。 -->
+
 ```mermaid
 flowchart BT
   TSP["tsp-index<br>テスト戦略・方針"]
@@ -74,7 +76,6 @@ flowchart BT
   classDef target stroke-width:4px
   class TCDetail target
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 参照サンプル `specdojo:itc-sample` が本ルールブックで定義した構成（第5節）に従っておらず、実例として不適切である。 -->
 ```
 
 ## 3. ファイル命名・ID規則

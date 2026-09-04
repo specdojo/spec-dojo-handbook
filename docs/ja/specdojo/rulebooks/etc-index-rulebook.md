@@ -58,6 +58,8 @@ TSPに基づき、外部結合テストに共通するルールや方針を定�
 
 `etc-index` と他ドキュメントの関係を示します。
 
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 指定の sample が mandatory と定義された本文構成（1~8章）を無視し、かつ Frontmatter の type に `project` を指定しており rulebook の定義と矛盾している。 -->
+
 ```mermaid
 flowchart BT
   TSP["tsp-index<br>テスト戦略・方針"]
@@ -73,8 +75,6 @@ flowchart BT
 
   TC -->|based_on| TSP
   Code -->|based_on| TC
-
-<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 指定の sample が mandatory と定義された本文構成（1~8章）を無視し、かつ Frontmatter の type に `project` を指定しており rulebook の定義と矛盾している。 -->
 
   classDef target stroke-width:4px
   class TCIndex target

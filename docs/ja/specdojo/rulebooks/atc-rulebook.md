@@ -55,6 +55,8 @@ Acceptance Test Catalog (ATC) Documentation Rules
 
 個別 ATC（`atc-<term>`）と他ドキュメントの関係を示します。
 
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 指定サンプル `docs/ja/specdojo/samples/atc-sample.md` が、本ルールで定義した構成（見出し1〜6）および type (`test`) に準拠しておらず、整合性が取れていない。 -->
+
 ```mermaid
 flowchart BT
   TSP["tsp-index<br>テスト戦略・方針"]
@@ -74,7 +76,6 @@ flowchart BT
   classDef target stroke-width:4px
   class TCDetail target
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance 指定サンプル `docs/ja/specdojo/samples/atc-sample.md` が、本ルールで定義した構成（見出し1〜6）および type (`test`) に準拠しておらず、整合性が取れていない。 -->
 ```
 
 ## 3. ファイル命名・ID規則

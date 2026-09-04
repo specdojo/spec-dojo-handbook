@@ -69,6 +69,8 @@ TSP は「個別のテストケース集」ではありません。
 
 TSP と下位ドキュメント（テストカタログ、テストコード／CI成果物）の関係を示します。
 
+<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness 責任分界（保証すること/やらないこと）の明文化に関する記述が重複しており、整理が必要である。 -->
+
 ```mermaid
 flowchart BT
   TSP["tsp-index<br>テスト戦略・方針"]
@@ -88,7 +90,6 @@ flowchart BT
   classDef target stroke-width:4px
   class TSP target
 
-<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness 責任分界（保証すること/やらないこと）の明文化に関する記述が重複しており、整理が必要である。 -->
 ```
 
 <!-- specdojo:finding id=F002 severity=minor rule=vp-arc-conciseness 曖昧表現の禁止に関する記述が本文内で重複しているため、共通原則として集約することを推奨する。 -->

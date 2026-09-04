@@ -191,9 +191,12 @@ Frontmatter は共通スキーマに従います（参照: [docs/specdojo/schema
 - SequenceDiagram：時系列と呼び出し順（必要時のみ）
 - 概要図の粒度は **C4コンポーネント図レベル相当** とし、実装クラス/メソッド詳細には踏み込まない
 
+<!-- specdojo:finding id=F011 severity=minor rule=vp-qe-kata-conformance 記法例および埋め込み完成例の図が、必須としたシステム内外・サービス境界と主要識別子を示しておらず、図の適用例が自身の規約を満たしていない。 -->
+
+<!-- specdojo:finding id=F010 severity=major rule=vp-qe-kata-conformance 埋め込み完成例の Frontmatter が `specdojo:` 名前空間と必須 `rulebook` を欠き、許可されない `title` を含むため、rulebook を適用した正しい成果物例として機能しない。 -->
+
 ```mermaid
 
-<!-- specdojo:finding id=F011 severity=minor rule=vp-qe-kata-conformance 記法例および埋め込み完成例の図が、必須としたシステム内外・サービス境界と主要識別子を示しておらず、図の適用例が自身の規約を満たしていない。 -->
 flowchart LR
   UI[UI] -->|POST /sales| API[Sales API]
   API --> SVC[Sales Service]
@@ -250,7 +253,6 @@ flowchart LR
 
 ```yaml
 
-<!-- specdojo:finding id=F010 severity=major rule=vp-qe-kata-conformance 埋め込み完成例の Frontmatter が `specdojo:` 名前空間と必須 `rulebook` を欠き、許可されない `title` を含むため、rulebook を適用した正しい成果物例として機能しない。 -->
 ---
 id: sysd-critical-flows
 type: architecture

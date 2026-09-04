@@ -730,7 +730,9 @@ export default defineConfig({
   // srcDir 省略時は root（リポジトリルート）と同一になる。
   // サイトに含めるのは docs/ 配下の Markdown のみとし、
   // リポジトリ直下の README 等やローカル作業用ディレクトリは除外する。
-  srcExclude: ["*.md", "local/**", "workspaces/**", "templates/**"],
+  // logs/ は agent 実行時の plan / 応答を蓄える。VitePress の走査対象にすると、
+  // 未知タグを含む agent 出力が Vue のコンパイルを壊す。
+  srcExclude: ["*.md", "local/**", "workspaces/**", "templates/**", "logs/**"],
 
   // サイドバー折りたたみ状態の復元（初回描画前に同期実行し、ちらつきを防ぐ）
   head: [

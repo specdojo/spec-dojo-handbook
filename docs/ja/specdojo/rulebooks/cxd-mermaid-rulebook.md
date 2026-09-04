@@ -78,11 +78,14 @@ Mermaid `flowchart` では `classDef` + `class`、境界は `style` を使用し
 
 ### 2.1.1 標準スタイル定義（コピーして利用）
 
+<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-cross-document-consistency サンプルのH1におけるルールブックへのリンク先ファイル名が、実際のもの（cxd-mermaid-rulebook.md）と不整合である。 -->
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency 成果物の配置場所、ファイル命名規則、および Frontmatter の詳細定義など, 管理上の必須ルールが欠落している。 -->
+
 ```mermaid
 flowchart LR
   %% --- Standard styles (recommended) ---
 
-<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-cross-document-consistency サンプルのH1におけるルールブックへのリンク先ファイル名が、実際のもの（cxd-mermaid-rulebook.md）と不整合である。 -->
   classDef person fill:#fff3bf,stroke:#f08c00,color:#000;
   classDef system fill:#d0ebff,stroke:#1c7ed6,color:#000;
   classDef external fill:#e9ecef,stroke:#495057,color:#000;
@@ -91,7 +94,6 @@ flowchart LR
   %% NOTE: '境界' は subgraph のID（名前）に合わせる
   style 境界 fill:#ffffff,fill-opacity:0,stroke:#868e96,stroke-width:1px,stroke-dasharray: 5 5;
 
-<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency 成果物の配置場所、ファイル命名規則、および Frontmatter の詳細定義など, 管理上の必須ルールが欠落している。 -->
 ```
 
 <!-- specdojo:finding id=F003 severity=major rule=vp-qe-kata-conformance rulebook としての責務（成果物の識別・管理定義）が不足しており、作図リファレンスの構成になっている。 -->

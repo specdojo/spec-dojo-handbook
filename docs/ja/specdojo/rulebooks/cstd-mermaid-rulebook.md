@@ -57,6 +57,8 @@ specdojo:
 
 - すべての図は以下のように `stateDiagram-v2` から始める。
 
+<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness 状態名の命名ルール（日本語・名詞句）に関する記述が、第3章(3.1)と第6章で重複している。 -->
+
 ```mermaid
 stateDiagram-v2
   [*] --> 初期状態
@@ -215,7 +217,6 @@ stateDiagram-v2
 
 ```mermaid
 
-<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness 状態名の命名ルール（日本語・名詞句）に関する記述が、第3章(3.1)と第6章で重複している。 -->
 stateDiagram-v2
   [*] --> 未入荷
   未入荷     --> 入荷済み     : 納品伝票の登録
