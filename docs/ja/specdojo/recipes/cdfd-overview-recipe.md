@@ -5,6 +5,30 @@ specdojo:
   status: ready
   rulebook: specdojo:cdfd-overview-rulebook
   sample: specdojo:cdfd-overview-sample
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 53
+    graded_at: "2026-09-04T12:18:23.628Z"
+    graded_by: codex-expert-executor
+    content_hash: ef240fb1e9d97d9054c960aa377144ac502ce3b635de3f5a99f1a5d0cd0f5d00
+    categories:
+      consistency: { score: 25 }
+      usability: { score: 58 }
+      architecture: { score: 100 }
+      quality: { score: 38 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 1, score: 25 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 2, score: 50 }
+      vp-qe-omissions-consistency: { level: 1, score: 25 }
+      vp-qe-kata-conformance: { level: 1, score: 25 }
+      vp-ux-readability: { level: 2, score: 50 }
+      vp-ux-language-consistency: { level: 1, score: 25 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 17, minor: 5, note: 0 }
 ---
 
 # 概念データフロー図（全体概要）作成レシピ
@@ -40,6 +64,13 @@ Conceptual Data Flow Diagram Overview Writing Recipe
 | 未決事項       | 境界、名称、責務、判断者が未確定な論点と、影響、決定者、決定時期         |
 
 ## 3. 全体の作成手順
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=39 recipe は起点イベントを概要図へ配置するよう求める一方、template は起点イベントを一覧表へ記載して図では省略すると指示し、sample の概要図も省略しているため、図の必須要素を一意に決定できない。 -->
+<!-- specdojo:finding id=F002 severity=major rule=vp-arc-cross-document-consistency line=43 recipe は未決事項を専用章へ分離するよう求め、template も条件付きの「未決事項」章を提供する一方、rulebook の本文構成には同章がなく、成果物の正しい章構成が一致していない。 -->
+<!-- specdojo:finding id=F009 severity=major rule=vp-qe-omissions-consistency line=43 未決事項の分離を作成手順と仕上げチェックで要求しているが、「各章の書き方」に未決事項の適用条件、必須列、ラベルの使い分けがなく、rulebook の本文構成からも同章が欠落している。 -->
+<!-- specdojo:finding id=F011 severity=major rule=vp-qe-omissions-consistency line=39 recipe が図示対象とする起点イベントを template と sample の概要図が省略しており、必須図要素の抜けを成果物間で一貫して検査できない。 -->
+<!-- specdojo:finding id=F013 severity=major rule=vp-qe-kata-conformance line=39 recipe が求める起点イベント付き概要図に対し、template は起点イベントの省略を明記し、sample も省略しているため、recipe から完成例・骨組みへの適用結果が一致しない。 -->
+<!-- specdojo:finding id=F014 severity=major rule=vp-qe-kata-conformance line=43 recipe と template が扱う条件付きの未決事項章を rulebook が定義しておらず、recipe-guided と fully-guided で生成される成果物構成が変わる。 -->
 
 1. 対象者、利用場面、開始点、終了点、対象外を定義します。
 2. 開始から結果利用までの業務成果を並べ、起点イベントと最終出力が異なるまとまりへ分けます。
@@ -88,6 +119,13 @@ Conceptual Data Flow Diagram Overview Writing Recipe
 
 問い:
 
+<!-- specdojo:finding id=F003 severity=major rule=vp-arc-cross-document-consistency line=82 recipe は同じ領域 ID・名称を一覧と図で一致させるよう求めるが, sample は `P-01`〜`P-03` に対して一覧の「販売記録・在庫補充判断・つけ管理」と図の「店頭販売・在庫管理・顧客管理」を併用している。 -->
+<!-- specdojo:finding id=F004 severity=major rule=vp-arc-cross-document-consistency line=87 recipe は現物の受け渡しがある場合に物理保管を図示するよう求める一方、template の単一図は物理保管の記入欄を持たず現物の流れを対象外としており、単一図を選んだ場合の適用方法が一致しない。 -->
+<!-- specdojo:finding id=F012 severity=major rule=vp-qe-omissions-consistency line=87 現物フローが存在して単一図で追跡可能な場合に必要な物理保管ノードと現物エッジの骨組みが template の単一図から欠落している。 -->
+<!-- specdojo:finding id=F015 severity=major rule=vp-qe-kata-conformance line=82 sample が一覧と図で異なる領域名を使用しており、recipe の問いに対する準拠完成例として利用できない。 -->
+<!-- specdojo:finding id=F018 severity=minor rule=vp-ux-readability line=86 成果物の章名に recipe 内の小節番号「4.5」「4.6」を付記しているが、template 上の成果物では「5」「6」であるため、番号を除いて章名だけで参照する必要がある。 -->
+<!-- specdojo:finding id=F020 severity=major rule=vp-ux-language-consistency line=82 sample は同じ `P-01`〜`P-03` を「販売記録・在庫補充判断・つけ管理」と「店頭販売・在庫管理・顧客管理」の二組の名称で表しており、recipe が求める名称統一を満たしていない。 -->
+
 - 一覧表の各領域が、同じ ID と名称を持つ一つの代表ノード（直接またはプロセスグループ経由）として登場していますか。
 - 各領域の起点イベントと主要なデータストアを図からたどれますか。
 - エッジラベルだけを読んでも、何がどこからどこへ渡るか説明できますか。
@@ -95,6 +133,13 @@ Conceptual Data Flow Diagram Overview Writing Recipe
 - この図が概要であり、詳細を個別プロセス領域主要入出力（4.5）・委譲境界（4.6）へ委譲していることが、見出しと凡例から分かりますか。
 - 現物の受け渡しがある場合、物理保管を図の要素として扱っていますか。一画面で追いにくいときは、外部主体・物理保管に着目した図とデータストアに着目した図に分け、両図で領域 ID・名称を統一していますか。
 - 代表ノードの数はおおむね7〜9件までに収まっていますか。超える場合は、業務の性質が近い領域をプロセスグループへまとめていますか。
+
+<!-- specdojo:finding id=F005 severity=major rule=vp-arc-cross-document-consistency line=90 recipe と overview rulebook はプロセスグループを一つの代表ノードとして扱うが、包含先の `cdfd-mermaid-rulebook` は同じ語を `subgraph` と定義して代表ノードの代替を禁止しているため、同時に準拠できない。 -->
+<!-- specdojo:finding id=F007 severity=major rule=vp-qe-verifiability line=90 複数領域を一つのグループ代表ノードへまとめられるとする一方、仕上げチェックは各代表ノードを一覧の一行と一つの詳細化先へ対応させるため、グループ ID、構成領域、複数の詳細化先をどう照合すれば pass か判定できない。 -->
+<!-- specdojo:finding id=F010 severity=major rule=vp-qe-omissions-consistency line=90 プロセスグループを使用する場合のグループ ID、名称、構成領域、一覧行および領域別 CDFD との対応方法が recipe・rulebook・template のいずれにも定義されていない。 -->
+<!-- specdojo:finding id=F016 severity=major rule=vp-qe-kata-conformance line=90 recipe・template のグループ代表ノード方式と、包含する `cdfd-mermaid-rulebook` の `subgraph` 方式が競合し、グループ化した成果物を kata 一式へ同時準拠させられない。 -->
+<!-- specdojo:finding id=F017 severity=major rule=vp-ux-readability line=90 グループ代表ノードが複数の一覧行・領域 ID・詳細化先をどう表すか説明されておらず、10領域以上でグループ化を選んだ読者が一覧、図、詳細化先の対応を追えない。 -->
+<!-- specdojo:finding id=F021 severity=major rule=vp-ux-language-consistency line=90 recipe の「プロセスグループ」は複数領域を代表する角丸ノードを意味するが、包含 rulebook では Mermaid の `subgraph` を意味しており、「プロセスグループ」と視覚的な「サブグラフ」の用語境界が統一されていない。 -->
 
 図は領域間の受け渡しに集中させます。一領域の内部手順を複数ノードへ展開したくなった場合は、その内容を個別プロセス領域主要入出力または委譲境界へ移します。関連領域を囲って見やすくする場合も、代表ノードは一領域につき一つに保ちます。代表ノードがおおむね7〜9件を超える場合は、業務の性質が近い領域をプロセスグループへまとめ、代表ノードをグループ単位にできます。現物の受け渡しがある場合は、物理保管（バックヤード、レジなど）も外部主体・データストアと同様に図の要素として扱います。
 
@@ -142,6 +187,10 @@ Conceptual Data Flow Diagram Overview Writing Recipe
 
 ## 6. 良い例 / 悪い例
 
+<!-- specdojo:finding id=F006 severity=minor rule=vp-arc-cross-document-consistency line=145 本行は9領域をグループ化する例を良い例、9代表ノードを悪い例とするが、recipe・rulebook・template の一般規則は9件までを許容しており境界値が一致していない。 -->
+<!-- specdojo:finding id=F008 severity=minor rule=vp-qe-verifiability line=145 一般規則では代表ノードを9件まで許容するのに本行は9件を悪い例としているため、代表ノードがちょうど9件の場合の pass / fail が一意に定まらない。 -->
+<!-- specdojo:finding id=F019 severity=minor rule=vp-ux-readability line=145 9件を許容する一般規則と9件を読みにくい悪い例とする対比が競合し、境界ケースで読者が次の手順を選びにくい。 -->
+
 | 観点         | 良い例                                                                         | 悪い例                                                |
 | ------------ | ------------------------------------------------------------------------------ | ----------------------------------------------------- |
 | 業務目的     | 販売情報を記録し、在庫管理とつけ管理へ同じ取引情報を引き渡す                   | 販売登録画面を実行する                                |
@@ -155,6 +204,8 @@ Conceptual Data Flow Diagram Overview Writing Recipe
 | 委譲境界     | 補充判断は `P-02`、つけ残高更新は `P-03` に委譲すると明記する                  | 委譲先を示さず「他領域で扱う」とだけ書く              |
 
 ## 7. レビュー観点
+
+<!-- specdojo:finding id=F022 severity=minor rule=vp-ux-language-consistency line=152 レビュー表の Role code `BA`、`PO`、`ARC`、`QE` に定義または参照がなく、初見の読者が確認責任を一意に特定できない。 -->
 
 | 観点       | 確認内容                                                                                         | 主な確認者 |
 | ---------- | ------------------------------------------------------------------------------------------------ | ---------- |

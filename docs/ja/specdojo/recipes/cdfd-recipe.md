@@ -5,6 +5,30 @@ specdojo:
   status: ready
   rulebook: specdojo:cdfd-rulebook
   sample: specdojo:cdfd-sample
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 70
+    graded_at: "2026-09-04T12:46:06.547Z"
+    graded_by: codex-expert-executor
+    content_hash: 23571f4cca904a99929e43ad6c7c870efdcd817365a4949a544b76f3d9fe7d6e
+    categories:
+      consistency: { score: 38 }
+      usability: { score: 83 }
+      architecture: { score: 100 }
+      quality: { score: 63 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 1, score: 25 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-kata-conformance: { level: 1, score: 25 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 3, score: 75 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 5, minor: 3, note: 0 }
 ---
 
 # 概念データフロー図（領域別）作成レシピ
@@ -14,6 +38,9 @@ Conceptual Data Flow Diagram Area Writing Recipe
 全体概要から一つのプロセス領域を引き継ぎ、一ノード一プロセスの領域内フロー、主要例外、領域外への委譲を、関係者が再現可能な形で具体化するための作成手順です。
 
 ## 1. このレシピの使い方
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=9 対応する cdfd-sample は、上位概要で `P-02` の対象外とされた実際の入荷を受入・検品・返品まで対象化しており、「全体概要から境界を引き継ぐ」適用例として矛盾するため, sample または overview sample の境界を揃える必要がある。 -->
+<!-- specdojo:finding id=F004 severity=major rule=vp-qe-kata-conformance line=9 recipe が上位概要の境界継承を最初の作業として要求している一方、対応する cdfd-sample は上位概要で対象外の実際の入荷を領域内へ展開しており、完成例が recipe の適用方法を正しく示していない。 -->
 
 - 最初に、全体概要から対象領域の目的、起点イベント、主要入力・出力、データストア、隣接領域との境界を抜き出します。
 - 次に、各章の問いに答えながら、目的、適用範囲、領域内プロセス一覧、概念データフロー、個別プロセス主要入出力、主要例外と領域外への委譲を具体化します。
@@ -62,6 +89,10 @@ Conceptual Data Flow Diagram Area Writing Recipe
 - 誰が、領域内フロー、必須・条件付きの境界、主要例外、委譲のどれを判断しますか。
 
 上位目的は参照として引き継ぎ、本領域が実現する結論と影響だけを書きます。「初期化を行う」ではなく、「後続が同じ正本から計画を開始できる状態を作る」のように、利用結果を判定できる表現にします。
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-arc-cross-document-consistency line=57 rulebook と template が適用範囲の必須事項として要求する「人間と AI Agent の責任分担を対応文書から参照する」という指針が recipe の問いと説明にないため、同じ型から異なる必須内容が生成され得る。 -->
+<!-- specdojo:finding id=F003 severity=major rule=vp-qe-omissions-consistency line=57 適用範囲の問いに、人間と AI Agent の責任分担を本文で再定義せず対応文書へ参照するための確認項目がなく、rulebook と template の必須指針を満たさない成果物を作成できてしまう。 -->
+<!-- specdojo:finding id=F005 severity=major rule=vp-qe-kata-conformance line=57 recipe の章別の問いに、rulebook と template が要求する人間と AI Agent の責任分担への参照確認がなく、recipe が必須事項を導出する問いとして完結していない。 -->
 
 ### 4.2. 適用範囲
 
@@ -142,6 +173,8 @@ Conceptual Data Flow Diagram Area Writing Recipe
 
 ## 6. 良い例 / 悪い例
 
+<!-- specdojo:finding id=F006 severity=minor rule=vp-ux-readability line=138 良い例・悪い例で `init`、`provider`、`Schedule`、計画展開など未定義の固有語を使用しているため、sample と同様の一般的な業務語へ置き換えるか短い定義を添える必要がある。 -->
+
 | 観点         | 良い例                                                                 | 悪い例                                         |
 | ------------ | ---------------------------------------------------------------------- | ---------------------------------------------- |
 | プロセス粒度 | 設定初期化とカタログ生成を、目的と生成物が異なる二プロセスに分ける     | init コマンド全体を一ノードに詰め込む          |
@@ -153,6 +186,9 @@ Conceptual Data Flow Diagram Area Writing Recipe
 | 委譲         | 初期カタログを計画展開へ渡し、Schedule 生成は領域外とする              | 計画展開の内部手順まで本図に描く               |
 
 ## 7. レビュー観点
+
+<!-- specdojo:finding id=F007 severity=minor rule=vp-ux-language-consistency line=151 「必須・任意境界」は同じ行の「必須プロセスと条件付きプロセス」および rulebook の三分類「必須／条件付き／選択」と一致せず、条件付きと選択を混同させるため正規の分類名へ統一する必要がある。 -->
+<!-- specdojo:finding id=F008 severity=minor rule=vp-ux-language-consistency line=151 レビュー表の `BA`、`PO`、`ARC`、`QE` が本文で定義されておらず、sample の具体的な担当者との対応も判別できないため、正式名称またはロール定義への参照を示す必要がある。 -->
 
 | 観点           | 確認内容                                                                   | 主な確認者 |
 | -------------- | -------------------------------------------------------------------------- | ---------- |
