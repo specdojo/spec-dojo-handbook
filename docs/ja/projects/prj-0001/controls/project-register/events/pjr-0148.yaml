@@ -168,3 +168,19 @@
       from: waiting
       to: in-progress
   previous_event_id: reg_cabfdce1b6da47e3abc4cb76c63c8d2d
+- v: 1
+  id: reg_35c8468aaad24290a01bceb6c68e98d3
+  ts: "2026-09-04T15:05:17Z"
+  action: wait
+  actor: codex-reporter
+  from_status: in-progress
+  to_status: waiting
+  reason: "integrate failed: git merge failed (args: --no-ff --no-edit exec/prj-0001-PJR-0148)"
+  changes:
+    - field: status
+      from: in-progress
+      to: waiting
+    - field: block_reason
+      from: "agent exited with non-zero code: runner検証「npm run test:unit」が失敗したため。tests/src/exec-run-lock.test.tsの「heartbeat で lock の更新時刻を進める」が失敗しており、runner validationのfailed状態は完了結果を支持できない。"
+      to: "integrate failed: git merge failed (args: --no-ff --no-edit exec/prj-0001-PJR-0148)"
+  previous_event_id: reg_98ffc416c97041b58a72779ff7864913
