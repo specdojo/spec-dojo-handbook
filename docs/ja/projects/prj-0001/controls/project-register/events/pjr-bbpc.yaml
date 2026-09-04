@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_cb338d3d8a74481397478a486a3810df
+  ts: "2026-09-04T11:51:15Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: recipe / sample / template の走査時に指定を忘れると誤った基準で評価されるため
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: 3段評価の既定リファレンスが対象種別に追従しない
+    - field: description
+      from: ""
+      to: "--kind を変えても stage1 の既定リファレンスが prj-overview-rulebook のままで、種別を跨いだ比較になる。"
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-04"
+    - field: due
+      from: ""
+      to: "2026-09-30"
