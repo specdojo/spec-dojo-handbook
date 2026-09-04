@@ -39,19 +39,22 @@ schedule assessment validate が、判定の根拠として status draft を挙�
 
 ## 3. 作業内容
 
-| No  | 作業                                       | 担当 | 状態 | メモ                   |
-| --- | ------------------------------------------ | ---- | ---- | ---------------------- |
-| 1   | 誤警告の発生条件を特定する                 | ARC  | open | 機械的な語の一致を疑う |
-| 2   | 判定の根拠を見て警告するよう改める         | ARC  | open | 警告の目的は弱めない   |
-| 3   | 誤警告と真の警告を区別するテストを追加する | ARC  | open | 双方向の確認           |
+| No  | 作業                                       | 担当 | 状態 | メモ                                                       |
+| --- | ------------------------------------------ | ---- | ---- | ---------------------------------------------------------- |
+| 1   | 誤警告の発生条件を特定する                 | ARC  | done | 後続の PJR-JFTC で対象実装を含む sch-assessment を廃止した |
+| 2   | 判定の根拠を見て警告するよう改める         | ARC  | done | 警告を生成する CLI 自体が廃止済みのため変更不要            |
+| 3   | 誤警告と真の警告を区別するテストを追加する | ARC  | done | 対象機能と専用テストが廃止済みのため追加不要               |
 
 ## 4. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+後続の [[prj-0001:pjr-jftc-sch-assessment-retirement|PJR-JFTC sch-assessment の廃止可否を判断し approach の決定論的導出へ移行する]] で、`sch-assessment` と `schedule assessment` CLI、schema、実データ、専用テストが廃止された。現在の `schedule` コマンドは `where`、`build`、`strategy` のみを提供し、対象の警告を生成する経路は存在しない。
+
+このため、誤警告と真の警告を区別する判定修正および回帰テスト追加は不要となった。元の完了条件は対象機能の存続を前提としていたため PJR-JFTC の廃止判断により適用外であり、実装の再導入は行わない。残課題はない。
 
 ## 5. 関連ドキュメント
 
 - 誤警告が判明した項目: [[prj-0001:pjr-enk0-sch-strategy-planning-regenerate|PJR-ENK0 sch-strategy-planningをassessmentから再生成する]]
+- 対象機能の廃止判断: [[prj-0001:pjr-jftc-sch-assessment-retirement|PJR-JFTC sch-assessment の廃止可否を判断し approach の決定論的導出へ移行する]]
 - Schedule の設計方針: [[specdojo:schedule-design-guide|Schedule設計ガイド]]
-- 対象ファイル: `docs/ja/projects/prj-0001/schedule/assessments/sch-assessment-planning.yaml`
-- 実装: `src/schedule-assessment.ts`
+- 廃止済みの対象ファイル: `docs/ja/projects/prj-0001/schedule/assessments/sch-assessment-planning.yaml`
+- 廃止済みの実装: `src/schedule-assessment.ts`
