@@ -91,3 +91,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_3e1dc8d8826a4b31a049ca337f9f3dbb
+- v: 1
+  id: reg_ef26244819ee41518a7e77ee016f343d
+  ts: "2026-09-04T14:43:41Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: docs/ 外への wikilink 拡張は行わない。実文書中の該当参照が 0 件であり必要性が観測されないため。再評価の条件を個票へ記録した。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-04"
+    - field: conclusion
+      from: "-"
+      to: docs/ 外への wikilink 拡張は行わない。実文書中の該当参照が 0 件であり必要性が観測されないため。再評価の条件を個票へ記録した。
+  previous_event_id: reg_37b28cddbcd448d1a8a36f51ecc5558e

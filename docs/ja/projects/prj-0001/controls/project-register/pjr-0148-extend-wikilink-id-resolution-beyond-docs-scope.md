@@ -2,15 +2,17 @@
 specdojo:
   id: prj-0001:pjr-0148-extend-wikilink-id-resolution-beyond-docs-scope
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: low
   owner: ARC
   due_on: "2026-09-30"
+  completed_at: "2026-09-04T14:43:41Z"
+  conclusion: docs/ 外への wikilink 拡張は行わない。実文書中の該当参照が 0 件であり必要性が観測されないため。再評価の条件を個票へ記録した。
 ---
 
 # PJR-0148 docs/外への[[id]]（wikilink）解決範囲拡張の要否検討
@@ -79,6 +81,19 @@ PJR-0146の検討過程で、`specdojo index build` の既定走査対象が `do
 - `docs/` 外のファイルを SpecDojo 文書として管理し、ID の所有元、一意性境界、メタ情報契約を定義する方針が別途採択された場合。
 
 再評価時はディレクトリの全面走査ではなく、`.specdojo/index-config.yaml` に明示した ID とリポジトリ相対パスだけを索引へ加える限定方式を優先する。その際は、許可パス、ファイル存在、ID 形式、`docs/` 索引との重複、リポジトリ外参照の拒否を検証条件とする。
+
+### 4.5. 受け入れ確認
+
+orchestrator が次を確認した。
+
+- 完了条件4件をすべて満たしている。ユースケース、実装上の論点、3方針の比較、後続対応の要否が
+  いずれも記載されている。
+- 結論が実データに基づく。plan / result / 個票の Markdown 1,063 ファイルを走査し、`docs/` 外に
+  置かれた実文書中の wikilink が 0 件であることを根拠としている。拡張の必要性が現時点で観測
+  されないという事実から「拡張しない」を導いており、推測で結論していない。
+- 再評価の条件が具体的に示されている。判断を将来へ引き継ぐうえで有効である。
+- 調査と判断が成果物であり、実装を変更していない。本項目の性質に照らして妥当である。
+- `lint:md` と `index build` が通る。
 
 ## 5. 関連ドキュメント
 
