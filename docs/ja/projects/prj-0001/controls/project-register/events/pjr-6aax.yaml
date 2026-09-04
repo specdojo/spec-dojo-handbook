@@ -68,3 +68,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_b525375b59344237bbbc3f75b696064c
+- v: 1
+  id: reg_4653624e21824d3383cd0c20f72e44d8
+  ts: "2026-09-04T14:28:54Z"
+  action: reject
+  actor: orchestrator
+  from_status: review
+  to_status: rejected
+  reason: PJR-JFTC で sch-assessment が廃止され、誤警告を出す判定処理そのものが失われたため前提不成立。修正対象がない。
+  changes:
+    - field: status
+      from: review
+      to: rejected
+    - field: completed
+      from: "-"
+      to: "2026-09-04"
+    - field: conclusion
+      from: "-"
+      to: PJR-JFTC で sch-assessment が廃止され、誤警告を出す判定処理そのものが失われたため前提不成立。修正対象がない。
+  previous_event_id: reg_e56d831fe3a04292a2b8c5a93ccc8a85

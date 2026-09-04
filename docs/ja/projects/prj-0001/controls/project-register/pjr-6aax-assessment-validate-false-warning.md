@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-6aax-assessment-validate-false-warning
   type: project
-  status: draft
+  status: deprecated
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: rejected
   priority: low
   owner: ARC
   registered_at: "2026-08-27T13:22:07Z"
   due_on: "2026-10-31"
+  completed_at: "2026-09-04T14:28:54Z"
+  conclusion: PJR-JFTC で sch-assessment が廃止され、誤警告を出す判定処理そのものが失われたため前提不成立。修正対象がない。
 ---
 
 # PJR-6AAX assessment validateが正しい判定に対して誤警告を出す
@@ -50,6 +52,21 @@ schedule assessment validate が、判定の根拠として status draft を挙�
 後続の [[prj-0001:pjr-jftc-sch-assessment-retirement|PJR-JFTC sch-assessment の廃止可否を判断し approach の決定論的導出へ移行する]] で、`sch-assessment` と `schedule assessment` CLI、schema、実データ、専用テストが廃止された。現在の `schedule` コマンドは `where`、`build`、`strategy` のみを提供し、対象の警告を生成する経路は存在しない。
 
 このため、誤警告と真の警告を区別する判定修正および回帰テスト追加は不要となった。元の完了条件は対象機能の存続を前提としていたため PJR-JFTC の廃止判断により適用外であり、実装の再導入は行わない。残課題はない。
+
+受け入れ時に orchestrator が前提の消滅を確認した。
+
+| 確認項目               | 結果                                        |
+| ---------------------- | ------------------------------------------- |
+| 実装                   | `src/schedule-assessment.ts` は存在しない   |
+| 対象データ             | `sch-assessment*.yaml` は存在しない         |
+| CLI からの到達性       | `schedule` に assessment サブコマンドがない |
+| 実装・テストの残存参照 | なし                                        |
+
+廃止は PJR-JFTC の実行（commit `614945e1`）で意図的に行われている。誤警告を出す判定処理そのもの
+が失われたため、修正すべき対象がない。
+
+実施しない判断が確定したため、`done` ではなく `rejected` で終端する。判定修正を行っていないため
+完了扱いにすると、実施済みの対応があったと誤読される。
 
 ## 5. 関連ドキュメント
 
