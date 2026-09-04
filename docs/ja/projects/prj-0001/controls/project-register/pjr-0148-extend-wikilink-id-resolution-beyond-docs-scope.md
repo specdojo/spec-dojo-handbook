@@ -7,10 +7,11 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: low
   owner: ARC
   due_on: "2026-09-30"
+  block_reason: "agent exited with non-zero code: runner検証「npm run test:unit」が失敗したため。tests/src/exec-run-lock.test.tsの「heartbeat で lock の更新時刻を進める」が失敗しており、runner validationのfailed状態は完了結果を支持できない。"
   conclusion: docs/ 外への wikilink 拡張は行わない。実文書中の該当参照が 0 件であり必要性が観測されないため。再評価の条件を個票へ記録した。
 ---
 

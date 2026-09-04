@@ -139,3 +139,19 @@
       from: open
       to: in-progress
   previous_event_id: reg_683335a8466147209828e86c04cfaee2
+- v: 1
+  id: reg_cabfdce1b6da47e3abc4cb76c63c8d2d
+  ts: "2026-09-04T15:01:32Z"
+  action: wait
+  actor: codex-expert-executor
+  from_status: in-progress
+  to_status: waiting
+  reason: "agent exited with non-zero code: runner検証「npm run test:unit」が失敗したため。tests/src/exec-run-lock.test.tsの「heartbeat で lock の更新時刻を進める」が失敗しており、runner validationのfailed状態は完了結果を支持できない。"
+  changes:
+    - field: status
+      from: in-progress
+      to: waiting
+    - field: block_reason
+      from: "-"
+      to: "agent exited with non-zero code: runner検証「npm run test:unit」が失敗したため。tests/src/exec-run-lock.test.tsの「heartbeat で lock の更新時刻を進める」が失敗しており、runner validationのfailed状態は完了結果を支持できない。"
+  previous_event_id: reg_401d165cd86648169089df313d2a38ee
