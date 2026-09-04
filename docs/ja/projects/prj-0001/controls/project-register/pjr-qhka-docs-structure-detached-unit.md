@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-qhka-docs-structure-detached-unit
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-02T22:48:28Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-04T13:36:48Z"
+  conclusion: docs-structure-guide へ別リポジトリ構成の章を追記した。採用条件、プロダクト文書の配置、統合順序、現行実装の境界を記載している。
 ---
 
 # PJR-QHKA 別リポジトリ構成（Detached Unit）のドキュメント化
@@ -242,6 +244,13 @@ docs とソースの両方を扱う項目では、ソースを先に統合し、
 - [[specdojo:docs-structure-guide]] に「別リポジトリ構成（Detached Unit）」を追加した。
 - 3ディレクトリの配置、プロダクト文書の切り分け、現行実装の境界、result から app commit への片方向トレーサビリティを規定した。
 - 二重 worktree は将来構成として、app 側を先に統合する順序、部分状態での `waiting`、採用前に必要な実装を明記した。多リポジトリ対応の実装自体は本項目の範囲外である。
+
+- 受け入れ時に orchestrator が `lint:md` と `docs:build` の通過を確認した。
+- トレーサビリティの記録時点は、設計整理では「定める必要がある」と課題として挙げるに留めた
+  が、ガイドでは app commit hash を統合後に確定してから docs 側の result へ記録する手順として
+  具体化されている。個票の記述より踏み込んでおり、この点はガイドの記述を採用する。
+- 残課題は二重 worktree の実装（親検証の割り当て、agent の作業ディレクトリ、失敗時の worktree
+  保持、統合処理の複製）である。本項目は設計の整理とガイド追記までとする。
 
 ## 6. 関連ドキュメント
 
