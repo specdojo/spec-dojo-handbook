@@ -110,3 +110,19 @@
       from: "-"
       to: docs/ 外への wikilink 拡張は行わない。実文書中の該当参照が 0 件であり必要性が観測されないため。再評価の条件を個票へ記録した。
   previous_event_id: reg_37b28cddbcd448d1a8a36f51ecc5558e
+- v: 1
+  id: reg_683335a8466147209828e86c04cfaee2
+  ts: "2026-09-04T14:49:43Z"
+  action: reopen
+  actor: orchestrator
+  from_status: done
+  to_status: open
+  reason: 結論の根拠が循環している。docs/ 外の wikilink が 0 件なのは機能が無く規約も禁じているためで、需要の不在を示さない。同じ調査が 55 箇所の生パス参照を記録しており、逆の解釈が可能である。
+  changes:
+    - field: status
+      from: done
+      to: open
+    - field: completed
+      from: "2026-09-04"
+      to: "-"
+  previous_event_id: reg_ef26244819ee41518a7e77ee016f343d
