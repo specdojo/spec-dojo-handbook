@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_b2335674b5a94ed29aafe6272464e861
+  ts: "2026-09-04T11:25:39Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: rulebook 106 件の評価で 56 件が needs-work となったが、plan が finding を載せないため修正へ渡せないため
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: maintenance と bootstrap の plan へ finding を載せる
+    - field: description
+      from: ""
+      to: grade が記録した finding を kata 保守の plan から参照できるようにし、評価結果を修正へつなげる。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: high
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-04"
+    - field: due
+      from: ""
+      to: "2026-09-30"
