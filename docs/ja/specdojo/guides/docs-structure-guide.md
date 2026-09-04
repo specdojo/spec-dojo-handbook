@@ -43,6 +43,7 @@ SpecDojoで扱うドキュメントの全体構成について、以下のガイ
 | 文書の分類と責任の考え方          | `SpecDojoで扱うドキュメントの全体構成`〜`ドキュメントオーナー`                    |
 | 成果物・DCT・Schedule・execの関係 | `成果物と実践体系の関係`〜`成果物カタログ・Schedule・実行管理の関係`              |
 | ディレクトリの命名・構成方針      | `ディレクトリ・ファイルの命名ルール` 以降                                         |
+| プロダクトと別リポジトリで運用    | `別リポジトリ構成（Detached Unit）`                                               |
 | ファイル単位の完全な配置一覧      | [ディレクトリレイアウトリファレンス](../references/directory-layout-reference.md) |
 
 ## 1. SpecDojoで扱うドキュメントの全体構成
@@ -333,3 +334,109 @@ product/
 ```
 
 ファイル単位の完全なツリーは [ディレクトリレイアウトリファレンス](../references/directory-layout-reference.md) の `プロダクトドキュメントの構成` を参照してください。
+
+## 10. 別リポジトリ構成（Detached Unit）
+
+Detached Unit は、SpecDojo Unit をプロダクトと同じリポジトリに置かず、専用のリポジトリで管理する構成です。SpecDojo の成果物更新、登録簿の状態遷移、exec の実行記録をプロダクトの Git 履歴から分離したい場合に使用します。
+
+### 10.1. 採用条件
+
+| 利用形態                                                | 判断                                                                      |
+| ------------------------------------------------------- | ------------------------------------------------------------------------- |
+| SpecDojo 側の文書のみを扱う                             | 採用可。catalog、Schedule、exec、grade を `app1-specdojo/` 内で完結させる |
+| 1つの登録簿項目で文書とプロダクト実装の両方を変更する   | 現時点では採用不可。二重 worktree と複数リポジトリ統合の実装後に採用する  |
+| SpecDojo 自身の開発のように成果物と実装が同じ変更で動く | 同一リポジトリを維持する                                                  |
+
+文書のみを扱う場合も、使用する成果物、設定、実行記録、検証コマンドがすべて `app1-specdojo/` 内で解決できることを確認します。プロダクト実装への書き込みや、`app1/` での親検証が完了条件に含まれる場合は自己完結型ではありません。
+
+### 10.2. ディレクトリレイアウト
+
+3つのルートを互いに独立したディレクトリとして配置します。`app1/` と `app1-specdojo/` はそれぞれ別の Git リポジトリです。`app1-worktrees/` は両リポジトリの外に置く worktree 用の領域です。
+
+```text
+workspace/
+├── app1/                    # プロダクト実装のリポジトリ
+│   ├── src/
+│   └── docs/                 # コードと同じ場所で読む付属文書だけを置く
+├── app1-specdojo/           # SpecDojo Unit のリポジトリ
+│   ├── .specdojo/
+│   ├── docs/ja/product/
+│   ├── docs/ja/projects/
+│   └── package.json          # npm i -D specdojo で CLI を導入する
+└── app1-worktrees/          # task 単位の worktree 置き場
+```
+
+`.specdojo/specdojo.config.json` の各パスは `app1-specdojo/` を基準とする構成にします。SpecDojo CLI の実行、成果物カタログの解決、doc index の生成、文書検証は `app1-specdojo/` 側で行います。
+
+### 10.3. プロダクト文書の配置
+
+SpecDojo の成果物カタログが管理するプロダクト文書は、`app1-specdojo/docs/ja/product/` に置きます。これらはカタログが `base_path` で配置を宣言し、scaffold、exec、grade の対象とする SpecDojo の管理成果物です。SpecDojo Unit と同じリポジトリに置くことで、catalog から grade までのパス解決と更新履歴が1つのリポジトリ内で完結します。
+
+一方、README、ソースコードから生成する API リファレンス、パッケージ利用者向けの手順など、コードと同じ revision で読めることを優先する付属文書は `app1/` に残します。配置は「SpecDojo が成果物として作成・評価するか」と「コードと同じ revision で配布する必要があるか」で判断します。
+
+### 10.4. 現行実装の境界
+
+現行の exec worktree は SpecDojo リポジトリの1つのルートと1つの worktree の組を管理します。そのため、`app1-specdojo/` の agent が `app1/` を同じ項目で更新する運用には、次の未対応点があります。
+
+| 論点              | 現行の境界                                                                 |
+| ----------------- | -------------------------------------------------------------------------- |
+| 編集対象の解決    | job の `paths` と task の `targets` は SpecDojo ルート相対で解決する       |
+| worktree の隔離   | SpecDojo リポジトリのみを隔離し、`app1/` の更新は task worktree の外に出る |
+| commit のスコープ | 変更ファイルと commit 対象を SpecDojo リポジトリに対して計算する           |
+| 親検証の実行場所  | 親検証は1つの `cwd` で実行し、検証 ID ごとに `app1/` へ割り当てられない    |
+
+これらが解消されるまでは、`app1/` を agent のサンドボックス外から直接更新したり、手動の Git 操作で実質的な二重 worktree にしたりしません。文書のみの項目に限定するか、プロダクト変更を別の実行単位として人が管理します。
+
+### 10.5. result によるトレーサビリティ
+
+プロダクト実装の変更を伴う項目では、SpecDojo 側の result 本文に対応する app commit を記録します。result frontmatter は scaffold の構造を維持し、独自キーを追加しません。
+
+```markdown
+| app repository | app commit                                 | 記録時点                 |
+| -------------- | ------------------------------------------ | ------------------------ |
+| app1           | `0123456789abcdef0123456789abcdef01234567` | 統合先ブランチへの統合後 |
+```
+
+次の規則で記録します。
+
+- リポジトリを識別できる名称と、40文字の完全長 commit hash を対にします。
+- app commit は、意図する統合先ブランチが実装変更を含んだ直後の commit とします。merge commit が作られた場合はその merge commit、fast-forward の場合は fast-forward 後の先端を記録します。
+- 記録時点は app 側の統合成功後、SpecDojo 側の result と成果物を統合する前です。app 側への統合が未完了なら hash を推測で記録しません。
+- 文書のみの項目で app commit がない場合は、`app commit: not applicable`とその理由を記録します。
+
+この参照は **SpecDojo result から app commit への片方向** です。`app1/` 側の commit message やファイルに SpecDojo result への逆参照を必須とせず、2つのリポジトリを原子的に統合することも保証しません。履歴改変によって hash が到達不能になる可能性と、参照の整合性を自動検証しない制約を受け入れる必要があります。
+
+### 10.6. 二重 worktree の構成案と統合順序
+
+文書とソースの両方を1つの登録簿項目で扱う将来構成では、同じ task ID の下に両リポジトリの worktree を作ります。
+
+```text
+app1-worktrees/
+└── <task-id>/
+    ├── docs/   # app1-specdojo の worktree
+    └── src/    # app1 の worktree
+```
+
+統合は次の順序で行います。
+
+1. `src/` で app 側の検証を実行し、`app1/` の統合先ブランチへ統合する。
+2. 統合後の app commit hash を確定し、`docs/` 側の result 本文へ記録する。
+3. `docs/` で SpecDojo 側の検証を実行し、`app1-specdojo/` の統合先ブランチへ統合する。
+
+ソースを先に統合することで、プロダクトの統合を SpecDojo 側の統合成否から切り離します。失敗時の部分状態は次の2つに限定します。
+
+| 失敗箇所                | 統合状態                    | 登録簿と再開の扱い                                                    |
+| ----------------------- | --------------------------- | --------------------------------------------------------------------- |
+| app 側の統合が失敗      | app / SpecDojo ともに未統合 | 項目を `waiting` とし、app 側の統合から再開する                       |
+| SpecDojo 側の統合が失敗 | app のみ統合済み            | 項目を `waiting` とし、app を再統合せず SpecDojo 側の統合だけ再開する |
+
+app のみ統合済みの状態は完了ではないため、`review` へ進めません。SpecDojo 側の統合を打ち切る場合、app の変更を残すか revert するかは、通常の統合後の判断として人が決めます。自動的に履歴を巻き戻しません。
+
+### 10.7. 二重 worktree の採用前に必要な実装
+
+プロダクト実装も同じ項目で扱うには、少なくとも次を実装します。
+
+- **親検証の割り当て**: 検証 ID ごとに実行対象のリポジトリと `cwd` を宣言し、ソースの test は `src/`、文書の lint と schema 検証は `docs/` で実行する。
+- **agent の作業ディレクトリ**: `<task-id>/` を agent の作業ディレクトリとして両 worktree を読み書き可能にし、`paths` と `targets` の解決基準を明示する。
+- **失敗時の worktree 保持**: 失敗した段と統合済みのリポジトリを識別し、調査・再開に必要な worktree の保持と撤去条件を定める。
+- **統合処理の複製**: commit 対象の算出、branch への統合、統合済み判定、pipeline state の記録を repo / worktree の2組に対応させ、app → SpecDojo の順序と再開位置を保存する。

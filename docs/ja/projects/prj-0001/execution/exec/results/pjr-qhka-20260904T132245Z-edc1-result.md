@@ -4,11 +4,12 @@ specdojo:
   type: exec-result
   task_id: PJR-QHKA
   mode: edit
-  status: in_progress
+  status: complete
   project_id: prj-0001
   origin: register
   plan_ref: exec/plans/pjr-qhka-20260904T132245Z-edc1-plan.md
   started_at: "2026-09-04T13:22:46.137Z"
+  completed_at: "2026-09-04T13:31:47.141Z"
   agent: codex-expert-executor
 ---
 
@@ -16,16 +17,19 @@ specdojo:
 
 ## 1. 実施内容
 
-_TODO_: 実施した内容の要約を記入する。
+- Detached Unit の採用条件、配置、片方向トレーサビリティ、二重 worktree 案と実装要件を文書化した。
+- 個票の作業内容・対応結果を更新した。
+- runner による schema 検証、unit test、integration test はすべて成功した。
 
 ## 2. 変更ファイル
 
-_TODO_: 変更したファイルのパスを記入する。
+- `docs/ja/specdojo/guides/docs-structure-guide.md`: Detached Unit 構成の運用要件とトレーサビリティ方式を追記した。
+- `docs/ja/projects/prj-0001/controls/project-register/pjr-qhka-docs-structure-detached-unit.md`: タスク個票の作業内容・対応結果を更新した。
 
 ## 3. 申し送り
 
-_TODO_: 後続タスクへの申し送り事項を記入する（なければ削除）。
+- 登録簿および個票のステータスは変更していない。
 
 ## 4. 進め方と実践の型の適用
 
-_TODO_: `approach` に従ってどう進めたか、その進め方の中で実践の型（rulebook / recipe / sample / template）をどう適用したかを記入する（`fully-guided` で rulebook / recipe / sample / template をどう使い分けたか、`recipe-guided` で recipe のみを基準にした内容、`freeform` で実践の型より優先した実例やプロジェクト文脈、`retrofit` で実際に参照した実装パス・抽出した現在動作・反映/新設判断・未反映の乖離・未確認範囲、`rulebook-maintenance` などの maintenance 系で見直した実践の型とその根拠、など）。実践の型を基準にしなかった場合は、その判断と代わりに根拠にした内容も記入する。複数文書間に矛盾があり rulebook を正として判断した箇所、参照範囲から外れていた文書とその代わりに根拠にした内容があれば、あわせて記録する。
+executor が対象ドキュメントと個票を更新し、Markdown 整形・lint、登録簿生成、カタログ検証、索引生成、差分検査を実施した。runner が schema 検証、unit test、integration test を実施し、すべて成功した。
