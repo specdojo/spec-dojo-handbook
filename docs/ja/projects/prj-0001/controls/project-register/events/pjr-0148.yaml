@@ -65,3 +65,16 @@
       to: "2026-09-30"
   legacy_commit: dbac152079df02ec9bbad154a3253c043e10655a
   previous_event_id: reg_201b406d80c93adca3ac4bfad8f4eb05
+- v: 1
+  id: reg_3e1dc8d8826a4b31a049ca337f9f3dbb
+  ts: "2026-09-04T14:34:38Z"
+  action: start
+  actor: codex-expert-executor
+  from_status: open
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: open
+      to: in-progress
+  previous_event_id: reg_a1c8370246873c3cc7554c9523e6e23b
