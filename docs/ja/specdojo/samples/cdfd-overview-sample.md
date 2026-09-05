@@ -6,11 +6,37 @@ specdojo:
   rulebook: specdojo:cdfd-overview-rulebook
   based_on: []
   supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 85
+    graded_at: "2026-09-04T22:44:47.109Z"
+    graded_by: gemma-expert-executor
+    content_hash: e51689affffb11300f72dfac61058f2f25c5509194d0d7f012180c1948292dd6
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 58 }
+      architecture: { score: 100 }
+      quality: { score: 88 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 3, score: 75 }
+      vp-ux-readability: { level: 2, score: 50 }
+      vp-ux-language-consistency: { level: 1, score: 25 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 2, minor: 1, note: 0 }
 ---
 
 # 概念データフロー図（全体概要）: 駄菓子屋きぬや販売管理
 
 本書は、駄菓子屋きぬやの店頭販売、在庫管理、顧客管理を、三つのプロセス領域と領域間の情報の流れとして定義する全体概要である。
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-kata-conformance line=4 Frontmatter の type は rulebook の規定に従い flow とすべきである。 -->
 
 ## 1. 目的
 
@@ -39,6 +65,9 @@ specdojo:
 一画面では領域間の受け渡しを追いにくいため、外部主体・物理保管に着目した現物の流れと、データストアに着目した情報の流れを図に分ける。両図でプロセス領域 ID・名称を統一する。
 
 ### 4.1. 外部主体と物理保管に着目した概要フロー
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-ux-readability line=60 3章の定義表と4章の概要図でプロセス領域名（P-01〜P-03）が不一致であり、代表ノードの対応関係を正しく識別できない。 -->
+<!-- specdojo:finding id=F003 severity=major rule=vp-ux-language-consistency line=60 領域 ID P-01, P-02, P-03 の名称が, 3章の一覧表（販売記録, 在庫補充判断, つけ管理）と4章の図（店頭販売, 在庫管理, 顧客管理）で乖離している。 -->
 
 ```mermaid
 flowchart LR

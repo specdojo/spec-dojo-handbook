@@ -7,6 +7,30 @@ specdojo:
   based_on:
     - specdojo:cdfd-overview-sample
   supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 86
+    graded_at: "2026-09-04T23:12:17.417Z"
+    graded_by: gemma-expert-executor
+    content_hash: 3c73d35f3cad0409a54df85c861739b67b8b8b982c6c30bbb1f6974bca179918
+    categories:
+      consistency: { score: 75 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 75 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 2, score: 50 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 2, minor: 0, note: 0 }
 ---
 
 # 概念データフロー図（領域別）: 在庫補充判断
@@ -19,6 +43,9 @@ specdojo:
 - 店主代表は起動条件と必須・条件付きの境界を、開発担当は入出力と正本を、同行レビュー担当は主要例外の停止範囲と再開条件を、それぞれ本書から確認する。
 
 ## 2. 適用範囲
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=13 上位概要の領域 `P-02` で対象外とされた受入・検品・返品処理を領域内に含めており、ベース文書との境界定義が矛盾している。 -->
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance line=13 レシピが要求する「上位概要からの境界継承」を正しく示しておらず、完成例としての適合性に欠けている。 -->
 
 - 対象は、在庫が補充基準を下回ってから、仕入先へ発注し、納品を受け入れて検品し、正常品を在庫として計上するまでである。検品で不良・数量違いが判明した場合の返品処理も対象に含む。
 - 発注、受入、検品、在庫保管は必須とする。返品処理は検品で不良・数量違いを発見した場合にだけ起動する条件付きプロセスとする。
