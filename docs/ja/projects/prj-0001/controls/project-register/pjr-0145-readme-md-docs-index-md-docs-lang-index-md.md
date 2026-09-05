@@ -2,15 +2,17 @@
 specdojo:
   id: prj-0001:pjr-0145-readme-md-docs-index-md-docs-lang-index-md
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: PO
   due_on: "2026-10-31"
+  completed_at: "2026-09-05T13:53:27Z"
+  conclusion: README と docs 配下 index の責務を分離し、重複4節を参照で解消した。英語版は未翻訳であることと日本語版への導線を明示する構成にした。
 ---
 
 # PJR-0145 README.md / docs/index.md / docs/`<lang>`/index.md の責務再整理と記述見直し
@@ -96,6 +98,23 @@ ja/index は `Use this template` とダウンロードの2経路を説明する�
 - `docs/en/index.md` は英語版の提供状況を明示するページとして維持し、完全な日本語版への導線を設けた。
 - Quick Start の詳細は [[specdojo:quick-start-guide]]、ディレクトリ構成は [[specdojo:docs-structure-guide]] と [[specdojo:directory-layout-reference]]、ライセンス条文は `LICENSE` を正本とした。入口文書には要約と参照だけを置き、重複更新を避けた。
 - 残課題はない。
+
+受け入れ時に orchestrator が次を確認した。
+
+| ファイル           | 変更前 | 変更後 | 責務                            |
+| ------------------ | ------ | ------ | ------------------------------- |
+| `README.md`        | 64 行  | 35 行  | GitHub とパッケージページの入口 |
+| `docs/index.md`    | 4 行   | 6 行   | 言語選択と提供状況の明示        |
+| `docs/ja/index.md` | 81 行  | 36 行  | 日本語文書サイトの入口          |
+| `docs/en/index.md` | 3 行   | 9 行   | 英語版の提供状況の明示          |
+
+- 重複していた4節（Quick Start、ディレクトリ構成、ライセンス、著者）が解消された。両ファイルの
+  合計は 145 行から 71 行へ減っている。転記の重複ではなく、詳細を持つ文書への参照で解決して
+  おり、検討事項に挙げた「転記か参照か」の判断として妥当である。
+- 英語版は「工事中」の一言ではなく、未翻訳であることと日本語版への導線を明示する構成になった。
+  `docs/index.md` のリンクにも提供状況を併記している。配下が日本語のまま英語版の体裁だけ整えると
+  利用者の期待とずれるという懸念に対し、期待を正しく設定する方向で解いている。
+- `lint:md` と `docs:build` が通る。リンク切れも出ていない。
 
 ## 7. 関連ドキュメント
 
