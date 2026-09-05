@@ -11,13 +11,12 @@ specdojo:
   supersedes: []
   grade:
     rubric: grade-rubric-v1
-    reference: specdojo:prj-overview-sample
     target: kata
     verdict: needs-work
     score: 84
-    graded_at: "2026-09-05T22:29:54.417Z"
+    graded_at: "2026-09-05T22:41:20.408Z"
     graded_by: gemma-expert-executor
-    content_hash: 565c8b0a119b6e2a6a6f90813ab3f0e70d8421db42c99d86e6d6e0d142fc5f3d
+    content_hash: 9cde3a41e69258db70882ac52587c463b5f0d386b7f5b03cb483d1e548ce3aa2
     categories:
       consistency: { score: 75 }
       usability: { score: 92 }
@@ -90,12 +89,7 @@ specdojo:
 
 評価は `High` / `Middle` / `Low` とし、採択に有利なほど高くする。重みは優先順位を示すが、機械的な合計だけで決定しない。
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-qe-omissions-consistency line=55 評価軸の最低ラインである「リスク」と「技術実現性」が表から欠落しており、かつ省略理由の記載もないため、rulebook の必須要件を満たしていない。 -->
-<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance line=55 完成例である sample が rulebook/recipe で定める最低評価軸を省略し、かつその正当な理由を明示していないため、標準的な書き方の正解例として機能していない。 -->
-
 ## 4. 比較結果と採択理由
-
-<!-- specdojo:finding id=F003 severity=minor rule=vp-ux-language-consistency line=60 最低ラインの評価軸名称が rulebook では「運用適合」となっているが、本 sample では「業務適合」となっており、用語が不統一である。 -->
 
 | 案ID   | 効果   | コスト | 期間   | 業務適合 | 操作性 | データ移行 | 継続運用 | 保守性 | 総合評価 | 判定     |
 | ------ | ------ | ------ | ------ | -------- | ------ | ---------- | -------- | ------ | -------- | -------- |
@@ -118,6 +112,11 @@ ALT-02 はセル操作と数式保守が店主代表の負担になり、誤入�
 | ALT-04 | タブレット向け最小機能を段階的に構築できる | 受入確認、データ移行、障害時の紙運用を整備する必要がある |
 
 ## 5. リスクとトレードオフ
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-omissions-consistency line=80 評価軸の最低ラインである「リスク」と「技術実現性」が表から欠落しており、かつ省略理由の記載もないため、rulebook の必須要件を満たしていない。 -->
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance line=80 完成例である sample が rulebook/recipe で定める最低評価軸を省略し、かつその正当な理由を明示していないため、標準的な書き方の正解例として機能していない。 -->
+
+<!-- specdojo:finding id=F003 severity=minor rule=vp-ux-language-consistency line=85 最低ラインの評価軸名称が rulebook では「運用適合」となっているが、本 sample では「業務適合」となっており、用語が不統一である。 -->
 
 | 区分         | 内容                                                       | 軽減策                                                      |
 | ------------ | ---------------------------------------------------------- | ----------------------------------------------------------- |

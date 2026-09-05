@@ -17,22 +17,56 @@ specdojo:
 
 ## 1. 概要
 
-specdojo:docs-editing-guide に、必要な VS Code extension（Markdown All in One 等）と SpecDojo extension（tools/vscode-specdojo）の導入・設定・使い方を追記する
+[[specdojo:docs-editing-guide]] に、文書編集で用いる VS Code 拡張と SpecDojo 拡張の説明を追加する。
 
-## 2. 完了条件
+[[prj-0001:pjr-gx9d-vscode-extension-consolidation]] で定めた集約方針の3番目にあたる。
+[[prj-0001:pjr-0143-vs-code-marketplace]] で公開先が定まってから記述する。
 
-- _TODO_: 完了と判断できる具体的な条件を記載する。
+## 2. 現状
 
-## 3. 作業内容
+`.vscode/extensions.json` は次を推奨するが、ガイドに説明がない。
 
-| No  | 作業   | 担当   | 状態 | メモ |
-| --- | ------ | ------ | ---- | ---- |
-| 1   | _TODO_ | _TODO_ | open | -    |
+```json
+{ "recommendations": ["unifiedjs.vscode-remark", "davidanson.vscode-markdownlint"] }
+```
 
-## 4. 対応結果
+SpecDojo 拡張そのものも推奨に含まれておらず、利用者は存在を知る手段がない。ガイドは
+`Format Markdown Table` タスクを名指しで参照しており、拡張へ集約した後は記述の追従が要る。
+
+## 3. 完了条件
+
+- ガイドに、文書編集へ必要な VS Code 拡張とその役割が記載されている。
+- SpecDojo 拡張の導入手順が記載され、Marketplace からインストールできることが分かる。
+- 拡張が提供する機能（`[[id]]` のリンク表示、ID による文書を開く、表整形）が説明されている。
+- `Format Markdown Table` タスクを参照する既存の記述が、拡張のコマンドへ追従している。
+  対象は [[specdojo:docs-editing-guide]] と [[specdojo:guide-authoring-standard]]。
+- `.vscode/extensions.json` の推奨へ SpecDojo 拡張を追加するかを判断し、結果が反映されている。
+- `npm run -s lint:md` と `npm run docs:build` が通る。
+
+## 4. 検討事項
+
+- 拡張を必須とするか推奨に留めるかを決める。必須にすると VS Code 以外の利用者を排除する。
+  表整形は CLI からも実行できるため、拡張なしでも作業は成立する。
+- タスクの撤去時期を判断する。集約方針では移行期間として当面残すとしている。ガイドの記述を
+  拡張へ寄せた時点で、タスクを非推奨として明示するかを決める。
+
+## 5. 作業内容
+
+| No  | 作業                                | 担当 | 状態 | メモ                           |
+| --- | ----------------------------------- | ---- | ---- | ------------------------------ |
+| 1   | 必要な VS Code 拡張と役割を記載する | ARC  | open | remark、markdownlint ほか      |
+| 2   | SpecDojo 拡張の導入手順を記載する   | ARC  | open | Marketplace からの導入         |
+| 3   | 提供機能を説明する                  | ARC  | open | リンク表示、文書を開く、表整形 |
+| 4   | タスク参照の記述を追従させる        | ARC  | open | ガイドと standard の2箇所      |
+| 5   | `extensions.json` の推奨を判断する  | ARC  | open | 追加するかを決める             |
+
+## 6. 対応結果
 
 _TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
 
-## 5. 関連ドキュメント
+## 7. 関連ドキュメント
 
-- _TODO_: 根拠・影響先・追跡先を `[[doc-id]]` 形式で記載する。
+- [[prj-0001:pjr-gx9d-vscode-extension-consolidation]]: 集約方針。本項目はその3番目。
+- [[prj-0001:pjr-0143-vs-code-marketplace]]: 先行して完了させる。
+- [[specdojo:docs-editing-guide]]: 記載先。
+- [[specdojo:guide-authoring-standard]]: タスク参照の追従先。
