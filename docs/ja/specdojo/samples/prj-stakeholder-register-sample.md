@@ -4,8 +4,34 @@ specdojo:
   type: sample
   status: ready
   rulebook: specdojo:prj-stakeholder-register-rulebook
-  based_on: [specdojo:prj-overview-sample]
+  based_on:
+    - specdojo:prj-overview-sample
   supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    reference: specdojo:prj-overview-sample
+    target: kata
+    verdict: pass
+    score: 98
+    graded_at: "2026-09-05T23:57:13.852Z"
+    graded_by: gemma-expert-executor
+    content_hash: 17af56a5b53441e4d082f2a58eb09b3fd95e09189a8deea67daa25d269455286
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 92 }
+      architecture: { score: 100 }
+      quality: { score: 100 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 3, score: 75 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 1, note: 0 }
 ---
 
 # ステークホルダー登録簿（サンプル）: 駄菓子屋きぬや販売管理システム
@@ -51,6 +77,8 @@ specdojo:
 | `STH-FAMILY-USER` | 家族利用者   | システム操作方法と変更による影響 | 簡易手順書, Issue      | リリース前の試利用に参加           | Issue, フィードバック | リリース準備                   |
 
 ## 5. 見直し条件
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-ux-language-consistency line=48 見直し条件の責任者に、関係者一覧で定義されていない Role code `BA` が指定されているため、定義済みの Role code に統一する必要がある。 -->
 
 | トリガー                                 | 見直し内容                                       | 責任者 | 承認者 | 証跡                |
 | ---------------------------------------- | ------------------------------------------------ | ------ | ------ | ------------------- |
