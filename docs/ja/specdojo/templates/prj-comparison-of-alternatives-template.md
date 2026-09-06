@@ -14,6 +14,31 @@ specdojo:
         - _PROJECT_ID_:prj-issues-and-approach
         - _PROJECT_ID_:prj-assumptions-constraints-dependencies
       supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    reference: specdojo:prj-overview-template
+    target: kata
+    verdict: pass
+    score: 100
+    graded_at: "2026-09-06T13:38:08.459Z"
+    graded_by: gemma-expert-executor
+    content_hash: fc75905db3008cf6ea35394547f43a2144335cd00f90126b1350b4be2e5bee13
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 100 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 0, note: 0 }
 ---
 
 # 代替案比較: _PROJECT_NAME_

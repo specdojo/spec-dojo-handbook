@@ -13,6 +13,30 @@ specdojo:
         - _PROJECT_ID_:prj-overview
         - _PROJECT_ID_:prj-stakeholder-register
       supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: pass
+    score: 98
+    graded_at: "2026-09-06T13:26:47.141Z"
+    graded_by: gemma-expert-executor
+    content_hash: c2c4fde13a4582411718ec60f4389d856ba02e89183d280c97b661bd1307e463
+    categories:
+      consistency: { score: 88 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 100 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 3, score: 75 }
+      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 2, note: 0 }
 ---
 
 # プロジェクト憲章: _PROJECT_NAME_
@@ -20,6 +44,8 @@ specdojo:
 _TODO_: 本書が、立ち上げ認可と権限委譲を記録する憲章であることを 2〜3 文で記述する。何の立ち上げを認可し、誰にどの権限を委譲するか、本格実行開始や外部公開を承認しないことを含め、PO またはスポンサーが最終判断と説明責任を担うことを明示する。
 
 ## 1. 認可対象
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-omissions-consistency line=10 frontmatterのstatusがreadyとなっており、承認前の認可状態と矛盾しやすいためdraftとするべきである。 -->
 
 | 項目            | 内容                              |
 | --------------- | --------------------------------- |
@@ -83,6 +109,8 @@ _TODO_: PO またはスポンサーの承認を必要とする事項を箇条書
 ## 6. 主要前提・制約
 
 _TODO_: 前提・制約の全量は `prj-assumptions-constraints-dependencies` を正とし、認可判断に直結する事項（予算枠、公開適性、人間の判断責任）だけを記載する。
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-omissions-consistency line=73 ハイレベルスコープ節にAI Agentの支援範囲を含めるというrulebook 6.4の指示に基づくガイド（_TODO_等）が不足している。 -->
 
 | 区分 | 内容                           | 詳細化先                                   |
 | ---- | ------------------------------ | ------------------------------------------ |
