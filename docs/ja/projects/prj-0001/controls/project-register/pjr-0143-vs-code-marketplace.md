@@ -44,28 +44,95 @@ specdojo:
 - 公開に使う認証情報の管理方法が定まっている。リポジトリへ含めない。
 - 公開後の拡張をインストールし、`[[id]]` のリンク表示と表整形が動作することを確認している。
 
-## 4. 検討事項
+## 4. 発行者 ID の決定
 
-- 発行者アカウントの所有者を決める。個人か組織かで、以後の運用と権限移譲が変わる。
+### 4.1. 前提
+
+Marketplace の publisher は Azure DevOps 組織を実体とする。個人と法人の区別は仕組み上なく、
+どの形態でも複数メンバーを追加できる。認証済みバッジもドメイン所有を証明すれば個人で取得
+できる。したがって選択の実質は publisher ID に何を使うかである。
+
+拡張の識別子は `<publisher>.<name>` で、**後から変更できない**。変更すると別の拡張として扱われ、
+インストール実績と評価を失う。
+
+### 4.2. 選択肢
+
+| 案               | publisher ID | 拡張識別子                 | 評価                   |
+| ---------------- | ------------ | -------------------------- | ---------------------- |
+| 個人名           | `naoji3x`    | `naoji3x.vscode-specdojo`  | 他資産と不整合         |
+| 個人事業主の屋号 | 屋号         | `<屋号>.vscode-specdojo`   | 屋号変更・廃業時に困る |
+| **プロダクト名** | `specdojo`   | `specdojo.vscode-specdojo` | GitHub・npm と一致する |
+
+### 4.3. 決定
+
+publisher ID は `specdojo` とする。
+
+- 既存資産と一致する。GitHub 組織（`github.com/specdojo/specdojo`）、npm パッケージ名、拡張の
+  `package.json` の `publisher` 記載がいずれも `specdojo` である。
+- 識別子は変更できないため、個人名や屋号を使うと将来の体制変更で不整合が固定される。
+- 権限はメンバー追加で移譲できるが、識別子に個人名が入ると製品名との乖離が残る。
+
+Marketplace で `specdojo` が未取得であることを確認済みである。
+
+アカウントの所有主体（個人か個人事業主か）は Marketplace の機能に影響しない。税務・管理責任の
+観点で別途判断する。
+
+### 4.4. 取得手順
+
+publisher の作成は Azure DevOps アカウントの作成から始まる。
+
+| 順  | 手順                                                                   |
+| --- | ---------------------------------------------------------------------- |
+| 1   | Microsoft アカウントを用意する。既存のものでよい                       |
+| 2   | `https://aka.ms/vscode-create-publisher` で publisher を作成する       |
+| 3   | ID に `specdojo` を入力する。ID は後から変更できない                   |
+| 4   | 表示名、説明、アイコンなど公開情報を設定する。表示名は後から変更できる |
+| 5   | Azure DevOps で Personal Access Token を発行する                       |
+| 6   | `npx @vscode/vsce login specdojo` でトークンを登録する                 |
+| 7   | `npx @vscode/vsce publish` で公開する                                  |
+
+Personal Access Token は次の条件で発行する。
+
+- Organization: **All accessible organizations** を選ぶ。特定組織に限ると publish が失敗する
+- Scopes: **Marketplace の Manage** を選ぶ
+- 有効期限: 既定は 90 日。更新の運用を決めておく
+
+トークンはリポジトリへ含めない。`vsce login` はローカルへ保存するため、CI で使う場合は
+シークレットとして注入する。
+
+`package.json` には publisher のほか、Marketplace の表示に用いる項目が要る。
+
+| 項目          | 用途                                      |
+| ------------- | ----------------------------------------- |
+| `publisher`   | `specdojo`（記載済み）                    |
+| `repository`  | ソースへの導線。未記載のため追加する      |
+| `license`     | MIT（本体と揃える）。未記載のため追加する |
+| `icon`        | 一覧での表示。未用意                      |
+| `description` | 検索結果に出る説明                        |
+| `categories`  | 分類。`Programming Languages` など        |
+
+## 5. 検討事項
+
 - バージョン付与の方針を決める。拡張のバージョンを SpecDojo 本体と揃えるか、独立させるか。
 - 公開の自動化の要否を判断する。手動公開で始め、頻度が上がってから CI を検討してもよい。
-- ライセンスと利用条件を確認する。Marketplace の公開には明示が要る。
+- 認証済みバッジの取得可否を判断する。ドメインを所有していれば申請できる。必須ではない。
+- Personal Access Token の有効期限（既定 90 日）の更新運用を決める。切れると公開できない。
 
-## 5. 作業内容
+## 6. 作業内容
 
-| No  | 作業                              | 担当 | 状態 | メモ                       |
-| --- | --------------------------------- | ---- | ---- | -------------------------- |
-| 1   | 発行者を登録する                  | ARC  | open | 所有者を先に決める         |
-| 2   | `package.json` の公開項目を揃える | ARC  | open | publisher、repository ほか |
-| 3   | 認証情報の管理方法を定める        | ARC  | open | リポジトリへ含めない       |
-| 4   | 公開して動作を確認する            | ARC  | open | インストールして検証する   |
-| 5   | 公開手順を文書化する              | ARC  | open | 再現できる形にする         |
+| No  | 作業                               | 担当 | 状態 | メモ                                |
+| --- | ---------------------------------- | ---- | ---- | ----------------------------------- |
+| 1   | publisher `specdojo` を作成する    | ARC  | open | ID は変更できないため確認して行う   |
+| 2   | Personal Access Token を発行する   | ARC  | open | All accessible / Marketplace Manage |
+| 3   | `package.json` の公開項目を揃える  | ARC  | open | repository、license、icon ほか      |
+| 4   | 公開して動作を確認する             | ARC  | open | インストールして検証する            |
+| 5   | 公開手順とトークン更新を文書化する | ARC  | open | 再現できる形にする                  |
 
-## 6. 対応結果
+## 7. 対応結果
 
 _TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
 
-## 7. 関連ドキュメント
+## 8. 関連ドキュメント
 
 - [[prj-0001:pjr-gx9d-vscode-extension-consolidation]]: 集約方針。本項目はその2番目。
 - [[prj-0001:pjr-0144-fmt-md-table-vs-code]]: 先行して完了させる。
