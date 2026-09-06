@@ -12,6 +12,30 @@ specdojo:
       based_on:
         - _AUTHORITY_:cdfd-overview
       supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 53
+    graded_at: "2026-09-06T06:18:57.054Z"
+    graded_by: codex-expert-executor
+    content_hash: 5d1fa680beb2e1a011b86affb520e5d92fd68a0cf7b3d063f73e1e2256df245d
+    categories:
+      consistency: { score: 25 }
+      usability: { score: 75 }
+      architecture: { score: 100 }
+      quality: { score: 25 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 1, score: 25 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 1, score: 25 }
+      vp-qe-omissions-consistency: { level: 1, score: 25 }
+      vp-qe-kata-conformance: { level: 1, score: 25 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 2, score: 50 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 13, minor: 1, note: 0 }
 ---
 
 # 概念データフロー図（領域別）: _DOMAIN_NAME_
@@ -34,10 +58,21 @@ _TODO_: 誰が、領域内フロー、必須・条件付きの境界、主要例
 _TODO_: 主要入力・主要出力・データストアは「個別プロセス主要入出力」（5章）へ記載し、本章の列には含めない。
 
 <!-- prettier-ignore -->
-| プロセス ID | プロセス | 業務目的 | 主な担当 | 起動条件 | 必須性 |
-| --- | --- | --- | --- | --- | --- |
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=23 rulebook は必須性を「必須／条件付き／選択」の三分類とする一方, プレースホルダーが `_REQUIRED_OR_CONDITIONAL_` に限定されているため, 「選択」を含む正式分類を表現できるよう修正する必要がある。 -->
+<!-- specdojo:finding id=F004 severity=major rule=vp-qe-verifiability line=23 `_REQUIRED_OR_CONDITIONAL_` では rulebook が許容する「選択」を記録できず, 選択プロセスの必須性を pass / fail 判定できないため, 三分類を明示する必要がある。 -->
+<!-- specdojo:finding id=F007 severity=major rule=vp-qe-omissions-consistency line=23 rulebook の必須性分類に含まれる「選択」がプレースホルダーと本文の案内から欠落しているため, 「必須／条件付き／選択」を漏れなく提示する必要がある。 -->
+<!-- specdojo:finding id=F010 severity=major rule=vp-qe-kata-conformance line=23 template が必須性を必須・条件付きの二分類に限定しており, rulebook の「必須／条件付き／選択」という型を完全には実装していないため, プレースホルダーと関連案内を三分類へ統一する必要がある。 -->
+<!-- specdojo:finding id=F014 severity=major rule=vp-ux-language-consistency line=23 必須性の正式ラベル「必須／条件付き／選択」と `_REQUIRED_OR_CONDITIONAL_` が一致せず, 「選択」と「条件付き」を混同させるため, プレースホルダーと本文中の分類表記を正式な三分類へ統一する必要がある。 -->
+
+| プロセス ID    | プロセス       | 業務目的           | 主な担当     | 起動条件          | 必須性                    |
+| -------------- | -------------- | ------------------ | ------------ | ----------------- | ------------------------- |
 | `_PROCESS_ID_` | _PROCESS_NAME_ | _BUSINESS_PURPOSE_ | _OWNER_ROLE_ | _START_CONDITION_ | _REQUIRED_OR_CONDITIONAL_ |
 
+<!-- specdojo:finding id=F002 severity=major rule=vp-arc-cross-document-consistency line=25 例示行が1行しかないのに行追加を「3プロセス以上」の場合だけ指示しており, 2プロセスの領域で一方が一覧・図から欠落し得るため, 「複数ある場合」に修正する必要がある。 -->
+<!-- specdojo:finding id=F005 severity=major rule=vp-qe-verifiability line=25 2プロセス時の行追加条件が定義されておらず, 全プロセスが一覧と図へ一度ずつ登場したか判定できないため, 2件以上なら行を追加する指示へ修正する必要がある。 -->
+<!-- specdojo:finding id=F008 severity=major rule=vp-qe-omissions-consistency line=25 「3プロセス以上」という条件では2プロセス目が領域内プロセス一覧から欠落し得るため, 全プロセスを記載する条件へ修正する必要がある。 -->
+<!-- specdojo:finding id=F011 severity=major rule=vp-qe-kata-conformance line=25 recipe と rulebook は全プロセスの追跡を要求するが, template は2プロセス時の行追加を案内していないため, 件数にかかわらず全プロセスを一覧化する骨組みに修正する必要がある。 -->
+<!-- specdojo:finding id=F013 severity=minor rule=vp-ux-readability line=25 「3プロセス以上」の場合だけ行を追加する記述では, 領域内またはグループ内がちょうど2プロセスの場合の扱いが不明確になるため, line 88 の同種コメントとともに「複数ある場合」へ統一する必要がある。 -->
 <!-- 領域内に3プロセス以上ある場合は、同じ形式で行を追加する。 -->
 
 ## 4. 概念データフロー
@@ -101,6 +136,10 @@ _TODO_: グループが扱う範囲を数行で要約する。業務目的、主
 | --- | --- | --- | --- | --- |
 | `_PROCESS_ID_` | _PROCESS_NAME_ | _MAIN_INPUTS_ | _MAIN_OUTPUTS_ | _DATA_STORES_ |
 
+<!-- specdojo:finding id=F003 severity=major rule=vp-arc-cross-document-consistency line=88 グループ内の例示行が1行しかないのに行追加を「3プロセス以上」の場合だけ指示しており, 2プロセスのグループで一方が主要入出力表から欠落し得るため, 「複数ある場合」に修正する必要がある。 -->
+<!-- specdojo:finding id=F006 severity=major rule=vp-qe-verifiability line=88 2プロセスのグループで主要入出力表の全件性を判定できないため, 2件以上なら行を追加する指示へ修正する必要がある。 -->
+<!-- specdojo:finding id=F009 severity=major rule=vp-qe-omissions-consistency line=88 「3プロセス以上」という条件では2プロセス目が個別プロセス主要入出力から欠落し得るため, グループ内の全プロセスを記載する条件へ修正する必要がある。 -->
+<!-- specdojo:finding id=F012 severity=major rule=vp-qe-kata-conformance line=88 recipe と rulebook は各プロセスの主要入出力を要求するが, template は2プロセスのグループで2行目を追加させない案内になっているため, 全プロセスを収容できる指示へ修正する必要がある。 -->
 <!-- グループ内に3プロセス以上ある場合は、同じ形式で行を追加する。 -->
 
 ### 5.2. _PROCESS_GROUP_NAME_（_PROCESS_ID_ 〜 _PROCESS_ID_）

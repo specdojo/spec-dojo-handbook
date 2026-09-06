@@ -206,7 +206,11 @@ target_root="docs/ja/specdojo/$kind_directory"
 [[ -d "$target_root" ]] || fail "target directory not found: $target_root"
 
 if [[ ${#selected_paths[@]} -eq 0 ]]; then
-  mapfile -t selected_paths < <(find "$target_root" -type f -name '*.md' -print | LC_ALL=C sort)
+  # generated/ は他の正本から作られる派生物で、直接編集しても再生成で失われる。
+  # 評価しても修正へつなげられないため対象から外す。
+  mapfile -t selected_paths < <(
+    find "$target_root" -type f -name '*.md' -not -path '*/generated/*' -print | LC_ALL=C sort
+  )
 else
   for path in "${selected_paths[@]}"; do
     [[ -f "$path" ]] || fail "target not found: $path"
