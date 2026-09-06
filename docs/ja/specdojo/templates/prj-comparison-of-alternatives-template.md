@@ -16,29 +16,28 @@ specdojo:
       supersedes: []
   grade:
     rubric: grade-rubric-v1
-    reference: specdojo:prj-overview-template
     target: kata
     verdict: pass
-    score: 100
-    graded_at: "2026-09-06T13:38:08.459Z"
+    score: 94
+    graded_at: "2026-09-06T13:49:38.987Z"
     graded_by: gemma-expert-executor
     content_hash: fc75905db3008cf6ea35394547f43a2144335cd00f90126b1350b4be2e5bee13
     categories:
       consistency: { score: 100 }
-      usability: { score: 100 }
+      usability: { score: 92 }
       architecture: { score: 100 }
-      quality: { score: 100 }
+      quality: { score: 88 }
     viewpoints:
       vp-arc-cross-document-consistency: { level: 4, score: 100 }
       vp-arc-conciseness: { level: 4, score: 100 }
       vp-arc-single-responsibility: { level: 4, score: 100 }
       vp-qe-verifiability: { level: 4, score: 100 }
       vp-qe-omissions-consistency: { level: 4, score: 100 }
-      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 3, score: 75 }
       vp-ux-readability: { level: 4, score: 100 }
-      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 3, score: 75 }
       vp-arc-document-structure: { level: 4, score: 100 }
-    findings: { blocker: 0, major: 0, minor: 0, note: 0 }
+    findings: { blocker: 0, major: 0, minor: 2, note: 0 }
 ---
 
 # 代替案比較: _PROJECT_NAME_
@@ -128,12 +127,16 @@ _TODO_: 採択案、一部採択する要素、非採択理由、再評価条件
 
 ## 5. リスクとトレードオフ
 
+<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-kata-conformance line=90 評価軸の削除を案内しているが、rulebook が要求する「省略理由の記載」についての指示が欠けており、適用方法が不十分である。 -->
+
 | 区分         | 内容   | 軽減策 |
 | ------------ | ------ | ------ |
 | トレードオフ | _TODO_ | _TODO_ |
 | リスク       | _TODO_ | _TODO_ |
 
 ## 6. 決定と見直し
+
+<!-- specdojo:finding id=F002 severity=minor rule=vp-ux-language-consistency line=98 最低評価軸の名称が rulebook では「運用適合」と定義されているが、template では「利用者・業務適合」となっており、用語が不統一である。 -->
 
 - _TODO_: 採択、比較試行、保留を短く要約する。
 - _TODO_: 最終判断者を人間の責任ロールとして記述し、AI Agent は比較分析の支援に留める。
