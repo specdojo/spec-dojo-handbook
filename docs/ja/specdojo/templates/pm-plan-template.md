@@ -17,29 +17,28 @@ specdojo:
       supersedes: []
   grade:
     rubric: grade-rubric-v1
-    reference: specdojo:prj-overview-template
     target: kata
-    verdict: pass
-    score: 100
-    graded_at: "2026-09-06T11:24:39.124Z"
+    verdict: needs-work
+    score: 83
+    graded_at: "2026-09-06T11:34:06.008Z"
     graded_by: gemma-expert-executor
-    content_hash: a36b622ab79aa2a719cc50161f99b9f4b015178218fc8a03fe3d0aefd99405e0
+    content_hash: 198ec7c974801c0e61e1b9f2d11dcf779f14bc0c409419f7815054e97dfeae13
     categories:
       consistency: { score: 100 }
       usability: { score: 100 }
       architecture: { score: 100 }
-      quality: { score: 100 }
+      quality: { score: 50 }
     viewpoints:
       vp-arc-cross-document-consistency: { level: 4, score: 100 }
       vp-arc-conciseness: { level: 4, score: 100 }
       vp-arc-single-responsibility: { level: 4, score: 100 }
-      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 2, score: 50 }
       vp-qe-omissions-consistency: { level: 4, score: 100 }
-      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 2, score: 50 }
       vp-ux-readability: { level: 4, score: 100 }
       vp-ux-language-consistency: { level: 4, score: 100 }
       vp-arc-document-structure: { level: 4, score: 100 }
-    findings: { blocker: 0, major: 0, minor: 0, note: 0 }
+    findings: { blocker: 0, major: 2, minor: 0, note: 0 }
 ---
 
 # プロジェクト管理計画: _PROJECT_NAME_
@@ -75,3 +74,6 @@ _TODO_: 目的、スコープ、成功基準、体制、外部条件が変わっ
 | 論点   | 現状                | 決定時期 | 判断者 |
 | ------ | ------------------- | -------- | ------ |
 | _TODO_ | _UNDECIDED_: _TODO_ | _TODO_   | _TODO_ |
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-verifiability line=55 統合管理表に根拠IDや証跡を追跡するための列が不足しており、判定の検証可能性（verifiability）が確保できない。 -->
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance line=55 統合管理表に証跡項目が欠落しており、recipe の仕上げチェックで要求される「価値/リスクから証跡までの一続きの追跡」を実現できない。 -->
