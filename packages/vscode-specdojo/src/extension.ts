@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
+import { formatMarkdownTable } from "./markdown-table";
 
 interface DocIndex {
   version: number;
@@ -187,6 +188,36 @@ export function activate(context: vscode.ExtensionContext) {
       await vscode.window.showTextDocument(doc, {
         selection: new vscode.Range(lineNumber, 0, lineNumber, 0),
       });
+    }),
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("specdojo.formatMarkdownTable", async () => {
+      // Command variables in tasks.json require a string result. The returned no-op command lets
+      // the legacy task delegate formatting here without retaining the old CLI implementation.
+      const taskCompletionCommand = "echo";
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        vscode.window.showWarningMessage("Open a Markdown document before formatting a table.");
+        return taskCompletionCommand;
+      }
+
+      const document = editor.document;
+      const input = document.getText();
+      const output = formatMarkdownTable(input, editor.selection.active.line + 1);
+      if (output === input) return taskCompletionCommand;
+
+      const applied = await editor.edit((editBuilder) => {
+        editBuilder.replace(
+          new vscode.Range(document.positionAt(0), document.positionAt(input.length)),
+          output,
+        );
+        editBuilder.setEndOfLine(vscode.EndOfLine.LF);
+      });
+      if (!applied) {
+        vscode.window.showWarningMessage("Could not format the Markdown table.");
+      }
+      return taskCompletionCommand;
     }),
   );
 
