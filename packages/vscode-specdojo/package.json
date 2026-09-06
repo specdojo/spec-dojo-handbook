@@ -1,7 +1,7 @@
 {
   "name": "vscode-specdojo",
   "displayName": "SpecDojo",
-  "description": "Document ID navigation for SpecDojo projects",
+  "description": "Document navigation and Markdown table formatting for SpecDojo projects",
   "version": "0.1.0",
   "publisher": "specdojo",
   "engines": {
@@ -22,6 +22,10 @@
       {
         "command": "specdojo.openById",
         "title": "SpecDojo: Open Document by ID"
+      },
+      {
+        "command": "specdojo.formatMarkdownTable",
+        "title": "SpecDojo: Format Markdown Table"
       }
     ]
   },

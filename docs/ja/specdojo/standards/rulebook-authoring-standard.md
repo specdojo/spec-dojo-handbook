@@ -130,7 +130,7 @@ specdojo:
 
 - 章構成を変更する際は、本書の表を更新し、既存の `*-rulebook.md` と整合させる。
 - 実データや大量のケース列挙は本書ではなく対象ドキュメント側に置く。本書では「書き方・構成」を定義する。
-- 表は必要に応じて整形スクリプト（`Format Markdown Table` タスク）で揃える。
+- 表は必要に応じて `SpecDojo: Format Markdown Table` コマンドで揃える。
 - `status: ready` かつ `target_format: yaml` / `json` の rulebook は、`<prefix>-rulebook.md` と
   `docs/specdojo/schemas/v1/<prefix>.schema.yaml` がともに存在する場合、同じ成果物系統として
   `validate:schema:rulebook-enums` の検査対象になる。

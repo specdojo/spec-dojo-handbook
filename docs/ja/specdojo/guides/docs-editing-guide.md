@@ -138,7 +138,7 @@ vs code の拡張機能で用意されている表のフォーマッターは多
 
 このガイドでは、本機能の使い方と設計思想を説明します。
 
-※コードは`tools/docs/src/fmt-md-table.ts`にあります。
+この機能は SpecDojo VS Code 拡張の `SpecDojo: Format Markdown Table` コマンドとして提供します。
 
 ### 3.1. この機能で何が起きるか
 
@@ -198,13 +198,7 @@ Markdown ファイルを開き、
 次のコマンドを実行してください。
 
 ```text
-Tasks: Run Task
-```
-
-次に、一覧から次のタスクを選択します。
-
-```text
-Format Markdown Table
+SpecDojo: Format Markdown Table
 ```
 
 即座に表が整形されます。
@@ -227,16 +221,10 @@ Format Markdown Table
 2. 次のコマンドを検索
 
    ```text
-   workbench.action.tasks.runTask
+   SpecDojo: Format Markdown Table
    ```
 
-3. 対象タスク
-
-   ```text
-   Format Markdown Table
-   ```
-
-4. 好きなキーを割り当てる
+3. 好きなキーを割り当てる
 
 ### 3.5. 注意事項
 

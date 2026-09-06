@@ -97,4 +97,4 @@ Template Authoring Standard
 
 - 対応成果物の rulebook 本文要件や schema が変わった場合は、テンプレートの構成・キーを追従させる。
 - プレースホルダ名を変更する場合は、対応する recipe / 生成処理との整合を確認する。
-- 表は必要に応じて整形スクリプト（`Format Markdown Table` タスク）で揃える。
+- 表は必要に応じて `SpecDojo: Format Markdown Table` コマンドで揃える。
