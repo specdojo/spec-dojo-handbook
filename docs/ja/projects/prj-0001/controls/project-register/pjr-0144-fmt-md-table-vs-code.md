@@ -2,15 +2,17 @@
 specdojo:
   id: prj-0001:pjr-0144-fmt-md-table-vs-code
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   due_on: "2026-10-31"
+  completed_at: "2026-09-06T13:03:04Z"
+  conclusion: 表整形を拡張コマンドへ移し、旧 CLI 実装を削除した。tasks.json は拡張コマンドへ委譲する形で残した。
 ---
 
 # PJR-0144 fmt-md-table を VS Code 拡張へ統合
@@ -76,6 +78,24 @@ specdojo:
   拡張コマンドへ委譲した。CLI 実装は保持していない。
 - 編集ガイド、各 authoring standard、Markdown 編集指示の利用手順を新しいコマンド名へ追従させた。
 - 拡張のコンパイルと vsix 生成を確認した。残課題はない。
+
+受け入れ時に orchestrator が次を確認した。
+
+| 検証                   | 結果                           |
+| ---------------------- | ------------------------------ |
+| `npm run typecheck`    | 通過                           |
+| 単体テスト             | 1373 件通過（本項目で 5 件増） |
+| `npm run vscode:build` | 通過                           |
+
+- コマンド名が `specdojo.formatMarkdownTable` で、既存の `specdojo.openById` と接頭辞が揃っている。
+- 旧実装との出力一致がテストで固定されている。`matches the legacy formatter's LF output for
+changed CRLF input` と `preserves legacy CRLF input when the table needs no changes` が該当し、
+  改行コードの扱いまで検証している。
+- `tools/docs/src/fmt-md-table.ts` が削除され、実装を二重に持っていない。
+- `.vscode/tasks.json` は `${command:specdojo.formatMarkdownTable}` へ書き換えられ、拡張コマンドへ
+  委譲している。実体が削除されても既存利用者の手順が壊れない。移行期間としての維持と、実装を
+  二重に持たないことが両立している。
+- 保護機構は作動しなかった。`package.json` はルートではなく拡張側のもので、保護対象に含まれない。
 
 ## 7. 関連ドキュメント
 

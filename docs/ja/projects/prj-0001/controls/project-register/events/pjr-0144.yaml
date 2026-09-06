@@ -82,3 +82,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_75347df4be8f462ea92487876c92f951
+- v: 1
+  id: reg_7d93231d41934f15b9c929bbc3130d68
+  ts: "2026-09-06T13:03:04Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: 表整形を拡張コマンドへ移し、旧 CLI 実装を削除した。tasks.json は拡張コマンドへ委譲する形で残した。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-06"
+    - field: conclusion
+      from: "-"
+      to: 表整形を拡張コマンドへ移し、旧 CLI 実装を削除した。tasks.json は拡張コマンドへ委譲する形で残した。
+  previous_event_id: reg_b7ae976d860c43ca891a00b9fde366f7
