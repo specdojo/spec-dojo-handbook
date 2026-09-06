@@ -14,6 +14,30 @@ specdojo:
       item_type: question
       item_status: open
       priority: medium
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: pass
+    score: 98
+    graded_at: "2026-09-06T08:43:22.953Z"
+    graded_by: codex-expert-executor
+    content_hash: 3bbf2766468b217475ad1582bd2b69156247208421bf31043560b369ccd767eb
+    categories:
+      consistency: { score: 100 }
+      usability: { score: 92 }
+      architecture: { score: 100 }
+      quality: { score: 100 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 3, score: 75 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
+      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 1, note: 0 }
 ---
 
 # _PJR-XXXX_ _QUESTION_TITLE_
@@ -44,6 +68,8 @@ _TODO_: 回答または採択した方針を記載する。未回答の場合は
 | 回答日   | _TODO_ |
 | 承認方式 | _TODO_ |
 | 証跡     | _TODO_ |
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness line=30 承認方式に関する共通ポリシーを本文に直接記載すると全成果物で重複するため, rulebook への参照とするか, 編集者向け指示（_TODO_ 等）に変更することを検討してください。 -->
 
 - 承認方式は既定で `commit`（`register close` により `decided` へ遷移）を用いる。
 - 回答が不可逆・高リスク・framework schema 破壊的変更を伴う場合は `PR` 方式で承認し、証跡に PR URL と merge SHA を記載する。

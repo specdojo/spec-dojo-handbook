@@ -11,6 +11,30 @@ specdojo:
       rulebook: specdojo:opr-rulebook
       based_on: _BASED_ON_
       supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: needs-work
+    score: 95
+    graded_at: "2026-09-06T07:16:51.764Z"
+    graded_by: gemma-expert-executor
+    content_hash: 76f9f6d085fb3ae3b59bf4e981be31243bb940d5a8e8e0682f3147c2169e0cae
+    categories:
+      consistency: { score: 75 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 100 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-qe-kata-conformance: { level: 4, score: 100 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 1, minor: 0, note: 0 }
 ---
 
 # _DELIVERABLE_NAME_
@@ -18,6 +42,8 @@ specdojo:
 _DELIVERABLE_OVERVIEW_
 
 ## 1. 概要
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-qe-omissions-consistency line=7 Frontmatter の必須項目 `title` が `frontmatter_template` に不足しており、`opr-rulebook` の定義（4.1）に違反している。 -->
 
 _TODO_: 対象となる運用作業と、この手順によって再現可能にする結果を記述する。`opr-<term>` の場合は `opr-index` のどの共通規約を参照し、何を具体化する文書かを明示する。
 
