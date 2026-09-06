@@ -17,7 +17,7 @@ specdojo:
 
 ## 1. 概要
 
-`tools/vscode-specdojo` 拡張を Visual Studio Marketplace へ公開する。
+`packages/vscode-specdojo` 拡張を Visual Studio Marketplace へ公開する。
 
 [[prj-0001:pjr-gx9d-vscode-extension-consolidation]] で定めた集約方針の2番目にあたる。
 [[prj-0001:pjr-0144-fmt-md-table-vs-code]] で拡張の機能が確定してから実施する。公開先が定まって

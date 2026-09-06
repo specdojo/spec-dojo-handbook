@@ -18,7 +18,7 @@ specdojo:
 ## 1. 概要
 
 現在 `.vscode/tasks.json` のタスク `Format Markdown Table` として提供している `fmt-md-table` を、
-`tools/vscode-specdojo` 拡張のコマンドとして提供する。
+`packages/vscode-specdojo` 拡張のコマンドとして提供する。
 
 [[prj-0001:pjr-gx9d-vscode-extension-consolidation]] で定めた集約方針の1番目にあたる。拡張の
 機能が確定しないと Marketplace へ公開できないため、公開より先に実施する。
