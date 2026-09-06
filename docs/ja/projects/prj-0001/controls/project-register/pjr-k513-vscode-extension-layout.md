@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-k513-vscode-extension-layout
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-06T00:09:45Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-06T12:43:59Z"
   block_reason: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=package.json; agent must record the required change in the result …"
+  conclusion: 拡張を packages/ へ移し、ルートから install / build / package を実行できるようにした。vsix は tracking しない。
 ---
 
 # PJR-K513 VS Code 拡張の配置とビルド成果物の扱いを整える
@@ -216,6 +218,30 @@ references と workspaces でビルド順序の管理が二重になる。
 - 関連する現行文書の拡張パスを移動先へ更新した。過去の event、evidence、trial は実行時点の記録
   として変更していない。
 - 残課題はない。Marketplace 公開と機能集約は関連ドキュメントに記載した後続項目で扱う。
+
+受け入れ時に orchestrator が次を確認した。
+
+| 検証                     | 結果                            |
+| ------------------------ | ------------------------------- |
+| `npm run typecheck`      | 通過                            |
+| `npm run vscode:install` | 依存を復旧できる                |
+| `npm run vscode:build`   | 通過                            |
+| `npm run vscode:package` | vsix を生成（5 files, 5.31 KB） |
+| 単体テスト               | 1368 件通過                     |
+| vsix の追跡              | 生成後も追跡されない            |
+
+- 追従は4箇所すべて反映されている。`tsconfig.json` の references、統合テスト、
+  `.devcontainer/post-start.sh`、`.gitignore` である。
+- devcontainer が案内していた存在しない `npm run package` が `npm run vscode:package` へ修正されて
+  いる。参照先も移動後のパスになっている。
+- npm script は `--prefix` を使うため依存の巻き上げが起きない。モノレポ化しないという決定と
+  整合する。
+- 統合対象に `node_modules`、`out`、`vsix` の混入はない。ソースと設定の5ファイルのみである。
+- `package.json` への script 登録は `agent-config-write` が block したため、orchestrator が差分
+  （3行の追加）を確認して適用した。
+- 統合後に orchestrator が旧ディレクトリの残骸を `git clean -fdx` で削除した際、移動先の
+  `node_modules` も巻き込んで削除した。`npm run vscode:install` で復旧できることを確認しており、
+  追加した script が意図どおり機能する裏付けにもなった。
 
 ## 7. 関連ドキュメント
 
