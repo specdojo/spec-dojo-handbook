@@ -75,6 +75,10 @@ tools/vscode-specdojo/vscode-specdojo-0.1.0.vsix   ← ビルド成果物
 - vsix の生成もルートの script から実行できる。
 - 配置とリポジトリ構成の判断が記録されている。現状維持の場合もその根拠を残す。
 - `npm run typecheck` が引き続き通る。
+- `.devcontainer/post-start.sh` の参照先が移動後のパスへ追従している。案内するコマンドが実在
+  する。現在は存在しない `npm run package` を案内している。
+- vsix を tracking しなくなったため、新しい環境では自動インストールが働かない。ビルドしてから
+  インストールするか、案内だけに留めるかが決まっている。
 
 ## 4. 構成に関する決定
 
@@ -131,11 +135,43 @@ references と workspaces でビルド順序の管理が二重になる。
 分離が正当化される条件（独立した開発サイクル、別チームでの保守、リポジトリの肥大化、CI の
 肥大化）はいずれも該当しない。拡張は 274 行の1ファイルである。
 
-### 4.4. 配置を移さない
+### 4.4. 配置を `packages/` へ移す
 
-`tools/` は補助スクリプトの置き場であり配布物の置き場ではないが、独立 package が1つの現状で
-`extensions/` や `packages/` の階層を増やす利点は小さい。移動には `tsconfig.json` の references と
-`.gitignore` の追従が伴う。
+`tools/` は誤った配置である。`packages/vscode-specdojo/` へ移す。
+
+`tools/` 配下の他の7つは、いずれもこのリポジトリを開発するためのスクリプト群である。
+`vscode-specdojo` だけが性質を異にする。
+
+| 観点         | `tools/` 配下の他7件   | `vscode-specdojo`  |
+| ------------ | ---------------------- | ------------------ |
+| 性質         | 開発を助けるスクリプト | 配布する製品       |
+| 実行者       | 開発者、CI、Git hook   | エンドユーザー     |
+| package.json | なし。ルートに属する   | あり               |
+| 配布         | しない                 | Marketplace        |
+| 版管理       | リポジトリと一体       | 独立したバージョン |
+
+`tools/vscode/open-worktree-workspace.sh`（開発者が worktree を開く補助）と
+`tools/vscode-specdojo`（利用者が使う拡張）が同じ階層にあるのは、名前が似ているだけで中身が
+別物である。
+
+移動先は `packages/` とする。現在は1つだが「配布する package はここ」という区分が生まれ、
+ルートの CLI を将来移す余地も残る。`extensions/` は拡張が増えない限り過剰であり、ルート直下は
+階層が浅く意図を読み取りにくい。
+
+移動に伴う追従は次のとおりで、計4ファイル・7行程度である。
+
+| 対象                                          | 変更 |
+| --------------------------------------------- | ---- |
+| `tsconfig.json` の references                 | 1 行 |
+| `tests/src/exec-worktree.integration.test.ts` | 2 行 |
+| `.devcontainer/post-start.sh`                 | 2 行 |
+| `.gitignore`                                  | 2 行 |
+
+過去の evidence や trial は実行時点の記録であり変更しない。
+
+当初は「独立 package が1つの現状で階層を増やす利点が小さい」として現状維持と判断したが、
+配置が誤っている以上、移動コストが小さいなら直すべきである。積極的な理由の不在は現状維持の
+根拠にならない。
 
 ### 4.5. 判断が変わる条件
 
