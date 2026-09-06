@@ -81,8 +81,11 @@ CLAUDE.local.md
 .opencode/sessions/
 
 # specdojo VSCode extension
+# vsix は vsce が生成する配布物。バージョンごとにファイル名が変わるため、
+# tracking すると公開のたびに古い成果物が積み上がる。バイナリで差分も取れない。
 tools/vscode-specdojo/node_modules/
 tools/vscode-specdojo/out/
+*.vsix
 
 # specdojo doc-index は root/worktree で都度再生成される生成物。
 # commit すると exec の merge で衝突するため tracking しない。
