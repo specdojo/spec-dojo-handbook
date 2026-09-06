@@ -11,7 +11,34 @@ specdojo:
       rulebook: specdojo:prj-overview-rulebook
       based_on: []
       supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    target: kata
+    verdict: pass
+    score: 93
+    graded_at: "2026-09-06T14:39:59.655Z"
+    graded_by: codex-expert-executor
+    content_hash: 1971ba09b0c0abfaca08a344fe6ce9ba6c0d843b8fa2556a46b4d99a62751cce
+    categories:
+      consistency: { score: 88 }
+      usability: { score: 100 }
+      architecture: { score: 100 }
+      quality: { score: 88 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 4, score: 100 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 3, score: 75 }
+      vp-qe-kata-conformance: { level: 3, score: 75 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 0, minor: 2, note: 0 }
 ---
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-omissions-consistency line=1 Frontmatter のテンプレート自身の `status` が `ready` であり、Template 記述標準が指定する `specdojo.status: draft` と一致しないため、`draft` に変更する。 -->
+<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-kata-conformance line=1 Frontmatter のテンプレート自身の `status` が `ready` であり、Template 記述標準が指定する `specdojo.status: draft` と一致しないため、`draft` に変更する。 -->
 
 # プロジェクト概要: _PROJECT_NAME_
 
