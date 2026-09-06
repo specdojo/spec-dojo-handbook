@@ -164,7 +164,7 @@ describe("exec worktree", () => {
     const base = mkdtempSync(join(tmpdir(), "specdojo-worktree-base-"));
     try {
       addNpmPackage(repo);
-      addNpmPackage(repo, "tools/vscode-specdojo");
+      addNpmPackage(repo, "packages/vscode-specdojo");
       git(repo, "commit", "-m", "add packages");
       const installed: string[] = [];
 
@@ -180,7 +180,7 @@ describe("exec worktree", () => {
           }),
       });
 
-      expect(installed).toEqual([".", "tools/vscode-specdojo"]);
+      expect(installed).toEqual([".", "packages/vscode-specdojo"]);
       for (const packagePath of installed) {
         const nodeModules = resolve(created.path, packagePath, "node_modules");
         expect(lstatSync(nodeModules).isDirectory()).toBe(true);

@@ -84,7 +84,7 @@ ls -l "$GIT_CONFIG_FILE" || true
 git config --global --list || true
 
 echo "Installing SpecDojo VSCode extension..."
-VSIX=$(ls -t "${WORKSPACE_DIR}/tools/vscode-specdojo/"*.vsix 2>/dev/null | head -n 1)
+VSIX=$(ls -t "${WORKSPACE_DIR}/packages/vscode-specdojo/"*.vsix 2>/dev/null | head -n 1 || true)
 CODE_SERVER_BIN="$(ls -t /vscode/vscode-server/bin/*/*/bin/code-server 2>/dev/null | head -n 1 || true)"
 if [ -n "$VSIX" ]; then
   if [ -n "$CODE_SERVER_BIN" ]; then
@@ -94,7 +94,7 @@ if [ -n "$VSIX" ]; then
     echo "Skipping VSIX install: code-server CLI is not available in this startup context."
   fi
 else
-  echo "SpecDojo VSIX not found. Run 'npm run package' in tools/vscode-specdojo/."
+  echo "SpecDojo VSIX not found. Run 'npm run vscode:package' at the repository root."
 fi
 
 echo "Checking Local LLM API..."

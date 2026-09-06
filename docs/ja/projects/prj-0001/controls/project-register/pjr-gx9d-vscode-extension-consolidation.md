@@ -20,14 +20,14 @@ specdojo:
 
 SpecDojo の編集支援機能が複数の場所へ分散している。
 
-| 機能                    | 現在の所在                       | 導入方法                 |
-| ----------------------- | -------------------------------- | ------------------------ |
-| `[[id]]` のリンク表示   | `tools/vscode-specdojo`（拡張）  | vsix を手動インストール  |
-| ID による文書を開く     | 同上（`specdojo.openById`）      | 同上                     |
-| Markdown 表の整形       | `.vscode/tasks.json` のタスク    | リポジトリを開けば使える |
-| 表整形の実体            | `tools/docs/src/fmt-md-table.ts` | `npx tsx` で起動         |
-| 推奨拡張の宣言          | `.vscode/extensions.json`        | VS Code が提案           |
-| Markdown プレビュー装飾 | `.vscode/markdown-preview.css`   | 設定で参照               |
+| 機能                    | 現在の所在                         | 導入方法                 |
+| ----------------------- | ---------------------------------- | ------------------------ |
+| `[[id]]` のリンク表示   | `packages/vscode-specdojo`（拡張） | vsix を手動インストール  |
+| ID による文書を開く     | 同上（`specdojo.openById`）        | 同上                     |
+| Markdown 表の整形       | `.vscode/tasks.json` のタスク      | リポジトリを開けば使える |
+| 表整形の実体            | `tools/docs/src/fmt-md-table.ts`   | `npx tsx` で起動         |
+| 推奨拡張の宣言          | `.vscode/extensions.json`          | VS Code が提案           |
+| Markdown プレビュー装飾 | `.vscode/markdown-preview.css`     | 設定で参照               |
 
 利用者から見ると、機能ごとに導入経路が違う。拡張は vsix の手動配布で、タスクはリポジトリを
 clone した利用者しか使えない。SpecDojo を別リポジトリで運用する構成（[[prj-0001:pjr-qhka-docs-structure-detached-unit]]）
@@ -47,7 +47,7 @@ clone した利用者しか使えない。SpecDojo を別リポジトリで運�
 
 ## 3. 決定内容
 
-VS Code に依存する編集支援機能は `tools/vscode-specdojo` 拡張へ集約する。配布は Visual Studio
+VS Code に依存する編集支援機能は `packages/vscode-specdojo` 拡張へ集約する。配布は Visual Studio
 Marketplace を正とし、利用者は拡張のインストールだけで機能を得られる状態を目指す。
 
 集約の対象と非対象を次のとおり区別する。

@@ -19,10 +19,11 @@ specdojo:
 
 ## 1. 概要
 
-`tools/vscode-specdojo` の配置とビルド成果物の扱いが他と揃っていない。Marketplace へ公開する
-前に整える。[[prj-0001:pjr-gx9d-vscode-extension-consolidation]] の前提となる。
+`tools/vscode-specdojo` に置かれていた拡張を `packages/vscode-specdojo` へ移し、ビルド成果物の
+扱いとルートからの実行経路を整える。Marketplace へ公開する前に必要な作業であり、
+[[prj-0001:pjr-gx9d-vscode-extension-consolidation]] の前提となる。
 
-## 2. 現状
+## 2. 変更前の状況
 
 ### 2.1. ビルド成果物が git 管理下にある
 
@@ -89,11 +90,11 @@ tools/vscode-specdojo/vscode-specdojo-0.1.0.vsix   ← ビルド成果物
 
 リポジトリには配布物が2つある。VitePress は配布物ではない。
 
-| 対象         | 実体                     | 配布先      | `package.json` |
-| ------------ | ------------------------ | ----------- | -------------- |
-| CLI          | ルート（`specdojo`）     | npm         | あり           |
-| VS Code 拡張 | `tools/vscode-specdojo`  | Marketplace | あり           |
-| VitePress    | `.vitepress/` と `docs/` | 配布しない  | なし           |
+| 対象         | 実体                       | 配布先      | `package.json` |
+| ------------ | -------------------------- | ----------- | -------------- |
+| CLI          | ルート（`specdojo`）       | npm         | あり           |
+| VS Code 拡張 | `packages/vscode-specdojo` | Marketplace | あり           |
+| VitePress    | `.vitepress/` と `docs/`   | 配布しない  | なし           |
 
 VitePress は文書サイトを生成するビルド機構である。`vitepress` は `devDependencies` にあり、
 `package.json` の `files` にも `.vitepress` は含まれない。生成した文書（`docs/ja/specdojo`）は
@@ -191,17 +192,30 @@ references と workspaces でビルド順序の管理が二重になる。
 
 ## 5. 作業内容
 
-| No  | 作業                                | 担当 | 状態 | メモ                           |
-| --- | ----------------------------------- | ---- | ---- | ------------------------------ |
-| 1   | `.gitignore` へ `*.vsix` を追加する | ARC  | open | 他の成果物と揃える             |
-| 2   | 追跡中の vsix を削除する            | ARC  | open | 履歴の扱いは検討事項で判断する |
-| 3   | ルートからのビルド経路を用意する    | ARC  | open | workspaces か script か        |
-| 4   | 配置の是非を判断して記録する        | ARC  | open | 変えない場合も理由を残す       |
-| 5   | typecheck とビルドを確認する        | ARC  | open | -                              |
+| No  | 作業                                | 担当 | 状態 | メモ                                          |
+| --- | ----------------------------------- | ---- | ---- | --------------------------------------------- |
+| 1   | `.gitignore` へ `*.vsix` を追加する | ARC  | done | package 固有の生成物パスも移動先へ更新した    |
+| 2   | 追跡中の vsix を削除する            | ARC  | done | 履歴は書き換えず、現在の追跡対象から削除した  |
+| 3   | ルートからのビルド経路を用意する    | ARC  | done | install、build、package の3 script を追加した |
+| 4   | 配置の是非を判断して記録する        | ARC  | done | `packages/vscode-specdojo` へ移動した         |
+| 5   | typecheck とビルドを確認する        | ARC  | done | ルートの script と typecheck で検証した       |
 
 ## 6. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- VS Code 拡張を `tools/vscode-specdojo` から `packages/vscode-specdojo` へ移動した。
+- ルートに `vscode:install`、`vscode:build`、`vscode:package` の npm script を追加し、独立 package
+  の依存インストール、コンパイル、vsix 生成をルートから実行できるようにした。
+- 拡張には実行時 npm 依存がないため、vsix 生成では依存を同梱せず、`.vscodeignore` で TypeScript
+  ソース、source map、開発用設定を除外する。
+- `.gitignore` の package 固有パスを移動先へ更新した。`*.vsix` は引き続きリポジトリ全体で除外し、
+  既存の vsix が追跡対象から削除済みであることを確認した。
+- `tsconfig.json`、worktree の依存インストールに関する integration test、devcontainer の参照先を
+  移動後のパスへ更新した。
+- devcontainer は生成済み vsix がある場合だけ自動インストールする。新しい環境では起動時に
+  自動ビルドせず、ルートで `npm run vscode:package` を実行するよう案内する。
+- 関連する現行文書の拡張パスを移動先へ更新した。過去の event、evidence、trial は実行時点の記録
+  として変更していない。
+- 残課題はない。Marketplace 公開と機能集約は関連ドキュメントに記載した後続項目で扱う。
 
 ## 7. 関連ドキュメント
 
