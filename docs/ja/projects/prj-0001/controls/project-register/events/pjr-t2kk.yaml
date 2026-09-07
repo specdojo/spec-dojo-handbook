@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_c2817101640c47bf99d7a21d37e5d108
+  ts: "2026-09-07T23:00:00Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: 修正済み文書の再評価を routine で実行できるようにする
+    - field: description
+      from: ""
+      to: grade の再評価を routine から起動できるようにする。grade 側には --changed-only / --ungraded の選択機能があるが、tools/grade/run-per-document.sh は find で kind ディレクトリを独自に走査しており両者が接続されていない。選択結果を取り出す手段、スクリプトへのフィルタ受け渡し、複数種別を一度に扱う --kind all、job への入力追加、routine 定義の新設が要る。PJR-20DV と PJR-MBVM により --changed-only は信頼できる状態になった。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-08"
+    - field: due
+      from: ""
+      to: "2026-09-30"
