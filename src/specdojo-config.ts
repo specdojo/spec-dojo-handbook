@@ -31,8 +31,8 @@ export type SpecDojoProjectConfig = {
    */
   base_path?: string;
   catalog_path?: string;
-  schedule_path: string;
-  execution_path: string;
+  schedule_path?: string;
+  execution_path?: string;
   timeline_path?: string;
   members_path?: string;
   roles_path?: string;
@@ -144,12 +144,15 @@ function withOptionalBasePath(
   return withBasePath(project, relPath);
 }
 
+// schedule と execution は project 直下の固定ディレクトリに置く。設定を省いても既定値へ
+// 解決することで、登録簿だけを使う構成でも path 設定を書かずに始められる。戻り値は
+// string のままなので、呼び出し側の扱いは変わらない。
 export function getProjectSchedulePath(project: SpecDojoProjectConfig): string {
-  return withBasePath(project, project.schedule_path);
+  return withBasePath(project, project.schedule_path?.trim() || "schedule");
 }
 
 export function getProjectExecutionPath(project: SpecDojoProjectConfig): string {
-  return withBasePath(project, project.execution_path);
+  return withBasePath(project, project.execution_path?.trim() || "execution");
 }
 
 // Timeline lives in a fixed cross-cutting directory under the project root, so an
@@ -224,6 +227,11 @@ export function assertValidActor(actor: string, roster: MemberRoster | null): vo
   }
 }
 
+function isOmittedOrNonEmptyString(value: unknown): boolean {
+  if (value === undefined) return true;
+  return typeof value === "string" && value.trim().length > 0;
+}
+
 function isValidProjectConfig(project: unknown): project is SpecDojoProjectConfig {
   if (!project || typeof project !== "object" || Array.isArray(project)) return false;
 
@@ -232,15 +240,10 @@ function isValidProjectConfig(project: unknown): project is SpecDojoProjectConfi
     execution_path?: unknown;
     project_context?: unknown;
   };
-  if (typeof candidate.schedule_path !== "string" || candidate.schedule_path.trim().length === 0) {
-    return false;
-  }
-  if (
-    typeof candidate.execution_path !== "string" ||
-    candidate.execution_path.trim().length === 0
-  ) {
-    return false;
-  }
+  // 省略は既定値へ解決するため許容する。ただし指定したうえでの空文字は、設定漏れと
+  // 意図的な省略を区別できないため引き続き不正として扱う。
+  if (!isOmittedOrNonEmptyString(candidate.schedule_path)) return false;
+  if (!isOmittedOrNonEmptyString(candidate.execution_path)) return false;
   if (
     candidate.project_context !== undefined &&
     (!Array.isArray(candidate.project_context) ||
@@ -271,8 +274,9 @@ export function loadConfig(): ConfigLoadResult {
   for (const [projectId, project] of Object.entries(parsed.projects)) {
     if (!isValidProjectConfig(project)) {
       throw new Error(
-        `Invalid .specdojo/specdojo.config.json: projects.${projectId} must contain non-empty ` +
-          `schedule_path/execution_path strings and optional project_context string[]`,
+        `Invalid .specdojo/specdojo.config.json: projects.${projectId} must omit ` +
+          `schedule_path/execution_path or set them to non-empty strings, ` +
+          `and project_context must be a string[] when present`,
       );
     }
   }

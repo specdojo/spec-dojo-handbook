@@ -243,35 +243,80 @@ requirements.md を書く」で始められるが、SpecDojo は成果物カタ�
 
 「軽く始められる」という主張の裏付けとして、register が他の機能へ依存するかを確認した。
 
-| 設定                    | 型定義   | register に必要か              |
-| ----------------------- | -------- | ------------------------------ |
-| `schedule_path`         | **必須** | 不要だが設定が要る             |
-| `execution_path`        | **必須** | 必要。plan / result / evidence |
-| `project_register_path` | 任意     | 必要                           |
-| `members_path`          | 任意     | agent 実行時のみ必要           |
-| `catalog_path`          | 任意     | 不要                           |
-
 `src/register.ts` は `getProjectRegisterPath` だけを参照する。`src/exec-register.ts` に catalog
 への参照はない。catalog や kata を用意しなくても `register add` / `close` と
 `exec run --register` は成立する。
 
-ただし `schedule_path` が型定義上は必須である。register だけを使う場合も設定が要る。実害は
-ないが、「register だけで始められる」と謳うには不自然である。
+当初は `schedule_path` と `execution_path` が型定義上の必須で、register だけを使う場合も設定を
+書く必要があった。一方 `src/build-command.ts` の `isStepApplicable` は、各 path が設定されている
+ときだけ対応する build 段を実行する。path は既に opt-in スイッチとして働いており、型の必須指定
+だけが実挙動とずれていた。この不整合を解消し、両 path を省略可能にした（既定値は `schedule` /
+`execution`）。
 
-監査証跡の専用ツール（Helicone、LangSmith、Zenity など）とは記録の粒度が異なる。それらは
-ツール呼び出しや API アクセスを実行トレースとして記録し、EU AI Act や SOC 2 への対応を目的と
-する。register は課題単位の状態遷移を記録し、プロジェクト管理を目的とする。
+| 設定                    | 型定義 | register に必要か            |
+| ----------------------- | ------ | ---------------------------- |
+| `project_register_path` | 任意   | 必要                         |
+| `schedule_path`         | 任意   | 不要。省略できる             |
+| `execution_path`        | 任意   | `exec run --register` で必要 |
+| `members_path`          | 任意   | agent 実行時のみ必要         |
+| `catalog_path`          | 任意   | 不要                         |
 
-register の特徴は、人の判断と agent の実行が同じ台帳に並ぶ点にある。
+これにより最小構成は次まで縮む。
 
-```text
-add      orchestrator             起票
-start    codex-expert-executor    着手
-review   codex-expert-executor    実装完了
-close    orchestrator             受け入れ
+```json
+{
+  "version": 1,
+  "current_project": "prj-min",
+  "projects": {
+    "prj-min": {
+      "base_path": "docs/ja/projects/prj-min",
+      "project_register_path": "controls/project-register"
+    }
+  }
+}
 ```
 
-監査証跡ツールは agent の実行だけを記録する。人が何を承認したかは別の場所にある。
+この構成を一時ディレクトリで実測し、`register add` / `start` / `close` / `build` が動作すること、
+登録簿本体と owner / priority / status の3ビュー、および PM 系ログが生成されることを確認した。
+
+### 3.6.2. backlog としての register
+
+register を backlog とみなすと、アジャイル開発の基盤として扱える。必要な要素との対応は次の
+とおりである。
+
+| backlog に要る要素 | register の対応                                        |
+| ------------------ | ------------------------------------------------------ |
+| 項目の追加         | `register add`（todo / issue / question など7種別）    |
+| 優先順位           | `priority`（high / medium / low）                      |
+| 期限               | `due`                                                  |
+| 担当               | `owner`。人と agent を同じ欄で扱う                     |
+| 状態の可視化       | `register build` が status / owner / priority 別ビュー |
+| 実行への接続       | `exec run --register`                                  |
+
+競合3ツールに登録簿に相当する機能は確認できなかった。OpenSpec の `propose` / `apply` /
+`archive` は個々の変更提案の状態遷移であり、複数項目を優先順位付きで並べて残す台帳ではない。
+
+**register 単体の位置づけ**は、SDD ツールというより「agent への指示と結果が履歴として残る
+backlog」である。この用途なら kata を1つも用意せずに始められる。網羅範囲の広さが導入障壁に
+なるという `3.5.` の劣位を、register から入る導線で回避できる。
+
+ただし差別化としては限定的である。課題管理そのものは GitHub Issues、Linear、Jira などが担う
+成熟した領域で、register が優るのは「agent の実行が同じ台帳へ記帳される」点に絞られる。
+`3.6.1.` の変更はこの導線を成立させるための前提であり、それ自体が優位性ではない。
+
+### 3.6.3. 未解決: テンプレートの解決元
+
+上記の実測で、別リポジトリから使う際の障害を1件検出した。
+
+`specdojoRootDir()` は利用者リポジトリのルートを返し、register は
+`docs/ja/specdojo/templates/pjr-*-template.md` と `pm-*-template.md` をそこから読む。npm で
+インストールした利用者のリポジトリにこれらは存在せず、`Template not found` で失敗する。
+
+同梱パッケージ側へフォールバックする経路が要る。npm 公開（`4.`）の前提条件である。
+
+あわせて、同梱対象の template 26 件に `specdojo:finding` コメントが残っていることを確認した。
+実測では finding コメントが生成された登録簿の要約欄へ流入した。公開前に除去するか、生成時に
+除去する必要がある。
 
 ### 3.7. 総合
 
