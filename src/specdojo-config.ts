@@ -35,7 +35,6 @@ export type SpecDojoProjectConfig = {
   execution_path: string;
   timeline_path?: string;
   members_path?: string;
-  reviews_path?: string;
   roles_path?: string;
   viewpoints_path?: string;
   project_register_path?: string;
@@ -165,10 +164,6 @@ export function getProjectMembersPath(project: SpecDojoProjectConfig): string | 
 
 export function getProjectCatalogPath(project: SpecDojoProjectConfig): string | undefined {
   return withOptionalBasePath(project, project.catalog_path);
-}
-
-export function getProjectReviewsPath(project: SpecDojoProjectConfig): string | undefined {
-  return withOptionalBasePath(project, project.reviews_path);
 }
 
 export function getProjectRolesPath(project: SpecDojoProjectConfig): string | undefined {
