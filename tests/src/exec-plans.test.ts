@@ -631,6 +631,46 @@ describe("finding correction instructions in edit plan templates", () => {
   });
 });
 
+describe("finding evidence instructions in maintenance plan templates", () => {
+  const templates = [
+    "xep-rulebook-maintenance-template.md",
+    "xep-recipe-maintenance-template.md",
+    "xep-sample-maintenance-template.md",
+    "xep-template-maintenance-template.md",
+    "xrp-rulebook-maintenance-template.md",
+    "xrp-recipe-maintenance-template.md",
+    "xrp-sample-maintenance-template.md",
+    "xrp-template-maintenance-template.md",
+  ];
+
+  it.each(templates)("%s selects evidence from each finding", (template) => {
+    const source = readFileSync(join("docs/ja/specdojo/exec-templates", template), "utf8");
+
+    expect(source).toContain("finding が指す規範");
+    expect(source).toContain("message と同じ viewpoint ID の判定根拠");
+    expect(source).toContain("成果物または review result がないことだけを理由に");
+    expect(source).toContain(
+      "確認した資料、判断できなかった理由、不足している根拠、次のアクション",
+    );
+    // edit は kata を見直し、review は見直し内容を確認する。責務が違うため記録を求める
+    // 動詞も異なる。同じ文言を両方へ要求すると、review 側の語彙を edit 側へ寄せてしまう。
+    const evidenceRecord = template.startsWith("xep-")
+      ? "見直しの根拠とした規範・成果物・review result"
+      : "確認の根拠とした規範・成果物・review result";
+    expect(source).toContain(evidenceRecord);
+  });
+
+  it.each(["xep-sample-maintenance-template.md", "xrp-sample-maintenance-template.md"])(
+    "%s treats the rulebook as evidence for structural findings",
+    (template) => {
+      const source = readFileSync(join("docs/ja/specdojo/exec-templates", template), "utf8");
+
+      expect(source).toContain("rulebook との構成不整合を指摘する finding");
+      expect(source).toContain("成果物の有無にかかわらず rulebook を正として");
+    },
+  );
+});
+
 describe("generateSinglePlan", () => {
   function writeCatalog(catalogPath: string, withEvidence = true, rulebook?: string): void {
     mkdirSync(catalogPath, { recursive: true });

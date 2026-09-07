@@ -193,7 +193,7 @@ flowchart LR
 
 `rulebook-maintenance` / `recipe-maintenance` / `sample-maintenance` / `template-maintenance` は、通常の成果物作業とは参照の向きが逆になる進め方です。作成・更新かレビューかを `mode`（`edit` / `review`）で表す点は他の `approach` と同じです。
 
-メンテナンスのタスクでは、対象の実践の型を「見直す対象」として扱い、複数の成果物・review result・対象領域の慣行を根拠に、次の観点で妥当性を見直します。
+メンテナンスのタスクでは、対象の実践の型を「見直す対象」として扱い、複数の成果物・review result・対象領域の慣行を根拠に、次の観点で妥当性を見直します。対象の実践の型に finding がある場合は、finding の message と同じ viewpoint の判定根拠から指摘の根拠となる規範を特定し、紐づく rulebook / recipe / sample / template や執筆標準も必要な根拠として読みます。たとえば rulebook との構成不整合を指摘する finding では、成果物の有無にかかわらず rulebook を正として照合します。
 
 | `approach`             | 見直す対象 | 主な見直し観点                                                   |
 | ---------------------- | ---------- | ---------------------------------------------------------------- |
@@ -201,6 +201,8 @@ flowchart LR
 | `recipe-maintenance`   | recipe     | 問い、観点、深掘り手順、レビュー観点                             |
 | `sample-maintenance`   | sample     | 粒度、文体、表の書き方、完成例としての妥当性                     |
 | `template-maintenance` | template   | 章構成の骨組み、プレースホルダの配置・網羅性、雛形としての妥当性 |
+
+根拠の種別を一律に必須化せず、finding ごとに指摘の解消を判定できる資料を使います。成果物または review result がないことだけを理由に根拠不足とは判定しません。finding の message と判定根拠、対象の実践の型から辿れる関連文書、該当する執筆標準、利用可能な成果物・review result・対象領域の慣行を確認しても修正内容を確定できない場合に限り、根拠不足として見送ります。見送る場合は、確認した資料、判断できなかった理由、不足している根拠、次のアクションを result に記録します。
 
 実践の型メンテナンスは自動で差し込まれません。schedule で実行する場合は、`approach: rulebook-maintenance` のように対象を指定した phase / phase_set を `sch-strategy-<track>.yaml` に明示的に記述します（[Schedule設計ガイド](schedule-design-guide.md)）。
 
