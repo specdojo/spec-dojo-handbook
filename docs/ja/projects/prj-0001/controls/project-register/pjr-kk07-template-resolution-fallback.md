@@ -18,33 +18,63 @@ specdojo:
 
 ## 1. 概要
 
-specdojoRootDir() は利用者リポジトリのルートを返すため、npm でインストールした利用者のリポジトリに docs/ja/specdojo/templates が存在せず Template not found で失敗する。利用者リポジトリに無い場合は同梱パッケージ側のテンプレートを解決する経路を設ける。npm 公開の前提条件である。
+`specdojoRootDir()` は利用者リポジトリのルートを返すため、npm でインストールした利用者の
+リポジトリに `docs/ja/specdojo/templates` が存在せず `Template not found` で失敗する。
+利用者リポジトリに無い場合は同梱パッケージ側のテンプレートを解決する経路を設ける。
 
-## 2. 完了条件
+## 2. 観測した事実
 
-- _TODO_: 完了と判断できる具体的な条件を記載する。
+register 単体構成を一時ディレクトリで検証した際に判明した。設定と `git init` だけの状態で
+`register add` を実行すると、テンプレートの解決に失敗する。
 
-## 3. 作業内容
+```text
+Template not found: /tmp/sdj-register-only-XXXX/docs/ja/specdojo/templates/pjr-todo-template.md
+```
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=13 「作業内容」表の「担当」「状態」と既定値 `open` は、Frontmatter を唯一の正本とし担当・処理状態を本文へ重複記載しない `specdojo:pjr-rulebook` に反し、`owner` / `item_status` 更新後も本文が古い値を示し得るため、列を削除するか作業ステップ固有の別概念であることを明示する必要がある。 -->
-<!-- specdojo:finding id=F003 severity=major rule=vp-qe-omissions-consistency line=13 「担当」「状態」を作業表へ保持する構成は、担当・処理状態を Frontmatter のみに保存する禁止事項と矛盾し、個票全体の値との不一致を招くため、重複列を除去するか作業ステップ固有フィールドとして責務境界を定義する必要がある。 -->
-<!-- specdojo:finding id=F005 severity=major rule=vp-qe-kata-conformance line=13 テンプレートが Frontmatter の `owner` / `item_status` と区別できない「担当」「状態」を本文の固定列として生成するため、対応 rulebook の適用結果が構造化フィールドを重複保持しないという要件を満たさない。 -->
-<!-- specdojo:finding id=F007 severity=minor rule=vp-ux-readability line=13 「担当」「状態」が個票全体の担当・処理状態なのか各作業行の担当・進捗なのか説明されておらず、初見の利用者が更新対象を判断できないため、列名または補足で適用範囲を明示する必要がある。 -->
-<!-- specdojo:finding id=F008 severity=minor rule=vp-ux-language-consistency line=13 Frontmatter の `status`、`item_status` と本文表の「状態」が区別されず、既定値も `item_status` と同じ `open` であるため、作業行固有なら「作業ステップ進捗」などへ改称して値の意味を定義する必要がある。 -->
+解決元はリポジトリのルートに固定されている。
 
-| No  | 作業   | 担当   | 状態 | メモ |
-| --- | ------ | ------ | ---- | ---- |
-| 1   | _TODO_ | _TODO_ | open | -    |
+```typescript
+const templatePath = join(specdojoRootDir(), "docs/ja/specdojo/templates", templateFileName);
+```
 
-## 4. 対応結果
+`specdojoRootDir()` は `.specdojo/specdojo.config.json` か `.git` を上位へ探索し、利用者の
+リポジトリルートを返す。npm でインストールした利用者のリポジトリに kata は存在しない。
 
-<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-verifiability line=19 「対応結果」の記入指示に各完了条件の確認結果・検証根拠が含まれず、条件を満たしたかの pass / fail を成果物内で追跡できないため、完了条件ごとの確認結果または証跡を記載する指示を追加する必要がある。 -->
-<!-- specdojo:finding id=F004 severity=minor rule=vp-qe-omissions-consistency line=19 `specdojo:pjr-rulebook` が結果・結論に求める「完了を判定した根拠と後続対応」のうち、記入指示は実施内容・成果物・残課題だけで完了判定根拠を要求していないため、必須内容を補う必要がある。 -->
+同じ失敗は `register build` でも起きる。`pm-*-template.md` を解決できず、登録簿のビューと
+PM 系ログを生成できない。
+
+```text
+View template not found: .../docs/ja/specdojo/templates/pm-risk-register-template.md
+```
+
+テンプレートを手動で配置すると、`register add` / `start` / `close` / `build` はすべて動作した。
+解決経路だけが障害である。
+
+## 3. 完了条件
+
+- 利用者リポジトリに `docs/ja/specdojo/templates` が存在しない場合、同梱パッケージ側の
+  テンプレートを解決する。
+- 利用者リポジトリにテンプレートが存在する場合は、そちらを優先する。利用者による上書きを
+  妨げない。
+- `project_register_path` だけを設定した最小構成で、`register add` / `build` が成功する。
+- どちらのテンプレートを使ったかが、失敗時の調査に足る形でエラーメッセージへ現れる。
+- 解決順序を検証する単体テストを追加する。
+
+## 4. 作業内容
+
+| No  | 作業                                       | メモ                                    |
+| --- | ------------------------------------------ | --------------------------------------- |
+| 1   | テンプレート解決を共通関数へ集約           | `register.ts` に 3 箇所の組み立てがある |
+| 2   | 利用者リポジトリ優先、同梱へフォールバック | 探索順序を明示する                      |
+| 3   | 同梱パッケージのルート解決方法を決める     | `import.meta.url` からの相対など        |
+| 4   | 最小構成での動作確認                       | 一時ディレクトリで再現する              |
+| 5   | 単体テストを追加                           |                                         |
+
+## 5. 対応結果
 
 _TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
 
-## 5. 関連ドキュメント
+## 6. 関連ドキュメント
 
-<!-- specdojo:finding id=F006 severity=minor rule=vp-qe-kata-conformance line=23 `template-authoring-standard` は実在文書へのリンクを `[[id|title]]` 形式と定めているが、対象は `[[doc-id]]` 形式を指示しているため、タイトルを含む規定形式へ修正する必要がある。 -->
-
-- _TODO_: 根拠・影響先・追跡先を `[[doc-id]]` 形式で記載する。
+- [[prj-0001:pjr-say1-template-finding-comments]]: 同じ調査で判明したテンプレート由来の混入。
+- [[prj-0001:pjr-36qg-competitive-landscape-and-release]]: npm 公開の段取りと register 単体構成。

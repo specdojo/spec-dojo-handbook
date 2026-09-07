@@ -18,33 +18,91 @@ specdojo:
 
 ## 1. 概要
 
-docs/ja/specdojo/templates 配下の 26 件に specdojo:finding コメントが残っている。register 単体構成の実測で、finding コメントが生成された登録簿の要約欄へ流入することを確認した。テンプレート本体から除去するか、生成時に除去する。npm 公開の前提条件である。
+`grade apply` がテンプレートへ挿入した `specdojo:finding` コメントが、そのテンプレートから
+生成されるすべての文書へ複製される。
 
-## 2. 完了条件
+```text
+grade apply    → pjr-todo-template.md へ finding コメントを挿入
+register add   → テンプレート本文をそのまま複製
+                 → pjr-kk07-template-resolution-fallback.md へ混入
+```
 
-- _TODO_: 完了と判断できる具体的な条件を記載する。
+## 2. 調査結果
 
-## 3. 作業内容
+### 2.1. 時系列
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=13 「作業内容」表の「担当」「状態」と既定値 `open` は、Frontmatter を唯一の正本とし担当・処理状態を本文へ重複記載しない `specdojo:pjr-rulebook` に反し、`owner` / `item_status` 更新後も本文が古い値を示し得るため、列を削除するか作業ステップ固有の別概念であることを明示する必要がある。 -->
-<!-- specdojo:finding id=F003 severity=major rule=vp-qe-omissions-consistency line=13 「担当」「状態」を作業表へ保持する構成は、担当・処理状態を Frontmatter のみに保存する禁止事項と矛盾し、個票全体の値との不一致を招くため、重複列を除去するか作業ステップ固有フィールドとして責務境界を定義する必要がある。 -->
-<!-- specdojo:finding id=F005 severity=major rule=vp-qe-kata-conformance line=13 テンプレートが Frontmatter の `owner` / `item_status` と区別できない「担当」「状態」を本文の固定列として生成するため、対応 rulebook の適用結果が構造化フィールドを重複保持しないという要件を満たさない。 -->
-<!-- specdojo:finding id=F007 severity=minor rule=vp-ux-readability line=13 「担当」「状態」が個票全体の担当・処理状態なのか各作業行の担当・進捗なのか説明されておらず、初見の利用者が更新対象を判断できないため、列名または補足で適用範囲を明示する必要がある。 -->
-<!-- specdojo:finding id=F008 severity=minor rule=vp-ux-language-consistency line=13 Frontmatter の `status`、`item_status` と本文表の「状態」が区別されず、既定値も `item_status` と同じ `open` であるため、作業行固有なら「作業ステップ進捗」などへ改称して値の意味を定義する必要がある。 -->
+| 出来事                      | 日時             |
+| --------------------------- | ---------------- |
+| テンプレートへ finding 挿入 | 2026-09-06 20:30 |
+| PJR-KK07 / PJR-SAY1 の起票  | 2026-09-07 13:14 |
 
-| No  | 作業   | 担当   | 状態 | メモ |
-| --- | ------ | ------ | ---- | ---- |
-| 1   | _TODO_ | _TODO_ | open | -    |
+挿入より後に起票した項目が混入している。
 
-## 4. 対応結果
+### 2.2. 混入範囲
 
-<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-verifiability line=19 「対応結果」の記入指示に各完了条件の確認結果・検証根拠が含まれず、条件を満たしたかの pass / fail を成果物内で追跡できないため、完了条件ごとの確認結果または証跡を記載する指示を追加する必要がある。 -->
-<!-- specdojo:finding id=F004 severity=minor rule=vp-qe-omissions-consistency line=19 `specdojo:pjr-rulebook` が結果・結論に求める「完了を判定した根拠と後続対応」のうち、記入指示は実施内容・成果物・残課題だけで完了判定根拠を要求していないため、必須内容を補う必要がある。 -->
+生成物への影響が大きい。登録簿本体とその全ビューが該当する。
+
+| 文書                       | 混入数 |
+| -------------------------- | -----: |
+| `pjr-views-by-priority.md` |     10 |
+| `pjr-views-by-status.md`   |     10 |
+| `pjr-index.md`             |      5 |
+| `pjr-views-by-owner.md`    |      5 |
+| `pm-issue-log.md`          |      4 |
+| `pm-risk-register.md`      |      4 |
+| `pm-change-request-log.md` |      3 |
+| `pm-decision-log.md`       |      1 |
+
+個票は 311 件中 2 件（PJR-KK07 と PJR-SAY1）である。この 2 件だけ本文をテンプレートのまま
+残したためで、他の項目は起票時に本文を書き直していた。
+
+finding コメントを含む個票は他に 9 件あるが、いずれも finding を主題として扱う項目であり、
+正当な引用である。
+
+供給元となるテンプレートは 26 件ある。
+
+### 2.3. 誤解を招く点
+
+混入したコメントは、その文書に対する指摘ではない。テンプレート自身への指摘である。
+
+```text
+テンプレートが Frontmatter の owner / item_status と区別できない「担当」「状態」を
+本文の固定列として生成するため…
+```
+
+個票を読む利用者は、自分の文書への指摘だと誤読する。
+
+### 2.4. テンプレートの掃除だけでは再発する
+
+テンプレート本体から除去しても、次の grade 走査でテンプレートへ finding が再挿入される。
+テンプレートは評価対象であるため、この循環は続く。したがって生成時に除去する経路が要る。
+
+## 3. 完了条件
+
+- テンプレートから文書を生成する経路が、`specdojo:finding` コメントを生成物へ複製しない。
+  `register add`、`register build`、`catalog build` など、テンプレートを材料とする経路すべてに
+  適用する。
+- テンプレートへ finding が挿入された状態で `register add` を実行しても、生成された個票に
+  `specdojo:finding` が含まれない。
+- 既存の混入分（生成物 8 件と個票 2 件）が解消されている。
+- npm へ同梱するテンプレートに finding コメントが含まれない。
+- 生成時に除去することを検証する単体テストを追加する。
+
+## 4. 作業内容
+
+| No  | 作業                                              | メモ                                  |
+| --- | ------------------------------------------------- | ------------------------------------- |
+| 1   | テンプレート材料化の共通処理へ finding 除去を追加 | 除去は 1 箇所へ寄せる                 |
+| 2   | 適用漏れがないか生成経路を洗い出す                | register / catalog / deliverable      |
+| 3   | 既存の混入分を再生成または手当て                  | 生成物は再生成で解消する見込み        |
+| 4   | 同梱範囲の確認                                    | `npm pack --dry-run` で内容を確認する |
+| 5   | 単体テストを追加                                  |                                       |
+
+## 5. 対応結果
 
 _TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
 
-## 5. 関連ドキュメント
+## 6. 関連ドキュメント
 
-<!-- specdojo:finding id=F006 severity=minor rule=vp-qe-kata-conformance line=23 `template-authoring-standard` は実在文書へのリンクを `[[id|title]]` 形式と定めているが、対象は `[[doc-id]]` 形式を指示しているため、タイトルを含む規定形式へ修正する必要がある。 -->
-
-- _TODO_: 根拠・影響先・追跡先を `[[doc-id]]` 形式で記載する。
+- [[prj-0001:pjr-kk07-template-resolution-fallback]]: 同じ調査で判明したテンプレート解決の問題。
+- [[prj-0001:pjr-36qg-competitive-landscape-and-release]]: npm 公開の段取り。
