@@ -2,49 +2,59 @@
 specdojo:
   id: prj-0001:pjr-srqz-register-dependencies
   type: project
-  status: draft
+  status: deprecated
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: open
+  item_status: rejected
   priority: medium
   owner: ARC
   registered_at: "2026-09-07T13:20:54Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-07T13:27:23Z"
 ---
 
 # PJR-SRQZ 登録簿項目へ依存関係と着手可能判定を導入する
 
 ## 1. 概要
 
-register 項目に依存関係の表現がなく、着手可能な項目を返す手段もない。順序判断が人に残っており、実際に利用者から実行順の指示を受けている。schedule の CPM による ready 判定は成果物カタログのタスクが対象で登録簿には及ばない。beads は blocks / parent-child / discovered-from 等の依存グラフと bd ready を持つ。登録簿を backlog として使う導線を主張するなら埋める必要がある。
+beads との比較から、register 項目に依存関係の表現と着手可能判定がないことを欠落として起票した。
+判定の結果、前提が誤っていたため却下する。
 
 ## 2. 完了条件
 
-- _TODO_: 完了と判断できる具体的な条件を記載する。
+- 却下のため設定しない。
 
 ## 3. 作業内容
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=13 「作業内容」表の「担当」「状態」と既定値 `open` は、Frontmatter を唯一の正本とし担当・処理状態を本文へ重複記載しない `specdojo:pjr-rulebook` に反し、`owner` / `item_status` 更新後も本文が古い値を示し得るため、列を削除するか作業ステップ固有の別概念であることを明示する必要がある。 -->
-<!-- specdojo:finding id=F003 severity=major rule=vp-qe-omissions-consistency line=13 「担当」「状態」を作業表へ保持する構成は、担当・処理状態を Frontmatter のみに保存する禁止事項と矛盾し、個票全体の値との不一致を招くため、重複列を除去するか作業ステップ固有フィールドとして責務境界を定義する必要がある。 -->
-<!-- specdojo:finding id=F005 severity=major rule=vp-qe-kata-conformance line=13 テンプレートが Frontmatter の `owner` / `item_status` と区別できない「担当」「状態」を本文の固定列として生成するため、対応 rulebook の適用結果が構造化フィールドを重複保持しないという要件を満たさない。 -->
-<!-- specdojo:finding id=F007 severity=minor rule=vp-ux-readability line=13 「担当」「状態」が個票全体の担当・処理状態なのか各作業行の担当・進捗なのか説明されておらず、初見の利用者が更新対象を判断できないため、列名または補足で適用範囲を明示する必要がある。 -->
-<!-- specdojo:finding id=F008 severity=minor rule=vp-ux-language-consistency line=13 Frontmatter の `status`、`item_status` と本文表の「状態」が区別されず、既定値も `item_status` と同じ `open` であるため、作業行固有なら「作業ステップ進捗」などへ改称して値の意味を定義する必要がある。 -->
-
-| No  | 作業   | 担当   | 状態 | メモ |
-| --- | ------ | ------ | ---- | ---- |
-| 1   | _TODO_ | _TODO_ | open | -    |
+| No  | 作業                                     | メモ                     |
+| --- | ---------------------------------------- | ------------------------ |
+| 1   | 順序判定の責務がどこにあるかを実装で確認 | 却下の根拠として実施済み |
 
 ## 4. 対応結果
 
-<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-verifiability line=19 「対応結果」の記入指示に各完了条件の確認結果・検証根拠が含まれず、条件を満たしたかの pass / fail を成果物内で追跡できないため、完了条件ごとの確認結果または証跡を記載する指示を追加する必要がある。 -->
-<!-- specdojo:finding id=F004 severity=minor rule=vp-qe-omissions-consistency line=19 `specdojo:pjr-rulebook` が結果・結論に求める「完了を判定した根拠と後続対応」のうち、記入指示は実施内容・成果物・残課題だけで完了判定根拠を要求していないため、必須内容を補う必要がある。 -->
+却下する。起票時の前提が3点で誤っていた。
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+**責務の取り違え**。順序判定の置き場は既に存在する。track 間の順序は timeline の `depends_on` /
+`parallel_group` / `order` が持ち、タスク単位の順序と ready 判定は schedule の CPM が持つ。
+`src/schedule.ts` が読むのは `getProjectCatalogPath` / `getProjectTimelinePath` /
+`getProjectRolesPath` であり、`getProjectRegisterPath` は参照しない。register へ依存グラフを
+追加すると、この2層に対する二重実装になる。
+
+beads が tracker 内で依存判定を行うのは planning 層を持たないためである。構造的制約であって
+優位点ではない。競合の制約を優位点と誤認して模倣するところであった。
+
+**根拠の誤読**。「依存関係を考慮して順番に実行ください」という指示を欠落の証拠として扱ったが、
+誤りである。register 項目は todo / question / risk / issue などのアドホックな項目で、backlog の
+並び順は本来 human の判断領域である。計算で決めるものではない。正常な運用を defect と読み違えた。
+
+**適用可能性の未確認**。`register add` に工数・期間の項目はない。CPM の入力を満たさず、そもそも
+成立しない。
+
+register 項目を schedule の対象とすべきかは論点として成立するが、現時点で必要性の根拠がない。
+必要になった時点で timeline 側の課題として起票する。
 
 ## 5. 関連ドキュメント
 
-<!-- specdojo:finding id=F006 severity=minor rule=vp-qe-kata-conformance line=23 `template-authoring-standard` は実在文書へのリンクを `[[id|title]]` 形式と定めているが、対象は `[[doc-id]]` 形式を指示しているため、タイトルを含む規定形式へ修正する必要がある。 -->
-
-- _TODO_: 根拠・影響先・追跡先を `[[doc-id]]` 形式で記載する。
+- [[prj-0001:pjr-36qg-competitive-landscape-and-release]]: 起票の発端となった beads との比較。
