@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
-import { isAbsolute, join, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import type { ExecEvidence } from "./exec-evidence.js";
 import { loadPipelineResumeCheckpoint, type PipelineState } from "./exec-pipeline-state.js";
 import { safeSlug } from "./exec-shared.js";
@@ -9,12 +9,11 @@ import { safeSlug } from "./exec-shared.js";
 // `evidence.json` が残っている。ここではその run と再開段を特定し、reporter へ渡す
 // plan / result / evidence を復元する（実行は exec-run 側が行う）。
 //
-// 再開段は2つある。reporter が未完了なら reporter 段から、reporter も成功していて統合
-// （commit → merge → worktree 撤去）だけが残っているなら integrate 段から再開する。worktree は
-// 統合が完了したときにだけ撤去されるため、reporter 成功済みの worktree が残っていること自体が
-// 「統合が未完了」を意味する。
+// 再開段は3つある。executor が running のまま中断した場合は既存 worktree 上で executor を
+// 再実行する。executor が成功済みで reporter が未完了なら reporter 段から、reporter も成功して
+// 統合（commit → merge → worktree 撤去）だけが残っているなら integrate 段から再開する。
 
-export type RegisterResumeStage = "reporter" | "integrate";
+export type RegisterResumeStage = "executor" | "reporter" | "integrate";
 
 export type RegisterResumeCandidate = {
   runId: string;
@@ -22,17 +21,25 @@ export type RegisterResumeCandidate = {
   statePath: string;
   state: PipelineState;
   evidence?: ExecEvidence;
+  evidenceRef?: string;
 };
 
-export type RegisterResumeTarget = {
-  stage: RegisterResumeStage;
+type RegisterResumeTargetBase = {
   runId: string;
   stateRef: string;
   statePath: string;
   state: PipelineState;
-  evidence: ExecEvidence;
-  evidenceRef: string;
 };
+
+export type RegisterResumeTarget =
+  | (RegisterResumeTargetBase & {
+      stage: "executor";
+    })
+  | (RegisterResumeTargetBase & {
+      stage: "reporter" | "integrate";
+      evidence: ExecEvidence;
+      evidenceRef: string;
+    });
 
 export type RegisterResumeLookup =
   | { kind: "resumable"; target: RegisterResumeTarget }
@@ -81,6 +88,15 @@ export function loadRegisterResumeCandidates(input: {
       statePath: checkpoint.statePath,
       state: checkpoint.state,
       ...(checkpoint.evidence ? { evidence: checkpoint.evidence } : {}),
+      ...(checkpoint.evidence
+        ? {
+            evidenceRef:
+              checkpoint.state.stages.executor.artifact_ref ??
+              relative(input.worktreePath, join(dirname(statePath), "evidence.json"))
+                .split(sep)
+                .join("/"),
+          }
+        : {}),
     });
   }
   return candidates;
@@ -101,6 +117,47 @@ export function selectResumableRegisterRun(
     return a.runId < b.runId ? -1 : a.runId > b.runId ? 1 : 0;
   })[candidates.length - 1];
 
+  if (latest.state.stages.executor.status === "running") {
+    if (latest.evidence && latest.evidenceRef) {
+      const recoveredState: PipelineState = {
+        ...latest.state,
+        updated_at: latest.evidence.stage.completed_at,
+        stages: {
+          ...latest.state.stages,
+          executor: {
+            ...latest.state.stages.executor,
+            status: "succeeded",
+            actor: latest.evidence.stage.actor,
+            attempts: latest.evidence.stage.attempts,
+            completed_at: latest.evidence.stage.completed_at,
+            artifact_ref: latest.evidenceRef,
+          },
+        },
+      };
+      return {
+        kind: "resumable",
+        target: {
+          stage: "reporter",
+          runId: latest.runId,
+          stateRef: latest.stateRef,
+          statePath: latest.statePath,
+          state: recoveredState,
+          evidence: latest.evidence,
+          evidenceRef: latest.evidenceRef,
+        },
+      };
+    }
+    return {
+      kind: "resumable",
+      target: {
+        stage: "executor",
+        runId: latest.runId,
+        stateRef: latest.stateRef,
+        statePath: latest.statePath,
+        state: latest.state,
+      },
+    };
+  }
   if (latest.state.stages.executor.status !== "succeeded") {
     return {
       kind: "not-resumable",

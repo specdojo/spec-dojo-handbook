@@ -227,8 +227,18 @@ export function loadPipelineResumeCheckpoint(input: {
   }
   if (state.task_id !== input.taskId) return null;
 
-  const evidenceRef = state.stages.executor.artifact_ref;
-  if (state.stages.executor.status !== "succeeded" || !evidenceRef) {
+  const recordedEvidenceRef = state.stages.executor.artifact_ref;
+  const evidenceRef =
+    recordedEvidenceRef ??
+    (state.stages.executor.status === "running"
+      ? relative(input.worktreePath, join(dirname(statePath), "evidence.json"))
+          .split(sep)
+          .join("/")
+      : null);
+  if (
+    (state.stages.executor.status !== "succeeded" && state.stages.executor.status !== "running") ||
+    !evidenceRef
+  ) {
     return { state, statePath };
   }
   const evidencePath = resolveArtifactRef(input.worktreePath, evidenceRef);

@@ -789,21 +789,42 @@ export async function runConfiguredParentValidations(
   return validations;
 }
 
-async function revalidateFailedParentValidationsForReporterResume(params: {
+async function refreshParentValidationsForReporterResume(params: {
   execDefaults: ExecDefaultsConfig;
   cwd: string;
   evidence: ExecEvidence;
   evidencePath: string;
 }): Promise<ExecEvidence> {
-  if (!failedParentValidationReason(params.evidence.validations)) return params.evidence;
+  const configuredIds = params.execDefaults.pipeline?.parent_validations;
+  if (
+    hasRecordedParentValidations(params.evidence.validations, configuredIds) &&
+    !failedParentValidationReason(params.evidence.validations)
+  ) {
+    return params.evidence;
+  }
 
-  process.stdout.write("  Re-running failed parent validations before reporter resume.\n");
+  process.stdout.write("  Refreshing parent validations before reporter resume.\n");
   const parentValidations = await runConfiguredParentValidations(params.execDefaults, params.cwd);
   const evidence = replaceParentValidationResults(params.evidence, parentValidations);
   writeExecutorEvidence(params.evidencePath, evidence);
   process.stdout.write(
     `  Refreshed executor evidence: ${relative(params.cwd, params.evidencePath).split(sep).join("/")}\n`,
   );
+  return evidence;
+}
+
+// executor のプロセス結果は親検証より先に checkpoint する。親検証は長時間かかり得るため、
+// その途中で runner が終了しても agent 出力と変更一覧を失わないよう、ここでは保存済み evidence
+// へ runner-owned validation だけを追記する。
+async function appendParentValidationsToExecutorEvidence(params: {
+  execDefaults: ExecDefaultsConfig;
+  cwd: string;
+  evidence: ExecEvidence;
+  evidencePath: string;
+}): Promise<ExecEvidence> {
+  const parentValidations = await runConfiguredParentValidations(params.execDefaults, params.cwd);
+  const evidence = replaceParentValidationResults(params.evidence, parentValidations);
+  writeExecutorEvidence(params.evidencePath, evidence);
   return evidence;
 }
 
@@ -1628,28 +1649,21 @@ async function runPreparedTask(
       if (
         prepared.pipelineResumeStage === "reporter" &&
         checkpoint.evidence &&
-        hasRecordedParentValidations(
-          checkpoint.evidence.validations,
-          execDefaults.pipeline?.parent_validations,
-        )
+        checkpoint.state.stages.executor.artifact_ref
       ) {
         executorEvidence = checkpoint.evidence;
-        executorEvidenceRef = checkpoint.state.stages.executor.artifact_ref ?? undefined;
-        executorEvidencePath = executorEvidenceRef
-          ? resolve(prepared.worktree.path, executorEvidenceRef)
-          : undefined;
+        executorEvidenceRef = checkpoint.state.stages.executor.artifact_ref;
+        executorEvidencePath = resolve(prepared.worktree.path, executorEvidenceRef);
         resumeReporter = true;
         process.stdout.write(
           `  Resuming reporter from persisted executor evidence: ${executorEvidenceRef}\n`,
         );
-        if (failedParentValidationReason(executorEvidence.validations) && executorEvidenceRef) {
-          executorEvidence = await revalidateFailedParentValidationsForReporterResume({
-            execDefaults,
-            cwd: prepared.worktree.path,
-            evidence: executorEvidence,
-            evidencePath: resolve(prepared.worktree.path, executorEvidenceRef),
-          });
-        }
+        executorEvidence = await refreshParentValidationsForReporterResume({
+          execDefaults,
+          cwd: prepared.worktree.path,
+          evidence: executorEvidence,
+          evidencePath: executorEvidencePath,
+        });
       } else if (prepared.pipelineResumeStage === "reporter") {
         process.stdout.write(
           "  Persisted executor evidence is invalid; starting a new executor run.\n",
@@ -1711,10 +1725,6 @@ async function runPreparedTask(
     stdout = executorOutcome.stdout;
     attempts = executorOutcome.attempts;
     limit = executorOutcome.limit;
-    const parentValidations =
-      result === "success"
-        ? await runConfiguredParentValidations(execDefaults, prepared.worktree.path)
-        : [];
     const recorded = recordExecutorEvidence({
       repoRoot,
       worktreePath: prepared.worktree.path,
@@ -1730,7 +1740,6 @@ async function runPreparedTask(
       attempts,
       stdout,
       stderr,
-      parentValidations,
     });
     executorEvidenceRef = relative(prepared.worktree.path, recorded.evidencePath)
       .split(sep)
@@ -1752,6 +1761,14 @@ async function runPreparedTask(
     );
     writePipelineState(pipelineStatePath, pipelineState);
     process.stdout.write(`  Executor evidence: ${executorEvidenceRef}\n`);
+    if (result === "success") {
+      executorEvidence = await appendParentValidationsToExecutorEvidence({
+        execDefaults,
+        cwd: prepared.worktree.path,
+        evidence: executorEvidence,
+        evidencePath: executorEvidencePath,
+      });
+    }
   }
 
   if (prepared.pipelineRunId && result === "success") {
@@ -2911,10 +2928,6 @@ async function runInPlaceMode(opts: RunOpts): Promise<void> {
       },
       resultPath,
     );
-    const parentValidations =
-      outcome.result === "success"
-        ? await runConfiguredParentValidations(execDefaults, repoRoot)
-        : [];
     const recorded = recordExecutorEvidence({
       repoRoot,
       worktreePath: repoRoot,
@@ -2934,7 +2947,6 @@ async function runInPlaceMode(opts: RunOpts): Promise<void> {
       attempts: outcome.attempts,
       stdout: outcome.stdout,
       stderr: outcome.stderr,
-      parentValidations,
     });
     pipelineEvidenceRef = relative(repoRoot, recorded.evidencePath).split(sep).join("/");
     const executorCompletedAt = new Date().toISOString();
@@ -2956,6 +2968,14 @@ async function runInPlaceMode(opts: RunOpts): Promise<void> {
     );
     writePipelineState(stateLocation.path, pipelineState);
     process.stdout.write(`Executor evidence: ${pipelineEvidenceRef}\n`);
+    if (outcome.result === "success") {
+      recorded.evidence = await appendParentValidationsToExecutorEvidence({
+        execDefaults,
+        cwd: repoRoot,
+        evidence: recorded.evidence,
+        evidencePath: recorded.evidencePath,
+      });
+    }
     if (outcome.result === "success") {
       pipelineFailureStage = "reporter";
       const reporterStartedAt = new Date().toISOString();
@@ -3612,9 +3632,6 @@ async function runAgentPipeline(params: {
     env,
     resultPath,
   );
-  const parentValidations =
-    outcome.result === "success" ? await runConfiguredParentValidations(execDefaults, cwd) : [];
-
   const recorded = recordExecutorEvidence({
     repoRoot,
     worktreePath: cwd,
@@ -3634,7 +3651,6 @@ async function runAgentPipeline(params: {
     attempts: outcome.attempts,
     stdout: outcome.stdout,
     stderr: outcome.stderr,
-    parentValidations,
   });
   const evidenceRef = relative(cwd, recorded.evidencePath).split(sep).join("/");
   const executorCompletedAt = new Date().toISOString();
@@ -3670,6 +3686,13 @@ async function runAgentPipeline(params: {
       evidenceRef,
     };
   }
+
+  recorded.evidence = await appendParentValidationsToExecutorEvidence({
+    execDefaults,
+    cwd,
+    evidence: recorded.evidence,
+    evidencePath: recorded.evidencePath,
+  });
 
   const reporterOutcome = await runReporterStage({
     repoRoot,
@@ -4444,7 +4467,9 @@ function protectResumableRegisterWorktree(
   const stopped =
     stage === "integrate"
       ? `run ${runId} finished the reporter but not the integration`
-      : `executor already succeeded in run ${runId}`;
+      : stage === "reporter"
+        ? `executor already succeeded in run ${runId}`
+        : `executor was interrupted in run ${runId}`;
   return (
     `refusing to re-run ${taskId}: ${stopped}; ` +
     `its changes are still unintegrated in ${worktree.path}. ` +
@@ -4475,6 +4500,40 @@ export function resolveRegisterResumeReporter(
   }
   if (resolution.kind !== "command") {
     return { kind: "error", message: `reporter agent not found in pm-members.yaml: ${nickname}` };
+  }
+  return {
+    kind: "command",
+    candidate: {
+      command: resolution.command,
+      actor: resolution.actor ?? nickname,
+      provider: resolution.provider,
+    },
+  };
+}
+
+// stale な running executor を既存 worktree 上で再実行するときの agent を解決する。
+// --executor-by を優先し、省略時は pipeline-state に記録された actor を引き継ぐ。
+export function resolveRegisterResumeExecutor(
+  roster: MemberRoster | null,
+  opts: Pick<RunOpts, "executorBy">,
+  execDefaults: ExecDefaultsConfig,
+  recordedActor: string | null,
+):
+  | { kind: "command"; candidate: AgentRunCandidate & { actor: string } }
+  | { kind: "error"; message: string } {
+  const nickname = (opts.executorBy ?? recordedActor ?? "").trim();
+  if (!nickname) {
+    return {
+      kind: "error",
+      message: "executor agent is unknown for this run; specify --executor-by <nickname>",
+    };
+  }
+  const resolution = resolveAgentOverride("edit", nickname, {}, roster, execDefaults, "executor");
+  if (resolution.kind === "error") {
+    return { kind: "error", message: resolution.message.replace(/^--by/, "--executor-by") };
+  }
+  if (resolution.kind !== "command") {
+    return { kind: "error", message: `executor agent not found in pm-members.yaml: ${nickname}` };
   }
   return {
     kind: "command",
@@ -4538,11 +4597,12 @@ async function resumeRegisterIntegration(params: {
 }
 
 // register 項目1件の再開。途中で止まった run を、既存 worktree と evidence を保持したまま
-// 止まった段からやり直す。reporter 段の再開は reporter だけを起動し、統合段の再開は agent を
-// 起動せずに commit → merge → worktree 撤去だけをやり直す。入力は対象 run の
+// 止まった段からやり直す。running のまま残った executor は同じ plan/result と worktree 上で
+// 再実行し、reporter 段の再開は reporter だけを起動する。統合段は agent を起動せずに
+// commit → merge → worktree 撤去だけをやり直す。入力は対象 run の
 // `pipeline-state.json`（plan / result の参照と stage 状態）と `evidence.json`（executor の記録）で、
 // 成功後の commit → merge → register review は通常実行と同じ finalizeRegisterWorktreeRun を通す。
-// 再開できない場合（worktree 不在、executor 未完了、evidence 欠損）は破壊的操作を行わず理由を返す。
+// 再開できない場合（worktree 不在、入力成果物欠損など）は破壊的操作を行わず理由を返す。
 async function resumeSingleRegisterItemWorktree(
   context: RegisterRunContext,
   opts: RunOpts,
@@ -4581,20 +4641,6 @@ async function resumeSingleRegisterItemWorktree(
   });
   if (lookup.kind !== "resumable") return refuse(lookup.reason);
   const target = lookup.target;
-
-  // 親検証は executor evidence とともに reporter が消費する。reporter 段から再開する場合だけ、
-  // 設定と記録の突き合わせが必要になる（統合段の再開では reporter が消費済み）。
-  if (
-    target.stage === "reporter" &&
-    !hasRecordedParentValidations(
-      target.evidence.validations,
-      context.execDefaults.pipeline?.parent_validations,
-    )
-  ) {
-    return refuse(
-      `parent validation configuration changed or its results are missing for run ${target.runId}; restart the executor run`,
-    );
-  }
 
   const artifacts = resolveRegisterResumeArtifacts({
     repoRoot,
@@ -4672,6 +4718,64 @@ async function resumeSingleRegisterItemWorktree(
     return refuse(`plan not found for the resumed run: ${artifacts.planRef}`);
   const prompt = expandPromptRefs(readFileSync(planPath, "utf8"));
 
+  if (target.stage === "executor") {
+    const executor = resolveRegisterResumeExecutor(
+      context.roster,
+      opts,
+      context.execDefaults,
+      target.state.stages.executor.actor,
+    );
+    if (executor.kind === "error") return refuse(executor.message);
+    const reporter = resolveRegisterResumeReporter(
+      context.roster,
+      opts,
+      context.execDefaults,
+      target.state.stages.reporter.actor,
+    );
+    if (reporter.kind === "error") return refuse(reporter.message);
+
+    process.stdout.write(`Register item: ${item.id} — ${item.title}  [${item.type}]\n`);
+    process.stdout.write(
+      `  Resuming executor from interrupted run ${target.runId} in a new pipeline checkpoint\n` +
+        `  CWD: ${worktree.path}\n  Agent: ${executor.candidate.actor} (executor)\n`,
+    );
+
+    const beginFailure = await begin(executor.candidate.actor, "executor resumed");
+    if (beginFailure) return beginFailure;
+
+    const resultScaffold = readResultFrontmatterSnapshot(worktreeResultPath);
+    const outcome = await runAgentPipeline({
+      repoRoot,
+      cwd: worktree.path,
+      schedulePath,
+      executionPath,
+      taskId: item.id,
+      executor: executor.candidate,
+      reporterCandidates: [reporter.candidate],
+      planPath,
+      planPrompt: prompt,
+      resultPath: worktreeResultPath,
+      execDefaults: context.execDefaults,
+    });
+
+    const finalize = async (): Promise<RegisterItemSummary> =>
+      finalizeRegisterWorktreeRun({
+        context,
+        registerPaths,
+        item,
+        ticketPath,
+        worktree,
+        stem: artifacts.stem,
+        worktreeResultPath,
+        resultScaffold,
+        agentResult: outcome.runResult,
+        stderr: outcome.blockReason ?? "",
+        actor: executor.candidate.actor,
+        pipelineStatePath: resolve(worktree.path, outcome.stateRef),
+      });
+    return lifecycleLock ? lifecycleLock.runExclusive(finalize) : finalize();
+  }
+
   const reporter = resolveRegisterResumeReporter(
     context.roster,
     opts,
@@ -4689,7 +4793,7 @@ async function resumeSingleRegisterItemWorktree(
   const beginFailure = await begin(reporter.candidate.actor, "reporter resumed");
   if (beginFailure) return beginFailure;
 
-  const evidence = await revalidateFailedParentValidationsForReporterResume({
+  const evidence = await refreshParentValidationsForReporterResume({
     execDefaults: context.execDefaults,
     cwd: worktree.path,
     evidence: target.evidence,
@@ -4758,7 +4862,8 @@ async function runRegisterMode(opts: RunOpts): Promise<void> {
   // --executor-by / --reporter-by は両方揃って初めて pipeline モードになる。片方だけの指定は
   // 曖昧なため、実行前に明示的なエラーで止める（isRegisterPipelineRequested は片方でも true を
   // 返すため、resolveRegisterPipelineCommand 側の対称チェックとは別に、ここで早期に検知する）。
-  // 再開は reporter 段だけを実行するため、executor の指定は不要（指定されても使わない）。
+  // 再開は state が示す段だけを実行する。stale executor の再実行では各 agent の明示指定を
+  // 個別に許可し、省略時は state に記録された actor を使う。
   if (
     !opts.resume &&
     ((opts.executorBy && !opts.reporterBy) || (!opts.executorBy && opts.reporterBy))
@@ -4780,7 +4885,7 @@ async function runRegisterMode(opts: RunOpts): Promise<void> {
   );
 
   if (opts.dryRun && opts.resume) {
-    process.stdout.write(`[dry-run] resume reporter for register items: ${ids.join(", ")}\n`);
+    process.stdout.write(`[dry-run] resume pipeline for register items: ${ids.join(", ")}\n`);
     for (const pjrId of ids) {
       const { item } = resolveRegisterRunTarget(projectId, pjrId);
       requireRunnableRegisterItem(item);
@@ -4952,7 +5057,7 @@ export function registerRunCommand(exec: Command): void {
   );
   rcmd.option(
     "--resume",
-    "With --register --worktree: resume the stage where a run stopped (reporter, or integrate when the reporter already succeeded), reusing the existing worktree and evidence",
+    "With --register --worktree: resume the stage where a run stopped (executor, reporter, or integration), reusing the existing worktree and checkpoints",
     false,
   );
   rcmd.option(
