@@ -45,3 +45,19 @@
       from: open
       to: in-progress
   previous_event_id: reg_d2216eb1502e46569996a4e64e9e575a
+- v: 1
+  id: reg_7b7ed61f70cb4a2abd0aba9a4ab162a9
+  ts: "2026-09-07T23:15:13Z"
+  action: wait
+  actor: codex-expert-executor
+  from_status: in-progress
+  to_status: waiting
+  reason: "agent exited with non-zero code: runner validation 'test-unit' failed: tests/src/exec-agent-protected-config.test.ts (21 tests / 1 failed) - records a git failure reason without copying the whole file"
+  changes:
+    - field: status
+      from: in-progress
+      to: waiting
+    - field: block_reason
+      from: "-"
+      to: "agent exited with non-zero code: runner validation 'test-unit' failed: tests/src/exec-agent-protected-config.test.ts (21 tests / 1 failed) - records a git failure reason without copying the whole file"
+  previous_event_id: reg_2b7c8dc828f9458292c85f44799b5c4e
