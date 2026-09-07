@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: high
   owner: ARC
   registered_at: "2026-09-07T11:42:57Z"
   due_on: "2026-09-30"
+  block_reason: "agent exited with non-zero code: runner validation「test-unit」が failed（exec-plans.test.ts の4件の maintenance テンプレートテスト失敗）。"
 ---
 
 # PJR-HF4N maintenance の根拠が finding の性質と噛み合わない
