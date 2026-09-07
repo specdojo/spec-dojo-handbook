@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-mbvm-grade-exclude-generated
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-07T13:45:36Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-07T22:47:12Z"
 ---
 
 # PJR-MBVM grade の対象選択から generated 配下を除外する
