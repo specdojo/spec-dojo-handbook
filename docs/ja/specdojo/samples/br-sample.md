@@ -1,7 +1,8 @@
 ---
 specdojo:
   id: specdojo:br-sample
-  type: project
+  type: rule
+  title: 在庫不足判定
   status: draft
   rulebook: specdojo:br-rulebook
   grade:
@@ -30,44 +31,35 @@ specdojo:
     findings: { blocker: 1, major: 4, minor: 3, note: 0 }
 ---
 
-# [ビジネスルール](../rulebooks/br-rulebook.md) サンプル
+<!-- markdownlint-disable MD025 -->
 
-## 1. 目的と適用範囲
+# 在庫不足判定
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=4 Frontmatter の type が 'project' となっているが、ビジネスルールの標準に従い 'rule' とすべきである。 -->
-<!-- specdojo:finding id=F004 severity=major rule=vp-qe-omissions-consistency line=4 Frontmatter に必須項目である 'title' が不足している。 -->
+<!-- markdownlint-enable MD025 -->
 
-本書は、複数プロセスから参照される横断的な判断を定義するための最小サンプルである。
+## 1. 概要
 
-## 2. 入力情報
+販売可能な在庫が発注点を下回っているかを判定する。
 
-<!-- specdojo:finding id=F002 severity=minor rule=vp-arc-single-responsibility line=9 ビジネスルールの具体例を提示するサンプル文書でありながら、メタ的な説明（目的や記述内容の解説）に終始しており、責務が不明確である。 -->
-<!-- specdojo:finding id=F003 severity=major rule=vp-qe-omissions-consistency line=9 ルールブック第 5 節で定義された標準テンプレート（概要・入力・ルール・出力・例外・メモ）が適用されておらず、必須構成要素がすべて欠落している。 -->
-<!-- specdojo:finding id=F005 severity=blocker rule=vp-qe-kata-conformance line=9 ルールブックで定義された標準テンプレートに従っておらず、ビジネスルールの書き方を示すサンプルとしての役割を果たしていない。 -->
-<!-- specdojo:finding id=F006 severity=major rule=vp-ux-readability line=9 ルールブックの標準構成と乖離した独自の見出し構成となっており、正本に従った記述方法を学習することができない。 -->
-<!-- specdojo:finding id=F007 severity=minor rule=vp-ux-language-consistency line=11 見出しに '目的と適用範囲' と記載されているが、標準テンプレートの '概要' と統一すべきである。 -->
+## 2. 入力
 
-- 対象: 駄菓子屋の販売管理システム
-- 前提: プロジェクト文脈は handbook の共通方針に準拠する
-- 参照: `../rulebooks/br-rulebook.md`
+- 在庫: 在庫数と予約数を、有効在庫の算出に使用する。
+- 商品: 発注点を、不足判定のしきい値として使用する。
 
-## 3. 記述内容
+## 3. ルール（判定/計算）
 
-<!-- specdojo:finding id=F008 severity=minor rule=vp-ux-language-consistency line=15 見出しに '入力情報' と記載されているが、標準テンプレートの '入力' と統一すべきである。 -->
+1. 有効在庫を `在庫数 − 予約数` で算出する。
+2. 有効在庫が発注点を下回る場合は在庫不足と判定する。
 
-- 主な内容: ルール概要、入力、ルール、出力、例外 など
-- 必須観点: 対象、条件、判定基準、責任者
+## 4. 出力
 
-## 4. 最小記述例
+- 不足フラグ: 在庫不足の場合は `true`、それ以外は `false`。
 
-| 項目         | 値                                               | 備考                                 |
-| ------------ | ------------------------------------------------ | ------------------------------------ |
-| ドキュメント | [ビジネスルール](../rulebooks/br-rulebook.md)    | 最小サンプル                         |
-| 目的         | 複数プロセスから参照される横断的な判断を定義する | specdojo:deliverables-reference 準拠 |
-| 主な内容     | ルール概要、入力、ルール、出力、例外 など        | 要点のみ記載                         |
+## 5. 例外 / 異常系
 
-## 5. 未解決事項
+- 在庫数、予約数、発注点のいずれかが未設定の場合は判定せず、入力不備として通知する。
+- 在庫数、予約数、発注点のいずれかが負数の場合は判定せず、値の矛盾として通知する。
 
-| 論点           | 処理方針                 |
-| -------------- | ------------------------ |
-| 要件詳細の補強 | 実案件適用時に具体化する |
+## 6. メモ / 将来課題
+
+- 将来、季節要因に応じて発注点を動的に変更する。

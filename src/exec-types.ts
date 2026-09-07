@@ -1,7 +1,8 @@
 export type TaskMode = "edit" | "review";
 
 // タスクの進め方プロファイル。前3者は成果物作業で参考資料をどの程度参照するかを表し、
-// <kind>-maintenance は成果物を根拠に対象の参考資料を見直す進め方（参照の向きが逆転する）。
+// <kind>-maintenance は成果物や finding が指す規範を根拠に対象の参考資料を見直す進め方
+// （参照の向きが逆転する）。
 // bootstrap は成果物とその参考資料一式（rulebook/recipe/sample/template）を一貫した一組として
 // 同一タスクで作成・整備する進め方（初期立ち上げ専用）。
 // retrofit は宣言済みの実装エビデンスを現在動作の根拠として読み、成果物へ反映・新設する。

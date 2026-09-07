@@ -120,8 +120,6 @@ Business Rule (BR) Documentation Rules
 擬似コード例：
 
 ```ts
-
-<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance 参照されているサンプル `specdojo:br-sample` が、本ルールブックの第5節で定義された「本文構成（標準テンプレ）」に従っておらず、具体例として機能していない。 -->
 type 商品 = { 商品ID: string; 定番: boolean; 発注点: number };
 type 在庫 = { 商品ID: string; 在庫数: number; 予約数: number };
 
