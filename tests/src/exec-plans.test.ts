@@ -612,6 +612,25 @@ describe("review plan templates", () => {
   });
 });
 
+describe("finding correction instructions in edit plan templates", () => {
+  const templates = [
+    "xep-bootstrap-template.md",
+    "xep-rulebook-maintenance-template.md",
+    "xep-recipe-maintenance-template.md",
+    "xep-sample-maintenance-template.md",
+    "xep-template-maintenance-template.md",
+  ];
+
+  it.each(templates)("%s requires correcting findings before removing comments", (template) => {
+    const source = readFileSync(join("docs/ja/specdojo/exec-templates", template), "utf8");
+
+    expect(source).toContain("判定根拠を修正要件として読み");
+    expect(source).toContain("finding コメントの削除だけを修正として扱わ");
+    expect(source).toContain("「修正 → 確認 → 削除」の順序を変えない");
+    expect(source).toContain("未解消、根拠不足、または判断不能の finding コメントは残し");
+  });
+});
+
 describe("generateSinglePlan", () => {
   function writeCatalog(catalogPath: string, withEvidence = true): void {
     mkdirSync(catalogPath, { recursive: true });
