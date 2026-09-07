@@ -19,7 +19,7 @@ specdojo:
     score: 96
     graded_at: "2026-09-03T00:32:30.551Z"
     graded_by: gemma-expert-executor
-    content_hash: d18c0591e263d13268a1f829eadc4563ede00ce1a1fd12d4f92d924bc6a21906
+    content_hash: cf9d99d98c81c141bd88e369616166d1e2133914b65920851785d05a77884cbe
     categories:
       consistency: { score: 100 }
       usability: { score: 100 }

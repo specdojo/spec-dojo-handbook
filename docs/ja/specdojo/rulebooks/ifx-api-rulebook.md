@@ -14,7 +14,7 @@ specdojo:
     score: 71
     graded_at: "2026-09-02T17:52:02.840Z"
     graded_by: codex-expert-executor
-    content_hash: 5146671e6c363f757d11b4eb5d8f7e3e1b9166e9b10f7eb24d7865e7de8953ab
+    content_hash: 7d04f1f9f3b4907adaea2beb683ba66e2382e278cebdc00cd7a41e78fdf8118d
     categories:
       consistency: { score: 63 }
       usability: { score: 83 }
