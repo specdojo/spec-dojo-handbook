@@ -333,6 +333,14 @@ function deliverableName(deliverable: DeliverableInfo | null): string {
   return deliverable?.deliverable.name ?? MISSING;
 }
 
+// plan に表示する実践の型の状態。宣言からパスを解決できたがファイルが無い場合と、
+// 宣言不足・対象外などでパス自体を解決できない場合を分ける。これにより executor は
+// 既存文書の編集、宣言済みパスへの新規作成、前提確認が必要な状態を推測せず判別できる。
+function kataRefState(refPath: string): "existing" | "missing" | "unresolved" {
+  if (refPath === MISSING) return "unresolved";
+  return existsSync(join(specdojoRootDir(), refPath)) ? "existing" : "missing";
+}
+
 // 対象成果物の depends_on を、依存先 doc の [[id]] 参照の入れ子リストで提示する。
 // id は project 修飾 doc id（<projectId>:<local_id>）にする。素の local_id は doc-index で
 // 解決しないため。agent へ plan を渡すときに expandPromptRefs（src/exec-run.ts, format:'path'）が
@@ -823,13 +831,17 @@ function buildEditPlanMarkdown(
     _DELIVERABLE_PATH_: deliverablePath(deliverable),
     _RESULT_REF_: resultRef,
     _RULEBOOK_REF_: refs.rulebook,
+    _RULEBOOK_STATE_: kataRefState(refs.rulebook),
     _RULEBOOK_INCLUDES_: rulebookIncludesText(
       deliverable?.deliverable.rulebook,
       deliverable?.deliverable.kind,
     ),
     _RECIPE_REF_: refs.recipe,
+    _RECIPE_STATE_: kataRefState(refs.recipe),
     _SAMPLE_REF_: refs.sample,
+    _SAMPLE_STATE_: kataRefState(refs.sample),
     _TEMPLATE_REF_: refs.template,
+    _TEMPLATE_STATE_: kataRefState(refs.template),
     _OWNER_ROLE_LABEL_: ownerRole.label,
     _OWNER_ROLE_NOTE_: ownerRole.note,
     _OWNER_ROLE_VIEWPOINTS_: ownerRole.viewpoints,
