@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_ec1f448ba8bc4ce5a8d0747dbaa5a128
+  ts: "2026-09-07T22:56:34Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: 統合後に exec ブランチが削除されず蓄積する
+    - field: description
+      from: ""
+      to: "exec run --worktree の統合後に exec/prj-0001-PJR-XXXX ブランチが残る。worktree は削除されているがブランチだけが残存し、8 本が蓄積していた。removeWorktree は deleteBranch パラメータを持ち exec-run.ts の 2 箇所で true を設定しているが、実際には削除されていない。deleteBranch: true は 2026-08-01 に導入済みで、残存ブランチはすべて 2026-09-01 以降のものである。git branch -d が統合前に実行されて未統合として失敗している可能性がある。どれが未統合か判別しにくくなり、残骸の確認に手間がかかる。"
+    - field: type
+      from: ""
+      to: issue
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-08"
+    - field: due
+      from: ""
+      to: "2026-09-30"
