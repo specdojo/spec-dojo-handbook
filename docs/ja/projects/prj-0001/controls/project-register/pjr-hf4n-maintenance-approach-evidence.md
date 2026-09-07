@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-hf4n-maintenance-approach-evidence
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-07T11:42:57Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-07T12:51:47Z"
   block_reason: "agent exited with non-zero code: runner validation「test-unit」が failed（exec-plans.test.ts の4件の maintenance テンプレートテスト失敗）。"
+  conclusion: finding が指す規範を根拠に含め、成果物の欠落だけでは見送らないようにした。br-sample.md の章構成が rulebook と一致することを確認した。
 ---
 
 # PJR-HF4N maintenance の根拠が finding の性質と噛み合わない
@@ -124,6 +126,37 @@ rulebook は「構造・必須項目・禁止事項は rulebook を正とする�
 - [[specdojo:ryu-guide|ryu-guide]] へ共通方針を反映し、maintenance plan テンプレート8種の回帰テストを追加した。
 - [[specdojo:br-sample|ビジネスルールサンプル]] の8件の finding を [[specdojo:br-rulebook|ビジネスルール作成ルール]] を根拠に修正し、Frontmatter の `type` と `title`、本文の `概要 / 入力 / ルール（判定/計算） / 出力 / 例外 / 異常系 / メモ / 将来課題` を正本に沿わせた。解消を確認した finding コメントは削除した。
 - 残課題: なし。
+
+### 8.1. 受け入れ確認
+
+orchestrator が次を確認した。
+
+| 完了条件                     | 結果                                           |
+| ---------------------------- | ---------------------------------------------- |
+| finding に応じた根拠を読む   | 満たす。関連 kata と執筆標準を根拠へ含める     |
+| 根拠不足の判定基準           | 満たす。すべてを確認しても判断できない場合だけ |
+| 見送る場合の記録             | 満たす。確認資料・理由・不足・次アクション     |
+| **章構成が実際に修正される** | **満たす**                                     |
+| 根拠不足では推測しない       | 満たす。記述を維持                             |
+
+`br-sample.md` の章構成が rulebook の `本文構成（標準テンプレ）` と完全に一致した。
+
+| 段階   | 章構成                                                         | finding |
+| ------ | -------------------------------------------------------------- | ------- |
+| 修正前 | 目的と適用範囲 / 入力情報 / 記述内容 / 最小記述例 / 未解決事項 | 8 件    |
+| 修正後 | 概要 / 入力 / ルール（判定/計算） / 出力 / 例外・異常系 / メモ | 0 件    |
+
+[[prj-0001:pjr-t3vq-maintenance-plan-target-path]] の時点では同じ sample に対し「根拠不足」で
+見送られていた。根拠の指定を変えたことで修正が進むようになった。
+
+### 8.2. orchestrator による修正
+
+`tests/src/exec-plans.test.ts` の期待値を分割した。`xep` と `xrp` の両方へ
+「見直しの根拠とした規範」を要求していたが、`xrp` の実際の記述は「確認の根拠とした規範」で
+ある。edit は kata を見直し、review は見直し内容を確認するという責務の違いによる正当な差で
+あり、同じ文言を要求すると review 側の語彙を edit 側へ寄せてしまう。
+
+テンプレート本体は修正していない。単体テスト1390件の通過を確認した。
 
 ## 9. 関連ドキュメント
 

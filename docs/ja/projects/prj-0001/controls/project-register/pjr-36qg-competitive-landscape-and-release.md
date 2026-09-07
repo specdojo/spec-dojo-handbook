@@ -239,6 +239,40 @@ requirements.md を書く」で始められるが、SpecDojo は成果物カタ�
 したがって「いつでもどこからでも始められる」は設計思想としては正しいが、**それを支える導線が
 現状では弱い**。retrofit や最小構成の手順を示せれば、競合に対する優位として主張できる。
 
+### 3.6.1. register 単体での利用可能性
+
+「軽く始められる」という主張の裏付けとして、register が他の機能へ依存するかを確認した。
+
+| 設定                    | 型定義   | register に必要か              |
+| ----------------------- | -------- | ------------------------------ |
+| `schedule_path`         | **必須** | 不要だが設定が要る             |
+| `execution_path`        | **必須** | 必要。plan / result / evidence |
+| `project_register_path` | 任意     | 必要                           |
+| `members_path`          | 任意     | agent 実行時のみ必要           |
+| `catalog_path`          | 任意     | 不要                           |
+
+`src/register.ts` は `getProjectRegisterPath` だけを参照する。`src/exec-register.ts` に catalog
+への参照はない。catalog や kata を用意しなくても `register add` / `close` と
+`exec run --register` は成立する。
+
+ただし `schedule_path` が型定義上は必須である。register だけを使う場合も設定が要る。実害は
+ないが、「register だけで始められる」と謳うには不自然である。
+
+監査証跡の専用ツール（Helicone、LangSmith、Zenity など）とは記録の粒度が異なる。それらは
+ツール呼び出しや API アクセスを実行トレースとして記録し、EU AI Act や SOC 2 への対応を目的と
+する。register は課題単位の状態遷移を記録し、プロジェクト管理を目的とする。
+
+register の特徴は、人の判断と agent の実行が同じ台帳に並ぶ点にある。
+
+```text
+add      orchestrator             起票
+start    codex-expert-executor    着手
+review   codex-expert-executor    実装完了
+close    orchestrator             受け入れ
+```
+
+監査証跡ツールは agent の実行だけを記録する。人が何を承認したかは別の場所にある。
+
 ### 3.7. 総合
 
 | 区分         | 内容                                                                            |
