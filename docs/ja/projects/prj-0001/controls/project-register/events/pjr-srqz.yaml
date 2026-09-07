@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_fa07932fecff4e1c821d64a12cae98d6
+  ts: "2026-09-07T13:20:54Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: 登録簿項目へ依存関係と着手可能判定を導入する
+    - field: description
+      from: ""
+      to: register 項目に依存関係の表現がなく、着手可能な項目を返す手段もない。順序判断が人に残っており、実際に利用者から実行順の指示を受けている。schedule の CPM による ready 判定は成果物カタログのタスクが対象で登録簿には及ばない。beads は blocks / parent-child / discovered-from 等の依存グラフと bd ready を持つ。登録簿を backlog として使う導線を主張するなら埋める必要がある。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-07"
+    - field: due
+      from: ""
+      to: "2026-09-30"
