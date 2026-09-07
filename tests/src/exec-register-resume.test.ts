@@ -10,7 +10,10 @@ import {
   selectResumableRegisterRun,
   type RegisterResumeCandidate,
 } from "../../src/exec-register-resume.js";
-import { resolveRegisterResumeReporter } from "../../src/exec-run.js";
+import {
+  resolveRegisterResumeExecutor,
+  resolveRegisterResumeReporter,
+} from "../../src/exec-run.js";
 import type { ExecEvidence } from "../../src/exec-evidence.js";
 import { createPipelineState, type PipelineState } from "../../src/exec-pipeline-state.js";
 import type { MemberRoster, ProjectMember } from "../../src/specdojo-config.js";
@@ -100,6 +103,7 @@ function makeCandidate(
     stateRef: `state/${overrides.state.run_id}.json`,
     statePath: `/tmp/state/${overrides.state.run_id}.json`,
     evidence: makeEvidence(overrides.state.run_id),
+    evidenceRef: overrides.state.stages.executor.artifact_ref ?? undefined,
     ...overrides,
   };
 }
@@ -144,9 +148,47 @@ describe("selectResumableRegisterRun", () => {
     expect(actual.kind).toBe("resumable");
     if (actual.kind !== "resumable") return;
     expect(actual.target.stage).toBe("reporter");
+    if (actual.target.stage !== "reporter") return;
     expect(actual.target.runId).toBe("run-new");
     expect(actual.target.evidence.run_id).toBe("run-new");
     expect(actual.target.evidenceRef).toContain("run-new/evidence.json");
+  });
+
+  it("executor が running のまま残った最新 run を executor 再開対象にする", () => {
+    const candidate = makeCandidate({
+      state: makeState({ executorStatus: "running", evidenceRef: null }),
+      evidence: undefined,
+    });
+
+    const actual = selectResumableRegisterRun([candidate]);
+
+    expect(actual.kind).toBe("resumable");
+    if (actual.kind !== "resumable") return;
+    expect(actual.target.stage).toBe("executor");
+    expect(actual.target.runId).toBe(candidate.runId);
+  });
+
+  it("executor evidence 保存後に running のまま中断した run は reporter 再開対象にする", () => {
+    const evidenceRef = `${EXECUTION_REL}/exec/evidence/${TASK_ID}/run-interrupted/evidence.json`
+      .split(path.sep)
+      .join("/");
+    const candidate = makeCandidate({
+      state: makeState({
+        runId: "run-interrupted",
+        executorStatus: "running",
+        evidenceRef: null,
+      }),
+      evidence: makeEvidence("run-interrupted"),
+      evidenceRef,
+    });
+
+    const actual = selectResumableRegisterRun([candidate]);
+
+    expect(actual.kind).toBe("resumable");
+    if (actual.kind !== "resumable") return;
+    expect(actual.target.stage).toBe("reporter");
+    expect(actual.target.state.stages.executor.status).toBe("succeeded");
+    expect(actual.target.state.stages.executor.artifact_ref).toBe(evidenceRef);
   });
 
   it("最新 run の executor が未完了なら、古い再開可能な run へ遡らない", () => {
@@ -277,6 +319,24 @@ describe("loadRegisterResumeCandidates / findResumableRegisterRun", () => {
       kind: "not-resumable",
       reason: `executor evidence is missing or invalid for run ${runId}`,
     });
+  });
+
+  it("running state の直前に保存された executor evidence を復元する", () => {
+    const runId = "20260820T000000Z-checkpoint";
+    const state = makeState({ runId, executorStatus: "running", evidenceRef: null });
+    writeRun(runId, state, makeEvidence(runId));
+
+    const actual = findResumableRegisterRun({
+      repoRoot: root,
+      worktreePath: root,
+      executionPath: path.join(root, EXECUTION_REL),
+      taskId: TASK_ID,
+    });
+
+    expect(actual.kind).toBe("resumable");
+    if (actual.kind !== "resumable") return;
+    expect(actual.target.stage).toBe("reporter");
+    expect(actual.target.state.stages.executor.status).toBe("succeeded");
   });
 
   it("evidence ディレクトリが無い worktree は再開不可になる", () => {
@@ -459,5 +519,20 @@ describe("resolveRegisterResumeReporter", () => {
     expect(actual.kind).toBe("error");
     if (actual.kind !== "error") return;
     expect(actual.message).toMatch(/--reporter-by agent must have stage_role: reporter/);
+  });
+});
+
+describe("resolveRegisterResumeExecutor", () => {
+  it("--executor-by 省略時は pipeline-state に記録された executor actor を使う", () => {
+    const roster = makeRoster([
+      makeAgent({ nickname: "exec-1", stage_role: "executor", command: "run-exec-1" }),
+    ]);
+
+    const actual = resolveRegisterResumeExecutor(roster, {}, {}, "exec-1");
+
+    expect(actual).toEqual({
+      kind: "command",
+      candidate: { command: "run-exec-1", actor: "exec-1", provider: undefined },
+    });
   });
 });
