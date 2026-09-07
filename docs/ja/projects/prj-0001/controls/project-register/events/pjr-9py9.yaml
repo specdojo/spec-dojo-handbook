@@ -32,3 +32,22 @@
     - field: due
       from: ""
       to: "2026-09-30"
+- v: 1
+  id: reg_5fc62bf46ba94f2ebac3586b3f6774f5
+  ts: "2026-09-07T09:36:07Z"
+  action: reject
+  actor: orchestrator
+  from_status: open
+  to_status: rejected
+  reason: 前提が誤っていた。maintenance と bootstrap のテンプレート5件すべてに finding を参照する指示が既に存在する。
+  changes:
+    - field: status
+      from: open
+      to: rejected
+    - field: completed
+      from: "-"
+      to: "2026-09-07"
+    - field: conclusion
+      from: "-"
+      to: 前提が誤っていた。maintenance と bootstrap のテンプレート5件すべてに finding を参照する指示が既に存在する。
+  previous_event_id: reg_b2335674b5a94ed29aafe6272464e861

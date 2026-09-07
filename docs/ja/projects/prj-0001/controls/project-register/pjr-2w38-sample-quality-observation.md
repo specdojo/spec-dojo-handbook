@@ -157,8 +157,13 @@ sample の修正は軽微でない。章構成から書き直す必要があり�
 適用していない」という水準である。一方 rulebook の 56 件は `needs-work` が主で、blocker は 1 件
 にとどまる。修正の重さは種別で異なる。
 
-この規模は [[prj-0001:pjr-9py9-maintenance-plan-findings]] の重要度を上げる。finding を修正へ
-渡す経路がないまま 137 件を手作業で回すのは現実的でない。
+修正へ渡す経路は既に存在する。`maintenance` と `bootstrap` の exec テンプレートに finding を
+参照する指示が含まれており、`exec plan --approach <kind>-maintenance` で生成した plan へ反映
+される。当初これを「経路がない」と誤認して [[prj-0001:pjr-9py9-maintenance-plan-findings]] を
+起票したが、前提が誤っていたため reject した。
+
+ただし 137 件に対して実際に `maintenance` を回した実績はない。経路の存在と、それが機能する
+ことは別である。
 
 ### 4.1. 着手の優先順位
 

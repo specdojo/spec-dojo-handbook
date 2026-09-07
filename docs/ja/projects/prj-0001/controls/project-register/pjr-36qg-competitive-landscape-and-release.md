@@ -329,9 +329,11 @@ publisher の作成はブラウザ操作を要するため、人が行う。
 急ぐ理由は、自分の他プロジェクトで使うためである。npm 経由でインストールできれば、リポジトリを
 clone せずに利用できる。これは競合対策とは独立した動機である。
 
-急がない理由は品質にある。kata の評価で sample の 40% が `fail`、要修正が 69 件（79%）である。
-また [[prj-0001:pjr-9py9-maintenance-plan-findings]] が未解決で、評価はできるが修正へ渡す経路が
-ない。
+急がない理由は品質にある。kata の評価で全4種別の要修正が 137 件（58%）、うち sample は 69 件
+（79%）である。
+
+修正へ渡す経路は `maintenance` と `bootstrap` の exec テンプレートに存在する。ただし実際に
+回した実績はなく、機能するかは未検証である。
 
 ### 6.2. 判断
 
@@ -345,4 +347,3 @@ kata の品質は公開の阻害要因にしない。`grade` の結果が frontm
 - [[prj-0001:pjr-0143-vs-code-marketplace]]: Marketplace 公開の手順と発行者 ID の決定。
 - [[prj-0001:pjr-gx9d-vscode-extension-consolidation]]: VS Code 拡張の集約方針。
 - [[prj-0001:pjr-2w38-sample-quality-observation]]: kata の品質観測。
-- [[prj-0001:pjr-9py9-maintenance-plan-findings]]: 評価から修正への経路。

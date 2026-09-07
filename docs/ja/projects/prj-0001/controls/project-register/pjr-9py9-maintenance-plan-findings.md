@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-9py9-maintenance-plan-findings
   type: project
-  status: draft
+  status: deprecated
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: open
+  item_status: rejected
   priority: high
   owner: ARC
   registered_at: "2026-09-04T11:25:39Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-07T09:36:07Z"
+  conclusion: 前提が誤っていた。maintenance と bootstrap のテンプレート5件すべてに finding を参照する指示が既に存在する。
 ---
 
 # PJR-9PY9 maintenance と bootstrap の plan へ finding を載せる
@@ -85,7 +87,60 @@ template の 195 文書）を走査しても、活用できないデータが増
 
 ## 6. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+本項目は前提が誤っていた。実装は不要である。
+
+### 6.1. 誤りの内容
+
+起票時に「plan が finding を載せていない」と判断したが、事実に反する。`maintenance` と
+`bootstrap` の exec テンプレート5件すべてに、finding を参照する指示が既に含まれている。
+
+```text
+docs/ja/specdojo/exec-templates/xep-rulebook-maintenance-template.md
+docs/ja/specdojo/exec-templates/xep-recipe-maintenance-template.md
+docs/ja/specdojo/exec-templates/xep-sample-maintenance-template.md
+docs/ja/specdojo/exec-templates/xep-template-maintenance-template.md
+docs/ja/specdojo/exec-templates/xep-bootstrap-template.md
+```
+
+指示の内容は次のとおりで、十分に具体的である。
+
+```text
+対象 sample に `specdojo.grade` と `specdojo:finding` がある場合は、同じ viewpoint ID で
+根拠を確認し、該当箇所を修正した finding コメントだけを削除する。修正後の再評価で
+構造・整合性が劣化していないことを確認する。
+```
+
+`bootstrap` では加えて `grade plan --changed-only` の対象になることも示している。
+
+### 6.2. 動作確認
+
+`exec plan --deliverable br-actor-assignment --approach sample-maintenance` で plan を生成し、
+指示が反映されることを確認した。plan には対象文書のパスも含まれるため、agent は finding を
+読み取れる。
+
+```text
+- `path`: `docs/ja/product/010-business-specs/030-business-model/br-actor-assignment.md`
+対象 sample に `specdojo.grade` と `specdojo:finding` がある場合は、同じ viewpoint ID で…
+```
+
+### 6.3. 誤りの原因
+
+`specdojo:finding` を参照する処理をソースコードから探し、`src/grade.ts` にしか存在しないことを
+根拠に「plan は finding を載せていない」と結論した。
+
+実際の経路はコードではなくテンプレート本文である。テンプレートの指示が plan へそのまま出力され、
+agent が対象文書を読んで finding を解釈する。プレースホルダ置換以外のコードを介さないため、
+ソース検索では見つからない。
+
+実装の有無をコード検索だけで判断した誤りである。成果物（テンプレート）側を確認していれば
+気づけた。
+
+### 6.4. 残る課題
+
+finding を修正へ渡す経路は存在するが、実際に機能するかは未検証である。237 件の kata に対し
+`maintenance` を実行し、finding が解消されるかを確かめていない。
+
+これは本項目とは別の課題として扱う。実行して初めて分かる問題があれば、その時点で起票する。
 
 ## 7. 関連ドキュメント
 
