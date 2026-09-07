@@ -348,6 +348,44 @@ describe("grade markdown update", () => {
     expect(formatted).toContain("findings: { blocker: 0, major: 0, minor: 1, note: 0 }");
     const frontmatterOf = (value: string) => yaml.load(value.match(/^---\n([\s\S]*?)\n---/)![1]);
     expect(frontmatterOf(formatted)).toEqual(frontmatterOf(first));
+    expect(validateGradedMarkdown(formatted, submission.documents[0].path)).toEqual([]);
+    expect(
+      matchesGradeTargetFilters(formatted, submission.documents[0].path, {
+        changedOnly: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("normalizes repeated blank lines and trailing whitespace for content hashes", () => {
+    const withoutFindings = structuredClone(submission.documents[0]);
+    withoutFindings.viewpoints[1].findings = [];
+    const graded = gradeMarkdownContent({
+      content: markdown,
+      path: withoutFindings.path,
+      input: withoutFindings,
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-29T00:00:00.000Z"),
+    });
+    const formattingOnlyChange = graded.replace(
+      "# Example\n\n本文です。",
+      "# Example  \n\n \n本文です。\t",
+    );
+
+    expect(validateGradedMarkdown(formattingOnlyChange, withoutFindings.path)).toEqual([]);
+    expect(
+      matchesGradeTargetFilters(formattingOnlyChange, withoutFindings.path, {
+        changedOnly: true,
+      }),
+    ).toBe(false);
+    expect(
+      matchesGradeTargetFilters(
+        formattingOnlyChange.replace("本文です。", "本文を変更しました。"),
+        withoutFindings.path,
+        { changedOnly: true },
+      ),
+    ).toBe(true);
   });
 
   it("keeps mappings outside grade in block style", () => {

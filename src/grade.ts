@@ -192,6 +192,13 @@ function withoutFindingComments(body: string): string {
   return body.replace(FINDING_RE, "");
 }
 
+function normalizeContentForHash(body: string): string {
+  return body
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]+$/gm, "")
+    .replace(/\n{3,}/g, "\n\n");
+}
+
 function previousGradeFindings(body: string): PreviousGradeFinding[] {
   return [...body.matchAll(FINDING_RE)].map((match) => ({
     severity: match[2] as GradeSeverity,
@@ -208,7 +215,7 @@ function stableContentHash(document: MarkdownDocument): string {
   return createHash("sha256")
     .update(yaml.dump(cloned, { sortKeys: true, noRefs: true, lineWidth: -1 }))
     .update("\n")
-    .update(withoutFindingComments(document.body))
+    .update(normalizeContentForHash(withoutFindingComments(document.body)))
     .digest("hex");
 }
 
