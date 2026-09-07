@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_8abc0c0bc27e42d99d8927842fbcfea9
+  ts: "2026-09-07T09:59:12Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: 章構成の書き直しを要する blocker に対し、コメント削除だけで終わる余地があるため
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: maintenance と bootstrap の plan で finding を修正の根拠に据える
+    - field: description
+      from: ""
+      to: finding の指示が手順外にあり主動詞が削除のため、コメント除去だけで完了と解釈されうる。手順へ組み込み修正を主目的として示す。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: high
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-07"
+    - field: due
+      from: ""
+      to: "2026-09-30"
