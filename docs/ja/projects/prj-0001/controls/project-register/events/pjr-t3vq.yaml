@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_93129a444d8c4a718d93aad8b61fec19
+  ts: "2026-09-07T11:07:50Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: PJR-RP1K の検証時に、agent が編集対象の sample へ到達できないことが判明したため
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: maintenance の plan が編集対象の kata パスを示さない
+    - field: description
+      from: ""
+      to: sample-maintenance などの plan が成果物のパスだけを示し、編集対象である kata のパスを含まない。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: high
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-07"
+    - field: due
+      from: ""
+      to: "2026-09-30"

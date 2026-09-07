@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-rp1k-maintenance-finding-instruction
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-07T09:59:12Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-07T11:08:37Z"
+  conclusion: 5テンプレートで finding を手順へ組み込み、修正を主目的とする記述へ改めた。実行による検証は PJR-T3VQ の解決後に行う。
 ---
 
 # PJR-RP1K maintenance と bootstrap の plan で finding を修正の根拠に据える
@@ -132,7 +134,45 @@ severity で扱いを分けず、finding の message と同じ viewpoint ID の�
 - 未解消の finding コメントを残す。
 
 変更した成果物は、`docs/ja/specdojo/exec-templates/` 配下の bootstrap 1件と maintenance 4件、
-本個票、および上記の単体テストである。残課題はない。
+本個票、および上記の単体テストである。
+
+### 8.1. 受け入れ確認
+
+orchestrator が次を確認した。
+
+| 完了条件            | 結果                                              |
+| ------------------- | ------------------------------------------------- |
+| 手順の一部である    | 満たす。maintenance は手順2〜3、bootstrap は手順1 |
+| 修正が主目的        | 満たす。「削除だけを修正として扱わない」          |
+| 順序の明示          | 満たす。「修正 → 確認 → 削除」の順序を変えない    |
+| 未解消は残す        | 満たす。理由と次のアクションを result へ記録      |
+| 5テンプレートで揃う | 満たす。全件で同じ文言を確認                      |
+| **実行して確認**    | **未達**                                          |
+
+記述は的確である。finding が読み込み直後の手順へ組み込まれ、主動詞が「修正する」になり、
+削除は確認後の後処理として位置づけられた。単体テストで文言も固定されている。
+
+### 8.2. 未達の完了条件
+
+「sample 数件で実行し、章構成が実際に修正されることを確認している」は達成していない。検証を
+試みた際に別の欠陥が判明し、実行できなかった。
+
+`exec plan --deliverable br-actor-assignment --approach sample-maintenance` で生成した plan は、
+対象パスとして成果物を示す。
+
+```text
+- `path`: `docs/ja/product/010-business-specs/030-business-model/br-actor-assignment.md`
+```
+
+`sample-maintenance` は sample を編集する approach だが、編集対象である
+`docs/ja/specdojo/samples/br-sample.md` のパスが plan に含まれない。agent は「対象成果物に紐づく
+sample」を自力で探す必要がある。
+
+本項目の記述をいくら正確にしても、対象へ到達できなければ機能しない。ただしこれは plan 生成側の
+問題であり、テンプレートの記述を扱う本項目とは論点が異なる。
+[[prj-0001:pjr-t3vq-maintenance-plan-target-path]] として分離した。
+
+実行による検証は、その項目の解決後に行う。
 
 ## 9. 関連ドキュメント
 
