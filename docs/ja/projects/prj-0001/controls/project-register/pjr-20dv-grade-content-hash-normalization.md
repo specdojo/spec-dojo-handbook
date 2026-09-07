@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-20dv-grade-content-hash-normalization
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-07T13:45:31Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-07T21:43:36Z"
 ---
 
 # PJR-20DV grade の content_hash を整形に依存しない正規化で計算する

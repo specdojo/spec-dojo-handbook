@@ -58,3 +58,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_49a21c82231144cebf05f0735df08d18
+- v: 1
+  id: reg_347a611fd6d24577a97be2170492c753
+  ts: "2026-09-07T21:43:36Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: stableContentHash へ正規化を導入し、整形往復で content_hash が不変であることを単体テストで確認した。既存保存値の貼り直しと再評価対象の確定は別作業として切り出す。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-08"
+  previous_event_id: reg_84fe5567e7e9461498c5e86143b1da41
