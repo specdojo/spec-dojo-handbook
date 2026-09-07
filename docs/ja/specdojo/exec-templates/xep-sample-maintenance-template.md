@@ -6,13 +6,23 @@ _FRONTMATTER_
 
 _PHASE_DESCRIPTION_
 
-## 2. 対象成果物
+## 2. 根拠となる成果物と編集対象
+
+根拠となる成果物:
 
 - `name`: _DELIVERABLE_NAME_
 - `depends_on`: _DELIVERABLE_DEPENDS_ON_
 - `overview`: _DELIVERABLE_OVERVIEW_
 - `path`: `_DELIVERABLE_PATH_`
 - `result`: `_RESULT_REF_`
+
+編集対象（rulebook frontmatter の sample 宣言から解決）:
+
+- `kind`: sample
+- `path`: `_SAMPLE_REF_`
+- `state`: `_SAMPLE_STATE_`
+
+`existing` は既存文書を編集し、`missing` は宣言されたパスへ新規作成する。`unresolved` は宣言からパスを解決できない状態であり、命名規則から推測して作成せず異常終了する。
 
 _PROJECT_CONTEXT_
 

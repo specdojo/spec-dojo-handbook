@@ -17,13 +17,15 @@ _PHASE_DESCRIPTION_
 - `overview`: _DELIVERABLE_OVERVIEW_
 - `path`: `_DELIVERABLE_PATH_`
 
-実践の型（rulebook frontmatter から解決。`_MISSING_` は未宣言・未整備のため新規作成する）:
+実践の型（rulebook frontmatter の宣言から解決）:
 
-- rulebook: `_RULEBOOK_REF_`
+- rulebook: `_RULEBOOK_REF_`（state: `_RULEBOOK_STATE_`）
 - 併せて適用する rulebook（記法など）: _RULEBOOK_INCLUDES_
-- recipe: `_RECIPE_REF_`
-- sample: `_SAMPLE_REF_`
-- template: `_TEMPLATE_REF_`
+- recipe: `_RECIPE_REF_`（state: `_RECIPE_STATE_`）
+- sample: `_SAMPLE_REF_`（state: `_SAMPLE_STATE_`）
+- template: `_TEMPLATE_REF_`（state: `_TEMPLATE_STATE_`）
+
+`existing` は既存文書の編集対象、`missing` は宣言されたパスにファイルが無い新規作成対象、`unresolved` は宣言からパスを解決できず要否・宣言の確認が必要な状態を表す。`unresolved` のパスを命名規則から推測して作成しない。
 
 result: `_RESULT_REF_`
 

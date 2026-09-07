@@ -632,7 +632,7 @@ describe("finding correction instructions in edit plan templates", () => {
 });
 
 describe("generateSinglePlan", () => {
-  function writeCatalog(catalogPath: string, withEvidence = true): void {
+  function writeCatalog(catalogPath: string, withEvidence = true, rulebook?: string): void {
     mkdirSync(catalogPath, { recursive: true });
     writeFileSync(
       join(catalogPath, "dct-test.yaml"),
@@ -650,6 +650,7 @@ describe("generateSinglePlan", () => {
         "        kind: work",
         "        overview: Test overview",
         "        path: overview.md",
+        ...(rulebook ? [`        rulebook: ${rulebook}`] : []),
         ...(withEvidence
           ? [
               "        evidence_refs:",
@@ -714,6 +715,122 @@ describe("generateSinglePlan", () => {
       // Sibling plan and index are untouched (single-task generation must not wipe them).
       expect(readFileSync(join(plansDir, "T-TEST-overview-099-plan.md"), "utf8")).toBe("keep me\n");
       expect(readFileSync(join(plansDir, "index.md"), "utf8")).toBe("# existing index\n");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("maintenance 4種と bootstrap の plan に編集対象 kata のパスと existing 状態を示す", async () => {
+    const root = mkdtempSync(join(tmpdir(), "specdojo-kata-targets-"));
+    const executionPath = join(root, "execution");
+    const catalogPath = join(root, "catalog");
+    const cases = [
+      ["rulebook-maintenance", "rulebook", "rulebooks/prj-overview-rulebook.md"],
+      ["recipe-maintenance", "recipe", "recipes/prj-overview-recipe.md"],
+      ["sample-maintenance", "sample", "samples/prj-overview-sample.md"],
+      ["template-maintenance", "template", "templates/prj-overview-template.md"],
+    ] as const;
+
+    try {
+      writeCatalog(catalogPath, true, "specdojo:prj-overview-rulebook");
+
+      for (const [approach, kind, suffix] of cases) {
+        const id = `T-TEST-${kind}-maintenance`;
+        const outPath = await generateSinglePlan({
+          executionPath,
+          projectId: "test",
+          catalogPath,
+          task: {
+            id,
+            local_id: "overview",
+            mode: "edit",
+            approach,
+            schedule_file: "sch-track-test.yaml",
+            fifo_rank: 0,
+            critical_first_rank: 0,
+          },
+        });
+        const plan = readFileSync(outPath, "utf8");
+
+        expect(plan).toContain(`- \`kind\`: ${kind}`);
+        expect(plan).toContain(`- \`path\`: \`docs/ja/specdojo/${suffix}\``);
+        expect(plan).toContain("- `state`: `existing`");
+        expect(plan).toContain("- `path`: `docs/test/overview.md`");
+      }
+
+      const bootstrapPath = await generateSinglePlan({
+        executionPath,
+        projectId: "test",
+        catalogPath,
+        task: {
+          id: "T-TEST-bootstrap",
+          local_id: "overview",
+          mode: "edit",
+          approach: "bootstrap",
+          schedule_file: "sch-track-test.yaml",
+          fifo_rank: 0,
+          critical_first_rank: 0,
+        },
+      });
+      const bootstrapPlan = readFileSync(bootstrapPath, "utf8");
+
+      for (const [, kind, suffix] of cases) {
+        expect(bootstrapPlan).toContain(
+          `- ${kind}: \`docs/ja/specdojo/${suffix}\`（state: \`existing\`）`,
+        );
+      }
+      expect(bootstrapPlan).toContain("- `path`: `docs/test/overview.md`");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("kata の未作成とパス未解決を plan 上で区別する", async () => {
+    const root = mkdtempSync(join(tmpdir(), "specdojo-kata-state-"));
+    const executionPath = join(root, "execution");
+    const catalogPath = join(root, "catalog");
+
+    try {
+      writeCatalog(catalogPath, true, "specdojo:not-created-rulebook");
+
+      const missingPath = await generateSinglePlan({
+        executionPath,
+        projectId: "test",
+        catalogPath,
+        task: {
+          id: "T-TEST-missing-rulebook",
+          local_id: "overview",
+          mode: "edit",
+          approach: "rulebook-maintenance",
+          schedule_file: "sch-track-test.yaml",
+          fifo_rank: 0,
+          critical_first_rank: 0,
+        },
+      });
+      const missingPlan = readFileSync(missingPath, "utf8");
+      expect(missingPlan).toContain(
+        "- `path`: `docs/ja/specdojo/rulebooks/not-created-rulebook.md`",
+      );
+      expect(missingPlan).toContain("- `state`: `missing`");
+
+      const unresolvedPath = await generateSinglePlan({
+        executionPath,
+        projectId: "test",
+        catalogPath,
+        task: {
+          id: "T-TEST-unresolved-sample",
+          local_id: "overview",
+          mode: "edit",
+          approach: "sample-maintenance",
+          schedule_file: "sch-track-test.yaml",
+          fifo_rank: 0,
+          critical_first_rank: 0,
+        },
+      });
+      const unresolvedPlan = readFileSync(unresolvedPath, "utf8");
+      expect(unresolvedPlan).toContain("- `path`: `_MISSING_`");
+      expect(unresolvedPlan).toContain("- `state`: `unresolved`");
+      expect(unresolvedPlan).toContain("命名規則から推測して作成せず異常終了する");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

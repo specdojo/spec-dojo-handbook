@@ -72,17 +72,30 @@ agent は「対象成果物に紐づく kata」を自力で探す必要がある
 
 ## 6. 作業内容
 
-| No  | 作業                                        | 担当 | 状態 | メモ                                                           |
-| --- | ------------------------------------------- | ---- | ---- | -------------------------------------------------------------- |
-| 1   | kata パスの解決方法を決める                 | ARC  | open | frontmatter 宣言か命名規則か                                   |
-| 2   | plan へ kata パスを含める                   | ARC  | open | maintenance 4件と bootstrap                                    |
-| 3   | 対象が存在しない場合の表示を定める          | ARC  | open | 新規作成と区別する                                             |
-| 4   | 回帰テストを追加する                        | ARC  | open | kata パスの有無を検証                                          |
-| 5   | 実行して finding が修正されることを確認する | ARC  | open | [[prj-0001:pjr-rp1k-maintenance-finding-instruction]] の未達分 |
+| No  | 作業                                        | 担当 | 状態     | メモ                                                           |
+| --- | ------------------------------------------- | ---- | -------- | -------------------------------------------------------------- |
+| 1   | kata パスの解決方法を決める                 | ARC  | done     | rulebook frontmatter 宣言を正本とし、命名規則では推測しない    |
+| 2   | plan へ kata パスを含める                   | ARC  | done     | maintenance 4件と bootstrap に repo 相対パスを表示             |
+| 3   | 対象が存在しない場合の表示を定める          | ARC  | done     | `existing` / `missing` / `unresolved` の3状態で区別            |
+| 4   | 回帰テストを追加する                        | ARC  | done     | kata パス、成果物パス、3状態を検証                             |
+| 5   | 実行して finding が修正されることを確認する | ARC  | deferred | 本項目では到達経路まで検証。実際の修正確認は PJR-RP1K の再実行 |
 
 ## 7. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- kata の所在は既存の `resolveKataRefs` に従い、成果物カタログの rulebook 宣言と rulebook
+  frontmatter の recipe / sample / template 宣言から解決する方針に確定した。命名規則による暗黙探索は
+  採用していない。複数 sample は既存仕様どおり宣言順の先頭を既定例として扱う。
+- maintenance 4種の plan に「根拠となる成果物」と「編集対象」を分けて表示し、編集対象の種別、
+  repo 相対パス、状態を追加した。成果物のパスも引き続き表示する。bootstrap は4種すべてのパスへ
+  同じ状態表示を追加した。
+- 状態は、既存文書を編集する `existing`、宣言済みパスへ新規作成する `missing`、パスを解決できず
+  前提確認が必要な `unresolved` とした。`unresolved` では命名規則から推測せず異常終了するよう plan
+  に明記した。
+- 回帰テストで maintenance 4種と bootstrap の既存 kata パス、成果物パス、宣言先ファイルが無い
+  `missing`、パス未解決の `unresolved` を検証した。
+- [[prj-0001:pjr-rp1k-maintenance-finding-instruction]] の finding が実際に修正されることの確認は、
+  plan から対象へ到達できるようになった後の同項目の再実行として残る。本項目では生成 plan の到達経路を
+  回帰テストで確認した。
 
 ## 8. 関連ドキュメント
 
