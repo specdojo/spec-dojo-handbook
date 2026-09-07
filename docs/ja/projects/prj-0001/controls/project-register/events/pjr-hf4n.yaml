@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_55943c458eb24376b9011afe51e48369
+  ts: "2026-09-07T11:42:57Z"
+  action: add
+  actor: orchestrator
+  from_status: null
+  to_status: open
+  reason: PJR-T3VQ の実行検証で、agent が根拠不足を理由に修正を見送ったため
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: maintenance の根拠が finding の性質と噛み合わない
+    - field: description
+      from: ""
+      to: kata の構成不備を指摘する finding に対し、成果物と review result だけを根拠とする設計では修正が進まない。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: high
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-07"
+    - field: due
+      from: ""
+      to: "2026-09-30"

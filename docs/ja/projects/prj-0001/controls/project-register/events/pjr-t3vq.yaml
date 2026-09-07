@@ -58,3 +58,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_96d928a8dfc6405687dec0de287e9a71
+- v: 1
+  id: reg_a8ce4ebf4553404da5d2357012caafd4
+  ts: "2026-09-07T11:44:06Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: plan へ編集対象の kata パスと state を追加した。節名も実態へ合わせた。修正が進まない件は approach の設計問題として分離した。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-07"
+    - field: conclusion
+      from: "-"
+      to: plan へ編集対象の kata パスと state を追加した。節名も実態へ合わせた。修正が進まない件は approach の設計問題として分離した。
+  previous_event_id: reg_182f08c8c2de4057855acf35eeed0f70

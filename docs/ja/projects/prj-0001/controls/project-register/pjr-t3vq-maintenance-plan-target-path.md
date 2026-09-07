@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-t3vq-maintenance-plan-target-path
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-07T11:07:50Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-07T11:44:06Z"
+  conclusion: plan へ編集対象の kata パスと state を追加した。節名も実態へ合わせた。修正が進まない件は approach の設計問題として分離した。
 ---
 
 # PJR-T3VQ maintenance の plan が編集対象の kata パスを示さない
@@ -96,6 +98,56 @@ agent は「対象成果物に紐づく kata」を自力で探す必要がある
 - [[prj-0001:pjr-rp1k-maintenance-finding-instruction]] の finding が実際に修正されることの確認は、
   plan から対象へ到達できるようになった後の同項目の再実行として残る。本項目では生成 plan の到達経路を
   回帰テストで確認した。
+
+### 7.1. 受け入れ確認
+
+orchestrator が実際に plan を生成して確認した。
+
+| 完了条件             | 結果                                            |
+| -------------------- | ----------------------------------------------- |
+| kata パスが含まれる  | 満たす。`docs/ja/specdojo/samples/br-sample.md` |
+| 存在しない場合の区別 | 満たす。`state` が3値を取る                     |
+| 成果物のパスも示す   | 満たす。両方を表示                              |
+| 4種別で動作          | 満たす。rulebook / recipe / sample / template   |
+| 回帰テスト           | 満たす。単体テスト1380件が通過                  |
+
+節名が `対象成果物` から `根拠となる成果物と編集対象` へ変更されている。検討事項に挙げた
+「節名が実態と合っていない可能性」への対応であり、`maintenance` の編集対象が kata である
+実態と一致した。
+
+### 7.2. 実行検証の結果
+
+[[prj-0001:pjr-rp1k-maintenance-finding-instruction]] で未達だった検証を行った。`br-sample.md`
+（`fail`、finding 8件）に対し `sample-maintenance` の plan を `codex-expert-executor` へ渡した。
+
+結果は次のとおりである。
+
+| 項目    | 結果       |
+| ------- | ---------- |
+| 章構成  | 変更なし   |
+| finding | 8 件のまま |
+
+agent の判断は「finding は確認したが、根拠不足のため推測による改訂やコメント削除はしていない」
+であった。
+
+これは plan の `4.1. 見直しの根拠が不足する場合` の指示どおりである。
+
+```text
+根拠不足のまま推測で sample を改訂しない。確証が得られた範囲に改訂を限定し、残りは…
+```
+
+コメントだけを削除する振る舞いも起きていない。PJR-RP1K の記述が意図どおり機能している。
+
+### 7.3. 残る課題
+
+対象への到達と指示の明確さは解決したが、修正そのものは進まなかった。
+
+`sample-maintenance` は「成果物・review result を根拠に sample を見直す」設計である。一方
+今回の finding は「rulebook の構成に従っていない」という指摘で、根拠は rulebook にある。
+approach の設計と finding の性質が噛み合っていない可能性がある。
+
+本項目の範囲は対象パスの提示であり、これは達成した。approach の設計に関する論点は
+[[prj-0001:pjr-hf4n-maintenance-approach-evidence]] として分離する。
 
 ## 8. 関連ドキュメント
 
