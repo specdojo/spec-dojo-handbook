@@ -539,6 +539,10 @@ function resolveSafeRepositoryPath(input: string, option: string): string {
   return absolute;
 }
 
+function isGeneratedGradeTarget(path: string): boolean {
+  return repoRelativePath(path).split("/").includes("generated");
+}
+
 export function discoverGradeTargets(
   opts: {
     target: GradeTarget;
@@ -551,6 +555,10 @@ export function discoverGradeTargets(
   let candidates: string[];
   if (opts.paths && opts.paths.length > 0) {
     candidates = opts.paths.map(resolveSafeMarkdownPath);
+    const generated = candidates.find(isGeneratedGradeTarget);
+    if (generated) {
+      throw new Error(`${repoRelativePath(generated)}: generated documents cannot be graded`);
+    }
   } else if (opts.target === "kata") {
     candidates = KATA_DIRS.flatMap((dir) =>
       listFilesRecursive(join(root, "docs/ja/specdojo", dir)).filter((path) =>
@@ -578,7 +586,7 @@ export function discoverGradeTargets(
     }
     candidates = [...paths];
   }
-  const unique = [...new Set(candidates)].sort();
+  const unique = [...new Set(candidates)].filter((path) => !isGeneratedGradeTarget(path)).sort();
   if (
     !opts.changedOnly &&
     opts.verdict === undefined &&

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import yaml from "js-yaml";
@@ -130,6 +130,25 @@ describe("grade target filters", () => {
 
     expect(targets).toContainEqual(expect.stringContaining("/templates/prj-overview-template.md"));
     expect(targets).not.toContainEqual(expect.stringContaining("/exec-templates/"));
+  });
+
+  it("excludes generated documents and rejects their explicit selection", () => {
+    const generatedRoot = "docs/ja/specdojo/samples/generated";
+    mkdirSync(generatedRoot, { recursive: true });
+    const directory = mkdtempSync(join(generatedRoot, "grade-target-test-"));
+    const generatedPath = join(directory, "example.md");
+    writeFileSync(generatedPath, markdown);
+
+    try {
+      const targets = discoverGradeTargets({ target: "kata" });
+
+      expect(targets).not.toContainEqual(expect.stringContaining("/generated/"));
+      expect(() => discoverGradeTargets({ target: "kata", paths: [generatedPath] })).toThrow(
+        `${generatedPath}: generated documents cannot be graded`,
+      );
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 
   it("combines verdict, score, finding-count, and changed-only filters", () => {
