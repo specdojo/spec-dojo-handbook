@@ -117,6 +117,23 @@ export function selectResumableRegisterRun(
     return a.runId < b.runId ? -1 : a.runId > b.runId ? 1 : 0;
   })[candidates.length - 1];
 
+  // rate limit で打ち切られた executor は、evidence が記録されていても作業を完了していない。
+  // final_message と validations が空のまま残るため、reporter へ進めずに既存 worktree 上で
+  // executor を再開する。rate_limited が付く段が中断された段であり、reporter が pending の
+  // まま残っていることも executor 中の中断を示す。
+  if (latest.state.stages.executor.status === "rate_limited") {
+    return {
+      kind: "resumable",
+      target: {
+        stage: "executor",
+        runId: latest.runId,
+        stateRef: latest.stateRef,
+        statePath: latest.statePath,
+        state: latest.state,
+      },
+    };
+  }
+
   if (latest.state.stages.executor.status === "running") {
     if (latest.evidence && latest.evidenceRef) {
       const recoveredState: PipelineState = {

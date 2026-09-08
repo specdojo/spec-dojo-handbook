@@ -191,6 +191,30 @@ describe("selectResumableRegisterRun", () => {
     expect(actual.target.state.stages.executor.artifact_ref).toBe(evidenceRef);
   });
 
+  it("executor が rate_limited の run は evidence があっても executor 再開対象にする", () => {
+    const evidenceRef = `${EXECUTION_REL}/exec/evidence/${TASK_ID}/run-rate-limited/evidence.json`
+      .split(path.sep)
+      .join("/");
+    const candidate = makeCandidate({
+      state: makeState({
+        runId: "run-rate-limited",
+        executorStatus: "rate_limited",
+        evidenceRef: null,
+      }),
+      evidence: makeEvidence("run-rate-limited"),
+      evidenceRef,
+    });
+
+    const actual = selectResumableRegisterRun([candidate]);
+
+    expect(actual.kind).toBe("resumable");
+    if (actual.kind !== "resumable") return;
+    // rate limit で打ち切られた executor は作業を完了していないため、evidence があっても
+    // reporter へ進めない。
+    expect(actual.target.stage).toBe("executor");
+    expect(actual.target.runId).toBe("run-rate-limited");
+  });
+
   it("最新 run の executor が未完了なら、古い再開可能な run へ遡らない", () => {
     const resumable = makeCandidate({
       state: makeState({ runId: "run-old", updatedAt: "2026-08-20T00:00:00Z" }),
@@ -199,7 +223,7 @@ describe("selectResumableRegisterRun", () => {
       state: makeState({
         runId: "run-new",
         updatedAt: "2026-08-21T00:00:00Z",
-        executorStatus: "rate_limited",
+        executorStatus: "failed",
       }),
     });
 
@@ -207,7 +231,7 @@ describe("selectResumableRegisterRun", () => {
 
     expect(actual).toEqual({
       kind: "not-resumable",
-      reason: 'executor stage is "rate_limited" for run run-new; re-run the item instead',
+      reason: 'executor stage is "failed" for run run-new; re-run the item instead',
     });
   });
 
