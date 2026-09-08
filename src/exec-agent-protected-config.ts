@@ -35,6 +35,11 @@ const SNAPSHOT_DIRECTORY_ROOTS = [
   ".jenkins",
 ] as const;
 
+// 保護対象ディレクトリの配下にあるが、設定ではなく再生成可能な既知の生成物。
+// 任意の gitignore 対象を除外すると、agent が .gitignore と新規設定を同時に作ることで
+// ガードをすり抜けられるため、生成物として用途が確定しているパスだけを列挙する。
+const GENERATED_PATHS = new Set([".specdojo/doc-index.json"]);
+
 export type AgentProtectedConfigSnapshot = ReadonlyMap<string, string>;
 
 // `.specdojo/doc-index.json` のように、保護対象ディレクトリの下にある gitignore 済みの生成物を
@@ -46,12 +51,18 @@ export type AgentProtectedConfigSnapshot = ReadonlyMap<string, string>;
 // られるため、ignore 済みの生成物だけを対象から外す。
 //
 // git が使えない、または想定外の終了コードで失敗した場合は除外せず、全候補を保護対象のままにする。
-function ignoredPaths(repoRoot: string, candidates: readonly string[]): ReadonlySet<string> {
-  if (candidates.length === 0) return new Set();
-  const result = spawnSync("git", ["check-ignore", "-z", "--stdin"], {
+function ignoredGeneratedPaths(
+  repoRoot: string,
+  candidates: readonly string[],
+): ReadonlySet<string> {
+  const generatedCandidates = candidates
+    .map((path) => normalizeRepoPath(path))
+    .filter((path) => GENERATED_PATHS.has(path));
+  if (generatedCandidates.length === 0) return new Set();
+  const result = spawnSync("git", ["check-ignore", "--no-index", "-z", "--stdin"], {
     cwd: repoRoot,
     env: gitEnvironment(),
-    input: `${candidates.join("\0")}\0`,
+    input: `${generatedCandidates.join("\0")}\0`,
     encoding: "utf8",
   });
   // 0: 1件以上が ignore 対象、1: 該当なし。それ以外は判定不能として除外しない。
@@ -73,6 +84,24 @@ export function isAgentProtectedConfigPath(path: string): boolean {
   if (PROTECTED_EXACT_PATHS.has(normalized)) return true;
   if (PROTECTED_DIRECTORY_PREFIXES.some((prefix) => normalized.startsWith(prefix))) return true;
   return /^(?:commitlint\.config\.[^/]+|\.commitlintrc(?:\.[^/]+)?)$/.test(normalized);
+}
+
+// snapshot と統合直前の再検査で同じ保護境界を使う。isAgentProtectedConfigPath は
+// path だけで設定候補を分類し、この関数が repository の ignore 規則と既知の生成物定義を
+// 組み合わせて、実際に block すべきパスを返す。
+export function agentProtectedConfigPaths(
+  repoRoot: string,
+  candidates: readonly string[],
+): string[] {
+  const protectedPaths = [
+    ...new Set(
+      candidates.map((path) => normalizeRepoPath(path)).filter(isAgentProtectedConfigPath),
+    ),
+  ];
+  const ignoredGenerated = ignoredGeneratedPaths(repoRoot, protectedPaths);
+  return protectedPaths
+    .filter((path) => !ignoredGenerated.has(path))
+    .sort((a, b) => a.localeCompare(b));
 }
 
 function fingerprint(path: string): string {
@@ -114,8 +143,9 @@ export function captureAgentProtectedConfigSnapshot(
   for (const relRoot of SNAPSHOT_DIRECTORY_ROOTS) {
     addTreeFiles(repoRoot, join(repoRoot, relRoot), snapshot);
   }
-  for (const path of ignoredPaths(repoRoot, [...snapshot.keys()])) {
-    snapshot.delete(path);
+  const protectedPaths = new Set(agentProtectedConfigPaths(repoRoot, [...snapshot.keys()]));
+  for (const path of snapshot.keys()) {
+    if (!protectedPaths.has(path)) snapshot.delete(path);
   }
   return snapshot;
 }
@@ -133,26 +163,42 @@ export function changedAgentProtectedConfigPaths(
 
 // block した変更を人が判断できるよう、対象パスごとの差分を git から取得する。
 // diff は差分ありで status 1 を返すため、0 と 1 のみ結果として採用する。
-function gitDiffText(repoRoot: string, args: readonly string[]): string {
-  const result = gitResult(repoRoot, [...args]);
-  if (result.error || (result.status !== 0 && result.status !== 1)) return "";
-  return typeof result.stdout === "string" ? result.stdout : "";
+type GitTextResult = { text: string; failure?: string };
+
+function gitFailure(result: ReturnType<typeof gitResult>): string {
+  const detail = result.error?.message || (typeof result.stderr === "string" ? result.stderr : "");
+  const normalized = detail.trim().replace(/\s+/g, " ");
+  if (normalized) return normalized.slice(0, 500);
+  return `git exited with status ${result.status ?? "unknown"}`;
 }
 
-function untrackedProtectedPaths(repoRoot: string, paths: readonly string[]): ReadonlySet<string> {
+function gitDiffText(repoRoot: string, args: readonly string[]): GitTextResult {
+  const result = gitResult(repoRoot, [...args]);
+  if (result.error || (result.status !== 0 && result.status !== 1)) {
+    return { text: "", failure: gitFailure(result) };
+  }
+  return { text: typeof result.stdout === "string" ? result.stdout : "" };
+}
+
+function untrackedProtectedPaths(
+  repoRoot: string,
+  paths: readonly string[],
+): { paths: ReadonlySet<string>; failure?: string } {
   const result = gitResult(repoRoot, ["status", "--porcelain", "-z", "--", ...paths]);
-  if (result.error || result.status !== 0) return new Set();
+  if (result.error || result.status !== 0) {
+    return { paths: new Set(), failure: gitFailure(result) };
+  }
   const stdout = typeof result.stdout === "string" ? result.stdout : "";
   const untracked = new Set<string>();
   for (const entry of stdout.split("\0")) {
     if (!entry.startsWith("?? ")) continue;
     untracked.add(normalizeRepoPath(entry.slice(3)));
   }
-  return untracked;
+  return { paths: untracked };
 }
 
-// git が差分を出せない場合（未追跡の新規ファイル、agent が commit 済み、repository 未初期化）
-// でも、適用者が内容を判断できるよう現在の内容を追加行として組み立てる。
+// 未追跡の新規ファイルは git diff の対象にならないため、適用者が内容を判断できるよう
+// 現在の内容を追加行として組み立てる。git command 自体の失敗時にはこの処理へフォールバックしない。
 function addedFileDiff(repoRoot: string, path: string, note: string): string {
   const absolutePath = join(repoRoot, path);
   if (!existsSync(absolutePath)) return "";
@@ -179,15 +225,36 @@ export function describeAgentProtectedConfigChanges(
   const untracked = untrackedProtectedPaths(repoRoot, paths);
   const sections: string[] = [];
   for (const path of paths) {
-    const diff = untracked.has(path)
-      ? addedFileDiff(repoRoot, path, "新規ファイル（未追跡）の内容")
-      : gitDiffText(repoRoot, ["diff", "HEAD", "--unified=3", "--", path]) ||
-        gitDiffText(repoRoot, ["diff", "--unified=3", "--", path]) ||
-        addedFileDiff(repoRoot, path, "git 差分を取得できなかったため現在の内容を出力");
+    if (untracked.failure) {
+      sections.push(`# ${path}: 差分を取得できませんでした（git status: ${untracked.failure}）`);
+      continue;
+    }
+    if (untracked.paths.has(path)) {
+      const added = addedFileDiff(repoRoot, path, "新規ファイル（未追跡）の内容");
+      sections.push(
+        added.trim() === ""
+          ? `# ${path}: 未追跡ファイルの内容を読み取れませんでした`
+          : added.trimEnd(),
+      );
+      continue;
+    }
+
+    const againstHead = gitDiffText(repoRoot, ["diff", "HEAD", "--unified=3", "--", path]);
+    if (againstHead.text.trim() !== "") {
+      sections.push(againstHead.text.trimEnd());
+      continue;
+    }
+    const workingTree = gitDiffText(repoRoot, ["diff", "--unified=3", "--", path]);
+    if (workingTree.text.trim() !== "") {
+      sections.push(workingTree.text.trimEnd());
+      continue;
+    }
+
+    const failures = [againstHead.failure, workingTree.failure].filter(Boolean);
     sections.push(
-      diff.trim() === ""
-        ? `# ${path}: 差分を取得できませんでした（削除、またはバイナリ・非 Git 環境の可能性があります）`
-        : diff.trimEnd(),
+      failures.length > 0
+        ? `# ${path}: 差分を取得できませんでした（git diff: ${[...new Set(failures)].join(" / ")}）`
+        : `# ${path}: git diff の出力が空でした（HEAD に反映済み、削除、またはバイナリの可能性があります）`,
     );
   }
   return sections.join("\n");

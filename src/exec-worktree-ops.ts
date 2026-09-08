@@ -10,8 +10,8 @@ import {
 import { parseResultTaskIdentity } from "./exec-results.js";
 import { stripTerminalControlSequences } from "./exec-shared.js";
 import {
+  agentProtectedConfigPaths,
   agentProtectedConfigViolation,
-  isAgentProtectedConfigPath,
 } from "./exec-agent-protected-config.js";
 import { recordProtectedConfigBlock } from "./exec-protection-handoff.js";
 import {
@@ -196,9 +196,10 @@ function assertNoAgentProtectedConfigChanges(
     "-z",
     `${compareBase}..HEAD`,
   ]);
-  const protectedPaths = [...new Set([...statusPaths(worktree.path), ...committed])]
-    .filter(isAgentProtectedConfigPath)
-    .sort((a, b) => a.localeCompare(b));
+  const protectedPaths = agentProtectedConfigPaths(worktree.path, [
+    ...statusPaths(worktree.path),
+    ...committed,
+  ]);
   if (protectedPaths.length > 0) {
     const reason = agentProtectedConfigViolation(protectedPaths);
     // commit 前の再検査でも、対象と提案差分を result の申し送りへ残してから block する。

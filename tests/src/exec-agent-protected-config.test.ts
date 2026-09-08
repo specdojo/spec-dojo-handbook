@@ -5,8 +5,10 @@ import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { gitEnvironment } from "../../src/exec-worktree.js";
 import {
+  agentProtectedConfigPaths,
   captureAgentProtectedConfigSnapshot,
   changedAgentProtectedConfigPaths,
+  describeAgentProtectedConfigChanges,
   isAgentProtectedConfigPath,
 } from "../../src/exec-agent-protected-config.js";
 
@@ -87,6 +89,28 @@ describe("agent protected configuration paths", () => {
     expect(changedAgentProtectedConfigPaths(root, before)).toEqual([]);
   });
 
+  it("excludes a known generated path even when it is already tracked", () => {
+    const root = mkdtempSync(join(tmpdir(), "specdojo-protected-config-"));
+    roots.push(root);
+    initRepository(root);
+    write(join(root, ".gitignore"), ".specdojo/doc-index.json\n.specdojo/*.yaml\n");
+    write(join(root, ".specdojo", "doc-index.json"), '{"entries":[]}\n');
+    execFileSync("git", ["add", ".gitignore"], {
+      cwd: root,
+      stdio: "ignore",
+      env: gitEnvironment(),
+    });
+    execFileSync("git", ["add", "--force", ".specdojo/doc-index.json"], {
+      cwd: root,
+      stdio: "ignore",
+      env: gitEnvironment(),
+    });
+
+    expect(
+      agentProtectedConfigPaths(root, [".specdojo/doc-index.json", ".specdojo/exec-defaults.yaml"]),
+    ).toEqual([".specdojo/exec-defaults.yaml"]);
+  });
+
   it("still protects an untracked config file that is not gitignored", () => {
     const root = mkdtempSync(join(tmpdir(), "specdojo-protected-config-"));
     roots.push(root);
@@ -112,5 +136,17 @@ describe("agent protected configuration paths", () => {
     write(join(root, ".specdojo", "doc-index.json"), '{"entries":[{"id":"a"}]}\n');
 
     expect(changedAgentProtectedConfigPaths(root, before)).toEqual([".specdojo/doc-index.json"]);
+  });
+
+  it("records a git failure reason without copying the whole file", () => {
+    const root = mkdtempSync(join(tmpdir(), "specdojo-protected-config-"));
+    roots.push(root);
+    write(join(root, "package.json"), '{"private":"full-content-must-not-be-copied"}\n');
+
+    const description = describeAgentProtectedConfigChanges(root, ["package.json"]);
+
+    expect(description).toContain("差分を取得できませんでした（git status:");
+    expect(description).toContain("not a git repository");
+    expect(description).not.toContain("full-content-must-not-be-copied");
   });
 });

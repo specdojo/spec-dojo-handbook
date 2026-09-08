@@ -494,11 +494,13 @@ providers:
 commit 許可リストだけでは、register 由来の除外リスト方式や、commit より前に親 runner が検証を起動する経路を守れません。そのため `src/exec-agent-protected-config.ts` の固定定義で、次のパスを全 provider 共通の書き込み禁止対象にします。
 
 - `package.json`、`lefthook.yml` / `.lefthook.yml`
-- `.specdojo/**`
+- `.specdojo/**`（ただし既知の生成物 `.specdojo/doc-index.json` は除く）
 - `commitlint.config.*`、`.commitlintrc*`
 - `.github/workflows/**`、`.gitlab-ci.*`、`.gitlab/ci/**`、`.circleci/**`、Azure Pipelines / Jenkins の設定
 
 runner は agent の各試行前後でファイル内容を比較し、差分があれば親検証と reporter を起動せず block します。worktree の commit 前には Git status と exec branch の commit 済み差分を再検査するため、register の除外リスト方式や agent 自身による commit があっても merge されません。違反時は `agent-config-write:` と対象パスを標準エラーへ出力します。この定義は `exec-defaults.yaml` や member 設定から解除・拡張できません。
+
+保護対象の候補はパスの固定定義で分類し、実際に block する対象は `agentProtectedConfigPaths()` で確定します。`.specdojo/doc-index.json` は `index build` が再生成し commit しない既知の生成物なので、リポジトリの ignore 規則にも一致する場合だけ除外します。判定には `git check-ignore --no-index` を使い、過去に追跡されていた worktree でも生成物として扱います。任意の ignore 対象を除外すると、agent が `.gitignore` と新規設定を同時に作って回避できるため、除外は既知の生成物の固定リストに限定します。Git による判定が失敗した場合や ignore 規則から外れた場合は除外せず、保護側へ倒します。agent 前後の snapshot と commit 前の再検査はこの判定を共有します。
 
 agentと親検証の子プロセスを起動する際は、`gitEnvironment()`で`GIT_DIR`、`GIT_WORK_TREE`、`GIT_COMMON_DIR`、index・object・replace関連のrepository固有環境変数を除去します。除去対象は`src/git-environment.ts`の`GIT_LOCAL_ENV_VARS`を正本とします。Vitestの全3設定も共通setupを使ってtest module読込前に同じ変数をworkerから除去するため、Git hook経由で`npm test`が起動されても、テストfixtureはcwdの一時repositoryを参照し、linked worktreeのgitdirや共有configを参照しません。
 
@@ -514,7 +516,7 @@ executor / reporter pipelineのexecutor promptは、commitとrepository設定を
 
 - 保護機構名と、標準エラーへ出力するものと同じ block メッセージ。
 - 対象パス（`agent-config-write`）または対象フィールド（`agent-git-state-write`）。
-- 提案差分。`agent-config-write` は対象パスの `git diff` を、未追跡ファイルは現在の内容を追加行として記録します。`agent-git-state-write` は HEAD の before / after と local config の増減キーを記録します。local config は値に資格情報を含みうるためキー名だけを出力します。
+- 提案差分。`agent-config-write` は対象パスの `git diff` を、未追跡と確認できた新規ファイルは現在の内容を追加行として記録します。Git status や diff の取得に失敗した場合はファイル全文へフォールバックせず、取得できなかった事実と Git の失敗理由だけを記録します。`agent-git-state-write` は HEAD の before / after と local config の増減キーを記録します。local config は値に資格情報を含みうるためキー名だけを出力します。
 - 変更理由と変更後に必要な検証。これらは機構では復元できないため、agent が申し送りを書いていれば「agent 記入を参照」と示し、未記入なら「agent の記入なし」と明示します。
 
 自動記録は edit result の申し送り節（無い場合は末尾に専用節）へ書き込み、agent が書いた申し送りは残したまま自動記録を後ろへ追加します。同じ result へ再度 block した場合は前回の自動記録を置き換えます。frontmatter と他節（`実施内容` / `変更ファイル` のプレースホルダを含む）は変更しないため、未記入 result を block として扱う判定と終了コードの契約はそのままです。記録先の result が無い run では自動記録を行わず、その旨を実行ログへ出力します。`exec trial` は exec result を持たないため、違反は trial の evidence と標準エラーにのみ残ります。
