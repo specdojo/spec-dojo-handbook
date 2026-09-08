@@ -174,6 +174,23 @@ runner がコマンドを実行して evidence へ記録し、判断が要る場
 - 既存の `mode: edit` / `review` と、新しい実行方式の関係。mode を増やすか、別のキーとするか。
 - コマンドの実行者と権限。runner が直接実行する場合、agent の sandbox と同等の制限を課すか。
 - plan へ何を凍結するか。コマンドを凍結しない場合、再現性をどう担保するか。
+- コマンドを job と routine のどちらへ置くか。job へ置くことを想定している。コマンドは
+  「何をするか」であり、スケジュールとは独立である。routine 側へ寄せると、複数の routine
+  から同じコマンドを再利用できなくなる。`job-grade-kata` は既に 2 つの routine から異なる
+  入力で呼ばれており、この再利用は実際に機能している。
+
+## 8.1. 将来の統合を妨げない設計にする
+
+本項目の実装は、routine の `action.kind` を job へ統合する
+[[prj-0001:pjr-78mq-routine-action-kind-unification]] の前提になる。
+
+`action.kind` の 5 種（`register` / `exec-auto` / `exec-resume` / `exec-cycle` / `job`）は
+いずれも引数を組み立てて自分自身を spawn するだけで、実装の構造が同じである。job がコマンドを
+決定論的に実行できれば、すべてを job として表現できる。
+
+したがってコマンド実行の仕組みを grade 専用へ寄せない。任意のコマンドを入力付きで実行し、
+終了コードと出力を evidence へ記録できる汎用の形にする。`{{inputs.*}}` の展開も、grade の
+引数だけでなく一般の入力に使えるようにする。
 
 ## 9. 対応結果
 
