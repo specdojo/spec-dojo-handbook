@@ -87,3 +87,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_4e971d793267411c81a9948dcf267d8e
+- v: 1
+  id: reg_86b2db371ac0474588738e74f04b78e6
+  ts: "2026-09-08T03:40:51Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: 既知の生成物パスとして .specdojo/doc-index.json を保護対象から除外した。gitignore 該当を一律除外すると agent が .gitignore と設定を同時に作ってすり抜けられるため、用途が確定したパスだけを列挙する設計とした。差分取得失敗時は全内容ではなく失敗理由を記録する。実地で exec-defaults.yaml と package.json が保護対象に残ることを確認した。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-08"
+  previous_event_id: reg_c75726d7efe040aea947667c3ebdb468

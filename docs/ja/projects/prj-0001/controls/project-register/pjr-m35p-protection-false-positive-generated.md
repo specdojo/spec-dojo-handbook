@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-m35p-protection-false-positive-generated
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: issue
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-07T22:29:10Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-08T03:40:51Z"
   block_reason: "agent exited with non-zero code: runner validation 'test-unit' failed: tests/src/exec-agent-protected-config.test.ts (21 tests / 1 failed) - records a git failure reason without copying the whole file"
 ---
 

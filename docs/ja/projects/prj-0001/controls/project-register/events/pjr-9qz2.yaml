@@ -58,3 +58,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_79324609443241f080a6c00710f846fa
+- v: 1
+  id: reg_dae5871986324a8aaa6fff53ed5eae37
+  ts: "2026-09-08T03:40:51Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: "--resume が executor / reporter / 統合の3段へ対応し、executor が running のまま中断した場合も既存 worktree 上で再開できるようになった。PJR-M35P の再開で実地に確認し、reporter 段から再開して executor の再実行と codex 呼び出しを回避できた。"
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-08"
+  previous_event_id: reg_48aed40b89674ffa89493273dae09101

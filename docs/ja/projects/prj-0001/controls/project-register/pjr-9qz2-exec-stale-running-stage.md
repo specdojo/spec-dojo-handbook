@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-9qz2-exec-stale-running-stage
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: issue
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-07T22:40:48Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-08T03:40:51Z"
 ---
 
 # PJR-9QZ2 中断した exec の executor 段が running のまま残り resume できない
