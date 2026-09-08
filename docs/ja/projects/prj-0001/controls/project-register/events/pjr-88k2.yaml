@@ -58,3 +58,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_7679a4339fa84793a2f6efd420e4da30
+- v: 1
+  id: reg_b41a32dbd98d47589c1648b5b83d622b
+  ts: "2026-09-08T12:37:12Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: grade apply の出力で末尾の改行を1つへ正規化する。apply の出力だけで lint 可能になり、走査のたびに手作業で除去する必要がなくなった。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-08"
+  previous_event_id: reg_c3d6739464324df688754479d5fd702e

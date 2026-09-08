@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-kk07-template-resolution-fallback
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-07T13:14:00Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-08T12:37:11Z"
 ---
 
 # PJR-KK07 テンプレートを同梱パッケージ側へフォールバックさせる

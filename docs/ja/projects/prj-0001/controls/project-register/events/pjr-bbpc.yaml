@@ -58,3 +58,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_0a9be32545454171a660b553ff841665
+- v: 1
+  id: reg_a340c670d068486b9b05d89e76eb9472
+  ts: "2026-09-08T12:37:12Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: 1段目の既定リファレンスが --kind に追従する。rulebook / recipe / sample / template のそれぞれで prj-overview の同種別が選ばれることを実地で確認した。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-08"
+  previous_event_id: reg_e4206ef5649c455191f22144463b2f57

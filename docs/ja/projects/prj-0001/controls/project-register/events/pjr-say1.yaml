@@ -71,3 +71,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_050c71c963204507ab6afe6f02dea2ab
+- v: 1
+  id: reg_6614edc16f6849778350111cd9b134c8
+  ts: "2026-09-08T12:37:11Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: テンプレートから生成する経路で finding コメントを複製しなくなった。生成物 8 件の混入がすべて解消し、最小構成での起票でも混入しないことを実地で確認した。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-08"
+  previous_event_id: reg_9407fae6f74d42a09cf44fe40d4a5029

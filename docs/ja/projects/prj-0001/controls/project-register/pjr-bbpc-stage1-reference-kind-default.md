@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-bbpc-stage1-reference-kind-default
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-04T11:51:15Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-08T12:37:12Z"
 ---
 
 # PJR-BBPC 3段評価の既定リファレンスが対象種別に追従しない

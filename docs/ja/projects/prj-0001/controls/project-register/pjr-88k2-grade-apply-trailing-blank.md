@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-88k2-grade-apply-trailing-blank
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-05T22:34:28Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-08T12:37:12Z"
 ---
 
 # PJR-88K2 grade apply が本文末尾に余分な空行を残す
