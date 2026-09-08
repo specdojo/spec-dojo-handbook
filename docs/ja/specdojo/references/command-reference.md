@@ -457,12 +457,14 @@ specdojo exec trial adopt --project prj-0001 --comparison <comparison-id> --tria
 
 | コマンド         | 用途                                                     |
 | ---------------- | -------------------------------------------------------- |
+| `grade list`     | 選択した文書のパスを1行1件で出力し、plan は保存しない    |
 | `grade plan`     | 1文書ごとに executor / reporter の評価 plan を保存する   |
 | `grade apply`    | reporter の JSON と executor の申告を検証して反映する    |
 | `grade validate` | 内容ハッシュと Frontmatter / 本文 finding 件数を検証する |
 
 ```bash
 specdojo grade plan --target kata --changed-only --project prj-0001
+specdojo grade list --target kata --changed-only --project prj-0001
 specdojo grade plan --target kata --verdict pass --min-score 96 --max-findings 1 --project prj-0001
 specdojo grade plan --target kata --ungraded --project prj-0001
 # executor plan の自由記述を保存し、reporter plan と一緒に reporter へ渡す
@@ -473,7 +475,7 @@ specdojo grade validate --target kata --project prj-0001
 
 `--target` は `kata` または `deliverable` です。`--path` は繰り返し指定でき、明示した Markdown 文書だけを対象にします。ただし、パス要素に `generated` を含む生成文書は自動探索から除外し、`--path` で明示した場合も入力エラーとして拒否します。`--changed-only` は既存 grade の `content_hash` と、grade・finding を除いた現在内容のハッシュを比較するため、評価結果の書き込み自体を変更として再検出しません。ハッシュの計算前に改行を LF へ統一し、行末空白を除去して、連続する空行を1行へ畳みます。この正規化により、`grade apply` 後の Prettier 整形だけでは再評価対象になりません。
 
-保存済みの判定結果では、`--verdict <pass|needs-work|fail>` で最新 verdict、`--min-score <score>` で総合 score が指定値以上、`--max-findings <count>` で全 severity の finding 合計が指定件数以下の文書に絞れます。score は 0 から 100 の整数で指定します。`--ungraded` は `specdojo.grade` が存在しない文書だけを選びます。評価の試行に失敗して grade が保存されなかった文書も未評価に含まれ、失敗試行そのものとの区別はしません。複数の選択条件は AND で適用され、`--path` や `--changed-only` とも併用できます。保存済み grade を前提とする `--verdict`、`--min-score`、`--max-findings` のいずれかと `--ungraded` の併用は入力エラーです。
+保存済みの判定結果では、`--verdict <pass|needs-work|fail>` で最新 verdict、`--min-score <score>` で総合 score が指定値以上、`--max-findings <count>` で全 severity の finding 合計が指定件数以下の文書に絞れます。score は 0 から 100 の整数で指定します。`--ungraded` は `specdojo.grade` が存在しない文書だけを選びます。評価の試行に失敗して grade が保存されなかった文書も未評価に含まれ、失敗試行そのものとの区別はしません。複数の選択条件は AND で適用され、`--path` や `--changed-only` とも併用できます。保存済み grade を前提とする `--verdict`、`--min-score`、`--max-findings` のいずれかと `--ungraded` の併用は入力エラーです。`grade list` はこの選択規則を plan の生成や文書更新なしで利用するための機械可読な入口で、標準出力にはリポジトリ相対パスだけを辞書順で出力します。
 
 `grade plan` は対象ごとに executor plan と reporter plan の2ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。executor plan は評価対象を1件だけリポジトリ相対パスで示し、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書も参考資料のパスとして列挙します。`--random-reference` を指定した場合は、同じ種別で `status: ready` の別文書から良い実例を1件無作為に選び、記載水準を比較するリファレンスとして記録します。Kata は同じ rulebook / recipe / sample / template 種別、成果物は同じ `specdojo.type` を候補範囲とします。実例は評価対象ではなく、`ready` も品質保証ではありません。対象・参考資料・実例の本文は plan に埋め込みません。再生成のたびに候補集合から選び直すため、同じ対象の plan でも実例だけが変わることがあります。`--random-reference` も `--reference` も指定しなければリファレンスは付けません。reporter plan は対象の固定 facts と GradeSubmission テンプレートだけを持ち、評価資料は持ちません。
 
@@ -493,7 +495,7 @@ finding の忠実性照合では、message に限り、Unicode の正準等価�
 
 ### 8.1. 文書単位の3段評価
 
-3段評価を「文書を外側、段を内側」の順で実行する場合は、リポジトリルートから `tools/grade/run-per-document.sh` を実行します。`--kind` で `rulebook` / `recipe` / `sample` / `template` のいずれかへ対象を限定し、`--path` を繰り返すと明示した文書だけを処理できます。初回運用の既定対象は `rulebook` です。
+3段評価を「文書を外側、段を内側」の順で実行する場合は、リポジトリルートから `tools/grade/run-per-document.sh` を実行します。`--kind` で `rulebook` / `recipe` / `sample` / `template` のいずれか、または `all` で4種別すべてを対象にし、`--path` を繰り返すと明示した文書だけを処理できます。`--changed-only` と `--ungraded` は `grade list` の選択結果を利用し、両方を指定した場合は変更済みと未評価の和集合を処理します。初回運用の既定対象は `rulebook` です。
 
 ```bash
 # 対象と agent / reference の確認だけを行う
@@ -501,11 +503,15 @@ tools/grade/run-per-document.sh --run-id 20260901-rulebooks --limit 3 --dry-run
 
 # rulebook を文書単位で3段評価する。同じ run-id で再実行すると中断箇所から再開する
 tools/grade/run-per-document.sh --run-id 20260901-rulebooks --kind rulebook
+
+# 変更済みまたは未評価の4種別を最大5件再評価する
+tools/grade/run-per-document.sh --run-id 20260908-recheck --kind all \
+  --changed-only --ungraded --limit 5
 ```
 
 各段は executor と reporter を個別に指定できます。1段目の比較リファレンスは `--kind` に応じて `docs/ja/specdojo/<種別ディレクトリ>/prj-overview-<kind>.md` を既定とします。たとえば `--kind recipe` では `docs/ja/specdojo/recipes/prj-overview-recipe.md` です。対応する既定文書が存在しない場合は警告し、1段目もリファレンスなしで続行します。`--stage-1-reference` の明示指定は既定値より優先しますが、選択した種別のディレクトリにある `prj-overview` 系 Markdown だけを受理し、異なる種別や `none` は入力エラーとします。解決した値（欠落時の `none` を含む）は `--dry-run` の `stage=1` 行で確認できます。2段目はリファレンスなし、3段目は `codex-expert-executor` によるリファレンスなしの確認が既定です。2段目が `pass`、score 96以上、finding 1件以下の3条件をすべて満たす場合だけ3段目を実行します。
 
-実行 state は既定で `logs/grade/runs/per-document/<run-id>/documents/` に文書・段ごとに保存し、保存先を変える場合は `--work-dir` で指定します。`docs/` の外へ置くのは、`grade plan --out` が段ごとに plan を書き出す一方で plan の ID が評価対象の文書から決まるため、3段分が同一 ID の Markdown となり `index build` が重複 ID で失敗するからです。`grade plan --out` はリポジトリ外のパスを拒否するため、保存先はリポジトリ内に置きます。agent が rate limit を返した場合は終了コード75で中断し、その段の完了 state は書きません。同じ引数と `--run-id` で再実行すると、完了済みの段を再適用せず未完了の段から続行します。設定が保存済み state と異なる場合は、別条件の結果を混在させず、新しい `--run-id` を要求します。
+実行 state は既定で `logs/grade/runs/per-document/<run-id>/documents/` に文書・段ごとに保存し、保存先を変える場合は `--work-dir` で指定します。初回に選択した文書は同じ Run の `selection.txt` へ固定し、再開時に grade の更新で `--changed-only` の再選択結果が変わっても、未完了の段を同じ対象で継続します。`docs/` の外へ置くのは、`grade plan --out` が段ごとに plan を書き出す一方で plan の ID が評価対象の文書から決まるため、3段分が同一 ID の Markdown となり `index build` が重複 ID で失敗するからです。`grade plan --out` はリポジトリ外のパスを拒否するため、保存先はリポジトリ内に置きます。agent が rate limit を返した場合は終了コード75で中断し、その段の完了 state は書きません。同じ引数と `--run-id` で再実行すると、完了済みの段を再適用せず未完了の段から続行します。設定が保存済み state と異なる場合は、別条件の結果を混在させず、新しい `--run-id` を要求します。
 
 各段の status、所要秒数、verdict、score、finding 件数、executor、reporter、reference は同ディレクトリの `results.tsv` で確認できます。通常の agent / apply 失敗も段の結果として保存し、1段目の失敗後は安定評価の2段目へ進みます。2段目の結果が得られなかった場合は条件を満たしたと推測せず、3段目を `skipped_condition` として記録します。
 

@@ -52,6 +52,19 @@ import { dirname, join } from "node:path";
 
 const args = process.argv.slice(2);
 const value = (option) => args[args.indexOf(option) + 1];
+if (args[0] === "grade" && args[1] === "list") {
+  const mode = process.env.FAKE_GRADE_LIST_MODE ?? "changed";
+  if (mode === "empty") process.exit(0);
+  if (args.includes("--changed-only")) {
+    process.stdout.write("docs/ja/specdojo/rulebooks/fixture-rulebook.md\\n");
+    process.stdout.write("docs/ja/specdojo/recipes/prj-overview-recipe.md\\n");
+  }
+  if (args.includes("--ungraded")) {
+    process.stdout.write("docs/ja/specdojo/rulebooks/fixture-rulebook.md\\n");
+    process.stdout.write("docs/ja/specdojo/samples/prj-overview-sample.md\\n");
+  }
+  process.exit(0);
+}
 if (args[0] === "grade" && args[1] === "plan") {
   const out = value("--out");
   mkdirSync(out, { recursive: true });
@@ -95,6 +108,7 @@ process.exit(1);
 function runPipeline(
   fixture: ReturnType<typeof makeFixture>,
   extraEnv: Record<string, string> = {},
+  extraArguments: string[] = [],
 ) {
   return spawnSync(
     "bash",
@@ -108,6 +122,7 @@ function runPipeline(
       "docs/ja/specdojo/rulebooks/fixture-rulebook.md",
       "--specdojo-bin",
       fixture.fakeSpecdojo,
+      ...extraArguments,
     ],
     {
       cwd: fixture.root,
@@ -121,11 +136,12 @@ function runDryRun(
   fixture: ReturnType<typeof makeFixture>,
   kind: string,
   extraArguments: string[] = [],
+  extraEnv: Record<string, string> = {},
 ) {
   return spawnSync(
     "bash",
     [script, "--run-id", "fixture-dry-run", "--kind", kind, "--dry-run", ...extraArguments],
-    { cwd: fixture.root, encoding: "utf8", env: process.env },
+    { cwd: fixture.root, encoding: "utf8", env: { ...process.env, ...extraEnv } },
   );
 }
 
@@ -200,6 +216,51 @@ describe("grade per-document pipeline", () => {
     );
   });
 
+  it("selects the union of changed and ungraded documents across all kinds", () => {
+    const fixture = makeFixture();
+
+    const result = runDryRun(fixture, "all", [
+      "--changed-only",
+      "--ungraded",
+      "--specdojo-bin",
+      fixture.fakeSpecdojo,
+    ]);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain("kind=all changed_only=true ungraded=true documents=3");
+    expect(result.stdout).toContain("reference=per-kind");
+    expect(result.stdout.match(/fixture-rulebook\.md/g)).toHaveLength(1);
+    expect(result.stdout).toContain("docs/ja/specdojo/recipes/prj-overview-recipe.md");
+    expect(result.stdout).toContain("docs/ja/specdojo/samples/prj-overview-sample.md");
+  });
+
+  it("treats an empty filtered selection as a successful no-op", () => {
+    const fixture = makeFixture();
+
+    const result = spawnSync(
+      "bash",
+      [
+        script,
+        "--run-id",
+        "fixture-noop",
+        "--kind",
+        "all",
+        "--changed-only",
+        "--specdojo-bin",
+        fixture.fakeSpecdojo,
+      ],
+      {
+        cwd: fixture.root,
+        encoding: "utf8",
+        env: { ...process.env, FAKE_GRADE_LIST_MODE: "empty" },
+      },
+    );
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain("documents=0");
+    expect(result.stdout).toContain("grade pipeline complete: selected=0 processed=0");
+  });
+
   it("runs all three stages for one document and skips it on resume", () => {
     const fixture = makeFixture();
 
@@ -233,6 +294,27 @@ describe("grade per-document pipeline", () => {
     expect(existsSync(fixture.stateFile)).toBe(false);
 
     const resumed = runPipeline(fixture, { FAKE_RATE_LIMIT_FILE: limiter });
+    expect(resumed.status, resumed.stderr).toBe(0);
+    expect(readFileSync(fixture.stateFile, "utf8")).toBe("3");
+  });
+
+  it("reuses the initial filtered selection when resuming", () => {
+    const fixture = makeFixture();
+    const limiter = join(fixture.root, "rate-limit-filtered-once");
+    writeFileSync(limiter, "1");
+
+    const limited = runPipeline(
+      fixture,
+      { FAKE_RATE_LIMIT_FILE: limiter, FAKE_GRADE_LIST_MODE: "changed" },
+      ["--changed-only"],
+    );
+    expect(limited.status).toBe(75);
+
+    const resumed = runPipeline(
+      fixture,
+      { FAKE_RATE_LIMIT_FILE: limiter, FAKE_GRADE_LIST_MODE: "empty" },
+      ["--changed-only"],
+    );
     expect(resumed.status, resumed.stderr).toBe(0);
     expect(readFileSync(fixture.stateFile, "utf8")).toBe("3");
   });
