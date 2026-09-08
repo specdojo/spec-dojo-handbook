@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
 import yaml from "js-yaml";
@@ -38,7 +38,7 @@ export type JobAgentDefinition = {
   reporter?: string;
 };
 
-export type JobTaskDefinition = {
+export type JobAgentTaskDefinition = {
   mode: TaskMode;
   owner?: string;
   description: string;
@@ -48,6 +48,22 @@ export type JobTaskDefinition = {
   capabilities?: string[];
   proficiency?: Proficiency;
 };
+
+export type JobCommandAnalysisDefinition = {
+  agent: string;
+  description: string;
+};
+
+export type JobCommandTaskDefinition = {
+  mode: "command";
+  owner?: string;
+  command: string;
+  analysis?: JobCommandAnalysisDefinition;
+  targets?: string[];
+  paths?: string[];
+};
+
+export type JobTaskDefinition = JobAgentTaskDefinition | JobCommandTaskDefinition;
 
 export type JobDefinition = {
   id: string;
@@ -70,6 +86,8 @@ export type JobRunAttempt = {
   completed_at?: string;
   status: "running" | "succeeded" | "failed" | "noop";
   result_ref?: string;
+  evidence_ref?: string;
+  exit_code?: number | null;
   reason?: string;
 };
 
@@ -109,6 +127,18 @@ export type MaterializedJobRun = {
   duplicateComplete: boolean;
 };
 
+export type JobCommandResult = {
+  command: string;
+  startedAt: string;
+  completedAt: string;
+  exitCode: number | null;
+  stdout: string;
+  stderr: string;
+  stdoutTruncated: boolean;
+  stderrTruncated: boolean;
+  error?: string;
+};
+
 type JobStateFile = {
   version: 1;
   jobs: Record<
@@ -119,6 +149,14 @@ type JobStateFile = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function isJobCommandTask(task: JobTaskDefinition): task is JobCommandTaskDefinition {
+  return task.mode === "command";
+}
+
+export function isJobAgentTask(task: JobTaskDefinition): task is JobAgentTaskDefinition {
+  return task.mode === "edit" || task.mode === "review";
 }
 
 function validStringList(value: unknown): value is string[] {
@@ -174,11 +212,26 @@ function isJobRunState(value: unknown): value is JobRunState {
 
 function isJobTaskDefinition(value: unknown): value is JobTaskDefinition {
   if (!isRecord(value)) return false;
+  if (value.owner !== undefined && typeof value.owner !== "string") return false;
+  if (
+    !(["targets", "paths"] as const).every(
+      (field) => value[field] === undefined || validStringList(value[field]),
+    )
+  )
+    return false;
+  if (value.mode === "command") {
+    return (
+      typeof value.command === "string" &&
+      (value.analysis === undefined ||
+        (isRecord(value.analysis) &&
+          isAgentNickname(value.analysis.agent) &&
+          typeof value.analysis.description === "string"))
+    );
+  }
   if (value.mode !== "edit" && value.mode !== "review") return false;
   if (typeof value.description !== "string") return false;
-  if (value.owner !== undefined && typeof value.owner !== "string") return false;
   if (value.agent !== undefined && !isJobAgentDefinition(value.agent)) return false;
-  return (["targets", "paths", "capabilities"] as const).every(
+  return (["capabilities"] as const).every(
     (field) => value[field] === undefined || validStringList(value[field]),
   );
 }
@@ -188,7 +241,11 @@ function isJobRunAttempt(value: unknown): value is JobRunAttempt {
     isRecord(value) &&
     typeof value.attempt === "number" &&
     typeof value.started_at === "string" &&
-    isJobRunState(value.status)
+    isJobRunState(value.status) &&
+    (value.evidence_ref === undefined || typeof value.evidence_ref === "string") &&
+    (value.exit_code === undefined ||
+      value.exit_code === null ||
+      typeof value.exit_code === "number")
   );
 }
 
@@ -288,49 +345,103 @@ export function parseJobDefinition(
   if (!isRecord(value.task)) errors.push("task is required and must be a mapping");
   else {
     const mode = value.task.mode;
-    if (mode !== "edit" && mode !== "review") errors.push("task.mode must be edit or review");
-    const description =
-      typeof value.task.description === "string" ? value.task.description.trim() : "";
-    if (!description) errors.push("task.description is required");
     const targets = validStringList(value.task.targets) ? value.task.targets : undefined;
     const paths = validStringList(value.task.paths) ? value.task.paths : undefined;
-    if (!targets && !paths)
-      errors.push("task.targets or task.paths must be a non-empty string list");
     if (value.task.targets !== undefined && !targets)
       errors.push("task.targets must be a non-empty string list");
     if (value.task.paths !== undefined && !paths)
       errors.push("task.paths must be a non-empty string list");
     if (value.task.owner !== undefined && typeof value.task.owner !== "string")
       errors.push("task.owner must be a string");
-    let agent: JobAgentDefinition | undefined;
-    if (value.task.agent !== undefined) {
-      const parsedAgent = parseJobAgent(value.task.agent);
-      if (parsedAgent.error) errors.push(parsedAgent.error);
-      agent = parsedAgent.agent;
-    }
-    if (value.task.capabilities !== undefined && !validStringList(value.task.capabilities)) {
-      errors.push("task.capabilities must be a non-empty string list");
-    }
-    const proficiency = value.task.proficiency;
-    if (
-      proficiency !== undefined &&
-      !["low", "normal", "high", "expert"].includes(String(proficiency))
-    ) {
-      errors.push("task.proficiency must be low|normal|high|expert");
-    }
-    if ((mode === "edit" || mode === "review") && description && (targets || paths)) {
-      task = {
-        mode,
-        description,
-        ...(targets ? { targets: targets.map((target) => target.trim()) } : {}),
-        ...(paths ? { paths: paths.map((path) => path.trim()) } : {}),
-        ...(typeof value.task.owner === "string" ? { owner: value.task.owner.trim() } : {}),
-        ...(agent ? { agent } : {}),
-        ...(validStringList(value.task.capabilities)
-          ? { capabilities: value.task.capabilities }
-          : {}),
-        ...(proficiency !== undefined ? { proficiency: proficiency as Proficiency } : {}),
-      };
+    const common = {
+      ...(targets ? { targets: targets.map((target) => target.trim()) } : {}),
+      ...(paths ? { paths: paths.map((path) => path.trim()) } : {}),
+      ...(typeof value.task.owner === "string" ? { owner: value.task.owner.trim() } : {}),
+    };
+
+    if (mode === "command") {
+      const command = typeof value.task.command === "string" ? value.task.command.trim() : "";
+      if (!command) errors.push("task.command is required for command mode");
+      let analysis: JobCommandAnalysisDefinition | undefined;
+      if (value.task.analysis !== undefined) {
+        if (!isRecord(value.task.analysis)) {
+          errors.push("task.analysis must be a mapping with agent and description");
+        } else {
+          const unknownAnalysisKeys = Object.keys(value.task.analysis).filter(
+            (key) => key !== "agent" && key !== "description",
+          );
+          if (unknownAnalysisKeys.length > 0) {
+            errors.push(
+              `task.analysis has unknown key(s): ${unknownAnalysisKeys.sort().join(", ")}`,
+            );
+          }
+          if (!isAgentNickname(value.task.analysis.agent)) {
+            errors.push("task.analysis.agent must be an agent nickname from pm-members.yaml");
+          }
+          const analysisDescription =
+            typeof value.task.analysis.description === "string"
+              ? value.task.analysis.description.trim()
+              : "";
+          if (!analysisDescription) errors.push("task.analysis.description is required");
+          if (isAgentNickname(value.task.analysis.agent) && analysisDescription) {
+            analysis = {
+              agent: value.task.analysis.agent.trim(),
+              description: analysisDescription,
+            };
+          }
+        }
+      }
+      if (value.task.agent !== undefined)
+        errors.push("task.agent is not allowed in command mode; use task.analysis.agent");
+      if (value.task.description !== undefined)
+        errors.push(
+          "task.description is not allowed in command mode; use task.analysis.description",
+        );
+      if (value.task.capabilities !== undefined || value.task.proficiency !== undefined) {
+        errors.push("task.capabilities and task.proficiency are not allowed in command mode");
+      }
+      if (command)
+        task = { mode: "command", command, ...(analysis ? { analysis } : {}), ...common };
+    } else {
+      if (mode !== "edit" && mode !== "review") {
+        errors.push("task.mode must be edit, review, or command");
+      }
+      const description =
+        typeof value.task.description === "string" ? value.task.description.trim() : "";
+      if (!description) errors.push("task.description is required");
+      if (!targets && !paths)
+        errors.push("task.targets or task.paths must be a non-empty string list");
+      let agent: JobAgentDefinition | undefined;
+      if (value.task.agent !== undefined) {
+        const parsedAgent = parseJobAgent(value.task.agent);
+        if (parsedAgent.error) errors.push(parsedAgent.error);
+        agent = parsedAgent.agent;
+      }
+      if (value.task.analysis !== undefined || value.task.command !== undefined) {
+        errors.push("task.command and task.analysis are only allowed in command mode");
+      }
+      if (value.task.capabilities !== undefined && !validStringList(value.task.capabilities)) {
+        errors.push("task.capabilities must be a non-empty string list");
+      }
+      const proficiency = value.task.proficiency;
+      if (
+        proficiency !== undefined &&
+        !["low", "normal", "high", "expert"].includes(String(proficiency))
+      ) {
+        errors.push("task.proficiency must be low|normal|high|expert");
+      }
+      if ((mode === "edit" || mode === "review") && description && (targets || paths)) {
+        task = {
+          mode,
+          description,
+          ...common,
+          ...(agent ? { agent } : {}),
+          ...(validStringList(value.task.capabilities)
+            ? { capabilities: value.task.capabilities }
+            : {}),
+          ...(proficiency !== undefined ? { proficiency: proficiency as Proficiency } : {}),
+        };
+      }
     }
   }
 
@@ -598,6 +709,82 @@ function repoRelative(absPath: string): string {
   return relative(specdojoRootDir(), absPath).replaceAll("\\", "/");
 }
 
+const MAX_COMMAND_OUTPUT_BYTES = 64 * 1024;
+
+function appendCommandOutput(
+  chunks: Buffer[],
+  chunk: Buffer,
+  capturedBytes: number,
+): { capturedBytes: number; truncated: boolean } {
+  if (capturedBytes >= MAX_COMMAND_OUTPUT_BYTES) {
+    return { capturedBytes, truncated: chunk.length > 0 };
+  }
+  const remaining = MAX_COMMAND_OUTPUT_BYTES - capturedBytes;
+  chunks.push(chunk.subarray(0, remaining));
+  return {
+    capturedBytes: capturedBytes + Math.min(chunk.length, remaining),
+    truncated: chunk.length > remaining,
+  };
+}
+
+function commandOutputText(chunks: Buffer[], truncated: boolean): string {
+  const text = Buffer.concat(chunks).toString("utf8");
+  return truncated ? text.replace(/\uFFFD$/u, "") : text;
+}
+
+/** Executes a materialized Job command directly in the runner process, never through an agent. */
+export async function executeJobCommand(command: string, cwd: string): Promise<JobCommandResult> {
+  const startedAt = new Date().toISOString();
+  return await new Promise((resolveResult) => {
+    const stdoutChunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
+    let stdoutBytes = 0;
+    let stderrBytes = 0;
+    let stdoutTruncated = false;
+    let stderrTruncated = false;
+    let settled = false;
+    const executable = process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "/bin/sh";
+    const args =
+      process.platform === "win32" ? ["/d", "/s", "/c", command] : ["-eu", "-c", command];
+    const child = spawn(executable, args, {
+      cwd,
+      env: gitEnvironment(),
+      shell: false,
+      stdio: ["ignore", "pipe", "pipe"],
+      windowsHide: true,
+    });
+    child.stdout.on("data", (chunk: Buffer) => {
+      process.stdout.write(chunk);
+      const appended = appendCommandOutput(stdoutChunks, chunk, stdoutBytes);
+      stdoutBytes = appended.capturedBytes;
+      stdoutTruncated ||= appended.truncated;
+    });
+    child.stderr.on("data", (chunk: Buffer) => {
+      process.stderr.write(chunk);
+      const appended = appendCommandOutput(stderrChunks, chunk, stderrBytes);
+      stderrBytes = appended.capturedBytes;
+      stderrTruncated ||= appended.truncated;
+    });
+    const finish = (exitCode: number | null, error?: string): void => {
+      if (settled) return;
+      settled = true;
+      resolveResult({
+        command,
+        startedAt,
+        completedAt: new Date().toISOString(),
+        exitCode,
+        stdout: commandOutputText(stdoutChunks, stdoutTruncated),
+        stderr: commandOutputText(stderrChunks, stderrTruncated),
+        stdoutTruncated,
+        stderrTruncated,
+        ...(error ? { error } : {}),
+      });
+    };
+    child.once("error", (error) => finish(null, error.message));
+    child.once("close", (code) => finish(code));
+  });
+}
+
 function jobPlanFrontmatter(
   projectId: string,
   definition: JobDefinition,
@@ -610,7 +797,9 @@ function jobPlanFrontmatter(
     "rulebook: none",
     `task_id: ${record.run_id}`,
     `name: "${definition.name.replaceAll('"', "'")}"`,
-    `mode: ${record.task.mode}`,
+    // A command Run's plan is consumed only by the optional analysis reporter. Exec result
+    // frontmatter intentionally keeps the existing edit/review vocabulary for compatibility.
+    `mode: ${isJobCommandTask(record.task) ? "edit" : record.task.mode}`,
     "status: ready",
     `project_id: ${projectId}`,
     "origin: job",
@@ -638,13 +827,35 @@ export async function generateJobPlan(
   if (!existsSync(templatePath)) throw new Error(`Template not found: ${templatePath}`);
   const planPath = join(paths.executionPath, "exec", "plans", `${record.run_id}-plan.md`);
   mkdirSync(resolve(planPath, ".."), { recursive: true });
+  const commandTask = isJobCommandTask(record.task) ? record.task : undefined;
   const values: Record<string, string> = {
     _FRONTMATTER_: jobPlanFrontmatter(paths.projectId, definition, record),
     _JOB_ID_: definition.id,
     _JOB_NAME_: definition.name,
     _RUN_ID_: record.run_id,
     _SCHEDULED_AT_: record.scheduled_at,
-    _JOB_DESCRIPTION_: record.task.description,
+    _JOB_DESCRIPTION_:
+      commandTask?.analysis?.description ??
+      (commandTask
+        ? "コマンドの終了結果を evidence として記録する。agent による判断は行わない。"
+        : isJobAgentTask(record.task)
+          ? record.task.description
+          : ""),
+    _JOB_EXECUTION_: commandTask
+      ? [
+          "### 3.1. 決定論的コマンド",
+          "",
+          "runner が次の解決済みコマンドを agent の sandbox 外で直接実行する。",
+          "",
+          "```sh",
+          commandTask.command,
+          "```",
+          "",
+          commandTask.analysis
+            ? "コマンドが成功した場合だけ、上記の判断を reporter agent が evidence に基づいて行う。"
+            : "コマンドの終了コードから Run の成否を直接決定する。",
+        ].join("\n")
+      : "",
     _JOB_INPUTS_: JSON.stringify(record.inputs, null, 2),
     _JOB_TARGETS_: record.task.targets?.map((target) => `- [[${target}]]`).join("\n") ?? "- -",
     _JOB_PATHS_: record.task.paths?.map((path) => `- \`${path}\``).join("\n") ?? "- -",
@@ -685,9 +896,19 @@ export async function materializeJobRun(opts: {
     : undefined;
   const task: JobTaskDefinition = {
     ...definition.task,
-    description: renderJobTemplate(definition.task.description, context),
     ...(targets ? { targets } : {}),
   };
+  if (isJobCommandTask(task)) {
+    task.command = renderJobTemplate(task.command, context);
+    if (task.analysis) {
+      task.analysis = {
+        ...task.analysis,
+        description: renderJobTemplate(task.analysis.description, context),
+      };
+    }
+  } else {
+    task.description = renderJobTemplate(task.description, context);
+  }
   const now = new Date().toISOString();
   let record: JobRunRecord;
   if (existsSync(runPath)) {
@@ -750,6 +971,8 @@ export function completeJobRun(opts: {
   runPath: string;
   status: "succeeded" | "failed" | "noop";
   reason?: string;
+  evidenceRef?: string;
+  exitCode?: number | null;
 }): JobRunRecord {
   const paths = resolveJobPaths(opts.projectId);
   const record = readJobRunRecord(opts.runPath);
@@ -763,6 +986,8 @@ export function completeJobRun(opts: {
     completed_at: completedAt,
     status: opts.status,
     result_ref: record.result_ref,
+    ...(opts.evidenceRef ? { evidence_ref: opts.evidenceRef } : {}),
+    ...(opts.exitCode !== undefined ? { exit_code: opts.exitCode } : {}),
     ...(opts.reason ? { reason: opts.reason } : {}),
   };
   let checkpointAfter: Record<string, unknown> | undefined;

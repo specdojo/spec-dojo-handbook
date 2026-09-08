@@ -13,7 +13,7 @@ Routine Operation Guide
 
 routineは、既存の未完了Schedule/Register項目を探索するほか、再利用可能なJob Definitionから期間・revisionごとのJob Runを生成できます。週報や変更文書の翻訳は[Job実行設計](../../product/040-system-design/sysd-job-execution.md)を参照してください。
 
-継続品質評価は `job-grade-kata` のような Job Definition から `action.kind: job` の routine で定期起動します。文書の選択、段の順序、各文書の executor / reporter 実行、`grade apply --path --analysis-from` の逐次処理は `tools/grade/run-per-document.sh` が持ち、Job はその入口の起動と実行結果の判断だけを agent へ委譲します。責務の切り分け基準は [Job定義標準](../standards/job-definition-standard.md) を参照します。これにより routine は時刻条件、Job は agent への委譲単位、script は決定論的な手順、grade は文書単位の plan と冪等な品質状態という責務分担になります。
+継続品質評価は `job-grade-kata` のような Job Definition から `action.kind: job` の routine で定期起動します。文書の選択、段の順序、各文書の executor / reporter 実行、`grade apply --path --analysis-from` の逐次処理は `tools/grade/run-per-document.sh` が持ちます。Job runnerは`task.command`からその入口を直接起動してevidenceを記録し、成功後の結果判断だけを`task.analysis`のreporter agentへ委譲します。責務の切り分け基準は [Job定義標準](../standards/job-definition-standard.md) を参照します。
 
 **対象読者**
 
@@ -99,7 +99,7 @@ Kata の定期評価は、ローカル評価を2回行った後、見落とし�
 
 3段目の高信頼 pass は、2段目の保存結果に対して `--verdict pass --min-score 96 --max-findings 1` を AND 適用した集合です。96点は、ローカルが `dec-rulebook.md` を finding 1件で pass とした一方、expert が12件を検出した実測上の偽陰性境界です。9件のサンプル評価でも pass の score は91、96、100に分かれ、96点以上かつ finding 1件以下を「問題がない」だけでなく「検出できていない」可能性がある層として扱います。score 96でも `needs-work` なら修正対象が既に確定しているため、verdict 条件で除外します。
 
-Job が担うのは、この入口を1回起動し、実行結果（未完了の段、失敗の切り分け、3段目がスキップされた理由、閾値の見直し要否）を判断することだけです。段ごとの agent、リファレンス、対象種別、件数上限は script の引数であり、Job の `inputs` から解決します。
+Job runnerは、この入口をmaterialize済みの引数で1回起動し、コマンド、終了コード、stdout/stderrをevidenceへ記録します。コマンドが成功した場合だけanalysis reporterが、未完了の段、失敗の切り分け、3段目がスキップされた理由、閾値の見直し要否を判断します。段ごとのagent、リファレンス、対象種別、件数上限はscriptの引数であり、Jobの`inputs`から解決します。
 
 各段は直前の `grade apply` 後の文書を入力にします。未解消 finding は次の plan へ引き継がれ、後段の agent が severity を下げて提出しても `grade apply` が前回値を維持します。rate limit や中断で段が未完了になった場合は、同じ `--run-id` で再実行すると完了済みの段を飛ばして再開します。閾値は固定の永続値ではなく、expert 再確認の対象率と偽陰性を定期レビューし、変更時は Job、routine、本節、根拠となる登録項目を同時に更新します。
 
