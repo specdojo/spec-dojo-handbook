@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { copyFile, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+
+export { specdojoPackageRootDir } from "./package-paths.js";
 
 // exec scaffold --provider <name> の実体。
 // npm package 内の templates/<provider>/ を配布原本として、利用リポジトリへコピーする。
@@ -25,12 +26,6 @@ export interface ProviderScaffoldPlan {
 export interface ProviderScaffoldOutcome {
   entry: ProviderScaffoldEntry;
   written: boolean;
-}
-
-// 配布原本はインストール済み package のルートから解決する。このモジュールは
-// 開発時は src/、配布時は dist/ 直下にあり、どちらも package ルートの 1 階層下。
-export function specdojoPackageRootDir(): string {
-  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 }
 
 export async function listProviderTemplates(packageRoot: string): Promise<string[]> {
