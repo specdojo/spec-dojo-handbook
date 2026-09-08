@@ -56,6 +56,8 @@ import type {
 } from "./exec-types.js";
 import {
   acquireExecRunLock,
+  EXEC_RUN_LOCK_TOKEN_ENV,
+  inheritsExecRunLock,
   releaseExecRunLock,
   ROUTINE_BUSY_SKIP_EXIT_CODE,
   ROUTINE_EXEC_ENV,
@@ -88,10 +90,12 @@ import {
   generateRegisterPlan,
   isRegisterFailureMode,
   parseRegisterIds,
+  parseRegisterSelectionFilter,
   registerRunExitCode,
   requireRunnableRegisterItem,
   resolveRegisterRunTarget,
   sanitizeRegisterConclusion,
+  selectRegisterItems,
   selectRegisterCommitPaths,
   selectRegisterRunArtifactResidue,
   ticketPathFromItem,
@@ -99,7 +103,12 @@ import {
   type RegisterItemSummary,
   type RegisterItemTransition,
 } from "./exec-register.js";
-import type { PjrItem, RegisterPaths } from "./register.js";
+import {
+  loadRegisterItems,
+  resolveRegisterPaths,
+  type PjrItem,
+  type RegisterPaths,
+} from "./register.js";
 import { registerEventFilePath } from "./register-events.js";
 import { displayIdFromTicketFilename } from "./register-item.js";
 import {
@@ -225,6 +234,11 @@ export type RunOpts = {
   deliverable?: string;
   plan?: string;
   register?: string | string[];
+  registerFilter?: boolean;
+  registerTypes?: string;
+  registerPriorities?: string;
+  registerStatuses?: string;
+  registerLimit?: string;
   job?: string;
   input?: string | string[];
   scheduledAt?: string;
@@ -690,6 +704,10 @@ async function withProjectExecRunLock(
   action: () => Promise<void>,
 ): Promise<void> {
   const resolvedPaths = resolveProjectPaths({ project: opts.project });
+  if (inheritsExecRunLock(resolvedPaths.executionPath)) {
+    await action();
+    return;
+  }
   const policy = parseExecRunBusyPolicy(opts.ifBusy);
   const handle = await acquireExecRunLock(resolvedPaths.executionPath, {
     actor: opts.by ?? `exec-${commandLabel}`,
@@ -705,9 +723,13 @@ async function withProjectExecRunLock(
     return;
   }
 
+  const previousInheritedToken = process.env[EXEC_RUN_LOCK_TOKEN_ENV];
+  process.env[EXEC_RUN_LOCK_TOKEN_ENV] = handle.token;
   try {
     await action();
   } finally {
+    if (previousInheritedToken === undefined) delete process.env[EXEC_RUN_LOCK_TOKEN_ENV];
+    else process.env[EXEC_RUN_LOCK_TOKEN_ENV] = previousInheritedToken;
     releaseExecRunLock(handle);
   }
 }
@@ -5083,7 +5105,27 @@ async function runRegisterMode(opts: RunOpts): Promise<void> {
     );
   }
 
-  const { ids, duplicates } = parseRegisterIds(opts.register);
+  const selectionFilter = opts.registerFilter
+    ? parseRegisterSelectionFilter({
+        types: opts.registerTypes,
+        priorities: opts.registerPriorities,
+        statuses: opts.registerStatuses,
+        limit: opts.registerLimit,
+      })
+    : undefined;
+  const selectedIds = selectionFilter
+    ? selectRegisterItems(
+        loadRegisterItems(resolveRegisterPaths({ project: projectId })).map((view) => view.item),
+        selectionFilter,
+      ).map((item) => item.id)
+    : undefined;
+  if (selectedIds?.length === 0) {
+    process.stdout.write("No matching register items.\n");
+    return;
+  }
+  const { ids, duplicates } = selectedIds
+    ? { ids: selectedIds, duplicates: [] }
+    : parseRegisterIds(opts.register);
   for (const duplicate of duplicates) {
     process.stdout.write(`Skipping duplicate register item id: ${duplicate}\n`);
   }
@@ -5270,6 +5312,15 @@ export function registerRunCommand(exec: Command): void {
     "--register <pjrIds...>",
     "One or more project register item IDs (PJR-XXXX) to run; tracks state via register transitions. In place and serial by default; add --worktree to isolate deliverables (and --parallel to run concurrently)",
   );
+  rcmd.option(
+    "--register-filter",
+    "Select register items deterministically with --register-types/--register-priorities/--register-statuses/--register-limit",
+    false,
+  );
+  rcmd.option("--register-types <types>", "Comma-separated register item types");
+  rcmd.option("--register-priorities <priorities>", "Comma-separated register priorities");
+  rcmd.option("--register-statuses <statuses>", "Comma-separated register statuses");
+  rcmd.option("--register-limit <n>", "Maximum selected register items");
   rcmd.option("--job <jobId>", "Materialize and run a reusable job definition");
   rcmd.option(
     "--input <key=value...>",
@@ -5360,10 +5411,31 @@ export function registerRunCommand(exec: Command): void {
       const hasTask = !!opts.task;
       const hasDeliverable = !!opts.deliverable;
       const hasPlan = !!opts.plan;
-      const hasRegister = !!opts.register;
+      const hasRegisterIds = !!opts.register;
+      const hasRegisterFilter = !!opts.registerFilter;
+      const hasRegister = hasRegisterIds || hasRegisterFilter;
       const hasJob = !!opts.job;
       const isManual = hasTask || hasDeliverable || hasPlan || hasRegister || hasJob;
       const isBatch = isAuto;
+
+      if (hasRegisterIds && hasRegisterFilter) {
+        process.stdout.write("Specify either --register or --register-filter, not both.\n");
+        process.exitCode = 1;
+        return;
+      }
+      if (
+        (opts.registerTypes ||
+          opts.registerPriorities ||
+          opts.registerStatuses ||
+          opts.registerLimit) &&
+        !hasRegisterFilter
+      ) {
+        process.stdout.write(
+          "--register-types, --register-priorities, --register-statuses, and --register-limit require --register-filter.\n",
+        );
+        process.exitCode = 1;
+        return;
+      }
 
       if (!isAuto && !isManual) {
         process.stdout.write(

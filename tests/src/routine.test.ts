@@ -4,11 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   aggregateRoutineActionResults,
-  buildExecAutoArgs,
-  buildExecCycleArgs,
-  buildExecResumeArgs,
   buildJobRunArgs,
-  buildRegisterRunArgs,
   cronOccurrences,
   executeRoutineActions,
   formatRoutineLastRun,
@@ -18,34 +14,14 @@ import {
   parseIntervalMs,
   parseRoutineDoc,
   routineActionKindLabel,
-  selectRegisterItems,
   type RoutineDoc,
 } from "../../src/routine.js";
-import type { PjrItem } from "../../src/register.js";
 
 function makeRoutine(overrides: Partial<RoutineDoc> = {}): RoutineDoc {
   return {
     id: "rtn-sample",
     interval: "1d",
-    action: { kind: "exec-auto" },
-    ...overrides,
-  };
-}
-
-function makeItem(overrides: Partial<PjrItem> = {}): PjrItem {
-  return {
-    id: "PJR-0001",
-    status: "open",
-    title: "サンプル項目",
-    description: "説明",
-    type: "todo",
-    priority: "high",
-    owner: "ARC",
-    registeredAt: "_TODO_",
-    due: "-",
-    completedAt: "-",
-    conclusion: "-",
-    ticket: "-",
+    action: { kind: "job", job: "job-sample" },
     ...overrides,
   };
 }
@@ -86,7 +62,7 @@ describe("isRoutineDue", () => {
 });
 
 describe("parseRoutineDoc", () => {
-  it("register kind の妥当な定義を受け入れる", () => {
+  it("job kind の妥当な定義を受け入れる", () => {
     const { doc, errors } = parseRoutineDoc(
       {
         id: "rtn-daily-sweep",
@@ -94,9 +70,9 @@ describe("parseRoutineDoc", () => {
         enabled: true,
         interval: "1d",
         action: {
-          kind: "register",
-          filter: { types: ["todo"], priorities: ["high"], statuses: ["open"] },
-          limit: 3,
+          kind: "job",
+          job: "job-register-sweep",
+          inputs: { types: "todo", priorities: "high", statuses: "open", limit: "3" },
         },
       },
       "rtn-daily-sweep.yaml",
@@ -109,16 +85,16 @@ describe("parseRoutineDoc", () => {
       enabled: true,
       interval: "1d",
       action: {
-        kind: "register",
-        filter: { types: ["todo"], priorities: ["high"], statuses: ["open"] },
-        limit: 3,
+        kind: "job",
+        job: "job-register-sweep",
+        inputs: { types: "todo", priorities: "high", statuses: "open", limit: "3" },
       },
     });
   });
 
   it("id とファイル名の不一致を検出する", () => {
     const { doc, errors } = parseRoutineDoc(
-      { id: "rtn-other", interval: "1d", action: { kind: "exec-auto" } },
+      { id: "rtn-other", interval: "1d", action: { kind: "job", job: "job-auto" } },
       "rtn-daily.yaml",
     );
 
@@ -139,18 +115,19 @@ describe("parseRoutineDoc", () => {
     expect(errors.every((e) => e.startsWith("rtn-bad.yaml: "))).toBe(true);
   });
 
-  it("filter の未知の値を報告する", () => {
+  it("旧 action kind を拒否して Job への移行を要求する", () => {
     const { errors } = parseRoutineDoc(
       {
-        id: "rtn-bad-filter",
+        id: "rtn-legacy",
         interval: "1d",
-        action: { kind: "register", filter: { types: ["epic"] } },
+        action: { kind: "exec-auto" },
       },
-      "rtn-bad-filter.yaml",
+      "rtn-legacy.yaml",
     );
 
     expect(errors).toEqual([
-      'rtn-bad-filter.yaml: action.filter.types contains unknown value "epic". Allowed: todo, question, risk, issue, change-request, decision, note',
+      'rtn-legacy.yaml: action.kind must be job (got "exec-auto")',
+      "rtn-legacy.yaml: action.job must match job-<slug>",
     ]);
   });
 
@@ -160,8 +137,8 @@ describe("parseRoutineDoc", () => {
         id: "rtn-sequential",
         interval: "1d",
         action: [
-          { kind: "exec-auto", strategy: "fifo", parallel: 1 },
-          { kind: "exec-auto", strategy: "critical-first", parallel: 2 },
+          { kind: "job", job: "job-first", inputs: { mode: "fifo" } },
+          { kind: "job", job: "job-second", inputs: { mode: "critical-first" } },
           { kind: "job", job: "job-final-check", inputs: { mode: "strict" } },
         ],
       },
@@ -170,8 +147,8 @@ describe("parseRoutineDoc", () => {
 
     expect(errors).toEqual([]);
     expect(doc?.action).toEqual([
-      { kind: "exec-auto", strategy: "fifo", parallel: 1 },
-      { kind: "exec-auto", strategy: "critical-first", parallel: 2 },
+      { kind: "job", job: "job-first", inputs: { mode: "fifo" } },
+      { kind: "job", job: "job-second", inputs: { mode: "critical-first" } },
       { kind: "job", job: "job-final-check", inputs: { mode: "strict" } },
     ]);
   });
@@ -185,14 +162,14 @@ describe("parseRoutineDoc", () => {
       {
         id: "rtn-invalid-step",
         interval: "1d",
-        action: [{ kind: "exec-auto" }, { kind: "unknown" }],
+        action: [{ kind: "job", job: "job-first" }, { kind: "unknown" }],
       },
       "rtn-invalid-step.yaml",
     );
 
     expect(empty.errors).toContain("rtn-empty.yaml: action must contain at least one action");
     expect(invalid.errors).toContain(
-      'rtn-invalid-step.yaml: action[1].kind must be one of: register, exec-auto, exec-resume, exec-cycle, job (got "unknown")',
+      'rtn-invalid-step.yaml: action[1].kind must be job (got "unknown")',
     );
   });
 });
@@ -207,10 +184,13 @@ describe("aggregateRoutineActionResults", () => {
 
 describe("routineActionKindLabel", () => {
   it("単一 kind と配列の実行順を表示する", () => {
-    expect(routineActionKindLabel({ kind: "exec-auto" })).toBe("exec-auto");
-    expect(routineActionKindLabel([{ kind: "exec-auto" }, { kind: "job" }])).toBe(
-      "exec-auto -> job",
-    );
+    expect(routineActionKindLabel({ kind: "job", job: "job-first" })).toBe("job");
+    expect(
+      routineActionKindLabel([
+        { kind: "job", job: "job-first" },
+        { kind: "job", job: "job-second" },
+      ]),
+    ).toBe("job -> job");
   });
 });
 
@@ -218,213 +198,22 @@ describe("executeRoutineActions", () => {
   it("失敗後も action を定義順に実行して段別結果を返す", () => {
     const executed: string[] = [];
     const results = executeRoutineActions(
-      [{ kind: "exec-auto" }, { kind: "exec-resume" }, { kind: "job", job: "job-check" }],
+      [
+        { kind: "job", job: "job-first" },
+        { kind: "job", job: "job-second" },
+        { kind: "job", job: "job-check" },
+      ],
       (action, index) => {
         executed.push(`${index}:${action.kind}`);
         return index === 1 ? "failure" : "success";
       },
     );
 
-    expect(executed).toEqual(["1:exec-auto", "2:exec-resume", "3:job"]);
+    expect(executed).toEqual(["1:job", "2:job", "3:job"]);
     expect(results).toEqual([
-      { index: 1, kind: "exec-auto", result: "failure" },
-      { index: 2, kind: "exec-resume", result: "success" },
+      { index: 1, kind: "job", result: "failure" },
+      { index: 2, kind: "job", result: "success" },
       { index: 3, kind: "job", result: "success" },
-    ]);
-  });
-});
-
-describe("selectRegisterItems", () => {
-  const items: PjrItem[] = [
-    makeItem({ id: "PJR-0003", type: "todo", priority: "low" }),
-    makeItem({ id: "PJR-0001", type: "todo", priority: "high" }),
-    makeItem({ id: "PJR-0002", type: "issue", priority: "high" }),
-    makeItem({ id: "PJR-0004", type: "note", priority: "high" }),
-    makeItem({ id: "PJR-0005", type: "todo", priority: "high", status: "done" }),
-    makeItem({ id: "PJR-0006", type: "todo", priority: "high", status: "waiting" }),
-  ];
-
-  it("既定では open かつ実行可能 type の項目を ID 昇順で返す", () => {
-    const actual = selectRegisterItems(items, { kind: "register" });
-
-    expect(actual.map((item) => item.id)).toEqual(["PJR-0001", "PJR-0002", "PJR-0003"]);
-  });
-
-  it("types / priorities / statuses / limit で絞り込む", () => {
-    const actual = selectRegisterItems(items, {
-      kind: "register",
-      filter: { types: ["todo"], priorities: ["high"], statuses: ["open", "waiting"] },
-      limit: 1,
-    });
-
-    expect(actual.map((item) => item.id)).toEqual(["PJR-0001"]);
-  });
-
-  it("実行対象外 type は filter に含まれていても選ばない", () => {
-    const actual = selectRegisterItems(items, {
-      kind: "register",
-      filter: { types: ["note"] },
-    });
-
-    expect(actual).toEqual([]);
-  });
-});
-
-describe("buildExecAutoArgs", () => {
-  it("最小構成で --if-busy skip を渡す", () => {
-    expect(buildExecAutoArgs({ kind: "exec-auto" }, "prj-test")).toEqual([
-      "exec",
-      "run",
-      "--auto",
-      "--project",
-      "prj-test",
-      "--if-busy",
-      "skip",
-    ]);
-  });
-
-  it("strategy / parallel / loop / max_rounds をオプションへ変換する", () => {
-    const actual = buildExecAutoArgs(
-      { kind: "exec-auto", strategy: "fifo", parallel: 2, loop: true, max_rounds: 3 },
-      "prj-test",
-    );
-
-    expect(actual).toEqual([
-      "exec",
-      "run",
-      "--auto",
-      "--project",
-      "prj-test",
-      "--if-busy",
-      "skip",
-      "--strategy",
-      "fifo",
-      "--parallel",
-      "2",
-      "--loop",
-      "--max-rounds",
-      "3",
-    ]);
-  });
-
-  it("loop なしの max_rounds は引数に含めない", () => {
-    const actual = buildExecAutoArgs({ kind: "exec-auto", max_rounds: 3 }, "prj-test");
-
-    expect(actual).toEqual(["exec", "run", "--auto", "--project", "prj-test", "--if-busy", "skip"]);
-  });
-});
-
-describe("buildExecResumeArgs", () => {
-  it("due な延期 task の再開コマンドへ変換する", () => {
-    expect(buildExecResumeArgs({ kind: "exec-resume", parallel: 2 }, "prj-test")).toEqual([
-      "exec",
-      "resume",
-      "--due",
-      "--project",
-      "prj-test",
-      "--if-busy",
-      "skip",
-      "--parallel",
-      "2",
-    ]);
-  });
-});
-
-describe("buildExecCycleArgs", () => {
-  it("最小構成で exec cycle へ --if-busy skip を渡す", () => {
-    expect(buildExecCycleArgs({ kind: "exec-cycle" }, "prj-test")).toEqual([
-      "exec",
-      "cycle",
-      "--project",
-      "prj-test",
-      "--if-busy",
-      "skip",
-    ]);
-  });
-
-  it("strategy / parallel / loop / max_rounds を auto step 用オプションへ変換する", () => {
-    const actual = buildExecCycleArgs(
-      { kind: "exec-cycle", strategy: "fifo", parallel: 2, loop: true, max_rounds: 5 },
-      "prj-test",
-    );
-
-    expect(actual).toEqual([
-      "exec",
-      "cycle",
-      "--project",
-      "prj-test",
-      "--if-busy",
-      "skip",
-      "--strategy",
-      "fifo",
-      "--parallel",
-      "2",
-      "--loop",
-      "--max-rounds",
-      "5",
-    ]);
-  });
-
-  it("loop なしの max_rounds は引数に含めない", () => {
-    const actual = buildExecCycleArgs({ kind: "exec-cycle", max_rounds: 5 }, "prj-test");
-
-    expect(actual).toEqual(["exec", "cycle", "--project", "prj-test", "--if-busy", "skip"]);
-  });
-});
-
-describe("parseRoutineDoc exec-cycle", () => {
-  it("strategy / parallel / loop / max_rounds を保持する", () => {
-    const { doc, errors } = parseRoutineDoc(
-      {
-        id: "rtn-cycle",
-        interval: "30m",
-        action: {
-          kind: "exec-cycle",
-          strategy: "critical-first",
-          parallel: 2,
-          loop: true,
-          max_rounds: 5,
-        },
-      },
-      "rtn-cycle.yaml",
-    );
-
-    expect(errors).toEqual([]);
-    expect(doc?.action).toEqual({
-      kind: "exec-cycle",
-      strategy: "critical-first",
-      parallel: 2,
-      loop: true,
-      max_rounds: 5,
-    });
-  });
-
-  it("不正な strategy / parallel を検証する", () => {
-    const { errors } = parseRoutineDoc(
-      {
-        id: "rtn-cycle",
-        interval: "30m",
-        action: { kind: "exec-cycle", strategy: "newest", parallel: 0 },
-      },
-      "rtn-cycle.yaml",
-    );
-
-    expect(errors).toContain('rtn-cycle.yaml: action.strategy must be "critical-first" or "fifo"');
-    expect(errors).toContain("rtn-cycle.yaml: action.parallel must be a positive integer");
-  });
-});
-
-describe("buildRegisterRunArgs", () => {
-  it("register 実行へ --if-busy skip を渡す", () => {
-    expect(buildRegisterRunArgs("PJR-0001", "prj-test")).toEqual([
-      "exec",
-      "run",
-      "--register",
-      "PJR-0001",
-      "--project",
-      "prj-test",
-      "--if-busy",
-      "skip",
     ]);
   });
 });
@@ -491,22 +280,22 @@ describe("loadRoutines", () => {
     try {
       await writeFile(
         path.join(dir, "rtn-b-auto.yaml"),
-        "id: rtn-b-auto\ninterval: 6h\naction:\n  kind: exec-auto\n",
+        "id: rtn-b-auto\ninterval: 6h\naction:\n  kind: job\n  job: job-auto\n",
         "utf8",
       );
       await writeFile(
         path.join(dir, "rtn-a-sweep.yaml"),
-        "id: rtn-a-sweep\ninterval: 1d\naction:\n  kind: register\n",
+        "id: rtn-a-sweep\ninterval: 1d\naction:\n  kind: job\n  job: job-sweep\n",
         "utf8",
       );
       await writeFile(
         path.join(dir, "rtn-broken.yaml"),
-        "id: rtn-broken\naction:\n  kind: exec-auto\n",
+        "id: rtn-broken\naction:\n  kind: job\n  job: job-broken\n",
         "utf8",
       );
       await writeFile(
         path.join(dir, "rtn-a-sweep.yml"),
-        "id: rtn-a-sweep\ninterval: 1d\naction:\n  kind: register\n",
+        "id: rtn-a-sweep\ninterval: 1d\naction:\n  kind: job\n  job: job-sweep\n",
         "utf8",
       );
       await writeFile(path.join(dir, "notes.md"), "# not a routine\n", "utf8");

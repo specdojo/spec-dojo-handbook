@@ -296,7 +296,7 @@ describe("computeRoutineDue", () => {
   const cronRoutine: RoutineDoc = {
     id: "rtn-dashboard-test",
     trigger: { cron: "* * * * *", timezone: "UTC" },
-    action: { kind: "exec-auto" },
+    action: { kind: "job", job: "job-dashboard-test" },
   };
 
   it("cron routine は last_scheduled_for より後の発火予定からdueを判定する", () => {

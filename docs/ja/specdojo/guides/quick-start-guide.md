@@ -345,7 +345,7 @@ specdojo exec run --project <project-id> --auto --parallel 5
 
 ## 5. routineで定期実行する
 
-この経路では、動作確認済みの schedule または register のagent実行を、`rtn-*.yaml` に定義した間隔で起動します。routine は任意の発展手順です。先に [exec設定ガイド](exec-config-guide.md) に従ってagentを設定し、次のような open かつ高優先度のtodoを用意します。
+この経路では、動作確認済みの Job を `rtn-*.yaml` に定義した間隔で起動します。Job は schedule または register のagent実行を決定論的なコマンドで呼び出します。routine は任意の発展手順です。先に [exec設定ガイド](exec-config-guide.md) に従ってagentを設定し、次のような open かつ高優先度のtodoを用意します。
 
 ```bash
 # チャット:「高優先度の todo『日次確認事項に対応する』を起票して」
@@ -356,7 +356,7 @@ specdojo register add \
   --title "日次確認事項に対応する"
 ```
 
-次のroutine例は、このようなtodoを毎日最大3件実行します。
+次のroutine例は、このようなtodoを毎日最大3件実行します。先に `jobs_path` 配下へ `job-register-sweep.yaml` を配置してください。このリポジトリの定義例は `docs/ja/projects/prj-0001/jobs/job-register-sweep.yaml`、入力制約の規約は [Job定義標準](../standards/job-definition-standard.md) を参照します。
 
 `.specdojo/specdojo.config.json` の `routines_path` 配下に `rtn-daily-register-sweep.yaml` を作成します。
 
@@ -369,15 +369,13 @@ name: 登録簿 open todo の日次スイープ
 enabled: true
 interval: 1d
 action:
-  kind: register
-  filter:
-    types:
-      - todo
-    priorities:
-      - high
-    statuses:
-      - open
-  limit: 3
+  kind: job
+  job: job-register-sweep
+  inputs:
+    types: todo
+    priorities: high
+    statuses: open
+    limit: "3"
 ```
 
 </details>

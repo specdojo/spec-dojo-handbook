@@ -18,6 +18,7 @@ import {
   type SpecDojoProjectConfig,
 } from "./specdojo-config.js";
 import type { Proficiency, TaskMode } from "./exec-types.js";
+import { selfRunCommand } from "./spawn-self.js";
 
 export type JobInputType = "string" | "integer" | "boolean" | "list";
 
@@ -25,6 +26,9 @@ export type JobInputDefinition = {
   type: JobInputType;
   required?: boolean;
   default?: unknown;
+  enum?: Array<string | number | boolean>;
+  minimum?: number;
+  maximum?: number;
   from_checkpoint?: string;
   resolve?: "git_head";
   git_revision?: boolean;
@@ -282,6 +286,26 @@ function readJobRunRecord(filePath: string): JobRunRecord {
   return raw;
 }
 
+function validateJobInputValue(value: unknown, input: JobInputDefinition, key: string): void {
+  const values = input.type === "list" ? (value as string[]) : [value];
+  if (input.enum) {
+    for (const item of values) {
+      if (!input.enum.includes(item as string | number | boolean)) {
+        throw new Error(`Input ${key} must be one of: ${input.enum.join(", ")}`);
+      }
+    }
+  }
+  if (input.type === "integer") {
+    const integer = value as number;
+    if (input.minimum !== undefined && integer < input.minimum) {
+      throw new Error(`Input ${key} must be at least ${input.minimum}`);
+    }
+    if (input.maximum !== undefined && integer > input.maximum) {
+      throw new Error(`Input ${key} must be at most ${input.maximum}`);
+    }
+  }
+}
+
 export function parseJobDefinition(
   value: unknown,
   fileName: string,
@@ -310,6 +334,23 @@ export function parseJobDefinition(
           errors.push(`inputs.${key} must be a mapping`);
           continue;
         }
+        const unknownInputKeys = Object.keys(raw).filter(
+          (field) =>
+            ![
+              "type",
+              "required",
+              "default",
+              "enum",
+              "minimum",
+              "maximum",
+              "from_checkpoint",
+              "resolve",
+              "git_revision",
+            ].includes(field),
+        );
+        if (unknownInputKeys.length > 0) {
+          errors.push(`inputs.${key} has unknown key(s): ${unknownInputKeys.sort().join(", ")}`);
+        }
         const type = raw.type;
         if (type !== "string" && type !== "integer" && type !== "boolean" && type !== "list") {
           errors.push(`inputs.${key}.type must be string|integer|boolean|list`);
@@ -327,16 +368,69 @@ export function parseJobDefinition(
         if (raw.git_revision !== undefined && typeof raw.git_revision !== "boolean") {
           errors.push(`inputs.${key}.git_revision must be a boolean`);
         }
-        inputDefinitions[key] = {
+        const enumValues = raw.enum;
+        if (
+          enumValues !== undefined &&
+          (!Array.isArray(enumValues) ||
+            enumValues.length === 0 ||
+            new Set(enumValues).size !== enumValues.length ||
+            enumValues.some((item) =>
+              type === "integer"
+                ? !Number.isSafeInteger(item)
+                : type === "boolean"
+                  ? typeof item !== "boolean"
+                  : typeof item !== "string",
+            ))
+        ) {
+          errors.push(
+            `inputs.${key}.enum must be a non-empty unique list of ${type === "list" ? "string" : type} values`,
+          );
+        }
+        if (
+          raw.minimum !== undefined &&
+          (type !== "integer" || !Number.isSafeInteger(raw.minimum))
+        ) {
+          errors.push(`inputs.${key}.minimum is only allowed as an integer constraint`);
+        }
+        if (
+          raw.maximum !== undefined &&
+          (type !== "integer" || !Number.isSafeInteger(raw.maximum))
+        ) {
+          errors.push(`inputs.${key}.maximum is only allowed as an integer constraint`);
+        }
+        if (
+          Number.isSafeInteger(raw.minimum) &&
+          Number.isSafeInteger(raw.maximum) &&
+          Number(raw.minimum) > Number(raw.maximum)
+        ) {
+          errors.push(`inputs.${key}.minimum must not exceed maximum`);
+        }
+        const definition: JobInputDefinition = {
           type,
           ...(typeof raw.required === "boolean" ? { required: raw.required } : {}),
           ...(raw.default !== undefined ? { default: raw.default } : {}),
+          ...(Array.isArray(enumValues)
+            ? { enum: enumValues as Array<string | number | boolean> }
+            : {}),
+          ...(Number.isSafeInteger(raw.minimum) ? { minimum: Number(raw.minimum) } : {}),
+          ...(Number.isSafeInteger(raw.maximum) ? { maximum: Number(raw.maximum) } : {}),
           ...(typeof raw.from_checkpoint === "string"
             ? { from_checkpoint: raw.from_checkpoint }
             : {}),
           ...(raw.resolve === "git_head" ? { resolve: "git_head" } : {}),
           ...(typeof raw.git_revision === "boolean" ? { git_revision: raw.git_revision } : {}),
         };
+        if (raw.default !== undefined) {
+          try {
+            const parsedDefault = parseInputValue(raw.default, type, key);
+            validateJobInputValue(parsedDefault, definition, key);
+          } catch (error) {
+            errors.push(
+              `inputs.${key}.default is invalid: ${error instanceof Error ? error.message : String(error)}`,
+            );
+          }
+        }
+        inputDefinitions[key] = definition;
       }
     }
   }
@@ -604,6 +698,8 @@ export function renderJobTemplate(
   template: string,
   context: {
     job_id: string;
+    project_id: string;
+    specdojo: string;
     scheduled_at: string;
     inputs: Record<string, unknown>;
     checkpoint: Record<string, unknown>;
@@ -611,6 +707,8 @@ export function renderJobTemplate(
 ): string {
   return template.replace(/\{\{\s*([a-z_][a-z0-9_.]*)\s*\}\}/gi, (_match, path: string) => {
     if (path === "job_id") return context.job_id;
+    if (path === "project_id") return context.project_id;
+    if (path === "specdojo") return context.specdojo;
     if (path === "scheduled_at") return context.scheduled_at;
     if (path.startsWith("inputs.")) return templateValue(getPath(context.inputs, path.slice(7)));
     if (path.startsWith("checkpoint."))
@@ -677,6 +775,7 @@ function resolveInputs(
       continue;
     }
     const parsed = parseInputValue(value, input.type, key);
+    validateJobInputValue(parsed, input, key);
     if (input.git_revision) {
       if (input.type !== "string")
         throw new Error(`Input ${key} with git_revision must be a string`);
@@ -885,7 +984,14 @@ export async function materializeJobRun(opts: {
     ? new Date(opts.scheduledAt).toISOString()
     : new Date().toISOString();
   const inputs = resolveInputs(definition, parseJobInputs(opts.inputs), checkpoint);
-  const context = { job_id: definition.id, scheduled_at: scheduledAt, inputs, checkpoint };
+  const context = {
+    job_id: definition.id,
+    project_id: paths.projectId,
+    specdojo: selfRunCommand(),
+    scheduled_at: scheduledAt,
+    inputs,
+    checkpoint,
+  };
   const idempotencyKey = renderJobTemplate(definition.run.idempotency_key, context);
   if (!idempotencyKey.trim())
     throw new Error(`Resolved idempotency key is empty: ${definition.id}`);
@@ -995,6 +1101,8 @@ export function completeJobRun(opts: {
   if (definition.checkpoint && advanceOn.includes(opts.status as "succeeded" | "noop")) {
     const context = {
       job_id: definition.id,
+      project_id: record.project_id,
+      specdojo: selfRunCommand(),
       scheduled_at: record.scheduled_at,
       inputs: record.inputs,
       checkpoint: record.checkpoint_before,

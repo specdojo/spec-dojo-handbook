@@ -26,6 +26,14 @@ properties:
         required:
           type: boolean
         default: true
+        enum:
+          type: array
+          minItems: 1
+          uniqueItems: true
+        minimum:
+          type: integer
+        maximum:
+          type: integer
         from_checkpoint:
           type: string
           minLength: 1
@@ -33,6 +41,39 @@ properties:
           enum: [git_head]
         git_revision:
           type: boolean
+      allOf:
+        - if:
+            properties:
+              type:
+                const: integer
+          then:
+            properties:
+              enum:
+                items:
+                  type: integer
+          else:
+            not:
+              anyOf:
+                - required: [minimum]
+                - required: [maximum]
+        - if:
+            properties:
+              type:
+                const: boolean
+          then:
+            properties:
+              enum:
+                items:
+                  type: boolean
+        - if:
+            properties:
+              type:
+                enum: [string, list]
+          then:
+            properties:
+              enum:
+                items:
+                  type: string
   task:
     oneOf:
       - $ref: "#/$defs/agentTask"
