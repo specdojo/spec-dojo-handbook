@@ -37,15 +37,8 @@ specdojo:
     findings: { blocker: 2, major: 2, minor: 0, note: 0 }
 ---
 
-<!-- specdojo:finding id=F002 severity=blocker rule=vp-qe-omissions-consistency line=1 rulebook で定義されている必須章（概要、課題ログ一覧、優先度と期限、対応計画、進捗レビュー、関連ドキュメント）がすべて欠落している。 -->
-<!-- specdojo:finding id=F004 severity=major rule=vp-ux-readability line=1 テンプレートとして必要な構造的ガイダンスやプレースホルダーが欠落しており、rulebook の要求を満たすための補助となっていない。 -->
-
 # 課題ログ
-
-<!-- specdojo:finding id=F003 severity=blocker rule=vp-qe-kata-conformance line=3 rulebook が定義する静的なドキュメント構造を無視し、「個票から生成される派生ビュー」として定義されており、整合性が取れていない。 -->
 
 > このファイルは各 `pjr-XXXX-<topic>.md`（個票）から生成された派生ビューです。正本は個票の Frontmatter であり、このファイルは再生成可能です。
 
 <!-- specdojo:view-slot=table -->
-
-<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=13 Frontmatter の rulebook 指定が `specdojo:pm-issue-log-rulebook` ではなく `specdojo:pjr-rulebook` になっている。 -->

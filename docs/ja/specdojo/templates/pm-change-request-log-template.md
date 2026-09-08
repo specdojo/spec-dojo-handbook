@@ -39,11 +39,6 @@ specdojo:
 
 # 変更要求ログ
 
-<!-- specdojo:finding id=F003 severity=major rule=vp-qe-kata-conformance line=3 文書が「派生ビュー（再生成可能）」であるとの記述は、手動での章構成や記述ガイドを定義するルールブックの規定と矛盾している。 -->
-
 > このファイルは各 `pjr-XXXX-<topic>.md`（個票）から生成された派生ビューです。正本は個票の Frontmatter であり、このファイルは再生成可能です。
 
 <!-- specdojo:view-slot=table -->
-
-<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=13 Frontmatter の rulebook 指定が specdojo:pjr-rulebook となっており、専用の pm-change-request-log-rulebook と不整合である。 -->
-<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency line=13 Frontmatter の rulebook 指定が specdojo:pjr-rulebook となっており、専用の pm-change-request-log-rulebook と不整合である。 -->

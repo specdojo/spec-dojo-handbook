@@ -45,8 +45,6 @@ _TODO_: 本書が、立ち上げ認可と権限委譲を記録する憲章であ
 
 ## 1. 認可対象
 
-<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-omissions-consistency line=10 frontmatterのstatusがreadyとなっており、承認前の認可状態と矛盾しやすいためdraftとするべきである。 -->
-
 | 項目            | 内容                              |
 | --------------- | --------------------------------- |
 | プロジェクト名  | _PROJECT_NAME_                    |
@@ -109,8 +107,6 @@ _TODO_: PO またはスポンサーの承認を必要とする事項を箇条書
 ## 6. 主要前提・制約
 
 _TODO_: 前提・制約の全量は `prj-assumptions-constraints-dependencies` を正とし、認可判断に直結する事項（予算枠、公開適性、人間の判断責任）だけを記載する。
-
-<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-omissions-consistency line=73 ハイレベルスコープ節にAI Agentの支援範囲を含めるというrulebook 6.4の指示に基づくガイド（_TODO_等）が不足している。 -->
 
 | 区分 | 内容                           | 詳細化先                                   |
 | ---- | ------------------------------ | ------------------------------------------ |

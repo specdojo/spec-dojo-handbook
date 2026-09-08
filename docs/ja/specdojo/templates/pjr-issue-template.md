@@ -44,9 +44,6 @@ specdojo:
 
 ## 1. 課題内容
 
-<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness line=5 第1節の記述ガイドに含まれる「影響」は第2節の影響範囲表と重複するため, 第1節から削除して課題の現象・発生日の記述に集中させることが望ましい。 -->
-<!-- specdojo:finding id=F002 severity=minor rule=vp-ux-readability line=5 課題内容の記述ガイドにおいて「影響」への言及があるが、第2節で詳述するため冗長である。また、現象と問題の切り分けなど、記載品質を揃えるための具体的なガイドを具体化することが望ましい。 -->
-
 _TODO_: すでに顕在化している問題、発生日、影響を記載する。
 
 ## 2. 影響範囲

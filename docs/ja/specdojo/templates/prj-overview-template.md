@@ -37,9 +37,6 @@ specdojo:
     findings: { blocker: 0, major: 0, minor: 2, note: 0 }
 ---
 
-<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-omissions-consistency line=1 Frontmatter のテンプレート自身の `status` が `ready` であり、Template 記述標準が指定する `specdojo.status: draft` と一致しないため、`draft` に変更する。 -->
-<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-kata-conformance line=1 Frontmatter のテンプレート自身の `status` が `ready` であり、Template 記述標準が指定する `specdojo.status: draft` と一致しないため、`draft` に変更する。 -->
-
 # プロジェクト概要: _PROJECT_NAME_
 
 _TODO_: 対象プロジェクトまたはフレームワークを一文で定義する（何を通じて、誰を支援し、どの状態を実現するか）。効果・指標・実装方式は盛り込まない。

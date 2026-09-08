@@ -100,7 +100,12 @@ finding コメントを含む個票は他に 9 件あるが、いずれも findi
 
 ## 5. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- Markdown テンプレートの生成物化を担う共通処理で `specdojo:finding` コメントを除去するようにした。`register add`、`register build`、`catalog build`、`catalog generate` はこの共通処理を経由する。
+- `docs/ja/specdojo/templates` 配下で finding コメントが残っていた Markdown テンプレート 26 件を清掃した。
+- `register build` で登録簿・派生ビュー 8 件を再生成し、finding コメントが含まれないことを確認した。PJR-KK07 と PJR-SAY1 の個票にも finding コメントがないことを確認した。
+- finding コメントと通常の HTML コメントを区別する共通処理、`register add`、`catalog generate` の回帰テストを追加した。
+- Template 記述標準へ、finding コメントを生成物へ複製しない規則と npm 公開前の確認事項を追加した。
+- 残課題はない。
 
 ## 6. 関連ドキュメント
 

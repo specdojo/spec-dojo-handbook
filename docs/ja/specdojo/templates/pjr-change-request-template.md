@@ -53,8 +53,6 @@ specdojo:
 
 ## 2. 影響評価
 
-<!-- specdojo:finding id=F002 severity=minor rule=vp-ux-readability line=15 「影響評価」の各行（スコープ、品質等）に、どのような視点で影響を記述すべきかの簡潔なガイドを追記することを推奨する。 -->
-
 | 観点         | 影響   |
 | ------------ | ------ |
 | スコープ     | _TODO_ |
@@ -80,9 +78,6 @@ specdojo:
 | 実施期限 | _TODO_ |
 | 完了条件 | _TODO_ |
 | 対応結果 | _TODO_ |
-
-<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-verifiability line=39 「完了条件」の記述欄に、判定可能性を高めるための記述例や指針を追記することを推奨する。 -->
-<!-- specdojo:finding id=F003 severity=minor rule=vp-ux-readability line=39 「完了条件」の記述欄に、判定可能性を高めるための記述例や指針を追記することを推奨する。 -->
 
 ## 5. 関連ドキュメント
 
