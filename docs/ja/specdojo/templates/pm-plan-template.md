@@ -74,6 +74,3 @@ _TODO_: 目的、スコープ、成功基準、体制、外部条件が変わっ
 | 論点   | 現状                | 決定時期 | 判断者 |
 | ------ | ------------------- | -------- | ------ |
 | _TODO_ | _UNDECIDED_: _TODO_ | _TODO_   | _TODO_ |
-
-<!-- specdojo:finding id=F001 severity=major rule=vp-qe-verifiability line=55 統合管理表に根拠IDや証跡を追跡するための列が不足しており、判定の検証可能性（verifiability）が確保できない。 -->
-<!-- specdojo:finding id=F002 severity=major rule=vp-qe-kata-conformance line=55 統合管理表に証跡項目が欠落しており、recipe の仕上げチェックで要求される「価値/リスクから証跡までの一続きの追跡」を実現できない。 -->

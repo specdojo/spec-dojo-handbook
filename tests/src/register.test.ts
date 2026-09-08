@@ -11,6 +11,7 @@ import {
   PJR_ID_RE,
   type PjrItem,
   type RegisterPaths,
+  buildRegisterItemContent,
   extractTableHeading,
   generatePjrId,
   generateDerivedViewFiles,
@@ -138,6 +139,54 @@ describe("register add — pjr テンプレート frontmatter スキーマ適合
       }
     },
   );
+
+  it("テンプレートに finding コメントがあっても生成した個票へ複製しない", () => {
+    const dir = mkdtempSync(join(tmpdir(), "specdojo-register-finding-"));
+    const templatePath = join(dir, "pjr-todo-template.md");
+    try {
+      writeFileSync(
+        templatePath,
+        [
+          "---",
+          "specdojo:",
+          "  id: specdojo:pjr-todo-template",
+          "  type: template",
+          "  status: draft",
+          "  frontmatter_template:",
+          "    specdojo:",
+          "      id: _PJR_DOCUMENT_ID_",
+          "      type: project",
+          "      status: draft",
+          "      rulebook: specdojo:pjr-rulebook",
+          "      item_type: todo",
+          "---",
+          "",
+          "<!-- specdojo:finding id=F001 severity=major rule=vp-test line=1 複製しない -->",
+          "# _PJR-XXXX_ _TODO_TITLE_",
+          "",
+          "## 1. 概要",
+          "",
+          "_TODO_: 概要を記載する。",
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      const content = buildRegisterItemContent({
+        projectId: "prj-test-0001",
+        displayId: "PJR-AB12",
+        topic: "finding-copy",
+        fields: DEFAULT_ADD_FIELDS,
+        templatePath,
+      });
+
+      expect(content).not.toContain("specdojo:finding");
+      expect(content).toContain("# PJR-AB12 登録項目");
+      expect(content).toContain("id: prj-test-0001:pjr-ab12-finding-copy");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("parsePjrIndex — 章番号アンカーの言語非依存", () => {

@@ -117,6 +117,37 @@ describe("flattenTemplateFrontmatter", () => {
     expect(actual).not.toContain("specdojo:pjr-index-template");
   });
 
+  it("removes grade finding comments while preserving other HTML comments", () => {
+    const template = [
+      "---",
+      "specdojo:",
+      "  id: specdojo:pjr-todo-template",
+      "  type: template",
+      "  status: draft",
+      "  frontmatter_template:",
+      "    specdojo:",
+      "      id: _PROJECT_ID_:_PJR_DOCUMENT_ID_",
+      "      type: project",
+      "      status: draft",
+      "---",
+      "",
+      "<!-- specdojo:finding id=F001 severity=major rule=vp-test line=1 修正対象 -->",
+      "# _PJR-XXXX_ _TODO_TITLE_",
+      "",
+      "<!-- specdojo:view-slot=table -->",
+      "",
+      "  <!--   specdojo:finding id=F002 severity=minor rule=vp-test 本文の指摘   -->  ",
+      "_TODO_: 内容",
+      "",
+    ].join("\n");
+
+    const actual = flattenTemplateFrontmatter(template);
+
+    expect(actual).not.toContain("specdojo:finding");
+    expect(actual).toContain("<!-- specdojo:view-slot=table -->");
+    expect(actual).toContain("# _PJR-XXXX_ _TODO_TITLE_");
+  });
+
   it("returns input unchanged when there is no frontmatter_template field", () => {
     const doc = [
       "---",

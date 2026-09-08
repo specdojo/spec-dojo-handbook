@@ -69,8 +69,6 @@ _TODO_: 回答または採択した方針を記載する。未回答の場合は
 | 承認方式 | _TODO_ |
 | 証跡     | _TODO_ |
 
-<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness line=30 承認方式に関する共通ポリシーを本文に直接記載すると全成果物で重複するため, rulebook への参照とするか, 編集者向け指示（_TODO_ 等）に変更することを検討してください。 -->
-
 - 承認方式は既定で `commit`（`register close` により `decided` へ遷移）を用いる。
 - 回答が不可逆・高リスク・framework schema 破壊的変更を伴う場合は `PR` 方式で承認し、証跡に PR URL と merge SHA を記載する。
 

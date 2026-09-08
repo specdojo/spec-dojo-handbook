@@ -70,11 +70,6 @@ _TODO_: 対象とする主要成果物・判断、省略範囲、使用するRol
 
 ## 5. 見直し条件
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=31 固定Role列の提示により、プロジェクトで採用されていないロールが混入し、組織定義等の正本と矛盾する成果物が生成されるリスクがある。 -->
-<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-verifiability line=31 マトリクス内で「主たるR」を識別するための表記例がなく、Schedule ownerとの整合性を判定する基準が不明確である。 -->
-<!-- specdojo:finding id=F003 severity=major rule=vp-qe-kata-conformance line=31 rulebookの採用済みRole codeのみを使用する規則に反して固定Role列が定義されており、可変プレースホルダー化が必要である。 -->
-<!-- specdojo:finding id=F004 severity=minor rule=vp-ux-readability line=31 固定Role列が例示である旨の注記がなく、必須構造であると誤認させる恐れがある。 -->
-
 | トリガー | 確認すること |
 | -------- | ------------ |
 | _TODO_   | _TODO_       |

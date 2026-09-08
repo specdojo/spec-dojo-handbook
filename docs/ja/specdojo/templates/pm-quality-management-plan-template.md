@@ -43,9 +43,6 @@ specdojo:
 
 ## 1. 品質方針と適用範囲
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-qe-omissions-consistency line=5 「品質方針と適用範囲」において、必須項目である「対象期間」の記述誘導が欠落している。 -->
-<!-- specdojo:finding id=F003 severity=major rule=vp-qe-kata-conformance line=5 rulebook で必須とされる「対象期間」の記入欄または誘導が不足している。 -->
-
 _TODO_: 利用者価値として確認する品質、価値提供を支える成果物品質、人間とAI Agentの判断境界を記述する。
 
 ## 2. 品質ゲート
@@ -55,9 +52,6 @@ _TODO_: 利用者価値として確認する品質、価値提供を支える成
 | _TODO_ | _TODO_   | _TODO_   | _TODO_     | _TODO_ | _TODO_          |
 
 ## 3. レビューと証跡
-
-<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency line=15 「レビューと証跡」の表において, 必須項目である「記録先」が欠落しており、また「出口条件」と「証跡」が統合されており rulebook の定義と矛盾している。 -->
-<!-- specdojo:finding id=F004 severity=major rule=vp-qe-kata-conformance line=15 「レビューと証跡」の表構成が rulebook の必須項目定義（対象、観点、実施責任、出口条件、記録先）と乖離している。 -->
 
 | 対象   | 主な観点 | 実施責任 | 出口条件・証跡 |
 | ------ | -------- | -------- | -------------- |

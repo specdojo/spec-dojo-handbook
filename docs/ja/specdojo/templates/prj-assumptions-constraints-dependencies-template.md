@@ -81,7 +81,3 @@ _TODO_: 前提の崩壊、制約の逸脱、依存先の変化ごとに、最初
 - _TODO_: 本書を見直す契機を記載する。
 - _TODO_: 変更記録に残す項目（ID、変化内容、影響範囲、判断者、対応状況）と記録先（プロジェクト登録簿を第一候補とする）を記載する。
 - _UNDECIDED_: 最終判断者または記録先が未確定の場合は、決定する文書またはタイミングを記載する。
-
-<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-omissions-consistency line=66 依存関係表の列名が rulebook の定義（「内容または依存先」等）と一致していない。 -->
-<!-- specdojo:finding id=F002 severity=minor rule=vp-qe-kata-conformance line=66 依存関係表の項目定義が rulebook の推奨表記と乖離しており、標準的な型に適合していない。 -->
-<!-- specdojo:finding id=F003 severity=minor rule=vp-ux-language-consistency line=66 依存関係表の列名に使用されている用語が rulebook の規定表記と統一されていない。 -->

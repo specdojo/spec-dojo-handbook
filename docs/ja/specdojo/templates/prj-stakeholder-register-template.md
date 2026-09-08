@@ -86,5 +86,3 @@ _TODO_: プロジェクトの目的、範囲、体制、公開・利用方針、
 | ---------------- | -------------- | --------------- | --------------- | ---------- |
 | _UPDATE_TRIGGER_ | _REVIEW_SCOPE_ | _REVIEWER_ROLE_ | _APPROVER_ROLE_ | _EVIDENCE_ |
 | _UPDATE_TRIGGER_ | _REVIEW_SCOPE_ | _REVIEWER_ROLE_ | _APPROVER_ROLE_ | _EVIDENCE_ |
-
-<!-- specdojo:finding id=F001 severity=major rule=vp-qe-kata-conformance line=86 見直し条件表にステークホルダー ID 列がないため、rulebook (4.7) および recipe (8.2) が要求する「見直し条件まで同一 ID で追跡できる」状態を実現できず、kata 内部で矛盾が生じている。 -->

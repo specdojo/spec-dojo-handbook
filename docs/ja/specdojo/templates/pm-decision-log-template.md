@@ -37,8 +37,6 @@ specdojo:
     findings: { blocker: 0, major: 0, minor: 1, note: 0 }
 ---
 
-<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-kata-conformance line=1 `specdojo:pjr-rulebook` が `template: not-needed` を宣言する一方、このファイルは `register build` が必須ロードする `type: template` であり、著述標準上の template 要否・所在の正本と実際の適用資産が一致しないため、複数テンプレートを解決できる宣言方式を定めて参照関係を整合させる必要がある。 -->
-
 # 決定記録
 
 > このファイルは各 `pjr-XXXX-<topic>.md`（個票）から生成された派生ビューです。正本は個票の Frontmatter であり、このファイルは再生成可能です。

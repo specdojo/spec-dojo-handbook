@@ -43,8 +43,6 @@ _DELIVERABLE_OVERVIEW_
 
 ## 1. 概要
 
-<!-- specdojo:finding id=F001 severity=major rule=vp-qe-omissions-consistency line=7 Frontmatter の必須項目 `title` が `frontmatter_template` に不足しており、`opr-rulebook` の定義（4.1）に違反している。 -->
-
 _TODO_: 対象となる運用作業と、この手順によって再現可能にする結果を記述する。`opr-<term>` の場合は `opr-index` のどの共通規約を参照し、何を具体化する文書かを明示する。
 
 ## 2. 手順適用範囲・前提
