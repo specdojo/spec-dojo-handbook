@@ -12,6 +12,12 @@ inputs:
   limit:
     type: integer
     default: 0
+  changed_only:
+    type: boolean
+    default: false
+  ungraded:
+    type: boolean
+    default: false
 task:
   mode: edit
   owner: ARC
@@ -23,7 +29,7 @@ task:
     各段の agent 呼び出し、`grade apply` の実行はこのスクリプトの責務であるため、
     手順を分解して個別のコマンドへ置き換えない。
 
-    tools/grade/run-per-document.sh --run-id {{job_id}}-{{inputs.kind}}-{{inputs.period}} --kind {{inputs.kind}} --limit {{inputs.limit}}
+    tools/grade/run-per-document.sh --run-id {{job_id}}-{{inputs.kind}}-{{inputs.period}} --kind {{inputs.kind}} --limit {{inputs.limit}} --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}}
 
     実行後に `logs/grade/runs/per-document/{{job_id}}-{{inputs.kind}}-{{inputs.period}}/results.tsv`
     と終了コードを読み、次を判断して報告する。
@@ -43,4 +49,4 @@ task:
     - docs/ja/specdojo/samples
     - docs/ja/specdojo/templates
 run:
-  idempotency_key: "{{job_id}}:{{inputs.kind}}:{{inputs.period}}"
+  idempotency_key: "{{job_id}}:{{inputs.kind}}:{{inputs.period}}:{{inputs.limit}}:{{inputs.changed_only}}:{{inputs.ungraded}}"

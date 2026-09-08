@@ -1640,6 +1640,26 @@ export function registerGradeCommand(program: Command): void {
       .option("--ungraded", "Select documents without a stored grade", false);
 
   addSelection(
+    grade.command("list").description("Print selected document paths without writing grade plans"),
+  ).action((options) => {
+    try {
+      const paths = discoverGradeTargets({
+        target: requireTarget(options.target),
+        project: options.project,
+        paths: options.path,
+        changedOnly: options.changedOnly,
+        verdict: options.verdict,
+        minScore: options.minScore,
+        maxFindings: options.maxFindings,
+        ungraded: options.ungraded,
+      });
+      for (const path of paths) process.stdout.write(`${repoRelativePath(path)}\n`);
+    } catch (error) {
+      commandError(error);
+    }
+  });
+
+  addSelection(
     grade
       .command("plan")
       .description("Write reusable executor and reporter plans per selected document"),

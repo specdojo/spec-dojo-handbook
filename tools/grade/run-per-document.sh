@@ -13,9 +13,11 @@ same command resumes after an interruption.
 Options:
   --run-id <id>                 Stable id used for resume state (required)
   --project <id>                Project id (default: prj-0001)
-  --kind <kind>                 rulebook, recipe, sample, or template
+  --kind <kind>                 rulebook, recipe, sample, template, or all
                                 (default: rulebook)
   --path <markdown>             Limit to one document (repeatable)
+  --changed-only[=true|false]   Select documents changed since the latest grade
+  --ungraded[=true|false]       Select documents without a stored grade
   --limit <count>               Process at most this many selected documents
   --work-dir <directory>        State and result directory
   --stage-1-executor <nickname> (default: gemma-expert-executor)
@@ -57,7 +59,10 @@ limit=0
 work_dir=
 dry_run=false
 specdojo_bin=
+changed_only=false
+ungraded=false
 declare -a selected_paths=()
+declare -a requested_paths=()
 
 stage_1_executor=gemma-expert-executor
 stage_1_reporter=gemma-reporter
@@ -89,8 +94,24 @@ while [[ $# -gt 0 ]]; do
       ;;
     --path)
       require_value "$@"
-      selected_paths+=("$2")
+      requested_paths+=("$2")
       shift 2
+      ;;
+    --changed-only)
+      changed_only=true
+      shift
+      ;;
+    --changed-only=*)
+      changed_only=${1#*=}
+      shift
+      ;;
+    --ungraded)
+      ungraded=true
+      shift
+      ;;
+    --ungraded=*)
+      ungraded=${1#*=}
+      shift
       ;;
     --limit)
       require_value "$@"
@@ -171,25 +192,40 @@ done
 [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] ||
   fail "--run-id must contain only letters, digits, dot, underscore, or hyphen"
 [[ "$limit" =~ ^[0-9]+$ ]] || fail "--limit must be a non-negative integer"
+[[ "$changed_only" == true || "$changed_only" == false ]] ||
+  fail "--changed-only must be true or false"
+[[ "$ungraded" == true || "$ungraded" == false ]] || fail "--ungraded must be true or false"
 
 case "$kind" in
-  rulebook) kind_directory=rulebooks ;;
-  recipe) kind_directory=recipes ;;
-  sample) kind_directory=samples ;;
-  template) kind_directory=templates ;;
-  *) fail "--kind must be rulebook, recipe, sample, or template" ;;
+  rulebook) kind_directories=(rulebooks) ;;
+  recipe) kind_directories=(recipes) ;;
+  sample) kind_directories=(samples) ;;
+  template) kind_directories=(templates) ;;
+  all) kind_directories=(rulebooks recipes samples templates) ;;
+  *) fail "--kind must be rulebook, recipe, sample, template, or all" ;;
 esac
 
-target_root="docs/ja/specdojo/$kind_directory"
-[[ -d "$target_root" ]] || fail "target directory not found: $target_root"
+declare -a target_roots=()
+for kind_directory in "${kind_directories[@]}"; do
+  target_root="docs/ja/specdojo/$kind_directory"
+  [[ -d "$target_root" ]] || fail "target directory not found: $target_root"
+  target_roots+=("$target_root")
+done
 
-stage_1_reference_root=$target_root
+if [[ "$kind" != all ]]; then
+  stage_1_reference_root=${target_roots[0]}
+fi
 if ! $stage_1_reference_explicit; then
-  stage_1_reference="$stage_1_reference_root/prj-overview-$kind.md"
-  if [[ ! -f "$stage_1_reference" ]]; then
-    printf 'grade pipeline: default stage 1 reference not found for kind %s; continuing without a reference: %s\n' \
-      "$kind" "$stage_1_reference" >&2
-    stage_1_reference=none
+  if [[ "$kind" == all ]]; then
+    stage_1_reference=per-kind
+  else
+    stage_1_reference_root=${target_roots[0]}
+    stage_1_reference="$stage_1_reference_root/prj-overview-$kind.md"
+    if [[ ! -f "$stage_1_reference" ]]; then
+      printf 'grade pipeline: default stage 1 reference not found for kind %s; continuing without a reference: %s\n' \
+        "$kind" "$stage_1_reference" >&2
+      stage_1_reference=none
+    fi
   fi
 fi
 
@@ -209,6 +245,7 @@ for option_and_value in \
 done
 
 if $stage_1_reference_explicit; then
+  [[ "$kind" != all ]] || fail "--stage-1-reference cannot be combined with --kind all"
   [[ "$stage_1_reference" != none ]] ||
     fail "--stage-1-reference cannot be none; omit the option to use the --kind default"
   [[ -f "$stage_1_reference" ]] || fail "reference not found: $stage_1_reference"
@@ -223,28 +260,9 @@ if $stage_1_reference_explicit; then
 fi
 
 for reference in "$stage_1_reference" "$stage_2_reference" "$stage_3_reference"; do
-  [[ "$reference" == none || -f "$reference" ]] || fail "reference not found: $reference"
+  [[ "$reference" == none || "$reference" == per-kind || -f "$reference" ]] ||
+    fail "reference not found: $reference"
 done
-
-if [[ ${#selected_paths[@]} -eq 0 ]]; then
-  # generated/ は他の正本から作られる派生物で、直接編集しても再生成で失われる。
-  # 評価しても修正へつなげられないため対象から外す。
-  mapfile -t selected_paths < <(
-    find "$target_root" -type f -name '*.md' -not -path '*/generated/*' -print | LC_ALL=C sort
-  )
-else
-  for path in "${selected_paths[@]}"; do
-    [[ -f "$path" ]] || fail "target not found: $path"
-    case "$path" in
-      "$target_root"/*.md) ;;
-      *) fail "target is outside the selected --kind: $path" ;;
-    esac
-  done
-fi
-
-if ((limit > 0 && ${#selected_paths[@]} > limit)); then
-  selected_paths=("${selected_paths[@]:0:limit}")
-fi
 
 if [[ -n "$specdojo_bin" ]]; then
   [[ -x "$specdojo_bin" ]] || fail "--specdojo-bin is not executable: $specdojo_bin"
@@ -252,6 +270,22 @@ if [[ -n "$specdojo_bin" ]]; then
 else
   specdojo_command=(npx tsx src/specdojo.ts)
 fi
+
+path_matches_kind() {
+  local path=$1
+  local root
+  [[ "$path" != */generated/* ]] || return 1
+  for root in "${target_roots[@]}"; do
+    [[ "$path" == "$root"/*.md ]] && return 0
+  done
+  return 1
+}
+
+for path in "${requested_paths[@]}"; do
+  validate_scalar "--path" "$path"
+  [[ -f "$path" ]] || fail "target not found: $path"
+  path_matches_kind "$path" || fail "target is outside the selected --kind or generated: $path"
+done
 
 # The run directory stays outside docs/ because `grade plan --out` writes a plan pair per
 # stage and the plan id is derived from the graded document, not from the stage. Three stages
@@ -262,9 +296,93 @@ if [[ -z "$work_dir" ]]; then
 fi
 validate_scalar "--work-dir" "$work_dir"
 
+select_documents() {
+  local root
+  local path
+  local output
+  local -a candidates=()
+  local -a list_command=(grade list --target kata --project "$project")
+  for path in "${requested_paths[@]}"; do
+    list_command+=(--path "$path")
+  done
+
+  if ! $changed_only && ! $ungraded; then
+    if [[ ${#requested_paths[@]} -gt 0 ]]; then
+      candidates=("${requested_paths[@]}")
+    else
+      for root in "${target_roots[@]}"; do
+        while IFS= read -r path; do
+          [[ -n "$path" ]] && candidates+=("$path")
+        done < <(find "$root" -type f -name '*.md' -not -path '*/generated/*' -print)
+      done
+    fi
+  else
+    if $changed_only; then
+      output=$("${specdojo_command[@]}" "${list_command[@]}" --changed-only) ||
+        fail "grade list --changed-only failed"
+      while IFS= read -r path; do
+        [[ -n "$path" ]] && candidates+=("$path")
+      done <<<"$output"
+    fi
+    if $ungraded; then
+      output=$("${specdojo_command[@]}" "${list_command[@]}" --ungraded) ||
+        fail "grade list --ungraded failed"
+      while IFS= read -r path; do
+        [[ -n "$path" ]] && candidates+=("$path")
+      done <<<"$output"
+    fi
+  fi
+
+  selected_paths=()
+  while IFS= read -r path; do
+    if [[ -n "$path" ]] && path_matches_kind "$path"; then
+      selected_paths+=("$path")
+    fi
+  done < <(printf '%s\n' "${candidates[@]}" | LC_ALL=C sort -u)
+  if ((limit > 0 && ${#selected_paths[@]} > limit)); then
+    selected_paths=("${selected_paths[@]:0:limit}")
+  fi
+}
+
+requested_signature=$(printf '%s\n' "${requested_paths[@]}" | node -e \
+  'const c=require("node:crypto");let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(c.createHash("sha256").update(s).digest("hex")))')
+expected_config=$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+  "$project" "$kind" "$limit" "$changed_only" "$ungraded" "$requested_signature" \
+  "$stage_1_executor" "$stage_1_reporter" "$stage_1_reference" \
+  "$stage_2_executor:$stage_2_reporter:$stage_2_reference" \
+  "$stage_3_executor:$stage_3_reporter:$stage_3_reference" "selection-v1" "pipeline-v1")
+config_file="$work_dir/config.tsv"
+selection_file="$work_dir/selection.txt"
+results_file="$work_dir/results.tsv"
+
+if ! $dry_run; then
+  mkdir -p "$work_dir/documents"
+  if [[ -f "$config_file" ]]; then
+    actual_config=$(<"$config_file")
+    [[ "$actual_config" == "$expected_config" ]] ||
+      fail "run configuration differs from saved state; use a new --run-id"
+  else
+    printf '%s' "$expected_config" >"$config_file"
+  fi
+fi
+
+if ! $dry_run && [[ -f "$selection_file" ]]; then
+  mapfile -t selected_paths <"$selection_file"
+else
+  select_documents
+  if ! $dry_run; then
+    if [[ ${#selected_paths[@]} -gt 0 ]]; then
+      printf '%s\n' "${selected_paths[@]}" >"$selection_file"
+    else
+      : >"$selection_file"
+    fi
+  fi
+fi
+
 print_configuration() {
-  printf 'run_id=%s project=%s kind=%s documents=%s work_dir=%s\n' \
-    "$run_id" "$project" "$kind" "${#selected_paths[@]}" "$work_dir"
+  printf 'run_id=%s project=%s kind=%s changed_only=%s ungraded=%s documents=%s work_dir=%s\n' \
+    "$run_id" "$project" "$kind" "$changed_only" "$ungraded" \
+    "${#selected_paths[@]}" "$work_dir"
   printf 'stage=1 executor=%s reporter=%s reference=%s\n' \
     "$stage_1_executor" "$stage_1_reporter" "$stage_1_reference"
   printf 'stage=2 executor=%s reporter=%s reference=%s\n' \
@@ -275,24 +393,12 @@ print_configuration() {
 
 print_configuration
 if $dry_run; then
-  printf '%s\n' "${selected_paths[@]}"
+  if [[ ${#selected_paths[@]} -gt 0 ]]; then
+    printf '%s\n' "${selected_paths[@]}"
+  fi
   exit 0
 fi
 
-mkdir -p "$work_dir/documents"
-config_file="$work_dir/config.tsv"
-results_file="$work_dir/results.tsv"
-expected_config=$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-  "$project" "$kind" "$stage_1_executor" "$stage_1_reporter" "$stage_1_reference" \
-  "$stage_2_executor" "$stage_2_reporter" "$stage_2_reference" \
-  "$stage_3_executor:$stage_3_reporter:$stage_3_reference")
-if [[ -f "$config_file" ]]; then
-  actual_config=$(<"$config_file")
-  [[ "$actual_config" == "$expected_config" ]] ||
-    fail "run configuration differs from saved state; use a new --run-id"
-else
-  printf '%s' "$expected_config" >"$config_file"
-fi
 if [[ ! -f "$results_file" ]]; then
   printf 'recorded_at\tdocument\tstage\tstatus\tduration_seconds\tverdict\tscore\tfindings\texecutor\treporter\treference\n' >"$results_file"
 fi
@@ -507,6 +613,35 @@ mark_stage_skipped() {
   fi
 }
 
+stage_1_reference_for_document() {
+  local document=$1
+  local document_kind
+  local reference
+  if [[ "$stage_1_reference" != per-kind ]]; then
+    printf '%s' "$stage_1_reference"
+    return 0
+  fi
+  case "$document" in
+    docs/ja/specdojo/rulebooks/*.md) document_kind=rulebook ;;
+    docs/ja/specdojo/recipes/*.md) document_kind=recipe ;;
+    docs/ja/specdojo/samples/*.md) document_kind=sample ;;
+    docs/ja/specdojo/templates/*.md) document_kind=template ;;
+    *) fail "cannot determine kind for selected document: $document" ;;
+  esac
+  case "$document_kind" in
+    rulebook) reference="docs/ja/specdojo/rulebooks/prj-overview-rulebook.md" ;;
+    recipe) reference="docs/ja/specdojo/recipes/prj-overview-recipe.md" ;;
+    sample) reference="docs/ja/specdojo/samples/prj-overview-sample.md" ;;
+    template) reference="docs/ja/specdojo/templates/prj-overview-template.md" ;;
+  esac
+  if [[ ! -f "$reference" ]]; then
+    printf 'grade pipeline: default stage 1 reference not found for kind %s; continuing without a reference: %s\n' \
+      "$document_kind" "$reference" >&2
+    reference=none
+  fi
+  printf '%s' "$reference"
+}
+
 processed=0
 completed=0
 for document in "${selected_paths[@]}"; do
@@ -523,8 +658,9 @@ for document in "${selected_paths[@]}"; do
   fi
   processed=$((processed + 1))
   printf 'document start: %s\n' "$document"
+  document_stage_1_reference=$(stage_1_reference_for_document "$document")
 
-  if execute_stage "$document" "$document_dir" 1 "$stage_1_executor" "$stage_1_reporter" "$stage_1_reference"; then
+  if execute_stage "$document" "$document_dir" 1 "$stage_1_executor" "$stage_1_reporter" "$document_stage_1_reference"; then
     :
   else
     exit_code=$?

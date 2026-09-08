@@ -8,4 +8,6 @@ GIT_CONFIG_GLOBAL=/home/node/.config/git/config
 TZ=Asia/Tokyo
 CRON_TZ=Asia/Tokyo
 
+# cron 自体の停止を routine の実行結果と区別できるよう、5分ごとに生存時刻を更新する。
+*/5 * * * * node /usr/bin/date -u +\%Y-\%m-\%dT\%H:\%M:\%SZ > __WORKSPACE_DIR__/logs/routine-cron-heartbeat.log
 0 1,6 * * * node cd __WORKSPACE_DIR__ && /usr/local/bin/node dist/specdojo.js routine run --project prj-0001 --due >> logs/routine-exec-cycle.log 2>&1

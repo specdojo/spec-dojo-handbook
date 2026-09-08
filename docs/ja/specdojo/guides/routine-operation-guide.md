@@ -89,7 +89,7 @@ action:
 
 ### 1.2. grade の段階評価
 
-Kata の定期評価は、ローカル評価を2回行った後、見落としの疑いが強い文書だけを expert で再確認します。この3段は文書ごとに通しで実行し、`rtn-grade-kata` は単一の `job-grade-kata` を起動するだけです。段の順序と対象の繰り返しは `tools/grade/run-per-document.sh` が持ちます。
+Kata の定期評価は、ローカル評価を2回行った後、見落としの疑いが強い文書だけを expert で再確認します。この3段は文書ごとに通しで実行し、`rtn-grade-kata` は単一の `job-grade-kata` を起動するだけです。段の順序と対象の繰り返しは `tools/grade/run-per-document.sh` が持ちます。変更済み・未評価だけを横断的に再評価する `rtn-grade-recheck` も同じ Job を使い、`kind: all`、`changed_only: true`、`ungraded: true`、`limit: 5` を入力します。
 
 | 段  | executor / reporter                        | 対象と役割                                                  |
 | --- | ------------------------------------------ | ----------------------------------------------------------- |
@@ -164,6 +164,7 @@ specdojo routine run --project <project-id> --due --dry-run
 TZ=Asia/Tokyo
 CRON_TZ=Asia/Tokyo
 
+*/5 * * * * node /usr/bin/date -u +\%Y-\%m-\%dT\%H:\%M:\%SZ > __WORKSPACE_DIR__/logs/routine-cron-heartbeat.log
 0 1,6 * * * node cd __WORKSPACE_DIR__ && /usr/local/bin/node dist/specdojo.js routine run --project prj-0001 --due >> logs/routine-exec-cycle.log 2>&1
 ```
 
@@ -185,9 +186,12 @@ specdojo routine run --project prj-0001 --due --dry-run
 
 # cron実行後のログ（初回実行前はファイルが存在しない）
 tail -n 100 logs/routine-exec-cycle.log
+
+# cronデーモンの生存確認。稼働中なら5分ごとに更新される
+cat logs/routine-cron-heartbeat.log
 ```
 
-devcontainerが停止している時刻のcronは実行されません。また、外部cronの起動時刻とroutine定義の`trigger.cron`は独立した設定です。特定時刻に確実にdue判定を行う構成では、`.devcontainer/specdojo-routine.cron`と対象の`rtn-*.yaml`で時刻・タイムゾーンを一致させます。プロジェクトIDや実行時刻を変更する場合は両方を更新し、コンテナを再起動して`post-start.sh`による再登録後に上記コマンドで確認します。
+`post-start.sh` は cron の起動直後の status 確認に失敗した場合、その失敗を無視せず終了します。起動後の停止は `routine-exec-cycle.log` だけでは「due 対象なし」と区別できないため、`routine-cron-heartbeat.log` の最終時刻が10分以上更新されていないことを検知条件にします。devcontainerが停止している時刻のcronは実行されません。また、外部cronの起動時刻とroutine定義の`trigger.cron`は独立した設定です。特定時刻に確実にdue判定を行う構成では、`.devcontainer/specdojo-routine.cron`と対象の`rtn-*.yaml`で時刻・タイムゾーンを一致させます。プロジェクトIDや実行時刻を変更する場合は両方を更新し、コンテナを再起動して`post-start.sh`による再登録後に上記コマンドで確認します。
 
 ## 3. 実行経路への委譲
 

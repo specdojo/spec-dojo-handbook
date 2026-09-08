@@ -21,7 +21,7 @@ specdojo:
 finding に沿って修正した文書を再評価する作業が手動のまま残っている。これを routine から起動
 できるようにする。
 
-## 2. 現状
+## 2. 対応前の現状
 
 必要な部品はほぼ揃っており、欠けているのは選択機能とスクリプトの接続である。
 
@@ -88,8 +88,10 @@ mapfile -t selected_paths < <(
 
 ## 6. 判断が要る点
 
-- 1 回あたりの処理件数。3 段目は codex を使うため rate limit を考慮する。
-- 週次の全件評価（`rtn-grade-kata`）と再評価を、別 routine にするか同一にするか。
+- 1 回あたりの処理件数は 5 件とした。3 段目の codex 利用量を抑えつつ、起票時の対象 11 件を
+  3 回以内に処理できる値である。
+- 週次の全件評価（`rtn-grade-kata`）とは別に `rtn-grade-recheck` を設けた。全件評価の既定値を
+  変えず、変更済み・未評価だけを有効な routine として運用するためである。
 
 ## 7. 定期起動の前提
 
@@ -105,13 +107,13 @@ mapfile -t selected_paths < <(
 
 配置は `.devcontainer/post-start.sh` が行い、同スクリプトが `service cron start` で起動する。
 
-ただし自動実行には次の3つがすべて必要で、現状はいずれも満たしていない。
+自動実行に必要な条件への対応は次のとおりである。
 
-| No  | 条件                            | 現状                               |
-| --- | ------------------------------- | ---------------------------------- |
-| 1   | 再評価用の routine 定義         | 未作成。本項目の範囲               |
-| 2   | その routine が `enabled: true` | 既存 6 件はすべて `enabled: false` |
-| 3   | cron デーモンの稼働             | 停止している                       |
+| No  | 条件                            | 対応                                                        |
+| --- | ------------------------------- | ----------------------------------------------------------- |
+| 1   | 再評価用の routine 定義         | `rtn-grade-recheck.yaml` を追加                             |
+| 2   | その routine が `enabled: true` | `enabled: true` で追加                                      |
+| 3   | cron デーモンの稼働             | 起動時の status 失敗を無視せず、5 分間隔の heartbeat を追加 |
 
 `logs/routine-exec-cycle.log` の最終書き込みは 2026-08-29 06:00 で、以降 10 日間動いていない。
 稼働していた期間も、routine が無効であるため `no due routines — exit` を繰り返していた。
@@ -121,14 +123,25 @@ mapfile -t selected_paths < <(
 [routine] no due routines — exit
 ```
 
-cron が停止した原因は特定していない。`post-start.sh` が実行されなかったのか、cron が異常終了
-したのかを確認する必要がある。原因が分からないまま routine を有効化しても動かない。
+過去の停止時には cron 自体のログと生存記録がなく、終了原因を事後に特定できなかった。また、
+`post-start.sh` が `service cron status` の失敗を `|| true` で無視していたため、起動失敗も正常な
+起動と区別できなかった。直接の再発防止として status 失敗を起動失敗として扱い、起動後の停止を
+検出するため `.devcontainer/specdojo-routine.cron` が `logs/routine-cron-heartbeat.log` を 5 分ごとに
+更新するようにした。10 分以上更新されなければ cron 停止またはコンテナ停止として検知できる。
 
 なお、コンテナが起動し続けていることも前提になる。開発機がスリープすれば cron も動かない。
 
 ## 8. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- `grade list` を追加し、plan を生成せずに共通フィルタの選択結果を取得できるようにした。
+- `run-per-document.sh` に `--changed-only`、`--ungraded`、`--kind all` を追加した。2つのフィルタは
+  和集合として扱い、`generated` 配下を除外し、初回選択を保存して中断後も同じ対象を再開する。
+- `job-grade-kata` に選択入力を追加し、変更済み・未評価の4種別を最大5件処理する
+  `rtn-grade-recheck` を毎週火曜日6時（Asia/Tokyo）、`enabled: true` で追加した。
+- grade CLI、スクリプトの選択・no-op・再開、Job/Routine 定義に対するテストを追加・更新した。
+- cron の起動失敗を見逃さないようにし、5分間隔の heartbeat で起動後の停止も判別可能にした。
+- 実時刻での初回起動ログ確認は、次回の火曜日6時の実行後に
+  `logs/routine-exec-cycle.log` と `logs/routine-cron-heartbeat.log` で行う。
 
 ## 9. 関連ドキュメント
 

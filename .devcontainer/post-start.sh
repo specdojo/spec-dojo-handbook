@@ -66,7 +66,7 @@ if command -v cron >/dev/null 2>&1; then
   sudo chmod 0644 "$CRON_TARGET"
   mkdir -p "${WORKSPACE_DIR}/logs"
   sudo service cron start
-  sudo service cron status || true
+  sudo service cron status
 else
   echo "Cron is not installed. Rebuild the devcontainer to apply .devcontainer/Dockerfile."
 fi
