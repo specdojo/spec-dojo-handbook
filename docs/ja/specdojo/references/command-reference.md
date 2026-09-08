@@ -503,7 +503,7 @@ tools/grade/run-per-document.sh --run-id 20260901-rulebooks --limit 3 --dry-run
 tools/grade/run-per-document.sh --run-id 20260901-rulebooks --kind rulebook
 ```
 
-各段は executor と reporter を個別に指定できます。1段目の比較リファレンスは既定で `prj-overview-rulebook.md` に固定し、`--stage-1-reference` で変更する場合も `prj-overview` 系の文書だけを受理します。2段目はリファレンスなし、3段目は `codex-expert-executor` によるリファレンスなしの確認が既定です。2段目が `pass`、score 96以上、finding 1件以下の3条件をすべて満たす場合だけ3段目を実行します。
+各段は executor と reporter を個別に指定できます。1段目の比較リファレンスは `--kind` に応じて `docs/ja/specdojo/<種別ディレクトリ>/prj-overview-<kind>.md` を既定とします。たとえば `--kind recipe` では `docs/ja/specdojo/recipes/prj-overview-recipe.md` です。対応する既定文書が存在しない場合は警告し、1段目もリファレンスなしで続行します。`--stage-1-reference` の明示指定は既定値より優先しますが、選択した種別のディレクトリにある `prj-overview` 系 Markdown だけを受理し、異なる種別や `none` は入力エラーとします。解決した値（欠落時の `none` を含む）は `--dry-run` の `stage=1` 行で確認できます。2段目はリファレンスなし、3段目は `codex-expert-executor` によるリファレンスなしの確認が既定です。2段目が `pass`、score 96以上、finding 1件以下の3条件をすべて満たす場合だけ3段目を実行します。
 
 実行 state は既定で `logs/grade/runs/per-document/<run-id>/documents/` に文書・段ごとに保存し、保存先を変える場合は `--work-dir` で指定します。`docs/` の外へ置くのは、`grade plan --out` が段ごとに plan を書き出す一方で plan の ID が評価対象の文書から決まるため、3段分が同一 ID の Markdown となり `index build` が重複 ID で失敗するからです。`grade plan --out` はリポジトリ外のパスを拒否するため、保存先はリポジトリ内に置きます。agent が rate limit を返した場合は終了コード75で中断し、その段の完了 state は書きません。同じ引数と `--run-id` で再実行すると、完了済みの段を再適用せず未完了の段から続行します。設定が保存済み state と異なる場合は、別条件の結果を混在させず、新しい `--run-id` を要求します。
 

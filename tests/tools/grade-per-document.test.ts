@@ -25,15 +25,25 @@ function makeFixture(): {
   fixtureDirectories.push(root);
   const rulebooks = join(root, "docs/ja/specdojo/rulebooks");
   const target = join(rulebooks, "fixture-rulebook.md");
-  const reference = join(rulebooks, "prj-overview-rulebook.md");
   const stateFile = join(root, "fake-apply-count.txt");
   const fakeSpecdojo = join(root, "fake-specdojo.mjs");
 
-  mkdirSync(rulebooks, { recursive: true });
-  const markdown = (id: string) =>
-    `---\nspecdojo:\n  id: ${id}\n  type: rulebook\n  status: draft\n---\n\n# Fixture\n`;
-  writeFileSync(target, markdown("specdojo:fixture-rulebook"));
-  writeFileSync(reference, markdown("specdojo:prj-overview-rulebook"));
+  const markdown = (id: string, type: string) =>
+    `---\nspecdojo:\n  id: ${id}\n  type: ${type}\n  status: draft\n---\n\n# Fixture\n`;
+  for (const [kind, directory] of [
+    ["rulebook", "rulebooks"],
+    ["recipe", "recipes"],
+    ["sample", "samples"],
+    ["template", "templates"],
+  ]) {
+    const kindDirectory = join(root, "docs/ja/specdojo", directory);
+    mkdirSync(kindDirectory, { recursive: true });
+    writeFileSync(
+      join(kindDirectory, `prj-overview-${kind}.md`),
+      markdown(`specdojo:prj-overview-${kind}`, kind),
+    );
+  }
+  writeFileSync(target, markdown("specdojo:fixture-rulebook", "rulebook"));
   writeFileSync(
     fakeSpecdojo,
     `#!/usr/bin/env node
@@ -107,6 +117,18 @@ function runPipeline(
   );
 }
 
+function runDryRun(
+  fixture: ReturnType<typeof makeFixture>,
+  kind: string,
+  extraArguments: string[] = [],
+) {
+  return spawnSync(
+    "bash",
+    [script, "--run-id", "fixture-dry-run", "--kind", kind, "--dry-run", ...extraArguments],
+    { cwd: fixture.root, encoding: "utf8", env: process.env },
+  );
+}
+
 afterEach(() => {
   for (const directory of fixtureDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
@@ -114,6 +136,70 @@ afterEach(() => {
 });
 
 describe("grade per-document pipeline", () => {
+  it.each([
+    ["rulebook", "rulebooks"],
+    ["recipe", "recipes"],
+    ["sample", "samples"],
+    ["template", "templates"],
+  ])("uses the %s prj-overview document as the stage 1 default", (kind, directory) => {
+    const fixture = makeFixture();
+
+    const result = runDryRun(fixture, kind);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain(
+      `stage=1 executor=gemma-expert-executor reporter=gemma-reporter reference=docs/ja/specdojo/${directory}/prj-overview-${kind}.md`,
+    );
+  });
+
+  it("prefers an explicit same-kind stage 1 reference", () => {
+    const fixture = makeFixture();
+    const customReference = join(
+      fixture.root,
+      "docs/ja/specdojo/recipes/prj-overview-custom-recipe.md",
+    );
+    writeFileSync(customReference, "# Custom recipe reference\n");
+
+    const result = runDryRun(fixture, "recipe", [
+      "--stage-1-reference",
+      "./docs/ja/specdojo/recipes/prj-overview-custom-recipe.md",
+    ]);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain(
+      "reference=./docs/ja/specdojo/recipes/prj-overview-custom-recipe.md",
+    );
+  });
+
+  it("rejects an explicit stage 1 reference from another kind", () => {
+    const fixture = makeFixture();
+
+    const result = runDryRun(fixture, "sample", [
+      "--stage-1-reference",
+      "docs/ja/specdojo/recipes/prj-overview-recipe.md",
+    ]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(
+      "--stage-1-reference must be a sample prj-overview document under docs/ja/specdojo/samples",
+    );
+  });
+
+  it("warns and continues without a reference when the kind default is missing", () => {
+    const fixture = makeFixture();
+    rmSync(join(fixture.root, "docs/ja/specdojo/samples/prj-overview-sample.md"));
+
+    const result = runDryRun(fixture, "sample");
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stderr).toContain(
+      "default stage 1 reference not found for kind sample; continuing without a reference",
+    );
+    expect(result.stdout).toContain(
+      "stage=1 executor=gemma-expert-executor reporter=gemma-reporter reference=none",
+    );
+  });
+
   it("runs all three stages for one document and skips it on resume", () => {
     const fixture = makeFixture();
 
