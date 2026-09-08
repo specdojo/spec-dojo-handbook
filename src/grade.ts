@@ -304,10 +304,15 @@ function insertFindings(body: string, viewpoints: GradeViewpointInput[]): string
     output.push(...comments);
     if (index < lines.length) output.push(lines[index]);
   }
-  return output
-    .join("\n")
-    .replace(/^\n+/, "")
-    .replace(/\n{3,}/g, "\n\n");
+  return (
+    output
+      .join("\n")
+      .replace(/^\n+/, "")
+      .replace(/\n{3,}/g, "\n\n")
+      // grade apply の出力だけで lint 可能な状態にする。走査は文書ごとの apply 間に
+      // Prettier を実行しないため、入力由来の末尾空行をここで1改行へ正規化する。
+      .replace(/(?:\n[ \t]*)*$/, "\n")
+  );
 }
 
 function resolveProject(projectOption?: string): {

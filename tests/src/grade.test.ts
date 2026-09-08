@@ -407,6 +407,32 @@ describe("grade markdown update", () => {
     ).toBe(true);
   });
 
+  it("normalizes trailing blank lines to exactly one newline", () => {
+    const content = markdown.replace(/\n$/, "\n\n\n");
+    const first = gradeMarkdownContent({
+      content,
+      path: submission.documents[0].path,
+      input: submission.documents[0],
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-29T00:00:00.000Z"),
+    });
+    const second = gradeMarkdownContent({
+      content: first,
+      path: submission.documents[0].path,
+      input: submission.documents[0],
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-29T00:00:00.000Z"),
+    });
+
+    expect(first).toMatch(/[^\n]\n$/);
+    expect(first).toContain("本文です。");
+    expect(second).toBe(first);
+  });
+
   it("keeps mappings outside grade in block style", () => {
     const withExternalMetadata = markdown.replace(
       "---\n\n# Example",
