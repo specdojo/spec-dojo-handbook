@@ -345,6 +345,7 @@ specdojo schedule strategy generate \
 | `--worktree`                    | worktree に隔離して実行する                                                                            | `run --task` / `run --register`                  |
 | `--track-state`                 | claim / complete の状態イベントを記録する                                                              | `run --task`                                     |
 | `--register <PJR-ID>`           | 登録簿の項目を実行する（空白・カンマ区切りで複数可。既定は in-place、`--worktree` で隔離）             | `run` / `plan`                                   |
+| `--register-filter`             | 登録簿項目を type / priority / status / limit の条件で決定論的に選ぶ                                   | `run`                                            |
 | `--register-commit`             | 成功したIDごとに、その実行で生じた変更を1コミットにまとめる（`--worktree` 時は常に commit のため無視） | `run --register`                                 |
 | `--on-failure <stop\|continue>` | 途中失敗時に残りのIDを停止するか継続するか（既定は `stop`）                                            | `run --register`                                 |
 | `--resume`                      | run が止まった段（executor / reporter / 統合）を既存 worktree と checkpoint で再開する                 | `run --register --worktree`                      |
@@ -386,6 +387,9 @@ specdojo exec run --project prj-0001 --register PJR-0012 PJR-0013 --register-com
 # 途中で失敗しても残りの項目を続行する（既定は失敗時に停止）
 specdojo exec run --project prj-0001 --register PJR-0012,PJR-0013 --on-failure continue
 
+# 登録簿を flat な条件で絞り込み、ID 昇順に実行する
+specdojo exec run --project prj-0001 --register-filter --register-types todo --register-priorities high --register-statuses open --register-limit 3
+
 # 成果物を worktree に隔離して実行し、統合ブランチへ merge back する
 specdojo exec run --project prj-0001 --register PJR-0012 --worktree
 
@@ -402,7 +406,7 @@ specdojo exec run --project prj-0001 --register PJR-0012 --worktree --resume
 specdojo exec run --project prj-0001 --job job-weekly-report --input period=2026-W32
 ```
 
-`--register` は個票の項目を実行します。実行対象になるのは type が `todo` / `issue` / `change-request` / `question` / `risk` の項目で、`decision` / `note` は対象外です。既定は in-place の直列実行です。`--worktree` を付けると成果物の変更を worktree に隔離し、状態遷移（`start` / `review` / `waiting`）を直列化したうえで、成功時に merge back します。`--parallel <n>` は `--worktree` との併用時のみ指定でき、単独で指定するとエラーになります。
+`--register` は指定した個票の項目を実行します。`--register-filter` は `--register-types` / `--register-priorities` / `--register-statuses` のカンマ区切り条件と、正の整数の `--register-limit` で項目を選びます。条件省略時は open かつ実行可能な type が対象です。いずれも実行対象になる type は `todo` / `issue` / `change-request` / `question` / `risk` で、`decision` / `note` は対象外です。既定は in-place の直列実行です。`--worktree` を付けると成果物の変更を worktree に隔離し、状態遷移（`start` / `review` / `waiting`）を直列化したうえで、成功時に merge back します。`--parallel <n>` は `--worktree` との併用時のみ指定でき、単独で指定するとエラーになります。
 
 `--resume` は `--register --worktree` の pipeline 実行専用で、途中で止まった run を止まった段から再開します。対象 run は既存 worktree に残る最新の `pipeline-state.json` から特定し、再開段も state から決まります。executor が `running` のまま残っていれば、同じ plan/result と未コミット成果を保持した worktree 上で executor を再実行します。executor が成功済みで reporter が未完了なら、保存済みの `evidence.json` を使って reporter だけを再開します。親検証の記録が不足または失敗している場合は、現在の固定許可リストで親検証を更新してから reporter へ進みます。reporter も成功していて統合（commit → merge → worktree 撤去）だけが残っている場合は、agent を起動せずに統合段だけを再試行します。worktree や plan/result が無い、成功済み executor の evidence が欠損しているなど再開できない場合は、worktree を含め何も変更せずエラー終了します。再開可能な成果が残っている項目を `--resume` なしで再実行しようとした場合も、未統合の成果を守るために中断します。破棄して最初からやり直す場合は `--force-restart` を指定します。手順の使い分けは [exec運用ガイド](../guides/exec-operation-guide.md) を参照します。
 
@@ -577,7 +581,7 @@ specdojo exec worktree remove --project prj-0001 --task <task-id> --delete-branc
 | `job validate` | `job-*.yaml`を検証する                     | `specdojo job validate --project prj-0001` |
 | `job where`    | Job Definition・Run・stateのパスを表示する | `specdojo job where --project prj-0001`    |
 
-`exec run --job`の`--input <key=value...>`はJob入力を指定し、`--scheduled-at`はroutineやCIが論理実行枠を渡す場合に使います。同じidempotency keyの完了済みRunは再実行せず、失敗済みRunは同じRun IDの次attemptとして実行します。Job Runは現在in-place実行に対応し、`--worktree`との併用は未対応です。
+`exec run --job`の`--input <key=value...>`はJob入力を指定し、`--scheduled-at`はroutineやCIが論理実行枠を渡す場合に使います。入力定義の `enum` は string / integer / boolean の値、または list の各要素を制限し、integer の `minimum` / `maximum` は値域を制限します。command template では `{{project_id}}` で解決済みプロジェクトIDを、`{{specdojo}}` で現在のrunnerと同じCLI entryを参照できます。同じidempotency keyの完了済みRunは再実行せず、失敗済みRunは同じRun IDの次attemptとして実行します。Job Runは現在in-place実行に対応し、`--worktree`との併用は未対応です。
 
 委譲先のagentは`task.agent.executor`（および必要なら`task.agent.reporter`）にnicknameで指名します。両方を指名したRunはexecutor→reporterの2段で実行し、resultはreporterが書きます。`--by`は単一agent実行としての差し替え、`--executor-by` / `--reporter-by`は段ごとの差し替えとして、いずれも指名より優先します。`job validate`はnicknameの書式だけを検査するため、実在確認は`--dry-run`で行います。責務境界と記述規約は [Job定義標準](../standards/job-definition-standard.md) を参照します。
 
@@ -607,7 +611,7 @@ specdojo exec run --job job-grade-kata --project prj-0001 --input period=2026-W3
 | `--id <id>` | due 判定と無関係に特定の routine を即時実行する |
 | `--dry-run` | 実行も `last_run` 記録も行わず、対象を表示する  |
 
-`action` は単一オブジェクト、または先頭から順に実行する1件以上の配列を受け付けます。単一オブジェクトの `action.kind` または配列の各要素の `kind` は、`register` / `exec-auto` / `exec-resume` / `exec-cycle` / `job` の5種類です。`exec-cycle` は延期 task の再開・doc-index 再構築・古い track の再生成・状態再計算・`--auto` loop を単一ロック内で順次実行します。定義ファイルの配置、`interval`または`trigger.cron`の書式、複数 action の失敗方針、due判定、kindごとの動作は [routine運用ガイド](../guides/routine-operation-guide.md) を参照します。
+`action` は単一オブジェクト、または先頭から順に実行する1件以上の配列を受け付けます。単一オブジェクトの `action.kind`、配列の各要素の `kind` とも `job` だけを受け付け、実行内容と入力検証は参照先の Job Definition が担います。`register` / `exec-auto` / `exec-resume` / `exec-cycle` の旧 kind は廃止済みです。定義ファイルの配置、`interval`または`trigger.cron`の書式、複数 action の失敗方針、due判定は [routine運用ガイド](../guides/routine-operation-guide.md) を参照します。
 
 ```bash
 # due な routine をまとめて実行する（cron / CI から呼ぶ想定）

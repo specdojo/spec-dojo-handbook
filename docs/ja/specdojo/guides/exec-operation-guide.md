@@ -49,7 +49,7 @@ agent にタスクを実行させる経路は、実行対象の出どころに�
 | ------------ | ----------------------------------------- | ------------------------------------------------- | ---------------------------------------- |
 | 実行対象     | `sch-track-*.yaml` のタスク（依存グラフ） | `generated/pjr-index.md` の項目                   | `rtn-*.yaml` の定義（実体は左の 2 経路） |
 | 代表コマンド | `exec run --task` / `exec run --auto`     | `exec run --register`                             | `routine run --due`                      |
-| 起動         | 人、または routine（`kind: exec-auto`）   | 人、または routine（`kind: register`）            | 外部スケジューラ（cron / CI）            |
+| 起動         | 人、または routine（`job-exec-auto`）     | 人、または routine（`job-register-sweep`）        | 外部スケジューラ（cron / CI）            |
 | 状態追跡     | exec events（claim / complete / block）   | register の遷移（in-progress / review / waiting） | `last_run` の記録のみ                    |
 | 隔離         | worktree（`--worktree` / `--auto`）       | in-place のみ                                     | -（実行経路へ委譲）                      |
 | 終端の扱い   | `complete` event（human finalize で確定） | 人が確認して `register close`                     | -（発火の記録のみ）                      |
@@ -291,18 +291,20 @@ AI モデルの rate limit に達した場合、`exec run` は `.specdojo/exec-d
 | 時刻不明で cooldown もない       | 時刻を推定せず、通常の blocked として人に委ねる                         |
 | `quota_exhausted`                | 自動再開せず、別 provider が無ければ人に委ねる                          |
 
-定時起動する場合は routine の `exec-resume` action を使います。due 判定と `blocked -> doing` の確保は scheduler lock 内で行われるため、多重起動でも同じ task を重複実行しません。詳細は [routine運用ガイド](routine-operation-guide.md) を参照してください。
+定時起動する場合は routine から `job-exec-resume` を参照します。due 判定と `blocked -> doing` の確保は scheduler lock 内で行われるため、多重起動でも同じ task を重複実行しません。詳細は [routine運用ガイド](routine-operation-guide.md) を参照してください。
 
 ```yaml
 id: rtn-exec-limit-resume
 enabled: true
 interval: 15m
 action:
-  kind: exec-resume
-  parallel: 2
+  kind: job
+  job: job-exec-resume
+  inputs:
+    parallel: "2"
 ```
 
-延期 task の再開に続けて Ready task も自動実行したい場合は、`exec-resume` と `exec-auto` を別 routine に分けず、`exec cycle`（routine では `kind: exec-cycle`）を使います。再開 → doc-index 再構築 → 古い track の再生成 → 状態再計算 → `--auto` loop を単一の project 実行ロック内で順次実行するため、実行順が routine ファイル名順や cron 時刻差に依存せず、step 間に手動実行・別 routine・CI が割り込みません。
+延期 task の再開に続けて Ready task も自動実行したい場合は、`job-exec-resume` と `job-exec-auto` を別 routine に分けず、`job-exec-cycle` を使います。再開 → doc-index 再構築 → 古い track の再生成 → 状態再計算 → `--auto` loop を単一の project 実行ロック内で順次実行するため、実行順が routine ファイル名順や cron 時刻差に依存せず、step 間に手動実行・別 routine・CI が割り込みません。
 
 track の再生成では、`exec validate` の警告と同じ鮮度判定を使います。`sch-track-<track>.yaml` がないか、`sch-strategy-<track>.yaml` の更新時刻が track より新しい場合だけ、`schedule build --track <track> --force` を実行します。再生成が不要ならコマンドも追加ログも発生しません。再生成に失敗した場合は、古い track のまま Ready task を選ばず cycle を停止します。単発の `exec run` と `exec refresh` は自動再生成しません。再開対象が再延期されても、依存しない Ready task の実行は継続します。詳細は [routine運用ガイド](routine-operation-guide.md) の順次実行（exec-cycle）を参照してください。
 

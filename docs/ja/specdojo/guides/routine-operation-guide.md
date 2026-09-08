@@ -9,7 +9,7 @@ specdojo:
 
 Routine Operation Guide
 
-`routine` は `rtn-*.yaml` の定義に基づき、Schedule の依存グラフとは独立にタスクを定期実行する、時刻条件のトリガー層です。routine 自体は実行機構を持たず、何を実行するかは schedule 実行または register 実行に委ねます。3つの実行経路の比較は [exec運用ガイド](exec-operation-guide.md) を参照します。
+`routine` は `rtn-*.yaml` の定義に基づき、Schedule の依存グラフとは独立にタスクを定期実行する、時刻条件のトリガー層です。routine 自体は実行機構を持たず、何を実行するかは Job Definition に委ねます。Job が schedule 実行または register 実行を呼び出します。実行経路の比較は [exec運用ガイド](exec-operation-guide.md) を参照します。
 
 routineは、既存の未完了Schedule/Register項目を探索するほか、再利用可能なJob Definitionから期間・revisionごとのJob Runを生成できます。週報や変更文書の翻訳は[Job実行設計](../../product/040-system-design/sysd-job-execution.md)を参照してください。
 
@@ -21,7 +21,7 @@ routineは、既存の未完了Schedule/Register項目を探索するほか、�
 
 **この文書で分かること**
 
-- routine の定義ファイル、due 判定と実行、`action.kind` による実行経路への委譲
+- routine の定義ファイル、due 判定と実行、`action.job` による Job への委譲
 
 **次に読む文書**
 
@@ -40,32 +40,34 @@ name: 登録簿 open todo の日次スイープ
 enabled: true
 interval: 1d
 action:
-  kind: register
-  filter:
-    types:
-      - todo
-    priorities:
-      - high
-    statuses:
-      - open
-  limit: 3
+  kind: job
+  job: job-register-sweep
+  inputs:
+    types: todo
+    priorities: high
+    statuses: open
+    limit: "3"
 ```
 
 ### 1.1. 複数 action の順次実行
 
-通常は従来どおり `action` に1つのオブジェクトを指定します。複数の処理を同じ実行機会で順序保証したい場合は、`action` に1件以上の配列を指定します。各要素は単一 action と同じ形式であり、段ごとに異なる kind と引数を指定できます。
+通常は `action` に1つの Job を指定します。複数の独立した委譲単位を同じ実行機会で順序保証したい場合は、`action` に1件以上の配列を指定します。各要素は `kind: job` と参照する Job、入力を持ちます。
 
 ```yaml
 id: rtn-staged-execution
 enabled: true
 interval: 1d
 action:
-  - kind: exec-auto
-    strategy: fifo
-    parallel: 1
-  - kind: exec-auto
-    strategy: critical-first
-    parallel: 2
+  - kind: job
+    job: job-exec-auto
+    inputs:
+      strategy: fifo
+      parallel: "1"
+  - kind: job
+    job: job-exec-auto
+    inputs:
+      strategy: critical-first
+      parallel: "2"
   - kind: job
     job: job-final-check
     inputs:
@@ -80,8 +82,8 @@ action:
 {
   "last_result": "failure",
   "last_action_results": [
-    { "index": 1, "kind": "exec-auto", "result": "failure" },
-    { "index": 2, "kind": "exec-auto", "result": "success" },
+    { "index": 1, "kind": "job", "result": "failure" },
+    { "index": 2, "kind": "job", "result": "success" },
     { "index": 3, "kind": "job", "result": "success" }
   ]
 }
@@ -107,15 +109,14 @@ Job runnerは、この入口をmaterialize済みの引数で1回起動し、コ�
 
 最終実行時刻と結果は `<routines-path>/generated/routine-state.json` に記録され、`interval`（`30m` / `6h` / `1d` / `1w` 形式）が経過したものを due と判定します。配列 action の場合は段別結果も同じ state に記録します。多重起動は lock で防ぐため、外部スケジューラが重複起動しても同じ routine が二重に走ることはありません。
 
-単一オブジェクトの `action.kind`、または配列の各要素の `kind` で、どの実行経路を発火させるかを選びます。
+単一オブジェクトの `action.kind`、配列の各要素の `kind` とも `job` だけを受け付けます。routine は `job-*.yaml` から一意な Job Run を生成して `exec run --job` へ委譲し、コマンド、入力の型・値域、冪等キーは Job Definition が担います。旧 `register` / `exec-auto` / `exec-resume` / `exec-cycle` kind は 2026-09-09 に廃止し、同等の command Job へ移行しました。
 
-| kind          | 動作                                                                                                                                                                               |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `register`    | 登録簿から `filter`（`types` / `priorities` / `statuses`）と `limit` で選んだ項目を `exec run --register` で実行する                                                               |
-| `exec-auto`   | `exec run --auto` を実行する（`strategy` / `parallel` / `loop` / `max_rounds` を指定できる）                                                                                       |
-| `exec-resume` | 再開時刻を迎えた retryable な利用制限 task を `exec resume --due` で排他的に再開する（`parallel` を指定できる）                                                                    |
-| `exec-cycle`  | `exec cycle` を実行し、`exec-resume` → 古い track の再生成 → 状態再計算 → `exec-auto` を単一ロック内で順次処理する（`strategy` / `parallel` / `loop` / `max_rounds` を指定できる） |
-| `job`         | `job-*.yaml`から一意なJob Runを生成し、`exec run --job`で実行する                                                                                                                  |
+| Job                  | 動作                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------- |
+| `job-register-sweep` | flat list 入力で登録簿を絞り込み、選択した項目を `exec run --register` 相当で実行する |
+| `job-exec-auto`      | `exec run --auto` を実行する                                                          |
+| `job-exec-resume`    | `exec resume --due` を実行する                                                        |
+| `job-exec-cycle`     | `exec cycle` を実行する                                                               |
 
 週報Jobを毎週金曜日17時（Asia/Tokyo）に起動する例です。
 
@@ -195,7 +196,7 @@ cat logs/routine-cron-heartbeat.log
 
 ## 3. 実行経路への委譲
 
-routine 自体は実行機構を持たないトリガー層です。何を実行するかは各 `action.kind` が指す schedule 実行または register 実行に委ねられ、状態追跡もそれぞれの経路の規則に従います。routine は発火結果として `last_run` と `last_result`、配列 action では `last_action_results` を記録します。
+routine 自体は実行機構を持たないトリガー層です。何を実行するかは `action.job` の Job Definition に委ねられ、状態追跡も Job が呼ぶ schedule 実行または register 実行の規則に従います。routine は発火結果として `last_run` と `last_result`、配列 action では `last_action_results` を記録します。
 
 ### 3.1. 既存項目の再探索と実行単位の反復
 
@@ -203,8 +204,8 @@ routine 自体は実行機構を持たないトリガー層です。何を実行
 
 | 種類                 | 例                                      | 現行routineでの扱い                  |
 | -------------------- | --------------------------------------- | ------------------------------------ |
-| 既存項目の再探索     | openな高優先度todoを毎日最大3件消化する | `kind: register`で対応済み           |
-| 既存計画の継続       | ReadyなSchedule taskを夜間に進める      | `kind: exec-auto`で対応済み          |
+| 既存項目の再探索     | openな高優先度todoを毎日最大3件消化する | `job-register-sweep`へ入力を渡す     |
+| 既存計画の継続       | ReadyなSchedule taskを夜間に進める      | `job-exec-auto`へ入力を渡す          |
 | 新しい実行単位の反復 | 毎週分の週報を作る                      | `kind: job`で期間ごとのRunを生成する |
 | checkpoint差分の反復 | 前回成功後に更新された文書を翻訳する    | Jobのcheckpointを使用する            |
 
@@ -212,9 +213,9 @@ routine 自体は実行機構を持たないトリガー層です。何を実行
 
 ### 3.2. 順次実行（exec-cycle）
 
-延期 task の再開と Ready task の自動実行を続けて動かしたいとき、`exec-resume` と `exec-auto` を別々の routine に分けると、実行順は routine ファイルの列挙順や複数 routine の cron 時刻差に依存します。先行 routine が想定時間を超えると後続 routine が busy skip され、次回の発火まで進みません。
+延期 task の再開と Ready task の自動実行を続けて動かしたいとき、`job-exec-resume` と `job-exec-auto` を別々の routine に分けると、実行順は routine ファイルの列挙順や複数 routine の cron 時刻差に依存します。先行 routine が想定時間を超えると後続 routine が busy skip され、次回の発火まで進みません。
 
-`kind: exec-cycle` は 1 つの routine で次の5 step を固定順で順次実行します。step の順序は routine ファイル名順や cron 時刻差に依存しません。
+`job-exec-cycle` は 1 つの routine で次の5 step を固定順で順次実行します。step の順序は routine ファイル名順や cron 時刻差に依存しません。
 
 1. `exec-resume --due`（再開時刻を迎えた retryable な利用制限 task の再開）
 2. `index build`（`.specdojo/doc-index.json` の再構築）
@@ -245,11 +246,13 @@ id: rtn-exec-cycle
 enabled: true
 interval: 30m
 action:
-  kind: exec-cycle
-  strategy: critical-first
-  parallel: 2
-  loop: true
-  max_rounds: 5
+  kind: job
+  job: job-exec-cycle
+  inputs:
+    strategy: critical-first
+    parallel: "2"
+    loop: "true"
+    max_rounds: "5"
 ```
 
-`strategy` / `loop` / `max_rounds` は auto step に、`parallel` は resume step と auto step の両方に適用されます。単体の `exec resume` / `exec run --auto` と `kind: exec-resume` / `kind: exec-auto` はこれまでどおり利用できます。
+`strategy` / `loop` / `max_rounds` は auto step に、`parallel` は resume step と auto step の両方に適用されます。単体の `exec resume` / `exec run --auto` はこれまでどおり利用でき、routine からは対応する Job を参照します。

@@ -12,6 +12,7 @@ import {
   materializeJobRun,
   parseJobDefinition,
   parseJobInputs,
+  renderJobTemplate,
   resolveJobPaths,
 } from "../../src/job.js";
 
@@ -219,6 +220,56 @@ describe("Job Definition", () => {
     });
     expect(() => parseJobInputs(["period=a", "period=b"])).toThrow(/Duplicate input/);
   });
+
+  it("enum と整数範囲を定義時に検証する", () => {
+    const valid = parseJobDefinition(
+      {
+        id: "job-auto",
+        name: "Auto",
+        inputs: {
+          strategy: { type: "string", default: "critical-first", enum: ["critical-first", "fifo"] },
+          parallel: { type: "integer", default: 1, minimum: 1, maximum: 8 },
+        },
+        task: { mode: "command", command: "run {{inputs.strategy}} {{inputs.parallel}}" },
+        run: { idempotency_key: "{{job_id}}:{{inputs.strategy}}:{{inputs.parallel}}" },
+      },
+      "job-auto.yaml",
+    );
+    expect(valid.errors).toEqual([]);
+
+    const invalid = parseJobDefinition(
+      {
+        id: "job-auto",
+        name: "Auto",
+        inputs: {
+          strategy: { type: "string", default: "newest", enum: ["critical-first", "fifo"] },
+          parallel: { type: "integer", default: 0, minimum: 1 },
+        },
+        task: { mode: "command", command: "run" },
+        run: { idempotency_key: "{{job_id}}" },
+      },
+      "job-auto.yaml",
+    );
+    expect(invalid.errors).toContain(
+      "job-auto.yaml: inputs.strategy.default is invalid: Input strategy must be one of: critical-first, fifo",
+    );
+    expect(invalid.errors).toContain(
+      "job-auto.yaml: inputs.parallel.default is invalid: Input parallel must be at least 1",
+    );
+  });
+
+  it("project_id を command template へ展開する", () => {
+    expect(
+      renderJobTemplate("specdojo exec cycle --project {{project_id}}", {
+        job_id: "job-cycle",
+        project_id: "prj-test",
+        specdojo: "specdojo",
+        scheduled_at: "2026-09-09T00:00:00.000Z",
+        inputs: {},
+        checkpoint: {},
+      }),
+    ).toBe("specdojo exec cycle --project prj-test");
+  });
 });
 
 describe("Job command execution", () => {
@@ -241,6 +292,44 @@ describe("Job command execution", () => {
 });
 
 describe("Job Run lifecycle", () => {
+  it("materialize 時に enum と整数範囲外の入力を拒否する", async () => {
+    const repo = setupRepo();
+    try {
+      writeFileSync(
+        join(repo, "jobs/job-constrained.yaml"),
+        [
+          "id: job-constrained",
+          "name: Constrained",
+          "inputs:",
+          "  strategy:",
+          "    type: string",
+          "    enum: [critical-first, fifo]",
+          "  parallel:",
+          "    type: integer",
+          "    minimum: 1",
+          "task:",
+          "  mode: command",
+          "  command: run {{inputs.strategy}} {{inputs.parallel}}",
+          "run:",
+          '  idempotency_key: "{{job_id}}:{{inputs.strategy}}:{{inputs.parallel}}"',
+          "",
+        ].join("\n"),
+      );
+
+      await expect(
+        materializeJobRun({
+          projectId: "test",
+          jobId: "job-constrained",
+          inputs: ["strategy=newest", "parallel=0"],
+          dryRun: true,
+        }),
+      ).rejects.toThrow(/Input strategy must be one of/);
+    } finally {
+      process.chdir(originalCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
   it("materializes one idempotent Run and advances checkpoint only on success", async () => {
     const repo = setupRepo();
     try {

@@ -22,6 +22,7 @@ Job Definition Standard
 
 - 決定論的な手順（分岐条件が事前に確定し、実行結果が入力から一意に決まる手順）は script または CLI へ実装し、`mode: command` の `task.command` からその入口を呼ぶ。
 - `task.command` は materialize 時に入力を展開して Run へ凍結し、runner が agent の sandbox 外で直接実行する。
+- command Job が同じプロジェクトの `specdojo exec` を子プロセスとして呼ぶ場合、runner が保持する project 実行 lock の token を子へ継承する。子は owner token の一致を検証した場合だけ再取得を省略し、Job 全体の排他範囲を維持する。
 - 判断（観測した結果の解釈、失敗の切り分け、次の行動の提案）が必要な command Job だけ、`task.analysis` で reporter agent と判断内容を指定する。
 - `edit` / `review` Job は従来どおり agent に作業を委譲し、`task.description` に判断内容を書く。
 - 委譲先の agent は nickname で指名する。`capabilities` / `proficiency` による間接指定は、指名が不要な場合に限る。
@@ -60,6 +61,7 @@ Job Definition Standard
 ### 3.3. command mode の規約
 
 - `task.command` は非空のシェルコマンドとし、materialize 後の文字列を Job Run に保存する。
+- command から対象プロジェクトを指定するときは template 値 `{{project_id}}` を使い、同じ CLI を子プロセスで呼ぶときは `{{specdojo}}` を使う。`specdojo` という PATH 上の別 checkout を直接呼ばない。
 - runner は POSIX 環境では `/bin/sh -eu` でコマンドを実行し、終了コードが0以外なら agent を起動せず Run を失敗にする。
 - runner はコマンド、終了コード、標準出力、標準エラーを bounded・redacted evidence として別々に保存する。
 - `task.analysis` は任意である。省略時は終了コードだけで成否を確定し、指定時はコマンド成功後に evidence を reporter agent へ渡す。
@@ -75,6 +77,8 @@ Job Definition Standard
 ### 3.5. inputs と冪等性
 
 - `inputs` には、Run を一意にする値（期間、対象種別、上限件数）だけを置く。
+- string / integer / boolean は `enum` で許容値を、list は `enum` で各要素の許容値を制限できる。integer の範囲は `minimum` / `maximum` で制限する。既定値にも同じ制約を適用する。
+- 入れ子の mapping は入力にせず、独立に検証できる flat な入力へ分ける。たとえば登録簿 filter は `types` / `priorities` / `statuses` の list と `limit` の integer で表す。
 - `run.idempotency_key` には、同じ論理実行を判別できる `inputs` をすべて含める。
 - script の再開キー（run id 相当）に `inputs` を使う場合、その値が script 側の書式制約を満たすことを確認する。ISO 8601 の `scheduled_at` は記号を含むため、そのまま再開キーへ使わない。
 
@@ -90,6 +94,8 @@ Job Definition Standard
 | `task.targets` `paths` | 条件 | `edit` / `review` はいずれか必須。`command` では任意               |
 | `task.agent.executor`  | 任意 | `pm-members.yaml` の nickname 書式（`^[a-z0-9][a-z0-9_-]{0,62}$`） |
 | `task.agent.reporter`  | 任意 | 同上。executor が result を書かない構成では必須                    |
+| `inputs.*.enum`        | 任意 | scalar の値または list の各要素に対する非空の許容値集合            |
+| `minimum` / `maximum`  | 任意 | integer input だけに指定でき、`minimum <= maximum`                 |
 | `run.idempotency_key`  | ○    | 空文字へ解決されず、Run を一意にする `inputs` を含む               |
 
 ## 5. 記述例

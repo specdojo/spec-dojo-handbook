@@ -106,7 +106,11 @@ job は現在コマンドを直接実行できない。`task.mode` は `edit` / 
 
 ### 4.4. 互換性の方針
 
-既存の 7 routine をすべて書き換えるか、`kind` を残して段階移行するかを決める必要がある。
+既存の 7 routine をすべて `kind: job` へ移行し、旧 `register` / `exec-auto` / `exec-resume` /
+`exec-cycle` は 2026-09-09 付で受け付けを終了する。リポジトリ内の定義を同一変更で移行でき、
+外部公開済みの stable schema version もないため、移行期間は設けない。旧定義は
+`routine validate` でエラーにし、対応する `job-register-sweep` / `job-exec-auto` /
+`job-exec-resume` / `job-exec-cycle` への書き換えを廃止条件かつ移行手順とする。
 
 ## 5. 完了条件
 
@@ -131,7 +135,22 @@ job は現在コマンドを直接実行できない。`task.mode` は `edit` / 
 
 ## 7. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- routine schema と実装を `action.kind: job` の1経路へ集約し、旧4 kind 固有の入力型、検証、
+  引数組み立て、register 選択・実行分岐を削除した。具体的には `buildExecAutoArgs` /
+  `buildExecResumeArgs` / `buildExecCycleArgs` / `buildRegisterRunArgs`、routine 内の
+  `selectRegisterItems`、`executeRoutineAction` の5分岐を除去した。既存7 routine はすべて Job
+  参照へ移行した。
+- `job-exec-auto` / `job-exec-resume` / `job-exec-cycle` / `job-register-sweep` を追加し、routine と
+  `exec run --job` のどちらからも同じ command を materialize できるようにした。
+- Job input に `enum` / `minimum` / `maximum` を追加し、定義時の既定値と Run materialize 時の
+  入力へ同じ値域検証を適用した。旧 routine の strategy と正整数制約を Job 側へ移した。
+- register の入れ子 filter は `types` / `priorities` / `statuses` の list と `limit` の integer へ
+  平坦化した。`exec run --register-filter` が値を再検証し、従来と同じ既定条件、ID順、上限で選ぶ。
+- command Job から同一 project の `specdojo exec` を呼ぶ場合は、親 runner の lock token と実際の
+  owner token の一致を検証して lock を継承する。自己デッドロックを避けつつ Job 全体の排他を保つ。
+- 互換移行は段階移行なしとし、旧 kind を schema と parser の双方で拒否する。移行日と置換先を
+  routine 運用ガイドおよび command reference に記載した。
+- 残課題はない。
 
 ## 8. 関連ドキュメント
 

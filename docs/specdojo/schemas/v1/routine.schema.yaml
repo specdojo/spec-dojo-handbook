@@ -51,41 +51,16 @@ properties:
           $ref: "#/$defs/action"
 $defs:
   action:
-    oneOf:
-      - type: object
-        additionalProperties: true
-        required: [kind]
-        properties:
-          kind:
-            const: register
-      - type: object
-        additionalProperties: true
-        required: [kind]
-        properties:
-          kind:
-            const: exec-auto
-      - type: object
-        additionalProperties: true
-        required: [kind]
-        properties:
-          kind:
-            const: exec-resume
-      - type: object
-        additionalProperties: true
-        required: [kind]
-        properties:
-          kind:
-            const: exec-cycle
-      - type: object
-        additionalProperties: false
-        required: [kind, job]
-        properties:
-          kind:
-            const: job
-          job:
-            type: string
-            pattern: "^job-[a-z0-9][a-z0-9-]*$"
-          inputs:
-            type: object
-            additionalProperties:
-              type: string
+    type: object
+    additionalProperties: false
+    required: [kind, job]
+    properties:
+      kind:
+        const: job
+      job:
+        type: string
+        pattern: "^job-[a-z0-9][a-z0-9-]*$"
+      inputs:
+        type: object
+        additionalProperties:
+          type: string

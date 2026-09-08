@@ -12,7 +12,7 @@ specdojo:
 
 週報作成や更新文書の翻訳など、同じ作業定義から実行単位を繰り返し生成するためのJob実行モデルを定義する。
 
-本設計は`job-*.yaml`、`exec run --job`、routineの`action.kind: job`として実装されている。Job Runは既存exec基盤を使ってin-place実行され、決定論的コマンドはrunnerが直接実行し、判断が必要な処理だけをagentへ委譲する。
+本設計は`job-*.yaml`、`exec run --job`、routineの`action.kind: job`として実装されている。routine の action は Job 参照へ統一し、register sweep、Schedule auto、利用制限後の再開、exec cycle も command Job として扱う。Job Runは既存exec基盤を使ってin-place実行され、決定論的コマンドはrunnerが直接実行し、判断が必要な処理だけをagentへ委譲する。
 
 ## 1. 目的と適用範囲
 
@@ -74,7 +74,7 @@ Job Definitionは「毎回何をするか」を表す再利用可能なテンプ
 | `id`                   | `job-<slug>`形式の安定したJob ID                      |
 | `name` / `description` | 作業の識別名と目的                                    |
 | `task`                 | runnerコマンドまたはagentへ渡す指示、対象、実行要件   |
-| `inputs`               | 必須入力、型、既定値                                  |
+| `inputs`               | 必須入力、型、既定値、`enum`・整数範囲                |
 | `run.idempotency_key`  | 同じ論理実行を重複生成しないキー                      |
 | `checkpoint`           | 前回成功時点を次回入力へ渡す規則。必要なJobだけが持つ |
 
@@ -128,9 +128,9 @@ run:
 
 `task.agent`はJobが委譲するagentを`pm-members.yaml`のnicknameで直接指名する。`capabilities`による間接指定は、要求を満たすmemberが複数あると選択が実行時の優先度に依存し、Jobの定義から委譲先を読み取れない。さらにroster全体がstage_roleを持つpipeline memberである場合、stage_roleなしのmemberだけを対象とする自動選択では候補が0件になる。`reporter`を併記したRunはexecutor→reporterの2段で実行し、resultはreporterが書く。`reporter`を省略した場合は単一agent実行となり、そのagentがresultまで記入する。`exec run --by`は単一agent実行としての差し替え、`--executor-by` / `--reporter-by`は段ごとの差し替えとして、いずれも指名より優先する。
 
-決定論的な処理は`task.mode: command`とし、入力を展開する`task.command`を必須にする。runnerはmaterialize済みコマンドをPOSIX環境では`/bin/sh -eu`で直接実行し、コマンド、終了コード、標準出力、標準エラーをevidenceへ記録する。終了コードが0以外なら、その値からRunを直接`failed`と判定しagentは起動しない。結果の解釈が必要な場合だけ`task.analysis.agent`と`task.analysis.description`を指定し、成功時のcommand evidenceをreporterへ渡す。analysisを省略した場合はrunnerがresultを確定する。
+決定論的な処理は`task.mode: command`とし、入力を展開する`task.command`を必須にする。runnerはmaterialize済みコマンドをPOSIX環境では`/bin/sh -eu`で直接実行し、コマンド、終了コード、標準出力、標準エラーをevidenceへ記録する。終了コードが0以外なら、その値からRunを直接`failed`と判定しagentは起動しない。結果の解釈が必要な場合だけ`task.analysis.agent`と`task.analysis.description`を指定し、成功時のcommand evidenceをreporterへ渡す。analysisを省略した場合はrunnerがresultを確定する。同じprojectの`specdojo exec`を子プロセスで呼ぶcommandでは、親runnerのproject実行lock tokenとowner tokenの一致を検証してlockを継承し、自己デッドロックを避けながら排他範囲を維持する。
 
-テンプレート式で参照できる値は、`job_id`、検証済み`inputs`、トリガーが渡した`scheduled_at`、読み取り専用の前回成功checkpointに限定する。任意コード実行や環境変数の無制限な展開は許可しない。
+テンプレート式で参照できる値は、`job_id`、`project_id`、現在のrunnerと同じCLI entryを表す`specdojo`、検証済み`inputs`、トリガーが渡した`scheduled_at`、読み取り専用の前回成功checkpointに限定する。任意コード実行や環境変数の無制限な展開は許可しない。入力の`enum`はscalar値またはlistの各要素へ、integerの`minimum` / `maximum`は値域へ適用し、既定値と実行時入力を同じ規則で検証する。入れ子条件は検証可能なflat入力へ分解する。
 
 ## 4. 起動と実行フロー
 
