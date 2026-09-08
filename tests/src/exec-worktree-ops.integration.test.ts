@@ -654,6 +654,31 @@ describe("exec worktree ops", () => {
     );
   });
 
+  it("does not block a regenerated gitignored doc index before commit", () => {
+    const fixture = setupRepository();
+    const taskId = "PJR-0138-GENERATED";
+    writeFile(join(fixture.repo, ".gitignore"), ".specdojo/doc-index.json\n");
+    writeFile(join(fixture.repo, ".specdojo", "doc-index.json"), '{"entries":[]}\n');
+    git(fixture.repo, "add", ".gitignore");
+    git(fixture.repo, "add", "--force", ".specdojo/doc-index.json");
+    git(fixture.repo, "commit", "-m", "add generated index fixture");
+    const worktree = prepare(
+      fixture,
+      taskId,
+      taskId,
+      planWithIdentity(taskId, { mode: "edit", origin: "register", targets: [] }),
+    );
+
+    writeFile(join(worktree.path, "docs", "a.md"), "# legitimate deliverable\n");
+    writeFile(join(worktree.path, ".specdojo", "doc-index.json"), '{"regenerated":true}\n');
+
+    const committed = commitWorktreeChanges({ context: fixture.context, worktree, taskId });
+
+    expect(committed.committed).toBe(true);
+    expect(committed.targets).toContain("docs/a.md");
+    expect(committed.targets).not.toContain(".specdojo/doc-index.json");
+  });
+
   it("blocks protected config changes already committed by an agent", () => {
     const fixture = setupRepository();
     const taskId = "PJR-0139";
