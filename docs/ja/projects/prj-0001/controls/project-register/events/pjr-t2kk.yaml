@@ -58,3 +58,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_ff16645eed134a238ced7d74599a40f3
+- v: 1
+  id: reg_3169b32d8d0e4149a3bf91a5fe244cfa
+  ts: "2026-09-08T13:48:25Z"
+  action: wait
+  actor: orchestrator
+  from_status: review
+  to_status: waiting
+  reason: grade list / --changed-only / --kind all と routine 定義は完成したが、routine 経由の実行が成立しない。job のコマンドが agent の sandbox 内で走るため、スクリプトが起動する内側の opencode がホームディレクトリへ書けず全段が失敗する。完了条件の routine run --id で再評価できることを満たさない。PJR-GWY4 の実装を待つ。
+  changes:
+    - field: status
+      from: review
+      to: waiting
+    - field: block_reason
+      from: "-"
+      to: grade list / --changed-only / --kind all と routine 定義は完成したが、routine 経由の実行が成立しない。job のコマンドが agent の sandbox 内で走るため、スクリプトが起動する内側の opencode がホームディレクトリへ書けず全段が失敗する。完了条件の routine run --id で再評価できることを満たさない。PJR-GWY4 の実装を待つ。
+  previous_event_id: reg_85643daed69a4ec6a20bd6cc4d55ad27

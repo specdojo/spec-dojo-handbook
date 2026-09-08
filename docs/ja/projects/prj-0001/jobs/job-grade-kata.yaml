@@ -22,14 +22,24 @@ task:
   mode: edit
   owner: ARC
   agent:
-    executor: claude-expert-executor
-    reporter: claude-reporter
+    # routine から無人で起動するため、セッションを共有しない agent を選ぶ。claude は CLI と
+    # TUI を同時に動かすと ~/.claude.json の書き込みが競合する。codex は --ephemeral で
+    # セッションを持たないため、利用者の作業と並行しても安全である。
+    executor: codex-expert-executor
+    reporter: gemma-reporter
   description: |
-    次のコマンドをリポジトリルートで1回だけ実行する。対象文書の選択、段の順序、
+    最初に `npm run build` を実行し、`dist/specdojo.js` を最新にする。次のコマンドが
+    `--specdojo-bin` で参照するため、ビルドが古いと当該時点の実装で評価してしまう。
+    無人実行ではビルドの鮮度を人が確認できないため、この手順を省略しない。
+
+    続けて次のコマンドをリポジトリルートで1回だけ実行する。対象文書の選択、段の順序、
     各段の agent 呼び出し、`grade apply` の実行はこのスクリプトの責務であるため、
     手順を分解して個別のコマンドへ置き換えない。
 
-    tools/grade/run-per-document.sh --run-id {{job_id}}-{{inputs.kind}}-{{inputs.period}} --kind {{inputs.kind}} --limit {{inputs.limit}} --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}}
+    `--specdojo-bin` は省略しない。既定の `npx tsx` は sandbox 内で IPC ソケットを作成
+    できず `EPERM` で失敗する。
+
+    tools/grade/run-per-document.sh --run-id {{job_id}}-{{inputs.kind}}-{{inputs.period}} --kind {{inputs.kind}} --limit {{inputs.limit}} --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}} --specdojo-bin dist/specdojo.js
 
     実行後に `logs/grade/runs/per-document/{{job_id}}-{{inputs.kind}}-{{inputs.period}}/results.tsv`
     と終了コードを読み、次を判断して報告する。

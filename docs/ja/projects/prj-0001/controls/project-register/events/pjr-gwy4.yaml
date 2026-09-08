@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_2acc2ad3c1c64bd49a3e78f343e1cb0b
+  ts: "2026-09-08T13:38:47Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: job のコマンド実行を決定論的にする
+    - field: description
+      from: ""
+      to: job の実行は agent が description を解釈してシェルコマンドを組み立て実行する形になっている。task.mode は edit / review のみで、コマンドを直接実行する経路がない。コマンドの実行は決定論的で、判断が要るのは結果の解釈だけである。agent の sandbox 内で実行されるため tsx の IPC ソケット作成が EPERM で失敗する事象も、この設計の帰結である。runner がコマンドを実行して evidence へ記録し、判断が要る場合だけ agent へ渡す形へ分離する。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: high
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-08"
+    - field: due
+      from: ""
+      to: "2026-09-30"

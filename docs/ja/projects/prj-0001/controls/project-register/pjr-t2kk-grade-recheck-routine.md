@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-09-07T23:00:00Z"
   due_on: "2026-09-30"
+  block_reason: grade list / --changed-only / --kind all と routine 定義は完成したが、routine 経由の実行が成立しない。job のコマンドが agent の sandbox 内で走るため、スクリプトが起動する内側の opencode がホームディレクトリへ書けず全段が失敗する。完了条件の routine run --id で再評価できることを満たさない。PJR-GWY4 の実装を待つ。
 ---
 
 # PJR-T2KK 修正済み文書の再評価を routine で実行できるようにする
@@ -130,6 +131,53 @@ mapfile -t selected_paths < <(
 更新するようにした。10 分以上更新されなければ cron 停止またはコンテナ停止として検知できる。
 
 なお、コンテナが起動し続けていることも前提になる。開発機がスリープすれば cron も動かない。
+
+## 7.1. 実装後の検証結果
+
+CLI と定義は完成したが、routine 経由の実行が成立しないため `waiting` とした。
+
+### 7.1.1. 完成した部分
+
+| 追加                     | 確認                                                     |
+| ------------------------ | -------------------------------------------------------- |
+| `specdojo grade list`    | `--changed-only` で 25 件を出力。`grade validate` と一致 |
+| `--kind all`             | 4 種別を横断して選択する                                 |
+| `--specdojo-bin`         | `npx tsx` を回避して起動できる                           |
+| `rtn-grade-recheck.yaml` | `routine validate` を通る                                |
+
+`--kind all --limit 2 --changed-only=true --ungraded=true` の dry-run で、種別ごとの
+リファレンス（`reference=per-kind`）が選ばれることも確認した。
+
+### 7.1.2. 成立しない部分
+
+`routine run --id rtn-grade-recheck` を 3 回試み、いずれも失敗した。
+
+| 回  | 結果 | 原因                                           |
+| --- | ---- | ---------------------------------------------- |
+| 1   | 失敗 | `npx tsx` の IPC ソケットが `EPERM`            |
+| 2   | 失敗 | 既存 Job Run の再利用により修正が未反映        |
+| 3   | 失敗 | 内側の opencode がホームディレクトリへ書けない |
+
+3 回目でスクリプト自体は終了コード 0 になったが、スクリプトが起動する agent が動作しない。
+全 15 段（5 文書 × 3 段）が 1 秒で失敗した。
+
+```text
+Unknown: FileSystem.open (/home/node/.local/share/opencode/log/opencode.log)
+agent failed: gemma-expert-executor exit=1
+```
+
+job のコマンドが agent の sandbox 内で実行されるため、内側の agent が制約を受ける。個別の
+回避を重ねても解決しない。詳細は [[prj-0001:pjr-gwy4-job-deterministic-command]] に記録した。
+
+### 7.1.3. 途中で行った是正
+
+- job の agent を `claude-expert-executor` / `claude-reporter` から
+  `codex-expert-executor` / `gemma-reporter` へ変更した。claude は CLI と TUI を同時に
+  動かすと `~/.claude.json` の書き込みが競合するため、無人実行に適さない。
+- job の手順へ `npm run build` と `--specdojo-bin dist/specdojo.js` を追加した。いずれも
+  PJR-GWY4 の実装後は不要になる暫定の回避策である。
+- `rtn-grade-recheck.yaml` を `enabled: false` に戻した。動作しない routine を有効のまま
+  にすると、定刻に失敗し続ける。
 
 ## 8. 対応結果
 
