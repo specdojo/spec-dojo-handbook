@@ -20,7 +20,8 @@ Options:
   --work-dir <directory>        State and result directory
   --stage-1-executor <nickname> (default: gemma-expert-executor)
   --stage-1-reporter <nickname> (default: gemma-reporter)
-  --stage-1-reference <path>    Must be a prj-overview document
+  --stage-1-reference <path>    Same-kind prj-overview document
+                                (default: follows --kind)
   --stage-2-executor <nickname> (default: gemma-expert-executor)
   --stage-2-reporter <nickname> (default: gemma-reporter)
   --stage-2-reference <path|none> (default: none)
@@ -60,7 +61,8 @@ declare -a selected_paths=()
 
 stage_1_executor=gemma-expert-executor
 stage_1_reporter=gemma-reporter
-stage_1_reference=docs/ja/specdojo/rulebooks/prj-overview-rulebook.md
+stage_1_reference=
+stage_1_reference_explicit=false
 stage_2_executor=gemma-expert-executor
 stage_2_reporter=gemma-reporter
 stage_2_reference=none
@@ -113,6 +115,7 @@ while [[ $# -gt 0 ]]; do
     --stage-1-reference)
       require_value "$@"
       stage_1_reference=$2
+      stage_1_reference_explicit=true
       shift 2
       ;;
     --stage-2-executor)
@@ -177,6 +180,19 @@ case "$kind" in
   *) fail "--kind must be rulebook, recipe, sample, or template" ;;
 esac
 
+target_root="docs/ja/specdojo/$kind_directory"
+[[ -d "$target_root" ]] || fail "target directory not found: $target_root"
+
+stage_1_reference_root=$target_root
+if ! $stage_1_reference_explicit; then
+  stage_1_reference="$stage_1_reference_root/prj-overview-$kind.md"
+  if [[ ! -f "$stage_1_reference" ]]; then
+    printf 'grade pipeline: default stage 1 reference not found for kind %s; continuing without a reference: %s\n' \
+      "$kind" "$stage_1_reference" >&2
+    stage_1_reference=none
+  fi
+fi
+
 for option_and_value in \
   "--project:$project" \
   "--run-id:$run_id" \
@@ -192,18 +208,23 @@ for option_and_value in \
   validate_scalar "${option_and_value%%:*}" "${option_and_value#*:}"
 done
 
-[[ "$stage_1_reference" != none ]] || fail "stage 1 requires a fixed prj-overview reference"
-case "$(basename "$stage_1_reference")" in
-  prj-overview*) ;;
-  *) fail "--stage-1-reference must be a prj-overview document" ;;
-esac
+if $stage_1_reference_explicit; then
+  [[ "$stage_1_reference" != none ]] ||
+    fail "--stage-1-reference cannot be none; omit the option to use the --kind default"
+  [[ -f "$stage_1_reference" ]] || fail "reference not found: $stage_1_reference"
+  case "$(basename "$stage_1_reference")" in
+    prj-overview*.md) ;;
+    *) fail "--stage-1-reference must be a prj-overview Markdown document" ;;
+  esac
+  stage_1_reference_directory=$(cd -- "$(dirname -- "$stage_1_reference")" && pwd -P)
+  stage_1_reference_root_directory=$(cd -- "$stage_1_reference_root" && pwd -P)
+  [[ "$stage_1_reference_directory" == "$stage_1_reference_root_directory" ]] ||
+    fail "--stage-1-reference must be a $kind prj-overview document under $stage_1_reference_root"
+fi
 
 for reference in "$stage_1_reference" "$stage_2_reference" "$stage_3_reference"; do
   [[ "$reference" == none || -f "$reference" ]] || fail "reference not found: $reference"
 done
-
-target_root="docs/ja/specdojo/$kind_directory"
-[[ -d "$target_root" ]] || fail "target directory not found: $target_root"
 
 if [[ ${#selected_paths[@]} -eq 0 ]]; then
   # generated/ は他の正本から作られる派生物で、直接編集しても再生成で失われる。

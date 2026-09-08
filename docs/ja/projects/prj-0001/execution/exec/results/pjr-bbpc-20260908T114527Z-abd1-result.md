@@ -4,11 +4,12 @@ specdojo:
   type: exec-result
   task_id: PJR-BBPC
   mode: edit
-  status: in_progress
+  status: complete
   project_id: prj-0001
   origin: register
   plan_ref: exec/plans/pjr-bbpc-20260908T114527Z-abd1-plan.md
   started_at: "2026-09-08T11:45:27.274Z"
+  completed_at: "2026-09-08T11:59:46.717Z"
   agent: codex-expert-executor
 ---
 
@@ -16,16 +17,21 @@ specdojo:
 
 ## 1. 実施内容
 
-_TODO_: 実施した内容の要約を記入する。
+- 3段評価の既定リファレンスが対象種別に追従しない問題に対処するため、`tools/grade/run-per-document.sh` を修正し、指定された種別に基づいた既定リファレンスの選択、明示指定の優先、異種別拒否、および欠落時のフォールバック処理を実装した。
+- あわせて、関連するCommandリファレンスおよび個票を更新し、回帰テスト `tests/tools/grade-per-document.test.ts` を実装・更新して動作を検証した。
+- 静的検査（prettier, markdownlint）、型検査、カタログ検証、および統合テスト（test-integration）および単体テスト（test-unit）をすべて通過した。
 
 ## 2. 変更ファイル
 
-_TODO_: 変更したファイルのパスを記入する。
+- `tools/grade/run-per-document.sh`: 種別に追従する既定リファレンスの選択ロジックおよびエラーハンドリングを実装。
+- `tests/tools/grade-per-document.test.ts`: 既定リファレンスの種別追従、明示指定の優先、異種別拒否などの検証ケースを追加し、回帰テストを整備。
+- `docs/ja/projects/prj-0001/controls/project-register/pjr-bbpc-stage1-reference-kind-default.md`: 個票の作業内容および対応結果を更新。
+- `docs/ja/specdojo/references/command-reference.md`: コマンドリファレンスの記述を修正。
 
 ## 3. 申し送り
 
-_TODO_: 後続タスクへの申し送り事項を記入する（なければ削除）。
+- なし
 
 ## 4. 進め方と実践の型の適用
 
-_TODO_: `approach` に従ってどう進めたか、その進め方の中で実践の型（rulebook / recipe / sample / template）をどう適用したかを記入する（`fully-guided` で rulebook / recipe / sample / template をどう使い分けたか、`recipe-guided` で recipe のみを基準にした内容、`freeform` で実践の型より優先した実例やプロジェクト文脈、`retrofit` で実際に参照した実装パス・抽出した現在動作・反映/新設判断・未反映の乖離・未確認範囲、`rulebook-maintenance` などの maintenance 系で見直した実践の型とその根拠、など）。実践の型を基準にしなかった場合は、その判断と代わりに根拠にした内容も記入する。複数文書間に矛盾があり rulebook を正として判断した箇所、参照範囲から外れていた文書とその代わりに根拠にした内容があれば、あわせて記録する。
+まず `tools/grade/run-per-document.sh` において、`--kind` 引数に基づいた既定リファレンスの動的な切り替えを実装した。次に、意図しない種別のリファレンスが利用されないよう拒否ロジックを追加し、テストコードでこれらの境界条件と正常系を網羅的に検証した。最後に、ドキュメントの整合性を整え、プロジェクト規定の静的検査およびテストサイクルを通じて品質を担保した。
