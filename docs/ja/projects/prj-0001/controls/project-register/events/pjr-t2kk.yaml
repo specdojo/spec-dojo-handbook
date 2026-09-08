@@ -74,3 +74,16 @@
       from: "-"
       to: grade list / --changed-only / --kind all と routine 定義は完成したが、routine 経由の実行が成立しない。job のコマンドが agent の sandbox 内で走るため、スクリプトが起動する内側の opencode がホームディレクトリへ書けず全段が失敗する。完了条件の routine run --id で再評価できることを満たさない。PJR-GWY4 の実装を待つ。
   previous_event_id: reg_85643daed69a4ec6a20bd6cc4d55ad27
+- v: 1
+  id: reg_cdddf46cd1854f7fb7194070c9904e0a
+  ts: "2026-09-08T22:19:58Z"
+  action: start
+  actor: codex-expert-executor
+  from_status: waiting
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: waiting
+      to: in-progress
+  previous_event_id: reg_3169b32d8d0e4149a3bf91a5fe244cfa
