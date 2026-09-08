@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: high
   owner: ARC
   registered_at: "2026-09-08T13:38:47Z"
   due_on: "2026-09-30"
+  block_reason: rate limit reached
 ---
 
 # PJR-GWY4 job のコマンド実行を決定論的にする
