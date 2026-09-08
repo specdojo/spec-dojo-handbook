@@ -45,3 +45,16 @@
       from: prj-0001:pjr-say1-finding
       to: prj-0001:pjr-say1-template-finding-comments
   previous_event_id: reg_e4a296b529504b16840e4a7f3b62b5bc
+- v: 1
+  id: reg_050c71c963204507ab6afe6f02dea2ab
+  ts: "2026-09-08T11:04:30Z"
+  action: start
+  actor: codex-expert-executor
+  from_status: open
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: open
+      to: in-progress
+  previous_event_id: reg_1ede21a87ef24ea994f2e1eb873a829e
