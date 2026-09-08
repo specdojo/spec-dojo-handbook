@@ -5,6 +5,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   completeJobRun,
   deriveJobState,
+  executeJobCommand,
+  isJobAgentTask,
+  isJobCommandTask,
   jobCheckpoint,
   materializeJobRun,
   parseJobDefinition,
@@ -111,7 +114,9 @@ describe("Job Definition", () => {
       "job-report.yaml",
     );
     expect(parsed.errors).toEqual([]);
-    expect(parsed.job?.task.agent).toEqual({
+    expect(parsed.job).toBeDefined();
+    if (!parsed.job || !isJobAgentTask(parsed.job.task)) throw new Error("expected agent task");
+    expect(parsed.job.task.agent).toEqual({
       executor: "claude-expert-executor",
       reporter: "claude-reporter",
     });
@@ -157,12 +162,81 @@ describe("Job Definition", () => {
     expect(parsed.errors).toContain("job-report.yaml: task.agent has unknown key(s): reporters");
   });
 
+  it("parses command mode separately from optional agent analysis", () => {
+    const parsed = parseJobDefinition(
+      {
+        id: "job-grade",
+        name: "Grade",
+        inputs: { period: { type: "string", required: true } },
+        task: {
+          mode: "command",
+          command: "tools/grade/run.sh --period {{inputs.period}}",
+          analysis: {
+            agent: "gemma-reporter",
+            description: "evidence から失敗原因を判断する",
+          },
+        },
+        run: { idempotency_key: "{{job_id}}:{{inputs.period}}" },
+      },
+      "job-grade.yaml",
+    );
+
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.job && isJobCommandTask(parsed.job.task)).toBe(true);
+    expect(parsed.job?.task).toMatchObject({
+      mode: "command",
+      command: "tools/grade/run.sh --period {{inputs.period}}",
+      analysis: { agent: "gemma-reporter" },
+    });
+  });
+
+  it("rejects agent-driven fields in command mode", () => {
+    const parsed = parseJobDefinition(
+      {
+        id: "job-grade",
+        name: "Grade",
+        task: {
+          mode: "command",
+          command: "tools/grade/run.sh",
+          description: "agent がコマンドを実行する",
+          agent: { executor: "gemma-executor" },
+        },
+        run: { idempotency_key: "{{job_id}}" },
+      },
+      "job-grade.yaml",
+    );
+
+    expect(parsed.job).toBeUndefined();
+    expect(parsed.errors).toContain(
+      "job-grade.yaml: task.agent is not allowed in command mode; use task.analysis.agent",
+    );
+  });
+
   it("parses key=value inputs and rejects duplicates", () => {
     expect(parseJobInputs(["period=2026-W32", "lang=en"])).toEqual({
       period: "2026-W32",
       lang: "en",
     });
     expect(() => parseJobInputs(["period=a", "period=b"])).toThrow(/Duplicate input/);
+  });
+});
+
+describe("Job command execution", () => {
+  it("uses fail-fast shell semantics and captures stdout and stderr", async () => {
+    const repo = mkdtempSync(join(tmpdir(), "specdojo-job-command-"));
+    try {
+      const result = await executeJobCommand(
+        "printf 'before\\n'; printf 'problem\\n' >&2; false; printf 'after\\n'",
+        repo,
+      );
+
+      expect(result.exitCode).not.toBe(0);
+      expect(result.stdout).toContain("before");
+      expect(result.stdout).not.toContain("after");
+      expect(result.stderr).toContain("problem");
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 });
 
@@ -180,6 +254,7 @@ describe("Job Run lifecycle", () => {
       expect(first.record.inputs).toEqual({ from_revision: "initial", to_revision: "abc123" });
       // The delegation target is frozen into the Run so a later definition change cannot
       // silently move a running Job to another agent.
+      if (!isJobAgentTask(first.record.task)) throw new Error("expected agent task");
       expect(first.record.task.agent).toEqual({
         executor: "gemma-executor",
         reporter: "gemma-reporter",

@@ -109,7 +109,13 @@ import {
   scaffoldResult,
   updateResultStatus,
 } from "./exec-results.js";
-import { completeJobRun, materializeJobRun } from "./job.js";
+import {
+  completeJobRun,
+  executeJobCommand,
+  isJobCommandTask,
+  materializeJobRun,
+  type JobRunRecord,
+} from "./job.js";
 import {
   findExecWorktree,
   gitEnvironment,
@@ -150,6 +156,7 @@ import {
   resolveTaskProficiency,
 } from "./exec-strategy.js";
 import {
+  recordCommandEvidence,
   recordExecutorEvidence,
   recordReporterFailureOutput,
   writeExecutorEvidence,
@@ -3156,6 +3163,217 @@ async function runInPlaceMode(opts: RunOpts): Promise<void> {
   process.stdout.write(`run done: ${label}\n`);
 }
 
+async function runCommandJobMode(params: {
+  opts: RunOpts;
+  record: JobRunRecord;
+  runPath: string;
+  planPath: string;
+  projectId: string;
+  schedulePath: string;
+  executionPath: string;
+}): Promise<void> {
+  const { opts, record, runPath, planPath, projectId, schedulePath, executionPath } = params;
+  if (!isJobCommandTask(record.task)) throw new Error("Expected a command Job task.");
+  if (opts.by || opts.executorBy) {
+    throw new Error(
+      "--by and --executor-by are not available for command Jobs; the runner executes command.",
+    );
+  }
+  if (opts.reporterBy && !record.task.analysis) {
+    throw new Error("--reporter-by requires task.analysis on a command Job.");
+  }
+  const repoRoot = specdojoRootDir();
+  const roster = loadRosterForExecutionPath(executionPath);
+  const execDefaults = loadExecDefaultsConfig(
+    resolveExecDefaultsPath(opts, schedulePath),
+    executionPath,
+  );
+  const analysisNickname = record.task.analysis
+    ? opts.reporterBy?.trim() || record.task.analysis.agent
+    : undefined;
+  const analysisResolution = analysisNickname
+    ? resolveAgentOverride("edit", analysisNickname, {}, roster, execDefaults, "reporter")
+    : undefined;
+  if (analysisResolution?.kind === "error") throw new Error(analysisResolution.message);
+  if (analysisResolution && analysisResolution.kind !== "command") {
+    throw new Error(`Analysis agent not found: ${analysisNickname ?? ""}`);
+  }
+  const analysisCandidate =
+    analysisResolution?.kind === "command"
+      ? {
+          command: analysisResolution.command,
+          actor: analysisResolution.actor ?? analysisNickname,
+          provider: analysisResolution.provider,
+        }
+      : undefined;
+
+  if (opts.dryRun) {
+    process.stdout.write(`[dry-run] execution: runner command\n`);
+    process.stdout.write(`[dry-run] command:\n${record.task.command}\n`);
+    if (analysisCandidate) {
+      process.stdout.write(
+        `[dry-run] agent: ${analysisCandidate.actor ?? ""} (analysis reporter)\n`,
+      );
+      process.stdout.write(`[dry-run] reporter command: ${analysisCandidate.command}\n`);
+    }
+    process.stdout.write(`[dry-run] plan: ${planPath}\n`);
+    return;
+  }
+
+  const resultActor = analysisCandidate?.actor ?? "specdojo-runner";
+  const { resultPath } = await scaffoldResult({
+    executionPath,
+    taskId: record.run_id,
+    mode: "edit",
+    projectId,
+    origin: "job",
+    jobId: record.job_id,
+    runId: record.run_id,
+    planRef: record.plan_ref,
+    agent: resultActor,
+    startedAt: new Date().toISOString(),
+    ...(record.task.targets ? { targets: record.task.targets } : {}),
+  });
+  const evidenceRunId = `attempt-${record.attempts.length}`;
+  process.stdout.write(`Running Job Run ${record.run_id} command in place.\n`);
+  const commandOutcome = await executeJobCommand(record.task.command, repoRoot);
+  const recorded = recordCommandEvidence({
+    repoRoot,
+    worktreePath: repoRoot,
+    executionPath,
+    taskId: record.run_id,
+    runId: evidenceRunId,
+    actor: "specdojo-runner",
+    command: record.task.command,
+    shell: process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "/bin/sh -eu",
+    startedAt: commandOutcome.startedAt,
+    completedAt: commandOutcome.completedAt,
+    exitCode: commandOutcome.exitCode,
+    stdout: commandOutcome.stdout,
+    stderr: commandOutcome.stderr,
+    stdoutTruncated: commandOutcome.stdoutTruncated,
+    stderrTruncated: commandOutcome.stderrTruncated,
+    ...(commandOutcome.error ? { error: commandOutcome.error } : {}),
+  });
+  const evidenceRef = relative(repoRoot, recorded.evidencePath).split(sep).join("/");
+  process.stdout.write(`Command evidence: ${evidenceRef}\n`);
+
+  const commandSucceeded = commandOutcome.exitCode === 0 && !commandOutcome.error;
+  if (!commandSucceeded || !analysisCandidate) {
+    const reason = commandSucceeded
+      ? undefined
+      : commandOutcome.error
+        ? `command spawn failed: ${commandOutcome.error}`
+        : `command exited with code ${commandOutcome.exitCode ?? "unknown"}`;
+    await renderReporterResult(resultPath, {
+      schema_version: 1,
+      mode: "edit",
+      outcome: commandSucceeded ? "complete" : "blocked",
+      summary: [
+        commandSucceeded
+          ? "runner が解決済みコマンドを直接実行し、終了コード 0 を確認した。"
+          : `runner が解決済みコマンドを直接実行したが、${reason}。`,
+      ],
+      changed_files: recorded.evidence.changes.map((change) => ({
+        path: change.path,
+        summary: "runner command の実行後に検出した変更",
+      })),
+      handoff: [`command evidence: ${evidenceRef}`],
+      approach:
+        "Job Definition から materialize したコマンドを agent の解釈を介さず実行し、runner evidence を正本とした。",
+      block_reason: reason ?? "",
+    });
+    await updateResultStatus(
+      resultPath,
+      commandSucceeded ? "complete" : "blocked",
+      new Date().toISOString(),
+      reason,
+    );
+    completeJobRun({
+      projectId,
+      runPath,
+      status: commandSucceeded ? "succeeded" : "failed",
+      evidenceRef,
+      exitCode: commandOutcome.exitCode,
+      ...(reason ? { reason } : {}),
+    });
+    if (commandSucceeded) {
+      process.stdout.write(`Job Run complete: ${record.run_id}\n`);
+    } else {
+      process.stdout.write(`Job Run failed: ${record.run_id}\n`);
+      process.exitCode = commandOutcome.exitCode || 1;
+    }
+    return;
+  }
+
+  const stateLocation = pipelineStateLocation({
+    repoRoot,
+    worktreePath: repoRoot,
+    executionPath,
+    taskId: record.run_id,
+    runId: evidenceRunId,
+  });
+  let state = createPipelineState({
+    taskId: record.run_id,
+    runId: evidenceRunId,
+    updatedAt: commandOutcome.completedAt,
+    executorActor: "specdojo-runner",
+    reporterActor: analysisCandidate.actor,
+    artifacts: {
+      plan_ref: relative(repoRoot, planPath).split(sep).join("/"),
+      result_ref: relative(repoRoot, resultPath).split(sep).join("/"),
+    },
+  });
+  state = updatePipelineStage(
+    state,
+    "executor",
+    {
+      status: "succeeded",
+      attempts: 1,
+      started_at: commandOutcome.startedAt,
+      completed_at: commandOutcome.completedAt,
+      artifact_ref: evidenceRef,
+    },
+    commandOutcome.completedAt,
+  );
+  writePipelineState(stateLocation.path, state);
+  const reporterOutcome = await runReporterStage({
+    repoRoot,
+    cwd: repoRoot,
+    schedulePath,
+    executionPath,
+    reporterCandidates: [analysisCandidate],
+    planPrompt: expandPromptRefs(readFileSync(planPath, "utf8")),
+    resultPath,
+    execDefaults,
+    evidence: recorded.evidence,
+    evidencePath: recorded.evidencePath,
+    state,
+    statePath: stateLocation.path,
+  });
+  const reason = reporterOutcome.blockReason;
+  await updateResultStatus(
+    resultPath,
+    reporterOutcome.exitCode === 0 ? "complete" : "blocked",
+    new Date().toISOString(),
+    reason,
+  );
+  completeJobRun({
+    projectId,
+    runPath,
+    status: reporterOutcome.exitCode === 0 ? "succeeded" : "failed",
+    evidenceRef,
+    exitCode: commandOutcome.exitCode,
+    ...(reason ? { reason } : {}),
+  });
+  if (reporterOutcome.exitCode === 0) {
+    process.stdout.write(`Job Run complete: ${record.run_id}\n`);
+  } else {
+    process.stdout.write(`Job Run failed: ${record.run_id}\n`);
+    process.exitCode = 1;
+  }
+}
+
 async function runJobMode(opts: RunOpts): Promise<void> {
   const resolvedPaths = resolveProjectPaths({ project: opts.project });
   activateResolvedProjectPaths(resolvedPaths);
@@ -3180,6 +3398,19 @@ async function runJobMode(opts: RunOpts): Promise<void> {
   const { definition, record, runPath, planPath } = materialized;
   if (materialized.duplicateComplete) {
     process.stdout.write(`Job Run already complete: ${record.run_id} (${record.state})\n`);
+    return;
+  }
+
+  if (isJobCommandTask(record.task)) {
+    await runCommandJobMode({
+      opts,
+      record,
+      runPath,
+      planPath,
+      projectId,
+      schedulePath,
+      executionPath,
+    });
     return;
   }
 

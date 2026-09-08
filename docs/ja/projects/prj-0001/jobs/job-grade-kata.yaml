@@ -19,40 +19,27 @@ inputs:
     type: boolean
     default: false
 task:
-  mode: edit
+  mode: command
   owner: ARC
-  agent:
-    # routine から無人で起動するため、セッションを共有しない agent を選ぶ。claude は CLI と
-    # TUI を同時に動かすと ~/.claude.json の書き込みが競合する。codex は --ephemeral で
-    # セッションを持たないため、利用者の作業と並行しても安全である。
-    executor: codex-expert-executor
-    reporter: gemma-reporter
-  description: |
-    最初に `npm run build` を実行し、`dist/specdojo.js` を最新にする。次のコマンドが
-    `--specdojo-bin` で参照するため、ビルドが古いと当該時点の実装で評価してしまう。
-    無人実行ではビルドの鮮度を人が確認できないため、この手順を省略しない。
+  command: |
+    npm run build
+    tools/grade/run-per-document.sh --run-id {{job_id}}-{{inputs.kind}}-{{inputs.period}} --kind {{inputs.kind}} --limit {{inputs.limit}} --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}}
+    cat logs/grade/runs/per-document/{{job_id}}-{{inputs.kind}}-{{inputs.period}}/results.tsv
+  analysis:
+    agent: gemma-reporter
+    description: |
+      runner が記録した command evidence の終了コードと、stdout に出力された
+      `results.tsv` から次を判断して報告する。
 
-    続けて次のコマンドをリポジトリルートで1回だけ実行する。対象文書の選択、段の順序、
-    各段の agent 呼び出し、`grade apply` の実行はこのスクリプトの責務であるため、
-    手順を分解して個別のコマンドへ置き換えない。
+      - 終了コード75（rate limit）または中断で未完了の段が残っているか。残る場合は同じ
+        `--run-id` で再開できる状態かを確認する。
+      - `failed` の段があるか。ある場合は rate limit、agent 側の失敗、`grade apply` の
+        忠実性検証による拒否のいずれかへ切り分ける。
+      - 3段目が実行されなかった文書について、閾値未満と2段目の失敗のどちらが理由か。
+      - verdict と score の分布に、3段目の閾値の見直しを要する偏りがあるか。
 
-    `--specdojo-bin` は省略しない。既定の `npx tsx` は sandbox 内で IPC ソケットを作成
-    できず `EPERM` で失敗する。
-
-    tools/grade/run-per-document.sh --run-id {{job_id}}-{{inputs.kind}}-{{inputs.period}} --kind {{inputs.kind}} --limit {{inputs.limit}} --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}} --specdojo-bin dist/specdojo.js
-
-    実行後に `logs/grade/runs/per-document/{{job_id}}-{{inputs.kind}}-{{inputs.period}}/results.tsv`
-    と終了コードを読み、次を判断して報告する。
-
-    - 終了コード75（rate limit）または中断で未完了の段が残っているか。残る場合は同じ
-      `--run-id` で再開できる状態かを確認する。
-    - `failed` の段があるか。ある場合は rate limit、agent 側の失敗、`grade apply` の
-      忠実性検証による拒否のいずれかへ切り分ける。
-    - 3段目が実行されなかった文書について、閾値未満と2段目の失敗のどちらが理由か。
-    - verdict と score の分布に、3段目の閾値の見直しを要する偏りがあるか。
-
-    選択された文書が0件の場合は no-op と判断する。判断できない事象は推測で埋めず、
-    観測した事実と未確認の範囲を分けて報告する。
+      選択された文書が0件の場合は no-op と判断する。判断できない事象は推測で埋めず、
+      観測した事実と未確認の範囲を分けて報告する。
   paths:
     - docs/ja/specdojo/rulebooks
     - docs/ja/specdojo/recipes

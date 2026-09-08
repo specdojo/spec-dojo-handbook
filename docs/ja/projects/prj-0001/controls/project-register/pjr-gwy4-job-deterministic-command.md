@@ -177,7 +177,20 @@ runner がコマンドを実行して evidence へ記録し、判断が要る場
 
 ## 9. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- Job schema と実行モデルへ `task.mode: command`、`task.command`、任意の
+  `task.analysis` を追加した。`edit` / `review` の定義形式と実行経路は維持した。
+- runner は materialize 済みコマンドを POSIX 環境では `/bin/sh -eu` で直接実行し、
+  コマンド、終了コード、stdout、stderr を attempt 単位の evidence へ保存する。非0終了時は
+  analysis agent を起動せず、Job Run と result を直接 failed / blocked にする。
+- command 成功後に判断が必要な場合だけ、command evidence を `stage_role: reporter` の agent へ
+  渡す経路を追加した。analysis が無い場合は runner が result を確定する。
+- `job-grade-kata.yaml` を command mode へ移行し、agent 向けの逸脱防止指示と
+  `--specdojo-bin dist/specdojo.js` の sandbox 回避策を削除した。
+- 回帰テストでは、command の fail-fast、stdout / stderr の分離記録、agent を介さない実行、
+  入れ子プロセスの起動、成功後だけ analysis reporter を起動する経路を追加した。
+- 実 agent を使う3段評価の運用確認は、executor 自身の sandbox 内では同じ制約を再現するため
+  実施していない。次回の `job-grade-kata` routine Run で、command evidence と
+  `results.tsv` により3段完走を確認する。
 
 ## 10. 関連ドキュメント
 
