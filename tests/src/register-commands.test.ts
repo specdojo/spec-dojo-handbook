@@ -32,6 +32,16 @@ const CONFIG = {
   },
 };
 
+const MINIMAL_CONFIG = {
+  version: 1,
+  current_project: "prj-0001",
+  projects: {
+    "prj-0001": {
+      project_register_path: REGISTER_REL,
+    },
+  },
+};
+
 function buildIndex(rows: string[]): string {
   return [
     "---",
@@ -109,7 +119,10 @@ function writeInitialEvent(
 }
 
 // テンプレート（個票・派生ビュー）は実リポジトリのものを temp へ複製し、生成処理を成立させる。
-function withRepo(fn: (fixture: Fixture) => Promise<void> | void): Promise<void> {
+function withRepo(
+  fn: (fixture: Fixture) => Promise<void> | void,
+  opts: { config?: typeof CONFIG | typeof MINIMAL_CONFIG; copyTemplates?: boolean } = {},
+): Promise<void> {
   const originalCwd = process.cwd();
   const root = mkdtempSync(join(tmpdir(), "specdojo-register-cli-"));
   return (async () => {
@@ -117,16 +130,18 @@ function withRepo(fn: (fixture: Fixture) => Promise<void> | void): Promise<void>
       mkdirSync(join(root, ".specdojo"), { recursive: true });
       writeFileSync(
         join(root, ".specdojo/specdojo.config.json"),
-        `${JSON.stringify(CONFIG, null, 2)}\n`,
+        `${JSON.stringify(opts.config ?? CONFIG, null, 2)}\n`,
         "utf8",
       );
       const registerDir = join(root, REGISTER_REL);
       mkdirSync(registerDir, { recursive: true });
-      cpSync(
-        join(originalCwd, "docs/ja/specdojo/templates"),
-        join(root, "docs/ja/specdojo/templates"),
-        { recursive: true },
-      );
+      if (opts.copyTemplates !== false) {
+        cpSync(
+          join(originalCwd, "docs/ja/specdojo/templates"),
+          join(root, "docs/ja/specdojo/templates"),
+          { recursive: true },
+        );
+      }
       process.chdir(root);
       await fn({ root, registerDir });
     } finally {
@@ -817,5 +832,35 @@ describe("register CLI — 個票 frontmatter への読み書き", () => {
       expect(existsSync(join(registerDir, "generated/pjr-views-by-priority.md"))).toBe(true);
       expect(existsSync(join(registerDir, "generated/pjr-views-by-owner.md"))).toBe(true);
     });
+  });
+
+  it("project_register_path だけの構成で同梱テンプレートから add と build が成功する", async () => {
+    await withRepo(
+      async ({ root, registerDir }) => {
+        expect(existsSync(join(root, "docs/ja/specdojo/templates"))).toBe(false);
+        vi.spyOn(process.stdout, "write").mockReturnValue(true);
+
+        await runRegister([
+          "add",
+          "--type",
+          "todo",
+          "--title",
+          "同梱テンプレートを使う",
+          "--topic",
+          "bundled-template",
+          "--id",
+          "PJR-AB12",
+          "--registered",
+          "2026-08-01T00:00:00Z",
+        ]);
+        await runRegister(["build"]);
+
+        expect(existsSync(join(registerDir, "pjr-ab12-bundled-template.md"))).toBe(true);
+        const index = readFileSync(join(registerDir, "generated/pjr-index.md"), "utf8");
+        expect(index).toContain("PJR-AB12");
+        expect(process.exitCode).toBeUndefined();
+      },
+      { config: MINIMAL_CONFIG, copyTemplates: false },
+    );
   });
 });

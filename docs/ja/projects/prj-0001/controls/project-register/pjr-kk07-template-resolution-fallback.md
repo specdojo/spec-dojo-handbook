@@ -72,7 +72,16 @@ View template not found: .../docs/ja/specdojo/templates/pm-risk-register-templat
 
 ## 5. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- `import.meta.url` を基準に npm パッケージルートを解決する共通モジュールと、
+  `docs/ja/specdojo/templates` 配下を探索するテンプレートリゾルバを追加した。
+- テンプレートは利用者リポジトリ、同梱パッケージの順で解決する。両方に無い場合は、
+  テンプレート名と探索した2つのパスをエラーメッセージに含める。
+- `register add`、旧一覧からの個票移行、`register build` の派生ビュー生成を共通リゾルバへ
+  移行した。利用者リポジトリ側に同名ファイルがある場合の上書き動作は維持している。
+- 利用者側優先、同梱側へのフォールバック、両方欠落時のエラー内容を単体テストで固定した。
+  あわせて、`project_register_path` だけを設定し、利用者側へテンプレートを配置しない構成で
+  `register add` と `register build` が成功する回帰テストを追加した。
+- 残課題はない。単体・統合テストと schema 検証は executor 後に parent runner が実行する。
 
 ## 6. 関連ドキュメント
 

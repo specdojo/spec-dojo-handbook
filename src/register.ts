@@ -26,6 +26,7 @@ import {
 } from "./register-migrate-timestamps.js";
 import { flattenTemplateFrontmatter } from "./template-frontmatter.js";
 import { parseSpecdojoDocument } from "./frontmatter-namespace.js";
+import { resolveSpecdojoTemplatePath } from "./template-resolution.js";
 import { collectRegisterHistoryEvents, formatRegisterHistoryEvents } from "./register-history.js";
 import {
   appendRegisterEvent,
@@ -684,10 +685,7 @@ export function planRegisterMigration(paths: RegisterPaths): RegisterMigrationPl
       if (existsSync(path)) {
         throw new Error(`Migration target already exists: ${path}`);
       }
-      const templatePath = join(
-        specdojoRootDir(),
-        `docs/ja/specdojo/templates/pjr-${source.item.type}-template.md`,
-      );
+      const templatePath = resolveSpecdojoTemplatePath(`pjr-${source.item.type}-template.md`);
       content = buildRegisterItemContent({
         projectId: paths.projectId,
         displayId: source.item.id,
@@ -854,10 +852,7 @@ type ViewGroup = { label: string; items: PjrDisplayItem[] };
 // 派生ビューの外枠（H1・note・章見出し・frontmatter）は template が所有する。
 // template をロードして生成物形へ平坦化し、`_PROJECT_ID_` を実プロジェクト ID へ置換する。
 function loadViewTemplate(templateFileName: string, projectId: string): string {
-  const templatePath = join(specdojoRootDir(), "docs/ja/specdojo/templates", templateFileName);
-  if (!existsSync(templatePath)) {
-    throw new Error(`View template not found: ${templatePath}`);
-  }
+  const templatePath = resolveSpecdojoTemplatePath(templateFileName);
   const raw = readFileSync(templatePath, "utf8");
   return flattenTemplateFrontmatter(raw).replace(/_PROJECT_ID_/g, projectId);
 }
@@ -2173,10 +2168,7 @@ export function registerRegisterCommands(program: Command): void {
         completedAt: completedAt ?? CELL_NONE,
         conclusion: opts.conclusion,
       };
-      const templatePath = join(
-        specdojoRootDir(),
-        `docs/ja/specdojo/templates/pjr-${opts.type}-template.md`,
-      );
+      const templatePath = resolveSpecdojoTemplatePath(`pjr-${opts.type}-template.md`);
 
       const { assignedId: displayId, ticketFilename } = planRegisterItem({
         existingIds: loadRegisterItems(paths).map((view) => view.id),
