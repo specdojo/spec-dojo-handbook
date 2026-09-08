@@ -69,28 +69,62 @@ mapfile -t selected_paths < <(
 - 1 回の実行で処理する件数を設定で制限できる。
 - `generated` 配下が対象にならない。
 - routine 定義が `routine validate` を通る。
+- 再評価用 routine が `enabled: true` である。
+- cron が稼働し、`routine run --due` が定刻に起動することを実行ログで確認できる。
+- cron が停止していた原因が特定され、再発時に気づける手段がある。
 
 ## 5. 作業内容
 
-| No  | 作業                                         | メモ                                         |
-| --- | -------------------------------------------- | -------------------------------------------- |
-| 1   | 選択結果を出力する手段を追加                 | `grade plan --list` 相当。plan を書かない    |
-| 2   | スクリプトへ `--changed-only` / `--ungraded` | 上記の出力を受け取り find の結果と突き合わせ |
-| 3   | スクリプトへ `--kind all`                    | 対象が 4 種別に散るため。既定は `rulebook`   |
-| 4   | `job-grade-kata.yaml` へ入力を追加           | `changed_only` は boolean 型が使える         |
-| 5   | 再評価用の routine 定義を新設                | 周期と `limit` を決める                      |
-| 6   | 単体テストを追加                             |                                              |
+| No  | 作業                                         | メモ                                       |
+| --- | -------------------------------------------- | ------------------------------------------ |
+| 1   | 選択結果を出力する手段を追加                 | `grade plan --list` 相当。plan を書かない  |
+| 2   | スクリプトへ `--changed-only` / `--ungraded` | 上記の出力を find の結果と突き合わせる     |
+| 3   | スクリプトへ `--kind all`                    | 対象が 4 種別に散るため。既定は `rulebook` |
+| 4   | `job-grade-kata.yaml` へ入力を追加           | `changed_only` は boolean 型が使える       |
+| 5   | 再評価用の routine 定義を新設                | 周期と `limit` を決める                    |
+| 6   | cron 停止の原因を特定する                    | `post-start.sh` の実行有無と cron の状態   |
+| 7   | routine を有効化し定刻起動を確認する         | 実行ログで確認する                         |
+| 8   | 単体テストを追加                             |                                            |
 
 ## 6. 判断が要る点
 
 - 1 回あたりの処理件数。3 段目は codex を使うため rate limit を考慮する。
 - 週次の全件評価（`rtn-grade-kata`）と再評価を、別 routine にするか同一にするか。
 
-## 7. 未解決の前提
+## 7. 定期起動の前提
 
-`routine run --due` を起動する仕組みが存在しない。`package.json` にも `.github/workflows/` にも
-登録がなく、既存 6 件の routine はすべて `enabled: false` である。本項目は routine 定義の整備
-までを範囲とし、定期起動の仕組みは routine 全体の課題として切り分ける。
+起票時に「`routine run --due` を起動する仕組みが存在しない」と記述したが、誤りである。
+`package.json` と `.github/workflows/` しか確認していなかった。devcontainer に cron の定義が
+存在する。
+
+```text
+/etc/cron.d/specdojo-routine
+0 1,6 * * *  node ... specdojo.js routine run --project prj-0001 --due
+             （Asia/Tokyo の 01:00 と 06:00）
+```
+
+配置は `.devcontainer/post-start.sh` が行い、同スクリプトが `service cron start` で起動する。
+
+ただし自動実行には次の3つがすべて必要で、現状はいずれも満たしていない。
+
+| No  | 条件                            | 現状                               |
+| --- | ------------------------------- | ---------------------------------- |
+| 1   | 再評価用の routine 定義         | 未作成。本項目の範囲               |
+| 2   | その routine が `enabled: true` | 既存 6 件はすべて `enabled: false` |
+| 3   | cron デーモンの稼働             | 停止している                       |
+
+`logs/routine-exec-cycle.log` の最終書き込みは 2026-08-29 06:00 で、以降 10 日間動いていない。
+稼働していた期間も、routine が無効であるため `no due routines — exit` を繰り返していた。
+
+```text
+[routine] no due routines — exit
+[routine] no due routines — exit
+```
+
+cron が停止した原因は特定していない。`post-start.sh` が実行されなかったのか、cron が異常終了
+したのかを確認する必要がある。原因が分からないまま routine を有効化しても動かない。
+
+なお、コンテナが起動し続けていることも前提になる。開発機がスリープすれば cron も動かない。
 
 ## 8. 対応結果
 
