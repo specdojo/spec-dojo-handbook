@@ -389,6 +389,11 @@ SpecDojo の成果物カタログが管理するプロダクト文書は、`app1
 
 ### 10.5. result によるトレーサビリティ
 
+> **この節は見直し中です。** 以下に規定する commit hash による参照は、squash merge や rebase を
+> 経ると参照先が到達不能になります。GC 後は元の commit が削除され、追跡できません。squash
+> merge は標準的な運用であるため、この方式をそのまま採用しないでください。履歴改変に耐える
+> 識別子への改訂を検討しています。経緯は `PJR-QHKA` に記録しています。
+
 プロダクト実装の変更を伴う項目では、SpecDojo 側の result 本文に対応する app commit を記録します。result frontmatter は scaffold の構造を維持し、独自キーを追加しません。
 
 ```markdown
