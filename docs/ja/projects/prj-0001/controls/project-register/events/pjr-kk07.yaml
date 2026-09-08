@@ -45,3 +45,16 @@
       from: prj-0001:pjr-kk07-item
       to: prj-0001:pjr-kk07-template-resolution-fallback
   previous_event_id: reg_0865d79150ce496ca8c7e3e1914d226b
+- v: 1
+  id: reg_f37de3ad6728462f99d5700bf4538214
+  ts: "2026-09-08T11:21:46Z"
+  action: start
+  actor: codex-expert-executor
+  from_status: open
+  to_status: in-progress
+  reason: work started
+  changes:
+    - field: status
+      from: open
+      to: in-progress
+  previous_event_id: reg_75680d02d0e24f90bd382625cf1994ab
