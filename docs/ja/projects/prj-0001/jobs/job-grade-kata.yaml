@@ -46,4 +46,5 @@ task:
     - docs/ja/specdojo/samples
     - docs/ja/specdojo/templates
 run:
-  idempotency_key: "{{job_id}}:{{inputs.kind}}:{{inputs.period}}:{{inputs.limit}}:{{inputs.changed_only}}:{{inputs.ungraded}}"
+  # agent mode で凍結された旧失敗 Run を再利用せず、command mode の Run を生成する。
+  idempotency_key: "{{job_id}}:command-v1:{{inputs.kind}}:{{inputs.period}}:{{inputs.limit}}:{{inputs.changed_only}}:{{inputs.ungraded}}"

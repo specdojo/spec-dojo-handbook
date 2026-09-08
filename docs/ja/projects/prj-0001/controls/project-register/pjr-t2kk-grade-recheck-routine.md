@@ -86,6 +86,7 @@ mapfile -t selected_paths < <(
 | 6   | cron 停止の原因を特定する                    | `post-start.sh` の実行有無と cron の状態   |
 | 7   | routine を有効化し定刻起動を確認する         | 実行ログで確認する                         |
 | 8   | 単体テストを追加                             |                                            |
+| 9   | command mode への移行後に routine を再有効化 | 旧 Job Run との冪等キー衝突を避ける        |
 
 ## 6. 判断が要る点
 
@@ -132,9 +133,9 @@ mapfile -t selected_paths < <(
 
 なお、コンテナが起動し続けていることも前提になる。開発機がスリープすれば cron も動かない。
 
-## 7.1. 実装後の検証結果
+## 7.1. 初回実装後の検証結果
 
-CLI と定義は完成したが、routine 経由の実行が成立しないため `waiting` とした。
+CLI と定義は完成したが、当時は routine 経由の実行が成立しなかったため `waiting` とした。
 
 ### 7.1.1. 完成した部分
 
@@ -148,7 +149,7 @@ CLI と定義は完成したが、routine 経由の実行が成立しないた�
 `--kind all --limit 2 --changed-only=true --ungraded=true` の dry-run で、種別ごとの
 リファレンス（`reference=per-kind`）が選ばれることも確認した。
 
-### 7.1.2. 成立しない部分
+### 7.1.2. 当時成立しなかった部分
 
 `routine run --id rtn-grade-recheck` を 3 回試み、いずれも失敗した。
 
@@ -169,7 +170,7 @@ agent failed: gemma-expert-executor exit=1
 job のコマンドが agent の sandbox 内で実行されるため、内側の agent が制約を受ける。個別の
 回避を重ねても解決しない。詳細は [[prj-0001:pjr-gwy4-job-deterministic-command]] に記録した。
 
-### 7.1.3. 途中で行った是正
+### 7.1.3. 初回実装中に行った是正
 
 - job の agent を `claude-expert-executor` / `claude-reporter` から
   `codex-expert-executor` / `gemma-reporter` へ変更した。claude は CLI と TUI を同時に
@@ -179,6 +180,29 @@ job のコマンドが agent の sandbox 内で実行されるため、内側の
 - `rtn-grade-recheck.yaml` を `enabled: false` に戻した。動作しない routine を有効のまま
   にすると、定刻に失敗し続ける。
 
+## 7.2. command mode 統合後の再開
+
+[[prj-0001:pjr-gwy4-job-deterministic-command]] により、Job の `task.mode: command` と runner に
+よる直接実行が実装された。`job-grade-kata` は agent が自然言語の手順を解釈する方式から、runner が
+`tools/grade/run-per-document.sh` を直接起動し、成功後の結果判断だけを reporter へ渡す方式へ移行
+している。このため、初回実装を止めた入れ子 agent の sandbox 問題は production の cron 実行経路
+では解消される。
+
+再開時の dry-run では、runner command と `gemma-reporter` による analysis が分離して解決される
+ことを確認した。また、スクリプトは `--changed-only` と `--ungraded` の和集合として再評価候補を
+25件返し、routine の `limit: 5` によって1回の処理件数を制限できる状態である。
+
+同じ2026-W37の初回実行で作成された失敗済み Job Run には、移行前の `task.mode: edit` が snapshot
+として凍結されていた。定義だけを command mode へ変更しても、この Run を再試行すると旧方式が
+再利用される。この移行衝突を避けるため、`job-grade-kata` の冪等キーへ `command-v1` を加え、同じ
+週・同じ選択条件でも command mode の新しい Run を作るようにした。
+
+`rtn-grade-recheck` は `enabled: true` へ戻した。次の定刻は2026年9月15日6時
+（Asia/Tokyo）であり、production の cron 実行後に `logs/routine-exec-cycle.log`、
+`logs/routine-cron-heartbeat.log`、Job command evidence、`results.tsv` を照合して3段完走を確認する。
+executor 自身の sandbox 内から実 agent を含む command を起動すると、production と異なり外側の
+sandbox 制約が残るため、定刻実行の代替証跡にはしない。
+
 ## 8. 対応結果
 
 - `grade list` を追加し、plan を生成せずに共通フィルタの選択結果を取得できるようにした。
@@ -186,9 +210,11 @@ job のコマンドが agent の sandbox 内で実行されるため、内側の
   和集合として扱い、`generated` 配下を除外し、初回選択を保存して中断後も同じ対象を再開する。
 - `job-grade-kata` に選択入力を追加し、変更済み・未評価の4種別を最大5件処理する
   `rtn-grade-recheck` を毎週火曜日6時（Asia/Tokyo）、`enabled: true` で追加した。
+- PJR-GWY4 の command mode 統合後、旧 agent-mode Run を再利用しないよう冪等キーに
+  `command-v1` を加え、`rtn-grade-recheck` を再有効化した。
 - grade CLI、スクリプトの選択・no-op・再開、Job/Routine 定義に対するテストを追加・更新した。
 - cron の起動失敗を見逃さないようにし、5分間隔の heartbeat で起動後の停止も判別可能にした。
-- 実時刻での初回起動ログ確認は、次回の火曜日6時の実行後に
+- 実時刻での command mode 初回起動ログ確認は、2026年9月15日6時の実行後に
   `logs/routine-exec-cycle.log` と `logs/routine-cron-heartbeat.log` で行う。
 
 ## 9. 関連ドキュメント
@@ -196,3 +222,5 @@ job のコマンドが agent の sandbox 内で実行されるため、内側の
 - [[prj-0001:pjr-20dv-grade-content-hash-normalization]]: `--changed-only` の信頼性を回復した項目。
 - [[prj-0001:pjr-mbvm-grade-exclude-generated]]: `generated` を対象から外した項目。
 - [[prj-0001:pjr-49d2-quality-assessment]]: 品質評価の全体方針。
+- [[prj-0001:pjr-gwy4-job-deterministic-command]]: Job command を agent の sandbox 外で直接実行する
+  前提を実装した項目。
