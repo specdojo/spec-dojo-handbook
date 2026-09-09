@@ -7,12 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-09-07T23:00:00Z"
   due_on: "2026-09-30"
-  block_reason: grade list / --changed-only / --kind all と routine 定義は完成したが、routine 経由の実行が成立しない。job のコマンドが agent の sandbox 内で走るため、スクリプトが起動する内側の opencode がホームディレクトリへ書けず全段が失敗する。完了条件の routine run --id で再評価できることを満たさない。PJR-GWY4 の実装を待つ。
+  block_reason: 3段評価は完走し 5 文書 15 段のうち 13 段が成功したが、Job Run は analysis 段の失敗により failed となる。完了条件の routine run --id で再評価できるを満たすには PJR-GWY4 の結果受け渡しの修正が要る。
 ---
 
 # PJR-T2KK 修正済み文書の再評価を routine で実行できるようにする
@@ -202,6 +202,25 @@ job のコマンドが agent の sandbox 内で実行されるため、内側の
 `logs/routine-cron-heartbeat.log`、Job command evidence、`results.tsv` を照合して3段完走を確認する。
 executor 自身の sandbox 内から実 agent を含む command を起動すると、production と異なり外側の
 sandbox 制約が残るため、定刻実行の代替証跡にはしない。
+
+## 7.2. PJR-GWY4 実装後の再検証
+
+`mode: command` の導入後に `routine run --id rtn-grade-recheck` を再実行した。
+
+3 段評価は完走し、5 文書 15 段のうち 13 段が成功した。実際の判定（`br-sample` が 100、
+`atc-sample` が 46 など）が得られており、`7.1.2.` で全 15 段が 1 秒で失敗していた状態から
+変わっている。種別別のリファレンスと 3 段目の閾値制御も働いた。
+
+ただし Job Run は `failed` である。analysis 段が `results.tsv` を読めないためで、原因は
+plan が stdout の参照先を伝えていないことにある。詳細は
+[[prj-0001:pjr-gwy4-job-deterministic-command]] の `実装後の検証結果` に記録した。
+
+完了条件の「`routine run --id` で、変更のあった文書と未評価の文書だけを再評価できる」は、
+評価自体が動く点では満たしているが、Job Run として成功しないため未達とする。PJR-GWY4 の
+結果受け渡しの修正後に再検証する。
+
+なお `rtn-grade-recheck` は `enabled: false` のままとする。無人実行は失敗しても定刻まで
+気づけないため、Job Run が成功することを確認してから有効化する。
 
 ## 8. 対応結果
 

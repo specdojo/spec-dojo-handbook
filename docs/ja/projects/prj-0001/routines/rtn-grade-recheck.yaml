@@ -2,7 +2,9 @@
 id: rtn-grade-recheck
 name: 修正済み・未評価の実践の型の週次再評価
 description: 毎週火曜日6時（Asia/Tokyo）に、変更済みまたは未評価の実践の型を最大5件再評価する。
-enabled: true
+# 3 段評価が完走することを手動実行で確認できるまで無効にする。無人実行は失敗しても定刻まで
+# 気づけないため、検証を経てから true へ戻す。
+enabled: false
 trigger:
   cron: "0 6 * * 2"
   timezone: Asia/Tokyo

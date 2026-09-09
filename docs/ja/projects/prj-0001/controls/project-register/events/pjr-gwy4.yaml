@@ -87,3 +87,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_cd6318fdf232498a8891c205126151c5
+- v: 1
+  id: reg_2731afbf964b4210a86c48f8fa1fe6a0
+  ts: "2026-09-09T12:52:33Z"
+  action: wait
+  actor: orchestrator
+  from_status: review
+  to_status: waiting
+  reason: "mode: command によるコマンド実行は成立し、5文書15段のうち13段で評価が完走した。ただし analysis 段へ結果が届かない。plan は stdout に出力された results.tsv から判断すると指示するが、その stdout の場所を伝えていない。command.stdout.log と stdout_ref は記録されているが plan での言及が 0 件である。完了条件のコマンドの実行と結果の解釈が分離されているを満たさない。"
+  changes:
+    - field: status
+      from: review
+      to: waiting
+    - field: block_reason
+      from: rate limit reached
+      to: "mode: command によるコマンド実行は成立し、5文書15段のうち13段で評価が完走した。ただし analysis 段へ結果が届かない。plan は stdout に出力された results.tsv から判断すると指示するが、その stdout の場所を伝えていない。command.stdout.log と stdout_ref は記録されているが plan での言及が 0 件である。完了条件のコマンドの実行と結果の解釈が分離されているを満たさない。"
+  previous_event_id: reg_62b3e20416054630a583d0fd82ed111e

@@ -100,3 +100,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_cdddf46cd1854f7fb7194070c9904e0a
+- v: 1
+  id: reg_ca15ae992aac4d358f087ccf26568acb
+  ts: "2026-09-09T12:52:41Z"
+  action: wait
+  actor: orchestrator
+  from_status: review
+  to_status: waiting
+  reason: 3段評価は完走し 5 文書 15 段のうち 13 段が成功したが、Job Run は analysis 段の失敗により failed となる。完了条件の routine run --id で再評価できるを満たすには PJR-GWY4 の結果受け渡しの修正が要る。
+  changes:
+    - field: status
+      from: review
+      to: waiting
+    - field: block_reason
+      from: grade list / --changed-only / --kind all と routine 定義は完成したが、routine 経由の実行が成立しない。job のコマンドが agent の sandbox 内で走るため、スクリプトが起動する内側の opencode がホームディレクトリへ書けず全段が失敗する。完了条件の routine run --id で再評価できることを満たさない。PJR-GWY4 の実装を待つ。
+      to: 3段評価は完走し 5 文書 15 段のうち 13 段が成功したが、Job Run は analysis 段の失敗により failed となる。完了条件の routine run --id で再評価できるを満たすには PJR-GWY4 の結果受け渡しの修正が要る。
+  previous_event_id: reg_d9bbd67b42c04a4ab2ad5afa5c4fa67d

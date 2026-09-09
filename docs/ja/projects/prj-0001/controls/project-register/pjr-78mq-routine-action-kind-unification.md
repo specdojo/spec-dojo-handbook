@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-78mq-routine-action-kind-unification
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-08T13:57:47Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-09T12:52:34Z"
 ---
 
 # PJR-78MQ routine の action.kind を job へ統合する
@@ -151,6 +152,22 @@ job は現在コマンドを直接実行できない。`task.mode` は `edit` / 
 - 互換移行は段階移行なしとし、旧 kind を schema と parser の双方で拒否する。移行日と置換先を
   routine 運用ガイドおよび command reference に記載した。
 - 残課題はない。
+
+## 7. 対応結果
+
+`RoutineActionKind` が `job` のみとなり、既存 7 routine すべてが `job` へ移行した。
+
+| routine                    | 変更前        | 変更後 |
+| -------------------------- | ------------- | ------ |
+| `rtn-daily-register-sweep` | `register`    | `job`  |
+| `rtn-exec-cycle`           | `exec-cycle`  | `job`  |
+| `rtn-exec-limit-resume`    | `exec-resume` | `job`  |
+| 他 4 件                    | `job`         | `job`  |
+
+`src/routine.ts` が 295 行減り、kind ごとに重複していた引数組み立てと検証が削除された。
+互換性の方針は `kind` を残さない一括移行を選んでいる。
+
+`routine validate` は 7 件すべてを通過する。単体テストは 1420 件が成功する。
 
 ## 8. 関連ドキュメント
 

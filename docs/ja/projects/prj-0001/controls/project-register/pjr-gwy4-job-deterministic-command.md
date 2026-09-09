@@ -7,12 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: waiting
   priority: high
   owner: ARC
   registered_at: "2026-09-08T13:38:47Z"
   due_on: "2026-09-30"
-  block_reason: rate limit reached
+  block_reason: "mode: command によるコマンド実行は成立し、5文書15段のうち13段で評価が完走した。ただし analysis 段へ結果が届かない。plan は stdout に出力された results.tsv から判断すると指示するが、その stdout の場所を伝えていない。command.stdout.log と stdout_ref は記録されているが plan での言及が 0 件である。完了条件のコマンドの実行と結果の解釈が分離されているを満たさない。"
 ---
 
 # PJR-GWY4 job のコマンド実行を決定論的にする
@@ -192,6 +192,64 @@ runner がコマンドを実行して evidence へ記録し、判断が要る場
 したがってコマンド実行の仕組みを grade 専用へ寄せない。任意のコマンドを入力付きで実行し、
 終了コードと出力を evidence へ記録できる汎用の形にする。`{{inputs.*}}` の展開も、grade の
 引数だけでなく一般の入力に使えるようにする。
+
+## 8.2. 実装後の検証結果
+
+`mode: command` は成立したが、analysis 段へ結果が届かないため `waiting` とした。
+
+### 8.2.1. 成立した部分
+
+`routine run --id rtn-grade-recheck` を実行し、5 文書 15 段のうち 13 段が成功した。3 回失敗
+していた入れ子の agent 起動が解消している。
+
+| 文書              | 1 段     | 2 段          | 3 段                   |
+| ----------------- | -------- | ------------- | ---------------------- |
+| `pm-roles-recipe` | failed   | needs-work 89 | skipped（閾値未満）    |
+| `br-rulebook`     | pass 98  | pass 98       | needs-work 79（codex） |
+| `atc-sample`      | fail 46  | fail 46       | skipped（閾値未満）    |
+| `br-sample`       | pass 100 | pass 100      | pass 100（codex）      |
+| `imp-data-sample` | failed   | needs-work 78 | skipped（閾値未満）    |
+
+runner が直接コマンドを実行するため sandbox の入れ子が生じず、内側の opencode と codex が
+いずれも動作した。3 段目の閾値制御も働き、5 件中 2 件のみ codex を呼んだ。
+
+1 段目の 2 件の失敗は sandbox ではなく忠実性検証による拒否である。いずれも 2 段目で回復した。
+
+```text
+$analysis.documents[0].viewpoints[5]: finding severity caps level at 1
+```
+
+暫定の回避策も不要になった。`job-grade-kata.yaml` から `--specdojo-bin` の指定（3 箇所）と
+逸脱防止の指示（2 箇所）がすべて削除され、同じ結果が得られている。
+
+### 8.2.2. 成立しない部分
+
+Job Run は `failed` である。analysis 段が結果を読めない。
+
+```text
+block_reason: results.tsv の実データが evidence に含まれていないため、
+              計画に定められた品質評価の判断ができない
+```
+
+原因は plan が参照先を伝えていないことである。
+
+| 項目                            | 状態                        |
+| ------------------------------- | --------------------------- |
+| `command.stdout.log`            | 35 行。`results.tsv` を含む |
+| `evidence.json` の `stdout_ref` | 記録あり                    |
+| analysis plan での参照先の明示  | 0 件                        |
+
+plan は「stdout に出力された `results.tsv` から判断する」と指示するが、その stdout がどこに
+あるかを書いていない。agent は場所を知らされないまま探し、見つけられなかった。
+
+コマンドの実行と evidence の記録は成功しており、結果の受け渡しだけが欠けている。完了条件の
+「判断が要る処理だけを agent へ渡せる。コマンドの実行と結果の解釈が分離されている」を満たさない。
+
+### 8.2.3. 残作業
+
+- analysis 段の plan へ、command evidence の `stdout_ref` と `stderr_ref` が指すパスを含める。
+- あるいは stdout の内容を plan または evidence へ直接埋め込む。出力量の上限を決める。
+- 修正後に `routine run --id rtn-grade-recheck` を再実行し、Job Run が成功することを確認する。
 
 ## 9. 対応結果
 
