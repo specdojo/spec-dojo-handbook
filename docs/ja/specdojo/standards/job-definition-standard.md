@@ -26,7 +26,7 @@ Job Definition Standard
 - 判断（観測した結果の解釈、失敗の切り分け、次の行動の提案）が必要な command Job だけ、`task.analysis` で reporter agent と判断内容を指定する。
 - `edit` / `review` Job は従来どおり agent に作業を委譲し、`task.description` に判断内容を書く。
 - 委譲先の agent は nickname で指名する。`capabilities` / `proficiency` による間接指定は、指名が不要な場合に限る。
-- 同じ入力に対して同じ Run を作れるよう、Job が使う値は `inputs`、`job_id`、`scheduled_at`、前回成功 checkpoint に限定する。
+- 同じ論理実行に対して同じ Run を作れるよう、Job が使う値は `inputs`、`job_id`、`scheduled_at`、前回成功 checkpoint に限定する。Run ID 確定後の task と checkpoint では `job_run_id` も参照できる。
 
 ### 2.1. 判断と手順の切り分け基準
 
@@ -62,6 +62,7 @@ Job Definition Standard
 
 - `task.command` は非空のシェルコマンドとし、materialize 後の文字列を Job Run に保存する。
 - command から対象プロジェクトを指定するときは template 値 `{{project_id}}` を使い、同じ CLI を子プロセスで呼ぶときは `{{specdojo}}` を使う。`specdojo` という PATH 上の別 checkout を直接呼ばない。
+- script が中断再開用の ID を要求するときは `{{job_run_id}}` を渡す。期間などの `inputs` から再開キーを組み立てない。
 - runner は POSIX 環境では `/bin/sh -eu` でコマンドを実行し、終了コードが0以外なら agent を起動せず Run を失敗にする。
 - runner はコマンド、終了コード、標準出力、標準エラーを bounded・redacted evidence として保存する。stdout / stderr は監査用ログへの参照に加え、analysis reporter が追加のファイル読取なしで判断できるよう evidence 本体にも同じ bounded 内容を含める。
 - `task.analysis` は任意である。省略時は終了コードだけで成否を確定し、指定時はコマンド成功後に evidence を reporter agent へ渡す。
@@ -76,11 +77,13 @@ Job Definition Standard
 
 ### 3.5. inputs と冪等性
 
-- `inputs` には、Run を一意にする値（期間、対象種別、上限件数）だけを置く。
+- `inputs` には、実行内容または表示内容を決める値（期間、対象種別、上限件数）だけを置く。
 - string / integer / boolean は `enum` で許容値を、list は `enum` で各要素の許容値を制限できる。integer の範囲は `minimum` / `maximum` で制限する。既定値にも同じ制約を適用する。
 - 入れ子の mapping は入力にせず、独立に検証できる flat な入力へ分ける。たとえば登録簿 filter は `types` / `priorities` / `statuses` の list と `limit` の integer で表す。
-- `run.idempotency_key` には、同じ論理実行を判別できる `inputs` をすべて含める。
-- script の再開キー（run id 相当）に `inputs` を使う場合、その値が script 側の書式制約を満たすことを確認する。ISO 8601 の `scheduled_at` は記号を含むため、そのまま再開キーへ使わない。
+- `run.idempotency_key` には、同じ論理実行を判別できる実行条件を含める。実行枠ごとに処理する Job は `scheduled_at` を含め、同じ実行枠の重複起動を同じ Run、次の実行枠を別 Run にする。
+- 表示専用の `period` は冪等キーや再開キーに使わない。実行内容を変える `inputs` は冪等キーに含める。
+- `job_run_id` は `idempotency_key` から導出されるため、`run.idempotency_key` では参照できない。
+- 同じ `scheduled_at` を明示した手動・routine 起動は同じ実行枠として重複排除する。`scheduled_at` を省略した手動起動は起動ごとに新しい実行枠とする。
 
 ## 4. 値制約・判定基準
 
@@ -96,7 +99,7 @@ Job Definition Standard
 | `task.agent.reporter`  | 任意 | 同上。executor が result を書かない構成では必須                    |
 | `inputs.*.enum`        | 任意 | scalar の値または list の各要素に対する非空の許容値集合            |
 | `minimum` / `maximum`  | 任意 | integer input だけに指定でき、`minimum <= maximum`                 |
-| `run.idempotency_key`  | ○    | 空文字へ解決されず、Run を一意にする `inputs` を含む               |
+| `run.idempotency_key`  | ○    | 空文字へ解決されず、同じ論理実行を一意に判別できる                 |
 
 ## 5. 記述例
 
@@ -105,8 +108,8 @@ task:
   mode: command
   owner: ARC
   command: |
-    tools/grade/run-per-document.sh --run-id {{job_id}}-{{inputs.period}}
-    cat logs/grade/runs/per-document/{{job_id}}-{{inputs.period}}/results.tsv
+    tools/grade/run-per-document.sh --run-id {{job_run_id}}
+    cat logs/grade/runs/per-document/{{job_run_id}}/results.tsv
   analysis:
     agent: claude-reporter
     description: |
@@ -114,6 +117,8 @@ task:
       閾値の見直し要否を判断して報告する。対象が0件の場合は no-op と判断する。
   paths:
     - docs/ja/specdojo/rulebooks
+run:
+  idempotency_key: "{{job_id}}:{{scheduled_at}}"
 ```
 
 ## 6. 禁止事項

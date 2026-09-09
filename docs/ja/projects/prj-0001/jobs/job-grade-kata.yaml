@@ -23,8 +23,8 @@ task:
   owner: ARC
   command: |
     npm run build
-    tools/grade/run-per-document.sh --run-id {{job_id}}-{{inputs.kind}}-{{inputs.period}} --kind {{inputs.kind}} --limit {{inputs.limit}} --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}}
-    cat logs/grade/runs/per-document/{{job_id}}-{{inputs.kind}}-{{inputs.period}}/results.tsv
+    tools/grade/run-per-document.sh --run-id {{job_run_id}} --kind {{inputs.kind}} --limit {{inputs.limit}} --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}}
+    cat logs/grade/runs/per-document/{{job_run_id}}/results.tsv
   analysis:
     agent: gemma-reporter
     description: |
@@ -46,5 +46,5 @@ task:
     - docs/ja/specdojo/samples
     - docs/ja/specdojo/templates
 run:
-  # agent mode で凍結された旧失敗 Run を再利用せず、command mode の Run を生成する。
-  idempotency_key: "{{job_id}}:command-v1:{{inputs.kind}}:{{inputs.period}}:{{inputs.limit}}:{{inputs.changed_only}}:{{inputs.ungraded}}"
+  # scheduled_at は routine の論理実行枠を表す。同じ枠の再試行は同じ Run、次の枠は別 Run にする。
+  idempotency_key: "{{job_id}}:command-v2:{{scheduled_at}}:{{inputs.kind}}:{{inputs.limit}}:{{inputs.changed_only}}:{{inputs.ungraded}}"

@@ -103,7 +103,7 @@ Kata の定期評価は、ローカル評価を2回行った後、見落とし�
 
 Job runnerは、この入口をmaterialize済みの引数で1回起動し、コマンド、終了コード、stdout/stderrをevidenceへ記録します。コマンドが成功した場合だけanalysis reporterが、未完了の段、失敗の切り分け、3段目がスキップされた理由、閾値の見直し要否を判断します。段ごとのagent、リファレンス、対象種別、件数上限はscriptの引数であり、Jobの`inputs`から解決します。
 
-各段は直前の `grade apply` 後の文書を入力にします。未解消 finding は次の plan へ引き継がれ、後段の agent が severity を下げて提出しても `grade apply` が前回値を維持します。rate limit や中断で段が未完了になった場合は、同じ `--run-id` で再実行すると完了済みの段を飛ばして再開します。閾値は固定の永続値ではなく、expert 再確認の対象率と偽陰性を定期レビューし、変更時は Job、routine、本節、根拠となる登録項目を同時に更新します。
+各段は直前の `grade apply` 後の文書を入力にします。未解消 finding は次の plan へ引き継がれ、後段の agent が severity を下げて提出しても `grade apply` が前回値を維持します。scriptの`--run-id`にはJob Run IDを渡すため、rate limitや中断後に同じJob Runをretryすると完了済みの段を飛ばして再開し、次の日次実行枠では新しい状態から対象を選択します。`period`は対象期間の表示だけに使い、実行や再開の同一性には使いません。閾値は固定の永続値ではなく、expert 再確認の対象率と偽陰性を定期レビューし、変更時は Job、routine、本節、根拠となる登録項目を同時に更新します。
 
 ## 2. due判定と実行
 

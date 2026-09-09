@@ -581,7 +581,7 @@ specdojo exec worktree remove --project prj-0001 --task <task-id> --delete-branc
 | `job validate` | `job-*.yaml`を検証する                     | `specdojo job validate --project prj-0001` |
 | `job where`    | Job Definition・Run・stateのパスを表示する | `specdojo job where --project prj-0001`    |
 
-`exec run --job`の`--input <key=value...>`はJob入力を指定し、`--scheduled-at`はroutineやCIが論理実行枠を渡す場合に使います。入力定義の `enum` は string / integer / boolean の値、または list の各要素を制限し、integer の `minimum` / `maximum` は値域を制限します。command template では `{{project_id}}` で解決済みプロジェクトIDを、`{{specdojo}}` で現在のrunnerと同じCLI entryを参照できます。同じidempotency keyの完了済みRunは再実行せず、失敗済みRunは同じRun IDの次attemptとして実行します。Job Runは現在in-place実行に対応し、`--worktree`との併用は未対応です。
+`exec run --job`の`--input <key=value...>`はJob入力を指定し、`--scheduled-at`はroutineやCIが論理実行枠を渡す場合に使います。入力定義の `enum` は string / integer / boolean の値、または list の各要素を制限し、integer の `minimum` / `maximum` は値域を制限します。command template では `{{project_id}}` で解決済みプロジェクトIDを、`{{specdojo}}` で現在のrunnerと同じCLI entryを、`{{job_run_id}}` で確定済みJob Run IDを参照できます。`job_run_id`は`run.idempotency_key`では参照できません。同じidempotency keyの完了済みRunは再実行せず、失敗済みRunは同じRun IDの次attemptとして実行します。Job Runは現在in-place実行に対応し、`--worktree`との併用は未対応です。
 
 委譲先のagentは`task.agent.executor`（および必要なら`task.agent.reporter`）にnicknameで指名します。両方を指名したRunはexecutor→reporterの2段で実行し、resultはreporterが書きます。`--by`は単一agent実行としての差し替え、`--executor-by` / `--reporter-by`は段ごとの差し替えとして、いずれも指名より優先します。`job validate`はnicknameの書式だけを検査するため、実在確認は`--dry-run`で行います。責務境界と記述規約は [Job定義標準](../standards/job-definition-standard.md) を参照します。
 

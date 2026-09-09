@@ -698,6 +698,7 @@ export function renderJobTemplate(
   template: string,
   context: {
     job_id: string;
+    job_run_id?: string;
     project_id: string;
     specdojo: string;
     scheduled_at: string;
@@ -707,6 +708,12 @@ export function renderJobTemplate(
 ): string {
   return template.replace(/\{\{\s*([a-z_][a-z0-9_.]*)\s*\}\}/gi, (_match, path: string) => {
     if (path === "job_id") return context.job_id;
+    if (path === "job_run_id") {
+      if (!context.job_run_id) {
+        throw new Error("Job template value job_run_id is unavailable before Run identity exists");
+      }
+      return context.job_run_id;
+    }
     if (path === "project_id") return context.project_id;
     if (path === "specdojo") return context.specdojo;
     if (path === "scheduled_at") return context.scheduled_at;
@@ -984,7 +991,7 @@ export async function materializeJobRun(opts: {
     ? new Date(opts.scheduledAt).toISOString()
     : new Date().toISOString();
   const inputs = resolveInputs(definition, parseJobInputs(opts.inputs), checkpoint);
-  const context = {
+  const identityContext = {
     job_id: definition.id,
     project_id: paths.projectId,
     specdojo: selfRunCommand(),
@@ -992,10 +999,11 @@ export async function materializeJobRun(opts: {
     inputs,
     checkpoint,
   };
-  const idempotencyKey = renderJobTemplate(definition.run.idempotency_key, context);
+  const idempotencyKey = renderJobTemplate(definition.run.idempotency_key, identityContext);
   if (!idempotencyKey.trim())
     throw new Error(`Resolved idempotency key is empty: ${definition.id}`);
   const runId = runIdFor(definition, idempotencyKey);
+  const context = { ...identityContext, job_run_id: runId };
   const runPath = join(paths.runsPath, `${runId}.json`);
   const targets = definition.task.targets
     ? qualifyTargets(paths.projectId, definition.task.targets)
@@ -1101,6 +1109,7 @@ export function completeJobRun(opts: {
   if (definition.checkpoint && advanceOn.includes(opts.status as "succeeded" | "noop")) {
     const context = {
       job_id: definition.id,
+      job_run_id: record.run_id,
       project_id: record.project_id,
       specdojo: selfRunCommand(),
       scheduled_at: record.scheduled_at,
