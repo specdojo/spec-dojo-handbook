@@ -1,9 +1,10 @@
 import { type Command } from "commander";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import dotenv from "dotenv";
 import yaml from "js-yaml";
 import type { AgentStageRole, SchedulerStrategy, TaskMode } from "./exec-types.js";
+import { runProviderScaffold, specdojoPackageRootDir } from "./exec-provider-scaffold.js";
 
 export type SpecDojoRunConfig = {
   exec_defaults?: string;
@@ -286,6 +287,7 @@ export function loadConfig(): ConfigLoadResult {
 
 export function writeConfig(config: SpecDojoConfig): void {
   const configPath = defaultConfigPath();
+  mkdirSync(dirname(configPath), { recursive: true });
   writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n", "utf8");
 }
 
@@ -305,16 +307,47 @@ export function registerConfigCommands(program: Command): void {
       }
       const template: SpecDojoConfig = {
         version: 1,
+        current_project: "prj-0001",
         projects: {
-          "shj-0001": {
-            schedule_path: "docs/ja/projects/prj-0001/060-schedule",
-            execution_path: "docs/ja/projects/prj-0001/070-execution",
+          "prj-0001": {
+            base_path: "docs/ja/projects/prj-0001",
+            project_register_path: "controls/project-register",
             project_context: ["prj-overview"],
           },
         },
       };
       writeConfig(template);
       process.stdout.write(`Created: ${configPath}\n`);
+      process.stdout.write(
+        "Next steps:\n" +
+          "  1. Review the project ID and paths in .specdojo/specdojo.config.json.\n" +
+          "  2. Optional agent setup: npx specdojo config scaffold --provider <name>\n" +
+          "  3. Create a register: npx specdojo register scaffold --project prj-0001\n",
+      );
+    });
+
+  cfg
+    .command("scaffold")
+    .description("Scaffold agent/settings templates for a provider")
+    .requiredOption(
+      "--provider <name>",
+      "Provider template to copy (claude|codex|copilot|opencode)",
+    )
+    .option("--force", "Overwrite existing files", false)
+    .option("--dry-run", "Show planned files without writing", false)
+    .action(async (opts) => {
+      try {
+        await runProviderScaffold(String(opts.provider), {
+          packageRoot: specdojoPackageRootDir(),
+          repoRoot: specdojoRootDir(),
+          force: !!opts.force,
+          dryRun: !!opts.dryRun,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        process.stderr.write(`${message}\n`);
+        process.exitCode = 1;
+      }
     });
 }
 

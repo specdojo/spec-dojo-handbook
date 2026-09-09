@@ -4,7 +4,7 @@ import path from "node:path";
 
 export { specdojoPackageRootDir } from "./package-paths.js";
 
-// exec scaffold --provider <name> の実体。
+// config scaffold --provider <name> と互換入口 exec scaffold --provider <name> の実体。
 // npm package 内の templates/<provider>/ を配布原本として、利用リポジトリへコピーする。
 // 配置規則は provider 名から機械的に決まり、provider ごとの分岐を持たない。
 //   templates/<provider>/agents/**        -> .<provider>/agents/**   （--agent の自動発見位置）
@@ -26,6 +26,13 @@ export interface ProviderScaffoldPlan {
 export interface ProviderScaffoldOutcome {
   entry: ProviderScaffoldEntry;
   written: boolean;
+}
+
+export interface RunProviderScaffoldOptions {
+  packageRoot: string;
+  repoRoot: string;
+  force: boolean;
+  dryRun: boolean;
 }
 
 export async function listProviderTemplates(packageRoot: string): Promise<string[]> {
@@ -106,4 +113,41 @@ export async function applyProviderScaffoldPlan(
     outcomes.push({ entry, written: true });
   }
   return outcomes;
+}
+
+/**
+ * config scaffold と従来の exec scaffold で共有する provider 設定の配置処理。
+ * package root と利用リポジトリ root は呼び出し側で解決し、このモジュールはコピーと
+ * 利用者向け出力だけを担う。
+ */
+export async function runProviderScaffold(
+  provider: string,
+  opts: RunProviderScaffoldOptions,
+): Promise<void> {
+  const plan = await buildProviderScaffoldPlan({
+    packageRoot: opts.packageRoot,
+    repoRoot: opts.repoRoot,
+    provider,
+  });
+
+  if (opts.dryRun) {
+    for (const entry of plan.entries) {
+      process.stdout.write(`[dry-run] would write: ${entry.destinationRelPath}\n`);
+    }
+    return;
+  }
+
+  const outcomes = await applyProviderScaffoldPlan(plan, { force: opts.force });
+  for (const { entry, written } of outcomes) {
+    if (written) {
+      process.stdout.write(`Written: ${entry.destinationRelPath}\n`);
+    } else {
+      process.stdout.write(`Skipped (already exists): ${entry.destinationRelPath}\n`);
+    }
+  }
+  process.stdout.write(
+    "Next steps:\n" +
+      "  1. Commit the scaffolded files (worktree runs read committed content).\n" +
+      `  2. Define providers.${provider}.command_template in .specdojo/exec-defaults.yaml (see templates/${provider}/README.md).\n`,
+  );
 }

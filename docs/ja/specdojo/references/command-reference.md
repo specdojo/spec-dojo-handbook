@@ -38,10 +38,15 @@ project の解決順序と設定は [遂行の技活用ガイド](../guides/waza
 
 ## 2. config / project
 
-| コマンド       | 用途                              | 例                      |
-| -------------- | --------------------------------- | ----------------------- |
-| `config init`  | `specdojo.config.json` を作成する | `specdojo config init`  |
-| `project list` | 登録済み project を表示する       | `specdojo project list` |
+| コマンド          | 用途                                       | 例                                          |
+| ----------------- | ------------------------------------------ | ------------------------------------------- |
+| `config init`     | `specdojo.config.json` を作成する          | `specdojo config init`                      |
+| `config scaffold` | provider の agent・settings 設定を配置する | `specdojo config scaffold --provider codex` |
+| `project list`    | 登録済み project を表示する                | `specdojo project list`                     |
+
+`config init` は、register 単体で始められる `prj-0001` の最小設定を作成し、設定確認、任意の
+provider 設定、登録簿作成の順に次のコマンドを案内します。`config scaffold` の `--provider` には
+`claude`、`codex`、`copilot`、`opencode` を指定でき、`--dry-run` と `--force` も利用できます。
 
 `current_project` を設定しておくと、多くのコマンドで `--project` を省略できます。
 
@@ -316,13 +321,13 @@ specdojo schedule strategy generate \
 | `exec cycle`     | 延期 task 再開・doc-index 再構築・古い track の再生成・状態再計算・`--auto` loop を単一ロック内で順次実行する | `specdojo exec cycle --project prj-0001 --loop`                                                         |
 | `exec trial`     | 同一planを複数agentで隔離試行し、比較・評価・採否を管理する                                                   | `specdojo exec trial run --project prj-0001 --plan <path> --agent agent-a agent-b`                      |
 | `exec status`    | 実行状態を表示する                                                                                            | `specdojo exec status --project prj-0001 --state blocked`                                               |
-| `exec scaffold`  | 共通レビュー観点を継承するプロジェクト差分、または provider 設定一式を生成する                                | `specdojo exec scaffold --project prj-0001`                                                             |
+| `exec scaffold`  | 共通レビュー観点を継承するプロジェクト差分を生成する                                                          | `specdojo exec scaffold --project prj-0001`                                                             |
 | `exec plan`      | plan だけを生成する                                                                                           | `specdojo exec plan --project prj-0001 --task <task-id>`                                                |
 | `exec archive`   | 完了済み plan を `done/` へ移動する                                                                           | `specdojo exec archive --project prj-0001 --task <task-id>`                                             |
 
 `exec scaffold --project <project-id>` は、対象 project の `viewpoints_path` へ `extends: specdojo:pm-review-viewpoints` を持つ空の差分ファイルを生成します。共通正本は [[specdojo:pm-review-viewpoints|共通レビュー観点一覧]] であり、scaffold 時点の全量コピーは作りません。そのため、共通側の更新は次回の review plan 生成時に継承 project へ反映されます。既存ファイルは既定で保持し、`--force` の指定時だけ差分雛形で置き換えます。
 
-プロジェクト差分の upsert、無効化、独自ロールの宣言規則は [[specdojo:review-guide|レビューガイド]] を参照してください。`--provider <name>` を指定した場合はレビュー観点を生成せず、provider 設定一式を生成します。
+プロジェクト差分の upsert、無効化、独自ロールの宣言規則は [[specdojo:review-guide|レビューガイド]] を参照してください。provider 設定の推奨入口は `config scaffold --provider <name>` です。従来の `exec scaffold --provider <name>` も互換入口として同じ設定一式を生成します。
 
 状態イベントの `--msg` は、イベント種別によって必須・省略可が分かれます。
 

@@ -39,6 +39,16 @@ specdojo config init
 
 `specdojo config init` は `.specdojo/specdojo.config.json` が存在しない場合に雛形を作成し、既存ファイルは上書きしません。作成された設定を開き、対象プロジェクトの ID と各パスを実際のディレクトリ構成に合わせてください。
 
+agent を使う場合は、設定ファイルを確認した後で利用する provider の設定を配置します。register
+だけを使う最小構成では、この手順を省略できます。
+
+```bash
+specdojo config scaffold --provider <name>
+```
+
+`<name>` には `claude`、`codex`、`copilot`、`opencode` を指定します。従来の
+`specdojo exec scaffold --provider <name>` も互換入口として利用できます。
+
 設定したプロジェクトを確認します。
 
 ```bash
