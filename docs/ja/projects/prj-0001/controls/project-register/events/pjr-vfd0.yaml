@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_c25d2bccfe694b209d00620a267f78f8
+  ts: "2026-09-09T22:38:32Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: 保護機構でブロックされた executor を再開できない
+    - field: description
+      from: ""
+      to: agent-config-write が保護対象の設定変更を検知すると executor 段が failed となり --resume が拒否される。ブロックは失敗とは性質が異なり、executor は作業を完了したうえでゲートで止められている。PJR-9M5N では 12 ファイル 231 行の成果物が worktree に揃い typecheck と test:unit 1425 件も成功していたが再開できず、orchestrator が reporter 相当を代行した。--force-restart しか正規の経路がなく、成果と codex 呼び出し 1 回分を捨てることになる。申し送りを人が適用した後に再開できる経路が要る。
+    - field: type
+      from: ""
+      to: issue
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-10"
+    - field: due
+      from: ""
+      to: "2026-09-30"
