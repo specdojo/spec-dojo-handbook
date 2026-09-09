@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-mrjt-job-run-identity-from-period
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: issue
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-09T14:22:01Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-09T22:18:09Z"
 ---
 
 # PJR-MRJT 実行の同一性を period から組み立てており日次実行できない

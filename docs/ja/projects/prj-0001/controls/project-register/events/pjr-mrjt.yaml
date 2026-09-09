@@ -58,3 +58,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_c53795b1616e40779f670e8e2c86b6cd
+- v: 1
+  id: reg_c5c7ba61bdf84386ae7e7ece57f47a68
+  ts: "2026-09-09T22:18:09Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: "--run-id を {{job_run_id}} から組み立てるよう変更し、inputs.period への依存を解消した。冪等キーも scheduled_at へ切り替えた。routine を連続2回実行し、run_id が異なり2回目も5文書を選択することを実測で確認した。Run 確定前の参照は例外で拒否し、暗黙に空文字へ落ちない。単体テスト 1422 件が成功する。"
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-10"
+  previous_event_id: reg_29779d3604d04fc4bfd5c9f26fb8bac9

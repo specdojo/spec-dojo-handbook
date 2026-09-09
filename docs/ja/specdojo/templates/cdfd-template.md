@@ -16,26 +16,26 @@ specdojo:
     rubric: grade-rubric-v1
     target: kata
     verdict: needs-work
-    score: 53
-    graded_at: "2026-09-06T06:18:57.054Z"
+    score: 55
+    graded_at: "2026-09-09T17:45:44.993Z"
     graded_by: codex-expert-executor
     content_hash: 1b7b52ad17468be4aa8f3977bbd2be2957f48bd958bfc16dd187ed327bc005dd
     categories:
       consistency: { score: 25 }
-      usability: { score: 75 }
+      usability: { score: 67 }
       architecture: { score: 100 }
-      quality: { score: 25 }
+      quality: { score: 38 }
     viewpoints:
       vp-arc-cross-document-consistency: { level: 1, score: 25 }
       vp-arc-conciseness: { level: 4, score: 100 }
       vp-arc-single-responsibility: { level: 4, score: 100 }
-      vp-qe-verifiability: { level: 1, score: 25 }
+      vp-qe-verifiability: { level: 2, score: 50 }
       vp-qe-omissions-consistency: { level: 1, score: 25 }
       vp-qe-kata-conformance: { level: 1, score: 25 }
-      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-readability: { level: 2, score: 50 }
       vp-ux-language-consistency: { level: 2, score: 50 }
       vp-arc-document-structure: { level: 4, score: 100 }
-    findings: { blocker: 0, major: 13, minor: 1, note: 0 }
+    findings: { blocker: 0, major: 16, minor: 0, note: 0 }
 ---
 
 # 概念データフロー図（領域別）: _DOMAIN_NAME_
@@ -48,6 +48,10 @@ _TODO_: 誰が、領域内フロー、必須・条件付きの境界、主要例
 
 ## 2. 適用範囲
 
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=11 rulebook が明示を求める組織境界とシステム境界を記入する指示がなく、開始イベント・終了状態と隣接領域だけで適用範囲を確定できてしまうため、対象となる組織およびシステムの境界を記入する欄または指示を追加する必要がある。 -->
+<!-- specdojo:finding id=F006 severity=major rule=vp-qe-omissions-consistency line=11 必須の適用範囲要素である組織境界とシステム境界が TODO の確認対象から欠落しているため、両境界を明示する記入指示を追加する必要がある。 -->
+<!-- specdojo:finding id=F010 severity=major rule=vp-qe-kata-conformance line=11 rulebook の適用範囲要件に含まれる組織境界とシステム境界を template が導出しないため、両境界の記入項目を追加する必要がある。 -->
+
 - 対象: _TODO_: どのイベントから、どの出力または状態がそろうまでを対象にするかを記述する。
 - 対象外: _TODO_: 隣接領域、補助操作、実装詳細のどこから先を対象外にするかを記述する。
 - 責任分担: _TODO_: 人間と AI Agent の責任分担の原則を本文で再定義せず、対応する文書への参照を記述する（例: `[[_AUTHORITY_:prj-overview|プロジェクト概要]]`）。
@@ -58,17 +62,33 @@ _TODO_: 誰が、領域内フロー、必須・条件付きの境界、主要例
 _TODO_: 主要入力・主要出力・データストアは「個別プロセス主要入出力」（5章）へ記載し、本章の列には含めない。
 
 <!-- prettier-ignore -->
+<!-- specdojo:finding id=F002 severity=major rule=vp-arc-cross-document-consistency line=23 必須性のプレースホルダーが `_REQUIRED_OR_CONDITIONAL_` で、rulebook の正規分類「必須／条件付き／選択」のうち「選択」を表現できないため、三分類へ統一する必要がある。 -->
+<!-- specdojo:finding id=F005 severity=major rule=vp-qe-verifiability line=23 条件付きプロセスについて非起動時の扱いを記入する欄または指示がなく、そのプロセスを起動しない経路でも領域の必須出力がそろうかを pass／fail 判定できないため、必須性欄またはフロー指示に非起動時の正常完了条件を追加する必要がある。 -->
+<!-- specdojo:finding id=F007 severity=major rule=vp-qe-omissions-consistency line=23 rulebook が必須性として認める「選択」がプレースホルダーから欠落しているため、「必須／条件付き／選択」の全分類を選べる骨組みに修正する必要がある。 -->
+<!-- specdojo:finding id=F011 severity=major rule=vp-qe-kata-conformance line=23 rulebook の三分類に対して template が必須・条件付きの二分類だけを想定しているため、「選択」を含む正規の必須性分類へ合わせる必要がある。 -->
+<!-- specdojo:finding id=F016 severity=major rule=vp-ux-language-consistency line=23 `_REQUIRED_OR_CONDITIONAL_` と本文中の「必須・条件付き」は rulebook の「必須／条件付き／選択」と一致せず、「選択」を条件付きと混同または欠落させるため、三分類の名称へ統一する必要がある。 -->
+
 | プロセス ID    | プロセス       | 業務目的           | 主な担当     | 起動条件          | 必須性                    |
 | -------------- | -------------- | ------------------ | ------------ | ----------------- | ------------------------- |
 | `_PROCESS_ID_` | _PROCESS_NAME_ | _BUSINESS_PURPOSE_ | _OWNER_ROLE_ | _START_CONDITION_ | _REQUIRED_OR_CONDITIONAL_ |
 
+<!-- specdojo:finding id=F003 severity=major rule=vp-arc-cross-document-consistency line=25 3章と5章の行追加注記が「3プロセス以上」の場合だけ追加を指示しており、2プロセスの場合に全プロセスを一行ずつ記載する rulebook の要件を満たせないため、「複数ある場合」または「2プロセス以上」に修正する必要がある。 -->
+<!-- specdojo:finding id=F008 severity=major rule=vp-qe-omissions-consistency line=25 2プロセスの場合に2行目を追加する指示がなく、一覧および個別プロセス主要入出力からプロセスが欠落し得るため、3章と5章の注記をプロセスが複数あるすべての場合に適用する必要がある。 -->
+<!-- specdojo:finding id=F012 severity=major rule=vp-qe-kata-conformance line=25 一つのプロセスを一行で表す型であるにもかかわらず、2プロセス時の行追加が指示されていないため、3章と5章の注記を全プロセスの列挙を保証する表現へ修正する必要がある。 -->
 <!-- 領域内に3プロセス以上ある場合は、同じ形式で行を追加する。 -->
 
 ## 4. 概念データフロー
 
+<!-- specdojo:finding id=F004 severity=major rule=vp-arc-cross-document-consistency line=29 rulebook と recipe が要求する条件付きプロセスの非起動時の正常完了経路を記述する指示がなく, 必須出力が成立する経路を追跡できない成果物を生成し得るため、非起動経路と領域完了条件を図示する指示を追加する必要がある。 -->
+<!-- specdojo:finding id=F009 severity=major rule=vp-qe-omissions-consistency line=29 条件付きプロセスの非起動経路と、その場合の領域完了条件を図へ含める指示が欠落しているため、正常系を最後まで追跡できる記入要件を追加する必要がある。 -->
+<!-- specdojo:finding id=F013 severity=major rule=vp-qe-kata-conformance line=29 recipe と rulebook が確認を求める条件付きプロセスの非起動時の正常完了経路を template が導出しないため、フロー作成 TODO に非起動経路と領域完了条件を追加する必要がある。 -->
+
 _TODO_: 一覧の各行を一つのプロセスノードとして配置し、起点イベント、主要なデータストア、必要な外部主体、委譲先をつなぐ。プロセスの性質（必須・条件付きなど）によって図が追いにくい場合は、業務の性質が近いプロセスをまとめて複数の図に分割できる（例: 「4.1. 必須プロセスのフロー」「4.2. 条件付きプロセスのフロー」）。
 
 <!-- 単一図で足りる場合は、以下の図・凡例をそのまま使う。図を分ける場合は、この単一図・凡例を削除し、4.1/4.2 の見出しで分割する。 -->
+
+<!-- specdojo:finding id=F014 severity=major rule=vp-qe-kata-conformance line=47 委譲先ノードがプロセスと同じ角丸長方形で定義され、凡例では角丸長方形をプロセスと断定しているため、領域外委譲を内部プロセスとして表す不適合な完成物を生成しないよう、委譲先を別形状にするか凡例で明確に区別する必要がある。 -->
+<!-- specdojo:finding id=F015 severity=major rule=vp-ux-readability line=47 委譲先がプロセスと同じ角丸長方形で描画される一方、凡例は角丸長方形を「一つのプロセス」と説明しており、領域外ノードを領域内プロセスと誤認するため、異なる形状または明示的な委譲先用凡例を使用する必要がある。 -->
 
 ```mermaid
 flowchart LR
