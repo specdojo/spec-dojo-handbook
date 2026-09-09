@@ -130,7 +130,7 @@ run:
 
 決定論的な処理は`task.mode: command`とし、入力を展開する`task.command`を必須にする。runnerはmaterialize済みコマンドをPOSIX環境では`/bin/sh -eu`で直接実行し、コマンド、終了コード、標準出力、標準エラーをevidenceへ記録する。stdout / stderr はredact・上限付きログへの参照と、その参照先と同じbounded内容をevidence本体へ保持する。終了コードが0以外なら、その値からRunを直接`failed`と判定しagentは起動しない。結果の解釈が必要な場合だけ`task.analysis.agent`と`task.analysis.description`を指定し、成功時のcommand evidence本体をreporterへ渡す。これによりreporterは作業ツリーや参照先ログを追加で読むことなく出力を解釈できる。analysisを省略した場合はrunnerがresultを確定する。同じprojectの`specdojo exec`を子プロセスで呼ぶcommandでは、親runnerのproject実行lock tokenとowner tokenの一致を検証してlockを継承し、自己デッドロックを避けながら排他範囲を維持する。
 
-テンプレート式で参照できる値は、`job_id`、`project_id`、現在のrunnerと同じCLI entryを表す`specdojo`、検証済み`inputs`、トリガーが渡した`scheduled_at`、読み取り専用の前回成功checkpointに限定する。任意コード実行や環境変数の無制限な展開は許可しない。入力の`enum`はscalar値またはlistの各要素へ、integerの`minimum` / `maximum`は値域へ適用し、既定値と実行時入力を同じ規則で検証する。入れ子条件は検証可能なflat入力へ分解する。
+テンプレート式で参照できる値は、`job_id`、`project_id`、現在のrunnerと同じCLI entryを表す`specdojo`、検証済み`inputs`、トリガーが渡した`scheduled_at`、読み取り専用の前回成功checkpointに限定する。Job Run IDの確定後に解決するtaskとcheckpointでは、これらに加えて`job_run_id`を参照できる。`run.idempotency_key`から`job_run_id`を参照すると循環するため許可しない。任意コード実行や環境変数の無制限な展開は許可しない。入力の`enum`はscalar値またはlistの各要素へ、integerの`minimum` / `maximum`は値域へ適用し、既定値と実行時入力を同じ規則で検証する。入れ子条件は検証可能なflat入力へ分解する。
 
 ## 4. 起動と実行フロー
 
@@ -148,8 +148,8 @@ specdojo routine run --project <project-id> --due
 
 1. 起動元がJob ID、入力、予定時刻を渡す。
 2. Job Definitionと入力schemaを検証する。
-3. `idempotency_key`を解決し、既存Runとの重複を判定する。
-4. Job Definition、入力、checkpointから解決済みtaskを生成し、Job Runへ保存する。
+3. `idempotency_key`を解決してJob Run IDを確定し、既存Runとの重複を判定する。
+4. Job Definition、Job Run ID、入力、checkpointから解決済みtaskを生成し、Job Runへ保存する。
 5. `edit` / `review`は既存exec基盤でagentを実行する。`command`はrunnerが解決済みコマンドを直接実行してevidenceを保存する。
 6. commandが成功し`task.analysis`があれば、evidenceをreporter agentへ渡す。失敗時またはanalysisなしではagentを起動しない。
 7. agent結果またはコマンド終了コードをRunへ反映する。
@@ -182,7 +182,9 @@ cronのdue判定では、実際に処理を開始した`last_run`とは別に、
 
 ### 5.1. 冪等性
 
-冪等性の単位はroutineの`last_run`ではなくJob Runの`idempotency_key`とする。週報ではISO週、翻訳では原文revision範囲と対象言語をキーへ含める。これにより、外部スケジューラの重複起動や手動再実行で成果物を二重生成しない。
+冪等性の単位はroutineの`last_run`ではなくJob Runの`idempotency_key`とする。週報ではISO週、翻訳では原文revision範囲と対象言語をキーへ含める。実行枠ごとに処理するJobでは`scheduled_at`を含め、同じ実行枠の重複起動と失敗後のretryは同じJob Run、次の実行枠は別のJob Runとして扱う。手動起動で`--scheduled-at`を省略した場合は起動時刻が入るため、呼び出しごとに新しい実行枠になる。これにより、外部スケジューラの重複起動で成果物を二重生成せず、日次などの次回実行を前回の完了状態と混同しない。
+
+scriptが中断再開用のキーを要求する場合は、入力の期間や`scheduled_at`を再加工せず、`task.command`から`{{job_run_id}}`を渡す。同じJob Runのretryでは同じ値になり、異なる実行枠では値が変わるため、スケジュール粒度と再開状態を分離できる。
 
 ### 5.2. 取りこぼしと重複実行
 

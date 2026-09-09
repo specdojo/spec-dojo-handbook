@@ -231,9 +231,9 @@ plan が stdout の参照先を伝えていないことにある。詳細は
 週次では顕在化しないが、日次へ変えると 2 晩目以降が空振りする。実行の同一性を入力から
 組み立てている設計上の誤りで、[[prj-0001:pjr-mrjt-job-run-identity-from-period]] へ起票した。
 
-このため `rtn-grade-recheck` は `enabled: false` のままとする。cron は毎晩 1 時のままとし、
-修正後に有効化する。空振りする routine を有効にすると、動作しているつもりで実際は何も評価
-されない状態になる。
+[[prj-0001:pjr-mrjt-job-run-identity-from-period]] でJob Run IDをscriptの再開キーへ渡し、
+`scheduled_at`をJob Runの実行枠にする修正を行った。これにより次の日次実行は前回の完了状態を
+引き継がず、同じJob Runのretryだけが完了段を引き継ぐため、`rtn-grade-recheck`を有効化した。
 
 ## 8. 対応結果
 

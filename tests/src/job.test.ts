@@ -270,6 +270,20 @@ describe("Job Definition", () => {
       }),
     ).toBe("specdojo exec cycle --project prj-test");
   });
+
+  it("job_run_id を command template へ展開する", () => {
+    expect(
+      renderJobTemplate("run --run-id {{job_run_id}}", {
+        job_id: "job-grade",
+        job_run_id: "JBR-grade-0123456789ab",
+        project_id: "prj-test",
+        specdojo: "specdojo",
+        scheduled_at: "2026-09-09T00:00:00.000Z",
+        inputs: {},
+        checkpoint: {},
+      }),
+    ).toBe("run --run-id JBR-grade-0123456789ab");
+  });
 });
 
 describe("Job command execution", () => {
@@ -292,6 +306,73 @@ describe("Job command execution", () => {
 });
 
 describe("Job Run lifecycle", () => {
+  it("scheduled_at ごとに別の再開キーを materialize し、同じ実行枠の retry では再利用する", async () => {
+    const repo = setupRepo();
+    try {
+      writeFileSync(
+        join(repo, "jobs/job-grade.yaml"),
+        [
+          "id: job-grade",
+          "name: Grade",
+          "inputs:",
+          "  period:",
+          "    type: string",
+          "    required: true",
+          "task:",
+          "  mode: command",
+          "  command: run --run-id {{job_run_id}} --period {{inputs.period}}",
+          "run:",
+          '  idempotency_key: "{{job_id}}:{{scheduled_at}}"',
+          "",
+        ].join("\n"),
+      );
+
+      const first = await materializeJobRun({
+        projectId: "test",
+        jobId: "job-grade",
+        inputs: ["period=2026-W37"],
+        scheduledAt: "2026-09-14T01:00:00+09:00",
+      });
+      const nextDay = await materializeJobRun({
+        projectId: "test",
+        jobId: "job-grade",
+        inputs: ["period=2026-W37"],
+        scheduledAt: "2026-09-15T01:00:00+09:00",
+      });
+      const sameDaySecondSlot = await materializeJobRun({
+        projectId: "test",
+        jobId: "job-grade",
+        inputs: ["period=2026-W37"],
+        scheduledAt: "2026-09-14T06:00:00+09:00",
+      });
+
+      expect(nextDay.record.run_id).not.toBe(first.record.run_id);
+      expect(sameDaySecondSlot.record.run_id).not.toBe(first.record.run_id);
+      expect(first.record.task).toMatchObject({
+        command: `run --run-id ${first.record.run_id} --period 2026-W37`,
+      });
+      expect(nextDay.record.task).toMatchObject({
+        command: `run --run-id ${nextDay.record.run_id} --period 2026-W37`,
+      });
+
+      completeJobRun({ projectId: "test", runPath: first.runPath, status: "failed" });
+      const retry = await materializeJobRun({
+        projectId: "test",
+        jobId: "job-grade",
+        inputs: ["period=2026-W37"],
+        scheduledAt: "2026-09-14T01:00:00+09:00",
+      });
+      expect(retry.record.run_id).toBe(first.record.run_id);
+      expect(retry.record.attempts).toHaveLength(2);
+      expect(retry.record.task).toMatchObject({
+        command: `run --run-id ${first.record.run_id} --period 2026-W37`,
+      });
+    } finally {
+      process.chdir(originalCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
   it("materialize 時に enum と整数範囲外の入力を拒否する", async () => {
     const repo = setupRepo();
     try {
