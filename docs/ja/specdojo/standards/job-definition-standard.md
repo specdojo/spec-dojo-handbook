@@ -63,9 +63,9 @@ Job Definition Standard
 - `task.command` は非空のシェルコマンドとし、materialize 後の文字列を Job Run に保存する。
 - command から対象プロジェクトを指定するときは template 値 `{{project_id}}` を使い、同じ CLI を子プロセスで呼ぶときは `{{specdojo}}` を使う。`specdojo` という PATH 上の別 checkout を直接呼ばない。
 - runner は POSIX 環境では `/bin/sh -eu` でコマンドを実行し、終了コードが0以外なら agent を起動せず Run を失敗にする。
-- runner はコマンド、終了コード、標準出力、標準エラーを bounded・redacted evidence として別々に保存する。
+- runner はコマンド、終了コード、標準出力、標準エラーを bounded・redacted evidence として保存する。stdout / stderr は監査用ログへの参照に加え、analysis reporter が追加のファイル読取なしで判断できるよう evidence 本体にも同じ bounded 内容を含める。
 - `task.analysis` は任意である。省略時は終了コードだけで成否を確定し、指定時はコマンド成功後に evidence を reporter agent へ渡す。
-- analysis の根拠にする生成ファイルは command が stdout へ出力する。reporter は bounded evidence だけを読み、作業ツリーのファイルを追加で検査しない。
+- analysis の根拠にする生成ファイルは command が stdout へ出力する。reporter は evidence 本体に埋め込まれた bounded stdout / stderr だけを読み、参照先ログや作業ツリーのファイルを追加で検査しない。
 
 ### 3.4. 責務境界と粒度
 

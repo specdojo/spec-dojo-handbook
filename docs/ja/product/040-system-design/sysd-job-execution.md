@@ -128,7 +128,7 @@ run:
 
 `task.agent`はJobが委譲するagentを`pm-members.yaml`のnicknameで直接指名する。`capabilities`による間接指定は、要求を満たすmemberが複数あると選択が実行時の優先度に依存し、Jobの定義から委譲先を読み取れない。さらにroster全体がstage_roleを持つpipeline memberである場合、stage_roleなしのmemberだけを対象とする自動選択では候補が0件になる。`reporter`を併記したRunはexecutor→reporterの2段で実行し、resultはreporterが書く。`reporter`を省略した場合は単一agent実行となり、そのagentがresultまで記入する。`exec run --by`は単一agent実行としての差し替え、`--executor-by` / `--reporter-by`は段ごとの差し替えとして、いずれも指名より優先する。
 
-決定論的な処理は`task.mode: command`とし、入力を展開する`task.command`を必須にする。runnerはmaterialize済みコマンドをPOSIX環境では`/bin/sh -eu`で直接実行し、コマンド、終了コード、標準出力、標準エラーをevidenceへ記録する。終了コードが0以外なら、その値からRunを直接`failed`と判定しagentは起動しない。結果の解釈が必要な場合だけ`task.analysis.agent`と`task.analysis.description`を指定し、成功時のcommand evidenceをreporterへ渡す。analysisを省略した場合はrunnerがresultを確定する。同じprojectの`specdojo exec`を子プロセスで呼ぶcommandでは、親runnerのproject実行lock tokenとowner tokenの一致を検証してlockを継承し、自己デッドロックを避けながら排他範囲を維持する。
+決定論的な処理は`task.mode: command`とし、入力を展開する`task.command`を必須にする。runnerはmaterialize済みコマンドをPOSIX環境では`/bin/sh -eu`で直接実行し、コマンド、終了コード、標準出力、標準エラーをevidenceへ記録する。stdout / stderr はredact・上限付きログへの参照と、その参照先と同じbounded内容をevidence本体へ保持する。終了コードが0以外なら、その値からRunを直接`failed`と判定しagentは起動しない。結果の解釈が必要な場合だけ`task.analysis.agent`と`task.analysis.description`を指定し、成功時のcommand evidence本体をreporterへ渡す。これによりreporterは作業ツリーや参照先ログを追加で読むことなく出力を解釈できる。analysisを省略した場合はrunnerがresultを確定する。同じprojectの`specdojo exec`を子プロセスで呼ぶcommandでは、親runnerのproject実行lock tokenとowner tokenの一致を検証してlockを継承し、自己デッドロックを避けながら排他範囲を維持する。
 
 テンプレート式で参照できる値は、`job_id`、`project_id`、現在のrunnerと同じCLI entryを表す`specdojo`、検証済み`inputs`、トリガーが渡した`scheduled_at`、読み取り専用の前回成功checkpointに限定する。任意コード実行や環境変数の無制限な展開は許可しない。入力の`enum`はscalar値またはlistの各要素へ、integerの`minimum` / `maximum`は値域へ適用し、既定値と実行時入力を同じ規則で検証する。入れ子条件は検証可能なflat入力へ分解する。
 
@@ -279,7 +279,7 @@ projects/<prj-id>/
          └─ job-state.json        # Job別checkpointの派生ビュー
 ```
 
-Job DefinitionとRun履歴を正本とし、`job-state.json`は再構築可能な派生物とする。plan/resultは既存`execution/exec`配下を共用し、frontmatterの`origin`へ`job`、`job_id`、`run_id`を記録する。command evidenceは`execution/exec/evidence/<run-id>/attempt-<n>/`へ置き、解決済みコマンド、終了コード、redact・上限付きのstdout/stderrログを保存する。
+Job DefinitionとRun履歴を正本とし、`job-state.json`は再構築可能な派生物とする。plan/resultは既存`execution/exec`配下を共用し、frontmatterの`origin`へ`job`、`job_id`、`run_id`を記録する。command evidenceは`execution/exec/evidence/<run-id>/attempt-<n>/`へ置き、解決済みコマンド、終了コード、redact・上限付きのstdout/stderrログと、analysis受け渡し用の同一内容を保存する。
 
 Runの状態変更とattemptは上書きだけで失われない履歴として記録し、`job-state.json`はその履歴をfoldした最新状態とcheckpointを表示する。Run生成、重複判定、checkpoint確定はproject単位の排他境界内で行う。
 
@@ -289,7 +289,7 @@ Runの状態変更とattemptは上書きだけで失われない履歴として�
 
 - Job Runはin-place実行に対応する。`exec run --job --worktree`は未対応で、指定時にエラーとする。
 - `task.agent`でexecutorとreporterを指名したJob Runは、register項目と同じexecutor/reporter pipelineで実行し、evidenceとpipeline stateを`exec/evidence/<taskId>/<runId>/`へ記録する。reporterだけが失敗したRunの`--resume`はregister経路のみが対応し、Jobでは次のattemptとして再実行する。
-- `task.mode: command`はrunnerがin-placeで直接実行する。`task.analysis`を持つ場合だけ成功後にreporterを起動し、commandまたはanalysisの失敗はRun全体をfailedにする。
+- `task.mode: command`はrunnerがin-placeで直接実行する。`task.analysis`を持つ場合だけ成功後にreporterを起動し、redact・上限付きstdout/stderrを含むevidence本体を渡す。commandまたはanalysisの失敗はRun全体をfailedにする。
 - cronは5フィールド形式を扱い、数値、`*`、リスト、範囲、stepを受け付ける。
 - `missed_run`は`latest`と`all`、`overlap`は`skip`に対応する。
 - agentが変更不要と判断して正常終了したRunは現在`succeeded`として記録する。`noop`はデータモデルとcheckpoint規則に予約しているが、agent resultからの自動分類は未対応である。

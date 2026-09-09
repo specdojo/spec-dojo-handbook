@@ -585,7 +585,7 @@ specdojo exec worktree remove --project prj-0001 --task <task-id> --delete-branc
 
 委譲先のagentは`task.agent.executor`（および必要なら`task.agent.reporter`）にnicknameで指名します。両方を指名したRunはexecutor→reporterの2段で実行し、resultはreporterが書きます。`--by`は単一agent実行としての差し替え、`--executor-by` / `--reporter-by`は段ごとの差し替えとして、いずれも指名より優先します。`job validate`はnicknameの書式だけを検査するため、実在確認は`--dry-run`で行います。責務境界と記述規約は [Job定義標準](../standards/job-definition-standard.md) を参照します。
 
-`task.mode: command`では、materialize済みの`task.command`をrunnerが直接実行します。終了コード、標準出力、標準エラーはcommand evidenceへ記録され、終了コードが0以外ならagentを起動せずRunをfailedにします。判断が必要なJobだけ`task.analysis.agent`と`description`を指定でき、成功時のevidenceがreporterへ渡されます。commandのrunner実行を`--by` / `--executor-by`でagent実行へ差し替えることはできません。analysis agentだけは`--reporter-by`で差し替えられます。
+`task.mode: command`では、materialize済みの`task.command`をrunnerが直接実行します。終了コード、標準出力、標準エラーはcommand evidenceへ記録され、終了コードが0以外ならagentを起動せずRunをfailedにします。stdout / stderr はredact・64 KiB上限付きログへの参照と同じbounded内容がevidence本体にも入り、判断が必要なJobでは成功時に`task.analysis.agent`へ渡されます。analysis reporterは参照先ログや作業ツリーを追加で読まず、このevidence本体から判断します。commandのrunner実行を`--by` / `--executor-by`でagent実行へ差し替えることはできません。analysis agentだけは`--reporter-by`で差し替えられます。
 
 ```bash
 # 解決された runner command / analysis reporter を確認する（実行しない）
