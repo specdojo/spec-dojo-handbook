@@ -129,3 +129,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_cffff6ae37f845ee80fce797a8528a87
+- v: 1
+  id: reg_41d8185883434c089fde826a80721860
+  ts: "2026-09-09T13:20:30Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: command evidence へ stdout / stderr を上限付きで埋め込み、analysis 段が結果を読めるようにした。redactSensitiveText で秘匿情報を除去し、MAX_LOG_BYTES を超える場合は切り詰める。routine run --id rtn-grade-recheck を実地で実行し Job Run complete と block_reason が空であることを確認した。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-09"
+  previous_event_id: reg_ae079bfdf2c64312aad8d8bb22cb604c

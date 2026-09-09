@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-t2kk-grade-recheck-routine
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-07T23:00:00Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-09T13:20:31Z"
   block_reason: 3段評価は完走し 5 文書 15 段のうち 13 段が成功したが、Job Run は analysis 段の失敗により failed となる。完了条件の routine run --id で再評価できるを満たすには PJR-GWY4 の結果受け渡しの修正が要る。
 ---
 

@@ -116,3 +116,19 @@
       from: grade list / --changed-only / --kind all と routine 定義は完成したが、routine 経由の実行が成立しない。job のコマンドが agent の sandbox 内で走るため、スクリプトが起動する内側の opencode がホームディレクトリへ書けず全段が失敗する。完了条件の routine run --id で再評価できることを満たさない。PJR-GWY4 の実装を待つ。
       to: 3段評価は完走し 5 文書 15 段のうち 13 段が成功したが、Job Run は analysis 段の失敗により failed となる。完了条件の routine run --id で再評価できるを満たすには PJR-GWY4 の結果受け渡しの修正が要る。
   previous_event_id: reg_d9bbd67b42c04a4ab2ad5afa5c4fa67d
+- v: 1
+  id: reg_77d13d3ecdb2414a800416f67eb4dbdd
+  ts: "2026-09-09T13:20:31Z"
+  action: close
+  actor: orchestrator
+  from_status: waiting
+  to_status: done
+  reason: routine run --id rtn-grade-recheck が Job Run complete で完了する。5 文書を選択し 3 段評価が完走した。grade list / --kind all / --changed-only と routine 定義が接続され、完了条件を満たした。
+  changes:
+    - field: status
+      from: waiting
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-09"
+  previous_event_id: reg_ca15ae992aac4d358f087ccf26568acb

@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-gwy4-job-deterministic-command
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: high
   owner: ARC
   registered_at: "2026-09-08T13:38:47Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-09T13:20:30Z"
   block_reason: "mode: command によるコマンド実行は成立し、5文書15段のうち13段で評価が完走した。ただし analysis 段へ結果が届かない。plan は stdout に出力された results.tsv から判断すると指示するが、その stdout の場所を伝えていない。command.stdout.log と stdout_ref は記録されているが plan での言及が 0 件である。完了条件のコマンドの実行と結果の解釈が分離されているを満たさない。"
 ---
 
