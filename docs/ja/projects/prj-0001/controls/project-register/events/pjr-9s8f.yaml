@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_ab884d3426fb4f9faf33db4f994ff76c
+  ts: "2026-09-09T15:19:06Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: 文書サイト機能を別パッケージへ分離する
+    - field: description
+      from: ""
+      to: gen-mermaid-svg.ts は npx mmdc を経由して Chromium を必要とする。CLI 本体の register や exec には不要な依存であり、同梱すると利用者が Mermaid 生成時に Chromium 取得へ直面する。.vitepress/config.mts は gen-mermaid-svg を直接 import しており両者は不可分である。文書サイト構築に必要な一式を別パッケージへ分離する。一方 remark-frontmatter-ajv2020.cjs と remark-md-content.cjs と history-links.ts は ajv と Node 標準のみに依存し、docs/specdojo/schemas と Markdown 規約に密結合するため specdojo 本体へ同梱する。規約と検証器を分けると版がずれる。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-10"
+    - field: due
+      from: ""
+      to: "2026-09-30"

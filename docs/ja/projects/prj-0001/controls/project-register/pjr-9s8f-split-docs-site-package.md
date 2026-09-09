@@ -1,0 +1,100 @@
+---
+specdojo:
+  id: prj-0001:pjr-9s8f-split-docs-site-package
+  type: project
+  status: draft
+  rulebook: specdojo:pjr-rulebook
+  part_of:
+    - prj-0001:pjr-index
+  item_type: todo
+  item_status: open
+  priority: medium
+  owner: ARC
+  registered_at: "2026-09-09T15:19:06Z"
+  due_on: "2026-09-30"
+---
+
+# PJR-9S8F 文書サイト機能を別パッケージへ分離する
+
+## 1. 概要
+
+Mermaid 図の生成が Chromium を必要とする。CLI 本体には不要な依存であり、同梱すると利用者が
+Mermaid 生成時に Chromium の取得へ直面する。文書サイト構築に必要な一式を分離する。
+
+## 2. 依存の実態
+
+`tools/docs/src` の内訳は用途で二分される。
+
+| ファイル                         | 呼び出し元               | 外部依存     | 判断 |
+| -------------------------------- | ------------------------ | ------------ | ---- |
+| `remark-frontmatter-ajv2020.cjs` | remark 設定              | ajv          | 同梱 |
+| `remark-md-content.cjs`          | remark 設定              | Node 標準    | 同梱 |
+| `history-links.ts`               | `validate-history-links` | Node 標準    | 同梱 |
+| `gen-mermaid-svg.ts`             | `docs:build:mermaid`     | **Chromium** | 分離 |
+
+Mermaid の生成は外部プロセスへ委ねている。
+
+```typescript
+const PUPPETEER_CONFIG = path.resolve("puppeteer-config.json");
+execSync(`npx mmdc -p "${PUPPETEER_CONFIG}" -c "${MERMAID_CONFIG}" -i "${tmpMmd}" -o "${svgPath}"`);
+```
+
+この環境では、Debian の Chromium ビルド退行により生成できなくなった経緯がある。CLI 本体の
+`register` や `exec` には一切不要な依存である。
+
+## 3. `.vitepress` を含める根拠
+
+`.vitepress/config.mts` が `gen-mermaid-svg` を直接 import している。両者は不可分であり、
+分離するなら同じパッケージへ入れる。
+
+```typescript
+import { generateMermaidSvgs, generateMermaidSvgsForFile } from "../tools/docs/src/gen-mermaid-svg";
+```
+
+`config.mts` は `vitepress` と `vitepress-sidebar` にも依存する。文書サイトの構築に必要な設定
+一式であり、CLI 利用者が閲覧サイトを立てない限り不要である。
+
+## 4. 同梱を維持する範囲とその理由
+
+検証系は kata と密結合する。`remark-frontmatter-ajv2020.cjs` は `docs/specdojo/schemas` を
+読み、`remark-md-content.cjs` は Markdown 規約を実装する。規約と検証器を別パッケージにすると
+版がずれ、規約の更新に検証が追随しない状態が生じる。依存も ajv と Node 標準のみで軽い。
+
+## 5. 完了条件
+
+- 文書サイト構築に必要な一式が別パッケージへ分離されている。`gen-mermaid-svg.ts`、
+  `.vitepress/config.mts`、`.vitepress/sidebar-config.ts`、Mermaid と puppeteer の設定を含む。
+- `specdojo` 本体の同梱物に Chromium を要する依存が含まれない。
+- 検証系（remark 系と `history-links.ts`）は `specdojo` 本体へ残っている。
+- 文書サイトを構築しない利用者が、分離パッケージを入れずに `register` / `exec` / `catalog` /
+  `grade` を実行できる。
+- 本リポジトリの `docs:build` と `docs:dev` が従来どおり動作する。
+- 分離パッケージの参照方法が決まっている。`optionalDependencies` とするか、利用者が明示的に
+  導入するか。
+- 分離パッケージが無い場合の挙動が定義されている。機能を無効化するのか、エラーとするのか。
+
+## 6. 作業内容
+
+| No  | 作業                                             | メモ                            |
+| --- | ------------------------------------------------ | ------------------------------- |
+| 1   | 分離対象の範囲を確定する                         | `.vitepress` 配下、設定ファイル |
+| 2   | パッケージ構成を決める                           | 名称、依存関係、参照方法        |
+| 3   | 分離を実施する                                   |                                 |
+| 4   | 本体の `files` から文書サイト関連を外す          |                                 |
+| 5   | 分離パッケージ無しでの動作を確認する             | 最小構成で実地確認              |
+| 6   | 本リポジトリの `docs:build` が動くことを確認する |                                 |
+
+## 7. 判断が要る点
+
+- パッケージ名。`@specdojo/docs-site` などのスコープ付きにするか。
+- 参照方法。`optionalDependencies` は導入を強制しない反面、失敗が分かりにくい。
+- lefthook や CI が分離パッケージへ依存してよいか。本リポジトリ自身は文書サイトを構築する。
+
+## 8. 対応結果
+
+_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+
+## 9. 関連ドキュメント
+
+- [[prj-0001:pjr-a12b-remove-dead-lefthook-docs-build]]: 同じ調査で判明した死んだコード。
+- [[prj-0001:pjr-36qg-competitive-landscape-and-release]]: npm 公開の段取りと同梱範囲。
