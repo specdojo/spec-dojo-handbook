@@ -124,15 +124,18 @@ PJR-KK07 により kata を配置しない最小構成でも `register add` と 
 
 ### 2.3. 手順
 
+publish は GitHub Actions が実行する。手元で行うのは version の更新と確認までである。詳細は
+`publish の実行経路` に記す。
+
 ```sh
 npm version minor          # 0.1.0 -> 0.2.0
 npm run build
 npm pack --dry-run         # 同梱範囲を確認する
-npm publish
+git push                   # main への push で workflow が起動する
 ```
 
-認証は `npm login` で行う。2FA を有効にしている場合は publish 時にワンタイムパスワードを求め
-られる。
+手元で `npm publish` を実行しない。実行する場合は `npm login` と、2FA を有効にしていれば
+ワンタイムパスワードを求められる。CI 経由では OIDC を使うため、いずれも不要である。
 
 ### 2.4. 公開前に確認する事項
 
@@ -186,6 +189,68 @@ publish の前に残るのは次の 2 点である。
 現状のまま公開しても動作する。ただし利用者が Mermaid 生成で Chromium の取得に直面するため、
 早い段階で整理する価値はある。
 
+## 4.1. publish の実行経路
+
+publish は GitHub Actions が自動実行する。`.github/workflows/publish-specdojo.yml` が
+Trusted Publishing（OIDC）で npm へ発行する。
+
+```yaml
+permissions:
+  contents: read
+  id-token: write
+...
+- name: Publish to npm via Trusted Publishing
+  run: npm publish --access public
+```
+
+`NODE_AUTH_TOKEN` を使わず、GitHub が発行する OIDC token で認証する。token を GitHub Secrets へ
+保存する必要がない。
+
+起動条件は `main` への push（`src/**`、`docs/ja/specdojo/**`、`docs/specdojo/**`、
+`package.json`、`package-lock.json`、workflow 自身のいずれかが変わった場合）と
+`workflow_dispatch` である。`package.json` の version が npm 上の版と同じ場合は skip する。
+
+### 4.1.1. 2FA との関係
+
+Trusted Publishing は 2FA を置き換えない。補完する位置づけである。CI からの publish に人の
+操作を要さない一方、npm 側の設定で「二要素認証を必須とし token を禁止する」を有効にできる。
+公式文書は、trusted publisher を設定した後に token の権限を絞ることを推奨している。
+
+したがって 2FA のワンタイムパスワードを CI 実行時に入力する必要はない。人が `npm publish` を
+手で実行する場合にのみ求められる。
+
+### 4.1.2. 確認が必要な事項
+
+workflow の記述は要件を満たしているが、**npm 側の設定は未確認**である。Trusted Publishing は
+両方が揃って初めて機能する。
+
+| 要件                                | 状態                                               |
+| ----------------------------------- | -------------------------------------------------- |
+| npm CLI 11.5.1 以上                 | workflow は Node 24 を使う。CLI は同梱版に依存する |
+| Node 22.14.0 以上                   | 満たす（Node 24）                                  |
+| `id-token: write`                   | 満たす                                             |
+| `contents: read`                    | 満たす                                             |
+| **npm 側の trusted publisher 設定** | **未確認**                                         |
+
+npm のパッケージ設定ページで次を登録する必要がある。
+
+- Organization または username
+- Repository 名
+- **Workflow のファイル名**（`.yml` を含む。パスではなくファイル名のみ）
+- 任意で GitHub environment 名と許可する actions
+
+登録名は `publish-specdojo.yml` でなければならない。
+
+### 4.1.3. 未検証の点
+
+- **新規パッケージを作成できるか**。公式文書は既存パッケージの設定を前提としており、trusted
+  publishing で新規に作成できるかを明示していない。`specdojo` は 0.1.0 が公開済みのため、本件
+  では問題にならない。
+- **workflow が一度も成功していない可能性**。0.1.0 の公開は 2026-04-05 で、別リポジトリの初期
+  実装であった。現在の workflow が実際に動作した実績を確認する必要がある。
+- version を上げずに `main` へ push した場合、skip されることは workflow の記述から読めるが、
+  実地では未確認である。
+
 ## 5. 完了条件
 
 - `files` の同梱範囲が `同梱範囲` の判断どおりに設定されている。`docs/en/specdojo` を含めず、
@@ -194,19 +259,28 @@ publish の前に残るのは次の 2 点である。
   `register build` / `exec scaffold --provider` が動作することを確認している。
 - README から npm 経由の導入手順を辿れる。[[prj-0001:pjr-9m5n-npm-onboarding-path]] の完了が前提。
 - `package.json` に `repository` / `license` が記載されている。
+- npm 側の trusted publisher 設定が登録されており、workflow のファイル名が
+  `publish-specdojo.yml` と一致している。
+- GitHub Actions の publish workflow が成功し、人手の `npm publish` を要さない。
+- 2FA のワンタイムパスワードを CI 実行時に求められない。
+- version を上げずに `main` へ push した場合に publish が skip される。
 - 0.2.0 が npm へ公開され、`npm install specdojo` で導入できる。
 - 導入した環境で `specdojo --help` が動作する。
 
 ## 6. 作業内容
 
-| No  | 作業                            | メモ                               |
-| --- | ------------------------------- | ---------------------------------- |
-| 1   | `files` を確定する              | `docs/en/specdojo` を除外          |
-| 2   | 同梱物を別環境で実地検証する    | tarball を展開して最小構成で動かす |
-| 3   | `package.json` のメタ情報を補う | `repository` / `license`           |
-| 4   | README の導線を確認する         | PJR-9M5N の完了を待つ              |
-| 5   | 0.2.0 を publish する           |                                    |
-| 6   | 導入して動作を確認する          |                                    |
+| No  | 作業                                      | メモ                                |
+| --- | ----------------------------------------- | ----------------------------------- |
+| 1   | `files` を確定する                        | `docs/en/specdojo` を除外           |
+| 2   | 同梱物を別環境で実地検証する              | tarball を展開して最小構成で動かす  |
+| 3   | `package.json` のメタ情報を補う           | `repository` / `license`            |
+| 4   | README の導線を確認する                   | PJR-9M5N は完了済み                 |
+| 5   | npm 側の trusted publisher 設定を確認する | ファイル名は `publish-specdojo.yml` |
+| 6   | workflow の実行実績を確認する             | 過去に成功したことがあるか          |
+| 7   | version を上げて `main` へ push する      | publish は Actions が実行する       |
+| 8   | 導入して動作を確認する                    |                                     |
+
+No 5 は npmjs.com のパッケージ設定ページでの操作となるため、人が行う。
 
 ## 7. 対応結果
 
