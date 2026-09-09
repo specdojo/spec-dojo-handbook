@@ -245,19 +245,29 @@ plan は「stdout に出力された `results.tsv` から判断する」と指�
 コマンドの実行と evidence の記録は成功しており、結果の受け渡しだけが欠けている。完了条件の
 「判断が要る処理だけを agent へ渡せる。コマンドの実行と結果の解釈が分離されている」を満たさない。
 
-### 8.2.3. 残作業
+### 8.2.3. 再開時の修正結果
 
-- analysis 段の plan へ、command evidence の `stdout_ref` と `stderr_ref` が指すパスを含める。
-- あるいは stdout の内容を plan または evidence へ直接埋め込む。出力量の上限を決める。
-- 修正後に `routine run --id rtn-grade-recheck` を再実行し、Job Run が成功することを確認する。
+command evidence の `command.stdout` / `command.stderr` へ、既存の参照先ログと同じ
+redact・64 KiB 上限付き内容を格納するよう修正した。`stdout_ref` / `stderr_ref` は監査用の参照として
+維持し、analysis reporter には参照だけでなく内容を含む evidence 本体を渡す。
+
+これにより reporter は、契約で禁止されている作業ツリーや参照先ログの追加読取を行わずに
+`results.tsv` を解釈できる。既存 evidence は inline 内容を持たないため、schema 上は追加項目を
+任意として後方互換性を維持した。回帰テストでは command の stdout / stderr が reporter prompt
+へ含まれることと、inline stdout にも認証情報の redaction が適用されることを確認した。
+
+実 agent を使う `rtn-grade-recheck` の再実行は外部 agent・network を必要とするため executor
+sandbox 内では行わない。前回の実運用で command と入れ子 agent の起動は確認済みであり、次回の
+runner 運用で Job Run 全体の成功を確認する。
 
 ## 9. 対応結果
 
 - Job schema と実行モデルへ `task.mode: command`、`task.command`、任意の
   `task.analysis` を追加した。`edit` / `review` の定義形式と実行経路は維持した。
 - runner は materialize 済みコマンドを POSIX 環境では `/bin/sh -eu` で直接実行し、
-  コマンド、終了コード、stdout、stderr を attempt 単位の evidence へ保存する。非0終了時は
-  analysis agent を起動せず、Job Run と result を直接 failed / blocked にする。
+  コマンド、終了コード、stdout、stderr を attempt 単位の evidence へ保存する。stdout / stderr
+  は参照先ログと同じ bounded・redacted 内容を evidence 本体にも含める。非0終了時は analysis
+  agent を起動せず、Job Run と result を直接 failed / blocked にする。
 - command 成功後に判断が必要な場合だけ、command evidence を `stage_role: reporter` の agent へ
   渡す経路を追加した。analysis が無い場合は runner が result を確定する。
 - `job-grade-kata.yaml` を command mode へ移行し、agent 向けの逸脱防止指示と

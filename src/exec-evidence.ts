@@ -46,6 +46,10 @@ export type ExecEvidence = {
     exit_code: number | null;
     stdout_ref: string;
     stderr_ref: string;
+    /** Redacted, bounded content stored at stdout_ref. Optional for legacy evidence. */
+    stdout?: string;
+    /** Redacted, bounded content stored at stderr_ref. Optional for legacy evidence. */
+    stderr?: string;
   };
   log_refs: Array<{
     kind: "agent-output-excerpt" | "command-stdout" | "command-stderr";
@@ -398,6 +402,8 @@ export function recordCommandEvidence(input: RecordCommandEvidenceInput): {
       exit_code: input.exitCode,
       stdout_ref: stdoutRef,
       stderr_ref: stderrRef,
+      stdout: boundedStdout.content,
+      stderr: boundedStderr.content,
     },
     log_refs: [
       {

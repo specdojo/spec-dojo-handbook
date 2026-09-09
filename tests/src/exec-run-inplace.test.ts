@@ -278,6 +278,7 @@ describe("exec run (in-place, default)", () => {
         "  mode: command",
         "  command: |",
         "    printf 'command stdout\\n'",
+        "    printf 'api_key=super-secret-value\\n'",
         "    printf 'command stderr\\n' >&2",
         "    printf 'done\\n' > command-artifact.txt",
         "  paths: [command-artifact.txt]",
@@ -311,11 +312,22 @@ describe("exec run (in-place, default)", () => {
       const evidence = JSON.parse(
         readFileSync(join(repo, run.attempts[0].evidence_ref), "utf8"),
       ) as {
-        command: { value: string; exit_code: number; stdout_ref: string; stderr_ref: string };
+        command: {
+          value: string;
+          exit_code: number;
+          stdout_ref: string;
+          stderr_ref: string;
+          stdout: string;
+          stderr: string;
+        };
         log_refs: Array<{ kind: string }>;
       };
       expect(evidence.command.value).toContain("command-artifact.txt");
       expect(evidence.command.exit_code).toBe(0);
+      expect(evidence.command.stdout).toContain("command stdout");
+      expect(evidence.command.stdout).toContain("api_key=[REDACTED]");
+      expect(evidence.command.stdout).not.toContain("super-secret-value");
+      expect(evidence.command.stderr).toContain("command stderr");
       expect(readFileSync(join(repo, evidence.command.stdout_ref), "utf8")).toContain(
         "command stdout",
       );
@@ -413,7 +425,23 @@ describe("exec run (in-place, default)", () => {
 
   it("runs only analysis reporter after a successful command that starts a nested process", async () => {
     const { repo, executionPath } = setupRepository();
-    configurePipeline(repo);
+    const reporterOutput = JSON.stringify({
+      schema_version: 1,
+      mode: "edit",
+      outcome: "complete",
+      summary: ["成果物を更新し、検証を完了した。"],
+      changed_files: [],
+      handoff: [],
+      approach: "command evidence の stdout と stderr を確認した。",
+      block_reason: "",
+    });
+    const reporterOutputBase64 = Buffer.from(reporterOutput, "utf8").toString("base64");
+    configurePipeline(
+      repo,
+      `node -e "const fs=require('node:fs');const prompt=fs.readFileSync(0,'utf8');` +
+        `fs.writeFileSync('reporter-prompt.txt',prompt);` +
+        `fs.writeSync(1,Buffer.from('${reporterOutputBase64}','base64'))"`,
+    );
     writeFileSync(
       join(repo, "jobs", "job-command-analysis.yaml"),
       [
@@ -423,6 +451,8 @@ describe("exec run (in-place, default)", () => {
         "  mode: command",
         "  command: |",
         "    node -e \"require('node:fs').writeFileSync('nested-agent.txt', 'nested process ran\\\\n')\"",
+        "    printf 'analysis input\\n'",
+        "    printf 'analysis warning\\n' >&2",
         "  analysis:",
         "    agent: pipeline-reporter",
         "    description: command evidence から実行結果を報告する。",
@@ -437,12 +467,18 @@ describe("exec run (in-place, default)", () => {
       args[0] === "status" ? "?? nested-agent.txt\0" : " nested-agent.txt | 1 +\n",
     );
     vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     try {
       process.chdir(repo);
       await runExec(["run", "--project", "test", "--job", "job-command-analysis"]);
 
       expect(readFileSync(join(repo, "nested-agent.txt"), "utf8")).toBe("nested process ran\n");
       expect(existsSync(join(repo, "pipeline-artifact.md"))).toBe(false);
+      const reporterPrompt = readFileSync(join(repo, "reporter-prompt.txt"), "utf8");
+      expect(reporterPrompt).toContain('"stdout_ref"');
+      expect(reporterPrompt).toContain('"stderr_ref"');
+      expect(reporterPrompt).toContain('"stdout": "analysis input\\n"');
+      expect(reporterPrompt).toContain('"stderr": "analysis warning\\n"');
       const runFile = readdirSync(join(executionPath, "jobs", "runs"))[0];
       const run = JSON.parse(
         readFileSync(join(executionPath, "jobs", "runs", runFile), "utf8"),
