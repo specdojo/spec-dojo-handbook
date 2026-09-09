@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_7ac3b748522a43188db1aaf00888a5ee
+  ts: "2026-09-09T15:30:18Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: npm 導入後のセットアップ導線を整備する
+    - field: description
+      from: ""
+      to: agent 設定を配置する機能が exec scaffold --provider の下にあり、初期セットアップの導線として発見しにくい。config init の隣か init 相当の入口が自然である。さらに README の使い始めるは Use this template とリポジトリ取得による取り込みのみを案内しており、npm install specdojo で導入した利用者向けの手順が存在しない。npm ページに表示される README がこの内容では、インストール後に何をすればよいか分からない。config init から provider 設定の配置、最初の register add までを一連の導線として示す必要がある。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: high
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-10"
+    - field: due
+      from: ""
+      to: "2026-09-30"
