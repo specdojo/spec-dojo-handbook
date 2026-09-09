@@ -1,17 +1,19 @@
 # yaml-language-server: $schema=../../../../specdojo/schemas/v1/routine.schema.yaml
 id: rtn-grade-recheck
-name: 修正済み・未評価の実践の型の週次再評価
-description: 毎週火曜日6時（Asia/Tokyo）に、変更済みまたは未評価の実践の型を最大5件再評価する。
-# 3 段評価が完走することを手動実行で確認できるまで無効にする。無人実行は失敗しても定刻まで
-# 気づけないため、検証を経てから true へ戻す。
+name: 修正済み・未評価の実践の型の夜間再評価
+description: 毎晩1時（Asia/Tokyo）に、変更済みまたは未評価の実践の型を最大5件再評価する。
+# run-id が period から組み立てられており、同じ period では前回の完了段を再開扱いで飛ばす。
+# 毎晩実行しても 2 晩目以降が空振りするため、PJR の修正まで無効にする。
 enabled: false
 trigger:
-  cron: "0 6 * * 2"
+  cron: "0 1 * * *"
   timezone: Asia/Tokyo
 action:
   kind: job
   job: job-grade-kata
   inputs:
+    # 実行の同一性は Job Run ID が持つべきで、period から組み立てるのは誤りである。
+    # 修正までは週次の値のままとする。
     period: "{{scheduled_at | iso_week}}"
     kind: all
     limit: "5"

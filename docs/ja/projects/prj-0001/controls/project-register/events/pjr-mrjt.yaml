@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_8ecd931442994a9186133758e5a84119
+  ts: "2026-09-09T14:22:03Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: 実行の同一性を period から組み立てており日次実行できない
+    - field: description
+      from: ""
+      to: job のコマンドが --run-id を job_id と inputs.period から組み立てているため、実行の同一性がスケジュールの粒度に依存する。run-per-document.sh は run-id 単位で完了段を保存し再開するため、同じ period では 2 回目以降が処理済みとして飛ばされる。週次を日次へ変えると 2 晩目以降が空振りする。Job Run は JBR-... という一意な ID を持つがテンプレートから参照できない。renderJobTemplate が解決するのは job_id / project_id / specdojo / scheduled_at / inputs / checkpoint のみである。フィルタを追加する対症療法では時間毎の実行で同じ問題が再発する。
+    - field: type
+      from: ""
+      to: issue
+    - field: priority
+      from: ""
+      to: high
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-09"
+    - field: due
+      from: ""
+      to: "2026-09-30"
