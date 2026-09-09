@@ -379,15 +379,18 @@ Claude member の `mode` はこの `{mode}` を権限プロファイル名へ展
 
 ### 7.1. scaffold コマンド
 
-この配置は `exec scaffold` の `--provider <name>` オプションで自動化します。
+この配置は、初期設定の導線にある `config scaffold` の `--provider <name>` オプションで自動化します。
 
 ```sh
-specdojo exec scaffold --provider claude
+specdojo config scaffold --provider claude
 ```
+
+従来の `specdojo exec scaffold --provider <name>` も互換入口として残り、同じ処理を実行します。
 
 挙動は次のとおりです。
 
-- `--provider <name>` を指定すると、package 内の `templates/<name>/` を配布原本として上記の配置規則でコピーします。`--provider` を省略した場合は従来どおり `pm-review-viewpoints.yaml` の scaffold を行い、挙動を変えません。
+- `config scaffold` の `--provider <name>` は必須です。package 内の `templates/<name>/` を配布原本として上記の配置規則でコピーします。
+- 互換入口の `exec scaffold` では、`--provider` を指定した場合に provider 設定をコピーします。省略した場合は従来どおり `pm-review-viewpoints.yaml` の scaffold を行い、挙動を変えません。
 - 配布原本はインストール済み package のルートから解決します。`templates/<name>/` が存在しない provider を指定した場合は、指定可能な provider 一覧を添えてエラーにします。
 - 配置先に同名ファイルが存在する場合は上書きせず `Skipped (already exists):` を出力します。`--force` 指定時のみ上書きします。ファイルごとに `Written:` / `Skipped:` を 1 行ずつ出力します（既存の scaffold 系コマンドの出力形式に合わせます）。
 - `--dry-run` 指定時は書き込みを行わず、コピー予定のファイル一覧を表示します。

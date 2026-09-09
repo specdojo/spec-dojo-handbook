@@ -4,6 +4,7 @@ import { registerCatalogCommands } from "../../src/catalog.js";
 import { registerDeliverableCommands } from "../../src/deliverable.js";
 import { registerExecCommands } from "../../src/exec.js";
 import { registerGradeCommand } from "../../src/grade.js";
+import { registerConfigCommands } from "../../src/specdojo-config.js";
 
 function subcommandNames(program: Command, name: string): string[] {
   return (
@@ -14,6 +15,15 @@ function subcommandNames(program: Command, name: string): string[] {
 }
 
 describe("CLI generation verb taxonomy", () => {
+  it("offers provider setup under config while retaining the exec compatibility entry", () => {
+    const program = new Command();
+    registerConfigCommands(program);
+    registerExecCommands(program);
+
+    expect(subcommandNames(program, "config")).toEqual(["init", "scaffold"]);
+    expect(subcommandNames(program, "exec")).toContain("scaffold");
+  });
+
   it("registers deliverable scaffold and removes catalog generate", () => {
     const program = new Command();
     registerCatalogCommands(program);

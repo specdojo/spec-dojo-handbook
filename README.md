@@ -18,10 +18,49 @@ SpecDojo は、次のものをオープンソースのテンプレートリポ�
 
 ## 使い始める
 
-利用形態に応じて、次のいずれかで準備します。
+### npm で導入する
 
-- 新しいリポジトリを始める場合は、このリポジトリの **Use this template** から作成する
-- 既存プロジェクトへ文書体系を導入する場合は、このリポジトリを取得し、`docs/ja/specdojo/` 配下を取り込む
+利用するプロジェクトのルートで、SpecDojo をローカル依存として導入し、設定を初期化します。
+
+```sh
+npm install specdojo
+npx specdojo config init
+```
+
+`config init` は `.specdojo/specdojo.config.json` とその親ディレクトリを作成します。既定では
+`prj-0001` と `docs/ja/projects/prj-0001/controls/project-register` を使う最小構成です。別の
+project ID や配置を使う場合は、生成された設定の `current_project`、`projects` のキー、
+`base_path` を次へ進む前に変更してください。
+
+agent にタスクを実行させる場合は、利用する provider の設定を配置します。この手順は register
+だけを使う最小構成では省略できます。
+
+```sh
+npx specdojo config scaffold --provider codex
+```
+
+`--provider` には `claude`、`codex`、`copilot`、`opencode` を指定できます。従来の
+`npx specdojo exec scaffold --provider <name>` も互換入口として引き続き利用できます。
+
+最初の登録簿と todo を作り、一覧を生成します。
+
+```sh
+npx specdojo register scaffold --project prj-0001
+npx specdojo register add \
+  --project prj-0001 \
+  --type todo \
+  --title "最初のタスク"
+npx specdojo register build --project prj-0001
+```
+
+ここまでの手順は、利用側へ kata をコピーせずに実行できます。生成された todo の個票が編集対象、
+`generated/pjr-index.md` が個票から作る一覧です。
+
+### テンプレートリポジトリとして導入する
+
+CLI だけでなく、プロジェクト文書体系一式を最初から配置する場合は、このリポジトリの
+**Use this template** から新しいリポジトリを作成します。既存プロジェクトへ文書体系一式を
+取り込む場合は、このリポジトリの `docs/ja/specdojo/` 配下を参照してください。
 
 導入後の初期設定と、最初のタスクを完了するまでの手順は [Quick Start ガイド](https://specdojo.github.io/specdojo/ja/specdojo/guides/quick-start-guide.html) を参照してください。
 全体像から確認する場合は [全体概要ガイド](https://specdojo.github.io/specdojo/ja/specdojo/guides/specdojo-overview-guide.html) を参照してください。

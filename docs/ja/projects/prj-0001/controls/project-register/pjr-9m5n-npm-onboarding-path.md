@@ -76,23 +76,38 @@ PJR-KK07 により、kata を配置しない最小構成でも `register add` �
 
 ## 5. 作業内容
 
-| No  | 作業                                 | メモ                             |
-| --- | ------------------------------------ | -------------------------------- |
-| 1   | セットアップ系コマンドの配置を決める | `init` の新設か `config` 配下か  |
-| 2   | 移行方法を決める                     | 既存呼び出しの互換               |
-| 3   | README へ npm 導入手順を追加する     | npm ページに表示される前提で書く |
-| 4   | 空のリポジトリで手順を実地確認する   |                                  |
+| No  | 作業                                 | メモ                                                                      |
+| --- | ------------------------------------ | ------------------------------------------------------------------------- |
+| 1   | セットアップ系コマンドの配置を決める | `config scaffold --provider` を推奨入口として追加                         |
+| 2   | 移行方法を決める                     | `exec scaffold --provider` は同じ実装を呼ぶ互換入口として維持             |
+| 3   | README へ npm 導入手順を追加する     | ローカル導入のため `npx specdojo` で `register add` までを通しで記載      |
+| 4   | 空のリポジトリで手順を実地確認する   | tarball をインストールし、config・provider・register の一連の操作を確認済 |
 
-## 6. 判断が要る点
+## 6. 判断結果
 
-- `init` を新設するか、`config init` を拡張するか。後者は「設定ファイル生成」という現在の
-  責務を超える。
-- README をどこまで詳しくするか。詳細はガイドへ委ね、README は導線に徹する案がある。
-- 英語 README の要否。npm の利用者層を考えると検討に値する。
+- `config init` は設定ファイル生成に限定したまま、provider 設定の配置を兄弟コマンドの
+  `config scaffold` にした。初期設定として発見でき、`init` の責務も広げないためである。
+- README は npm 導入から最初の register 項目生成までに絞り、provider の詳細設定は exec 設定
+  ガイドへ委ねた。
+- npm で表示するトップレベル README は現在の日本語 README を更新した。英語版の新設は、英語
+  ドキュメント全体が未整備であり本項目の完了条件外であるため対象に含めなかった。
 
 ## 7. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- provider の agent・settings 設定を配置する推奨入口として
+  `specdojo config scaffold --provider <name>` を追加した。コピー処理を共通化し、従来の
+  `specdojo exec scaffold --provider <name>` は同じ処理を呼ぶ互換入口として維持した。
+- `config init` は `.specdojo/` が存在しない空のリポジトリでも設定ファイルを作成できるようにし、
+  `prj-0001` の register 単体構成を既定値にした。実行後は設定確認、任意の provider 設定、登録簿
+  作成の順に次のコマンドを表示する。
+- README に `npm install specdojo` から `npx specdojo register add` / `register build` までの手順と、
+  agent を使わない最小構成、既存コマンドの互換性を記載した。Quick Start ガイド、exec 設定ガイド、
+  CLI コマンドリファレンスも新しい入口へ揃えた。
+- npm 利用環境で CLI の起動に必要な `fast-glob` が開発依存にのみ置かれていたため、runtime
+  dependencies へ移した。
+- `npm pack` した tarball を空の Git リポジトリへインストールし、README に記載した
+  `config init`、`config scaffold --provider codex`、`register scaffold`、`register add`、
+  `register build` が成功することを確認した。残課題はない。
 
 ## 8. 関連ドキュメント
 
