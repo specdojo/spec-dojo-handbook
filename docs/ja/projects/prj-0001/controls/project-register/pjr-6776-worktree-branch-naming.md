@@ -83,38 +83,73 @@ docs/revise-contents-guilde
 
 **補完とフィルタが効く**。多くの git UI がスラッシュを階層として表示する。
 
-## 4. 判断が要る点
+## 4. 決定事項
 
-Claude Code の `--worktree` は接頭辞を強制する。`worktree/claude-work` にできない可能性が高い。
+### 4.1. 命名は `worktree/` とする
 
-| 案                                    | 内容                            |
-| ------------------------------------- | ------------------------------- |
-| Claude も `git worktree add` へ揃える | `--worktree` を使わず自前で作る |
-| Claude だけ例外とする                 | `worktree-claude-work` のまま   |
+スラッシュ区切りの名前空間を採る。`exec/` と揃い、`git branch --list "worktree/*"` で一括列挙
+できる。
 
-前者を推すが、`--worktree` が持つ機能（自動 cd など）を失う可能性があり実機での検証が要る。
+### 4.2. Claude Code も `git worktree add` で作る
+
+`--worktree` は使わない。ブランチ名を指定する手段がなく、接頭辞 `worktree-` の付与を回避
+できない。
+
+```text
+-w, --worktree [name]   Create a new git worktree for this session (optionally specify a name)
+```
+
+他の agent と同じ形へ揃える。`-C` 相当のオプションはないが、`cd` で代替できる。
+
+```sh
+git worktree add ../worktrees/claude-work 2>/dev/null
+cd ../worktrees/claude-work && claude --agent specdojo-orchestrator --model sonnet
+```
+
+配置も統一される。現在 claude だけ `.claude/worktrees/claude-work` にあり、他は
+`../worktrees/` 配下にある。
+
+### 4.3. `--tmux` は使わない
+
+`--tmux` は `--worktree` を前提とするため、あわせて使えなくなる。
+
+```text
+--tmux   Create a tmux session for the worktree (requires --worktree).
+         Uses iTerm2 native panes when available; use --tmux=classic for traditional tmux.
+```
+
+worktree ごとに tmux セッションを自動作成する機能だが、自動化しているのは実質 1 行である。
+
+```sh
+tmux new-session -A -s claude-work -c ../worktrees/claude-work
+```
+
+iTerm2 のネイティブペインは devcontainer 内では利用できず、`--tmux=classic` の経路になる。
+必要になれば script 側で `tmux new-session` を明示できる。命名の統一を優先する。
 
 ## 5. 完了条件
 
-- エージェント作業用 worktree のブランチ命名規則が決まっている。
-- 既存のブランチが規則に従っている。`worktree-codex-work` と script の不整合が解消している。
-- `package.json` の script が規則に沿って worktree を作る。script の指定と実際のブランチ名が
-  一致する。
-- Claude Code の `--worktree` の扱いが決まっている。規則から外れる場合はその理由が記録されて
-  いる。
-- 命名規則が規範文書に記述されている。
+- エージェント作業用の worktree ブランチが `worktree/<name>` の形になっている。
+- `worktree-codex-work` と script の不整合が解消している。
+- `package.json` の script が `git worktree add` で worktree を作り、指定と実際のブランチ名が
+  一致する。Claude Code の `--worktree` を使わない。
+- 5 つの worktree の配置が `../worktrees/<name>` へ揃っている。`.claude/worktrees/` を使わない。
+- `git branch --list "worktree/*"` で作業用ブランチを一括列挙できる。
+- 命名規則と `--worktree` を使わない理由が規範文書に記述されている。
 - `tools/worktree/sync.sh` が改名後も動作する。
+- 改名の前に各 worktree の未コミット変更と独自コミットを確認し、失われるものがないことを
+  確かめている。
 
 ## 6. 作業内容
 
-| No  | 作業                                     | メモ                      |
-| --- | ---------------------------------------- | ------------------------- |
-| 1   | 命名規則を決める                         | `worktree/` を推す        |
-| 2   | Claude Code の `--worktree` の挙動を検証 | 接頭辞を回避できるか      |
-| 3   | 既存ブランチを改名する                   | worktree の付け替えを伴う |
-| 4   | `package.json` の script を揃える        |                           |
-| 5   | 規範文書へ命名規則を記述する             |                           |
-| 6   | `sync.sh` の動作を確認する               |                           |
+| No  | 作業                                             | メモ                        |
+| --- | ------------------------------------------------ | --------------------------- |
+| 1   | 各 worktree の未コミット変更と独自コミットを確認 | 改名前の安全確認            |
+| 2   | 既存ブランチを `worktree/<name>` へ改名          | worktree の付け替えを伴う   |
+| 3   | claude の worktree を `../worktrees/` へ移す     | `.claude/worktrees/` から   |
+| 4   | `package.json` の script を揃える                | `--worktree` を使わない形へ |
+| 5   | 規範文書へ命名規則と判断理由を記述する           |                             |
+| 6   | `sync.sh` の動作を確認する                       |                             |
 
 ## 7. 対応結果
 
