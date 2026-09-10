@@ -893,6 +893,51 @@ function renderGroupedTables(groups: ViewGroup[], chapter: number, heading: Tabl
     .join("\n\n");
 }
 
+// ビューの行順に使う起票時刻を解決する。`registered` は移行前の項目で `_TODO_` になるため、
+// 追記型イベントの `add` の `ts` で補う。表示 ID はランダムな 4 文字で、ID 順には時系列の意味が
+// ないため、並びの根拠は時刻に置く。
+function resolveRegisteredOrder(
+  item: PjrDisplayItem,
+  paths: RegisterPaths,
+  cache: Map<string, string>,
+): string {
+  const cached = cache.get(item.id);
+  if (cached !== undefined) return cached;
+
+  let value = "";
+  if (item.registered && item.registered !== "_TODO_" && item.registered !== "-") {
+    value = item.registered;
+  } else {
+    const eventPath = registerEventFilePath(paths.projectRegisterPath, item.id);
+    if (existsSync(eventPath)) {
+      const events = readRegisterEventsFromContent(readFileSync(eventPath, "utf8"), eventPath);
+      const added = events.find((event) => event.action === "add");
+      if (added?.ts) value = added.ts;
+    }
+  }
+  cache.set(item.id, value);
+  return value;
+}
+
+// 新しい起票を先頭へ置く。時刻が並ぶ場合と時刻を解決できない場合は ID で安定させる。
+// 時刻を解決できない項目は末尾へ送り、解決できた項目の並びを乱さない。
+export function sortByRegisteredDesc(
+  items: PjrDisplayItem[],
+  paths: RegisterPaths,
+): PjrDisplayItem[] {
+  const cache = new Map<string, string>();
+  return [...items].sort((a, b) => {
+    const left = resolveRegisteredOrder(a, paths, cache);
+    const right = resolveRegisteredOrder(b, paths, cache);
+    if (left !== right) {
+      if (!left) return 1;
+      if (!right) return -1;
+      return left < right ? 1 : -1;
+    }
+    return compareRegisterItemIds(a.id, b.id);
+  });
+}
+
 function groupByOwner(items: PjrDisplayItem[]): ViewGroup[] {
   const grouped = new Map<string, PjrDisplayItem[]>();
   for (const item of items) {
@@ -992,6 +1037,9 @@ export function generateDerivedViewFiles(paths: RegisterPaths, scope: BuildScope
   const controlsViews: ViewFile[] = [];
 
   if (scope === "register" || scope === "all") {
+    // 本体（pjr-index）は ID で引く用途があるため ID 昇順を保つ。軸別ビューは状況の把握が目的で、
+    // 新しい起票を先頭へ置く。
+    const viewItems = sortByRegisteredDesc(regItems, paths);
     registerViews.push(
       {
         path: join(paths.generatedPath, "pjr-index.md"),
@@ -999,15 +1047,15 @@ export function generateDerivedViewFiles(paths: RegisterPaths, scope: BuildScope
       },
       {
         path: join(paths.generatedPath, "pjr-views-by-status.md"),
-        content: generateViewsByStatusFile(regItems, paths.projectId, heading),
+        content: generateViewsByStatusFile(viewItems, paths.projectId, heading),
       },
       {
         path: join(paths.generatedPath, "pjr-views-by-priority.md"),
-        content: generateViewsByPriorityFile(regItems, paths.projectId, heading),
+        content: generateViewsByPriorityFile(viewItems, paths.projectId, heading),
       },
       {
         path: join(paths.generatedPath, "pjr-views-by-owner.md"),
-        content: generateViewsByOwnerFile(regItems, paths.projectId, heading),
+        content: generateViewsByOwnerFile(viewItems, paths.projectId, heading),
       },
     );
   }
