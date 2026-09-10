@@ -4,11 +4,56 @@
 
 // grade が Markdown 本文へ付与する finding は評価対象への注釈であり、テンプレートから
 // 生成する成果物の一部ではない。生成処理で共通利用できるよう、平坦化と同じ境界で除去する。
-const FINDING_COMMENT_RE =
-  /^[ \t]*<!--[ \t]*specdojo:finding(?:[ \t]+[^\r\n]*?)?[ \t]*-->[ \t]*(?:\r?\n|$)/gm;
+const FINDING_COMMENT_LINE_RE =
+  /^[ \t]*<!--[ \t]*specdojo:finding(?:[ \t]+[^\r\n]*?)?[ \t]*-->[ \t]*$/;
+
+function lineBody(line: string): string {
+  return line.replace(/\r\n$|[\r\n]$/, "");
+}
+
+function isBlankLine(line: string): boolean {
+  return /^[ \t]*$/.test(lineBody(line));
+}
 
 export function stripSpecdojoFindingComments(raw: string): string {
-  return raw.replace(FINDING_COMMENT_RE, "");
+  if (!raw.includes("specdojo:finding")) return raw;
+
+  const lines = raw.match(/[^\r\n]*(?:\r\n|\r|\n|$)/g) ?? [];
+  if (lines.at(-1) === "") lines.pop();
+
+  const output: string[] = [];
+  for (let index = 0; index < lines.length; ) {
+    const line = lines[index];
+    if (!isBlankLine(line) && !FINDING_COMMENT_LINE_RE.test(lineBody(line))) {
+      output.push(line);
+      index += 1;
+      continue;
+    }
+
+    const whitespaceBlock: string[] = [];
+    let hasFinding = false;
+    while (index < lines.length) {
+      const candidate = lines[index];
+      const finding = FINDING_COMMENT_LINE_RE.test(lineBody(candidate));
+      if (!isBlankLine(candidate) && !finding) break;
+      whitespaceBlock.push(candidate);
+      hasFinding ||= finding;
+      index += 1;
+    }
+
+    if (!hasFinding) {
+      output.push(...whitespaceBlock);
+      continue;
+    }
+
+    // finding の前後にあった空行は、コメント除去後には同じ空白ブロックになる。
+    // そのブロックだけを1空行へ畳み、finding と無関係な空白は変更しない。
+    const blankLine = whitespaceBlock.find(isBlankLine);
+    // 文末では、呼び出し側が保持する最終改行だけで十分。空行まで残すと MD012 になる。
+    if (blankLine !== undefined && index < lines.length) output.push(blankLine);
+  }
+
+  return output.join("");
 }
 
 // テンプレートの `frontmatter_template` を出力 Frontmatter として展開し、テンプレート
