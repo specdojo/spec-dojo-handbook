@@ -45,3 +45,16 @@
       from: open
       to: in-progress
   previous_event_id: reg_c25d2bccfe694b209d00620a267f78f8
+- v: 1
+  id: reg_8f3956c8969b44588de69ec6e3058678
+  ts: "2026-09-10T03:57:05Z"
+  action: review
+  actor: codex-expert-executor
+  from_status: in-progress
+  to_status: review
+  reason: ready for review
+  changes:
+    - field: status
+      from: in-progress
+      to: review
+  previous_event_id: reg_6019fc4ccae84d89a6b37004d1024d02
