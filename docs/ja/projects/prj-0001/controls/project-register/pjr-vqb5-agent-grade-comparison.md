@@ -258,6 +258,84 @@ qwen と gemma は指摘の重複が少ない。qwen は Frontmatter の矛盾�
 
 したがって1段目には厳格な agent を置くことが望ましい。`codex-expert-executor` は major を 8 件出しており、`qwen-expert-executor` の 5 件より厳格である。ただし解消されない指摘が世代を越えて蓄積し続ける可能性があり、その扱いは PJR-X40M の論点として残っている。
 
+### 1.1. 定期実行で観測した事象（2026-09-10）
+
+routine による無人実行（16:00 JST）で、3 段目の codex が忠実性検証に拒否された。1 件である。
+
+```text
+$analysis.documents[0]: missing agent viewpoint: vp-arc-conciseness
+$analysis.documents[0]: missing agent viewpoint: vp-arc-single-responsibility
+$analysis.documents[0]: missing agent viewpoint: vp-qe-verifiability
+$analysis.documents[0]: missing agent viewpoint: vp-qe-omissions-consistency
+$analysis.documents[0]: missing agent viewpoint: vp-qe-kata-conformance
+$analysis.documents[0]: missing agent viewpoint: vp-ux-readability
+$analysis.documents[0]: missing agent viewpoint: vp-ux-language-consistency
+```
+
+#### 1.1.1. 出力が思考の途中で打ち切られている
+
+rate limit ではない。出力は生成されているが 11 行で終わっている。
+
+| 文書                             | 出力行数 | 結果          |
+| -------------------------------- | -------: | ------------- |
+| `pjr-views-by-priority-template` |   **11** | failed        |
+| `pjr-views-by-status-template`   |       44 | needs-work 86 |
+| `pm-decision-log-template`       |       43 | needs-work 79 |
+
+1 観点目から思考の断片が判定文へ混入している。
+
+```text
+[VIEWPOINT vp-arc-cross-document-consistency]
+LEVEL: 2
+生成処理、`pjr-rulebook`、`pjr-index-template` は `pjr-gant...` no. Need exact. Let's craft.
+FINDING major line=1: ...
+[END VIEWPOINT]
+```
+
+`no. Need exact. Let's craft.` が判定文へ入り、`FINDING` の内容が `...` のままである。末尾も
+推敲の途中で終わる。
+
+```text
+Need no typo. Let's write. Ensure message single physical line.
+Japanese natural. `pjr-viewsilho` etc.
+Let's produce.
+```
+
+#### 1.1.2. 評価
+
+忠実性検証は正しく働いた。このまま通せば、中身のない finding と 7 観点が欠けた grade が記録
+されていた。破損データの混入を防げている。
+
+この型の失敗は 3 段目で初めて観測した。1 段目の gemma では同じ実行で 5 件中 2 件が失敗しており、
+発生率は 40% で前回と同じである。
+
+| 段  | agent | 観測された失敗                       |
+| --- | ----- | ------------------------------------ |
+| 1   | gemma | severity の範囲逸脱、観点欠落（40%） |
+| 3   | codex | 観点欠落（本件）                     |
+
+ローカルモデル固有の問題ではなく、LLM 出力一般の揺れと捉えるべきである。
+
+#### 1.1.3. 自動的に回復する
+
+失敗した文書は `content_hash` が更新されないため、次回の `--changed-only` で再び選択される。
+放置しても再試行される設計である。
+
+ただし同じ文書で繰り返し失敗する場合は、その文書固有の要因（長さ、複雑さ）を疑う必要がある。
+1 件では傾向を判断できないため、再発の有無を観測する。
+
+#### 1.1.4. 判定の乖離が再現した
+
+同じ実行で、gemma が 100 とした文書を codex が 86 と 79 に判定した。
+
+| 文書                           | 1 段（gemma） | 2 段（gemma） | 3 段（codex） |
+| ------------------------------ | ------------- | ------------- | ------------- |
+| `pjr-views-by-status-template` | pass 100      | pass 100      | needs-work 86 |
+| `pm-decision-log-template`     | pass 100      | pass 100      | needs-work 79 |
+
+`br-rulebook`（98 → 79）でも観測しており、ローカルモデルが甘く判定する傾向が再現している。
+3 段構成の意図どおり、codex が最終的な厳格さを担保している。
+
 ## 2. 背景・文脈
 
 kata 285 件を定期評価するにあたり、ローカルモデルで運用できれば API コストなしで全件を回せる。その可否と、どの agent をどの用途に使うかを判断するために比較した。

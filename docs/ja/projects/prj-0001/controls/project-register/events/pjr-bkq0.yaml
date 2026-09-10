@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_ab91dfa8f28c41cc9039a8deed2854b8
+  ts: "2026-09-10T12:50:48Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: finding 除去後の空行が畳まれず生成物が lint に失敗する
+    - field: description
+      from: ""
+      to: PJR-SAY1 で生成時に specdojo:finding コメントを除去したが、除去後の空行が畳まれないため生成物に連続空行が残り lint:md が MD012 で失敗する。pm-decision-log.md、pm-change-request-log.md、pjr-views-by-status.md の3件で発生している。いずれも gitignore 対象のため commit は妨げないが、lint:md を通らない状態が常態化する。除去と同時に空行を正規化する。PJR-20DV で stableContentHash へ導入した正規化と同じ処理が使える。
+    - field: type
+      from: ""
+      to: issue
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-10"
+    - field: due
+      from: ""
+      to: "2026-09-30"
