@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-bkq0-generated-blank-after-finding-removal
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: issue
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-10T12:50:48Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-10T13:18:34Z"
 ---
 
 # PJR-BKQ0 finding 除去後の空行が畳まれず生成物が lint に失敗する

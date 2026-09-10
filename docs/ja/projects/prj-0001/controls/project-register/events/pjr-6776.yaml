@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_c6dc674a05644c57b73807053856f8b0
+  ts: "2026-09-10T13:16:41Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: エージェント作業用 worktree のブランチ命名を統一する
+    - field: description
+      from: ""
+      to: エージェント作業用 worktree のブランチ名が揺れている。worktree-claude-work と worktree-codex-work は接頭辞付き、copilot-work と qwen-work は接頭辞なしである。原因は作成方法が2系統あることで、Claude Code の --worktree は worktree- を自動で付けるが、他は git worktree add でディレクトリ名がそのままブランチ名になる。codex-work は package.json の script が codex-work を指定しているのに実在するブランチが worktree-codex-work で不整合である。リポジトリは exec/ や feature/ や project/ のようにスラッシュ区切りの名前空間を既に使っており、worktree/ へ揃えるのが一貫する。Claude Code の --worktree は接頭辞を強制するため扱いの決定が要る。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: low
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-10"
+    - field: due
+      from: ""
+      to: "2026-09-30"

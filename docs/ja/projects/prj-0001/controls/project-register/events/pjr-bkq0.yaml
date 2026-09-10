@@ -58,3 +58,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_77fe085c8a4f477d95956c8d03160f3c
+- v: 1
+  id: reg_6ee19c32d63f498a9ae91b16485cab59
+  ts: "2026-09-10T13:18:34Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: finding コメントの除去と同時に空行を正規化した。生成をやり直して MD012 が 3 件から 0 件になることを確認し、lint:md 全体も通過する。単体テスト 1429 件が成功する。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-10"
+  previous_event_id: reg_e2d514b841504b938ed54955be356e3d
