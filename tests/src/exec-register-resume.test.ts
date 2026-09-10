@@ -215,6 +215,22 @@ describe("selectResumableRegisterRun", () => {
     expect(actual.target.runId).toBe("run-rate-limited");
   });
 
+  it("保護機構で blocked になった run は evidence があっても executor 再開対象にする", () => {
+    const candidate = makeCandidate({
+      state: makeState({
+        runId: "run-protection-blocked",
+        executorStatus: "blocked",
+      }),
+    });
+
+    const actual = selectResumableRegisterRun([candidate]);
+
+    expect(actual.kind).toBe("resumable");
+    if (actual.kind !== "resumable") return;
+    expect(actual.target.stage).toBe("executor");
+    expect(actual.target.runId).toBe("run-protection-blocked");
+  });
+
   it("最新 run の executor が未完了なら、古い再開可能な run へ遡らない", () => {
     const resumable = makeCandidate({
       state: makeState({ runId: "run-old", updatedAt: "2026-08-20T00:00:00Z" }),
