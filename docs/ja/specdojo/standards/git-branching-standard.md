@@ -21,7 +21,7 @@ SpecDojo Unit を管理するリポジトリで、プロジェクト単位の変
 
 - `main` はリポジトリ全体で共有する安定した統合点とし、プロジェクト進行中の未統合変更を直接蓄積しません。
 - 各プロジェクトは `project/<project-id>/develop` を中核の統合ブランチとし、そのプロジェクトの feature と exec の分岐元・統合先を一つにします。
-- 人が管理する feature と SpecDojo が管理する exec を名前空間とライフサイクルで分離します。
+- 人が管理する feature、SpecDojo が管理する exec、対話型 agent の常設 worktree を名前空間とライフサイクルで分離します。
 - 統合方向を固定し、task ブランチから `main` へ直接変更が流入する経路を作りません。
 
 ## 3. ブランチの種類と命名
@@ -37,6 +37,14 @@ SpecDojo Unit を管理するリポジトリで、プロジェクト単位の変
 - `<topic>` は英小文字、数字、ハイフンを使い、変更の目的を識別できる名前にします。
 - `<task-id>` は対象 schedule task の ID から機械的に導出します。
 - 既存の `feature/<topic>` は進行中の作業が完了するまで使用できます。新規作成する feature には project ID を含めます。
+
+### 3.1. 対話型 agent の常設 worktree
+
+対話型オーケストレーターを隔離して起動する常設 worktree は、ブランチを `worktree/<name>`、配置を `../worktrees/<name>` とします。`<name>` は `claude-work`、`codex-work`、`copilot-work`、`qwen-work`、`gemma-work` のいずれかです。
+
+- `worktree/` は常設の agent 作業ブランチを表す名前空間です。task ごとに作成・削除する `exec/` と区別し、`git branch --list "worktree/*"` で一括列挙できるようにします。
+- 起動スクリプトは、既存 worktree の実際のブランチが `worktree/<name>` と一致することを確認します。不一致の場合は agent を起動せず、先に未コミット変更と独自 commit を確認して移行します。
+- Claude Code の `--worktree` は、ブランチを `worktree-<name>`、配置を `.claude/worktrees/<name>` に固定して他の agent と揃えられないため使用しません。全 agent で `git worktree add` を使用します。
 
 ## 4. 分岐・統合の規範
 

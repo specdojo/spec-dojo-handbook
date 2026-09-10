@@ -154,7 +154,23 @@ iTerm2 のネイティブペインは devcontainer 内では利用できず、`-
 
 ## 7. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- 既存の Claude Code、Codex、GitHub Copilot、OpenCode / Qwen の4 worktree は、未コミット変更と `project/prj-0001/develop` に含まれない独自 commit がいずれもないことを確認した。4ブランチは同ブランチより遅れているだけで、Gemma 用 worktree は未作成だった。
+- `tools/worktree/open-agent-worktree.sh` を追加し、`worktree/<name>` と `../worktrees/<name>` の対応を作成・検証してから agent を起動する形へ統一した。不一致時は agent を起動せずエラーにするため、script の指定と実際のブランチが食い違ったまま作業を続けない。
+- `package.json` の7つの `orch:*:work` は共通スクリプトを呼び出す提案差分へ更新した。このファイルは agent の固定保護対象であるため、親 runner の `agent-config-write` による block 後、人または対話型 orchestrator が agent 実行外で差分を適用する必要がある。
+- [[specdojo:git-branching-standard|Git ブランチ運用標準]]、[[sysd-orchestrator-agent-settings|SpecDojo オーケストレーターエージェント設定]]、[[specdojo:orchestrator-operation-guide|オーケストレーター運用ガイド]]へ命名・配置・Claude Code の `--worktree` を使わない理由を反映した。
+- branch/worktree の改名と Claude Code worktree の移動は Git 状態および作業ディレクトリ外を変更するため、この executor では実行していない。保護対象差分の適用時に、安全確認済みの4 worktree を移行する必要がある。
+
+移行は primary worktree で次の順に行う。再実行時にも各 worktree の未コミット変更と独自 commit を確認してから実行する。
+
+```sh
+git -C .claude/worktrees/claude-work branch -m worktree/claude-work
+git worktree move .claude/worktrees/claude-work ../worktrees/claude-work
+git -C ../worktrees/codex-work branch -m worktree/codex-work
+git -C ../worktrees/copilot-work branch -m worktree/copilot-work
+git -C ../worktrees/qwen-work branch -m worktree/qwen-work
+```
+
+Gemma 用は未作成のため、設定適用後の初回 `npm run orch:gemma:work` で `worktree/gemma-work` として作成される。
 
 ## 8. 関連ドキュメント
 
