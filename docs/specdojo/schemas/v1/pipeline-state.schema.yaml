@@ -40,7 +40,7 @@ $defs:
     properties:
       status:
         type: string
-        enum: [pending, running, succeeded, failed, rate_limited]
+        enum: [pending, running, succeeded, failed, rate_limited, blocked]
       actor:
         type: [string, "null"]
       attempts:

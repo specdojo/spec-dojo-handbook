@@ -204,6 +204,37 @@ describe("pipeline state", () => {
     expect(validate(failed), JSON.stringify(validate.errors)).toBe(true);
   });
 
+  it("persists a schema-valid protection block separately from a process failure", () => {
+    const { root, executionPath } = setup();
+    const location = pipelineStateLocation({
+      repoRoot: root,
+      worktreePath: root,
+      executionPath,
+      taskId: "PJR-AB12",
+      runId: "run-blocked",
+    });
+    const created = createPipelineState({
+      taskId: "PJR-AB12",
+      runId: "run-blocked",
+      updatedAt: "2026-08-10T07:00:00Z",
+    });
+    const blocked = updatePipelineStage(
+      created,
+      "executor",
+      { status: "blocked", attempts: 1, completed_at: "2026-08-10T07:01:00Z" },
+      "2026-08-10T07:01:00Z",
+    );
+    writePipelineState(location.path, blocked);
+
+    expect(readPipelineState(location.path).stages.executor.status).toBe("blocked");
+
+    const schema = load(readFileSync(schemaPath(), "utf8")) as Record<string, unknown>;
+    const ajv = new Ajv2020({ allErrors: true, strict: false });
+    addFormats(ajv);
+    const validate = ajv.compile(schema);
+    expect(validate(blocked), JSON.stringify(validate.errors)).toBe(true);
+  });
+
   it("rejects state references outside the worktree", () => {
     const { root } = setup();
     expect(

@@ -363,13 +363,15 @@ specdojo exec run \
 
 再開する段は、対象 worktree に残っている最新 run の `pipeline-state.json` から自動的に決まります。指定するオプションはどの段でも同じです。
 
-| 再開段      | 対象の状態                                        | 実行する内容                                                        |
-| ----------- | ------------------------------------------------- | ------------------------------------------------------------------- |
-| `executor`  | executor が `running` のまま中断                  | 同じ plan/result と既存 worktree を使い、新しい checkpoint で再実行 |
-| `reporter`  | executor が `succeeded`、reporter が未完了        | reporter だけを起動し、成功後に統合まで進む                         |
-| `integrate` | executor と reporter が `succeeded`、統合が未完了 | agent を起動せず、commit → merge → worktree 撤去だけ行う            |
+| 再開段      | 対象の状態                                         | 実行する内容                                                        |
+| ----------- | -------------------------------------------------- | ------------------------------------------------------------------- |
+| `executor`  | executor が `running` / `rate_limited` / `blocked` | 同じ plan/result と既存 worktree を使い、新しい checkpoint で再実行 |
+| `reporter`  | executor が `succeeded`、reporter が未完了         | reporter だけを起動し、成功後に統合まで進む                         |
+| `integrate` | executor と reporter が `succeeded`、統合が未完了  | agent を起動せず、commit → merge → worktree 撤去だけ行う            |
 
 executor のプロセス結果は、親 runner 検証を始める前に `executor.log` と `evidence.json` へ保存し、`pipeline-state.json` の executor を `succeeded` へ更新します。親検証中にプロセスが中断した場合、`--resume` は保存済みの executor evidence を再利用し、不足している親検証を実行してから reporter へ進みます。agent 実行中の中断で executor が `running` のまま残った場合は、未コミット成果を含む既存 worktree を破棄せず、同じ plan/result を入力に executor から再実行します。`--executor-by` / `--reporter-by` を省略した場合は state に記録された各 agent を引き継ぎます。
+
+`agent-config-write` または `agent-git-state-write` が executor を止めた場合は、通常の実装失敗を示す `failed` と区別して executor を `blocked` と記録します。申し送りを人または orchestrator が適用し、agent 由来の保護対象差分や Git 状態変更を worktree から解消した後、`--resume` は既存成果を保持したまま executor から再開します。申し送りを適用せず保護対象差分を残したまま再開した場合、executor が完了しても統合前の保護検査で再び block し、worktree を保持します。
 
 reporter 段の再開の入力は、`pipeline-state.json`（stage 状態と plan / result の参照）と `evidence.json`（executor の変更・検証結果・最終メッセージ）です。`--reporter-by` を省略した場合は、その run で使った reporter agent を state から引き継ぎます。保存済みの親 runner 検証が失敗しているか不足していれば、Schedule 実行と同様に再実行して evidence を更新します。再開が成功した後は通常実行と同じ経路で、result の記入と status 更新、成果物の commit、統合ブランチへの merge、`register review` までを行います。
 
@@ -377,14 +379,15 @@ reporter 段の再開の入力は、`pipeline-state.json`（stage 状態と plan
 
 再開できるかどうかは、対象 worktree の最新 run だけで判定します。次の場合は worktree・exec ブランチ・未コミットの成果を一切変更せず、理由を出力して終了コード 1 で終わります。
 
-| 状況                                                          | 扱い                                                         |
-| ------------------------------------------------------------- | ------------------------------------------------------------ |
-| 項目の exec worktree が無い                                   | 再開せず、通常の再実行を促す                                 |
-| 最新 run の executor が `pending` / `failed` / `rate_limited` | 再開せず、通常の再実行を促す（古い run へは遡らない）        |
-| succeeded executor の `evidence.json` が欠損・不整合          | executor の記録を再利用できないため拒否する                  |
-| 親検証の設定 ID が変更・欠損                                  | 現在の固定許可リストで親検証を再実行して evidence を更新する |
-| result を worktree から復元できない                           | 再開の入力が揃わないため拒否する                             |
-| 再開した段が再び失敗した                                      | worktree と成果を保持したまま `waiting` へ戻す               |
+| 状況                                                 | 扱い                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------ |
+| 項目の exec worktree が無い                          | 再開せず、通常の再実行を促す                                 |
+| 最新 run の executor が `pending` / `failed`         | 再開せず、通常の再実行を促す（古い run へは遡らない）        |
+| 最新 run の executor が `rate_limited` / `blocked`   | 既存 worktree の executor 段から再開する                     |
+| succeeded executor の `evidence.json` が欠損・不整合 | executor の記録を再利用できないため拒否する                  |
+| 親検証の設定 ID が変更・欠損                         | 現在の固定許可リストで親検証を再実行して evidence を更新する |
+| result を worktree から復元できない                  | 再開の入力が揃わないため拒否する                             |
+| 再開した段が再び失敗した                             | worktree と成果を保持したまま `waiting` へ戻す               |
 
 再開可能な run が残っている項目を `--resume` なしで再実行しようとした場合は、worktree を破棄する手前で中断します（未統合の成果を失わないための保護）。破棄したうえで最初からやり直す場合は `--force-restart` を明示します。
 

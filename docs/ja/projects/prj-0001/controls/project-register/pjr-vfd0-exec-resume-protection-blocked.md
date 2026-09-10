@@ -78,16 +78,23 @@ PJR-9M5N では orchestrator が reporter 相当の検証と統合を代行し�
 
 ## 6. 作業内容
 
-| No  | 作業                                   | メモ                          |
-| --- | -------------------------------------- | ----------------------------- |
-| 1   | ブロックを失敗と区別できる状態を設ける | pipeline-state の表現を決める |
-| 2   | 再開判定へブロック状態を追加する       | executor 段へ固定する         |
-| 3   | 申し送り未適用時の扱いを決める         |                               |
-| 4   | 回帰テストを追加する                   |                               |
+| No  | 作業                                   | メモ                                           |
+| --- | -------------------------------------- | ---------------------------------------------- |
+| 1   | ブロックを失敗と区別できる状態を設ける | `pipeline-state` に `blocked` を追加           |
+| 2   | 再開判定へブロック状態を追加する       | 既存 worktree の executor 段へ固定             |
+| 3   | 申し送り未適用時の扱いを決める         | 統合前の保護検査で再 block し、worktree を保持 |
+| 4   | 回帰テストを追加する                   | state/schema、再開判定、E2E を追加             |
 
 ## 7. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- `pipeline-state` の段状態へ `blocked` を追加し、`agent-config-write` / `agent-git-state-write` が
+  executor を止めた場合だけ記録するようにした。通常のプロセス失敗は `failed` のままである。
+- 最新 run の executor が `blocked` の場合、`--resume` で plan、result、既存 worktree を保持し、
+  executor 段から新しい checkpoint として再実行するようにした。
+- 申し送りを適用して保護対象差分を worktree から解消した後に再開・統合できることを E2E テストで
+  検証した。未適用の差分が残る場合は統合前の既存ガードで再び block し、worktree を保持する。
+- pipeline state の schema 検証、`blocked` の再開先、`failed` を再開不可のまま維持する回帰テストを
+  追加した。残課題はない。
 
 ## 8. 関連ドキュメント
 
@@ -95,3 +102,4 @@ _TODO_: 完了時に、実施内容・成果物・残課題を記載する。未
 - [[prj-0001:pjr-tx1g-exec-resume-rate-limited-executor]]: rate limit による中断からの再開。
 - [[prj-0001:pjr-9qz2-exec-stale-running-stage]]: 中断した executor の状態残留。
 - [[prj-0001:pjr-m35p-protection-false-positive-generated]]: 保護機構の誤検知。
+- [[specdojo:exec-operation-guide]]: register executor/reporter pipeline の再開手順。

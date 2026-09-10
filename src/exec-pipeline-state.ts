@@ -4,7 +4,13 @@ import type { ExecEvidence } from "./exec-evidence.js";
 import { ensureDir, safeSlug } from "./exec-shared.js";
 import type { AgentStageRole } from "./exec-types.js";
 
-export type PipelineStageStatus = "pending" | "running" | "succeeded" | "failed" | "rate_limited";
+export type PipelineStageStatus =
+  | "pending"
+  | "running"
+  | "succeeded"
+  | "failed"
+  | "rate_limited"
+  | "blocked";
 
 // 統合段（commit → merge → worktree 撤去）は agent ではなく runner が実行する段。executor /
 // reporter と同じ粒度で記録し、agent 段が成功したまま統合だけ失敗した run を特定できるようにする。
@@ -113,7 +119,8 @@ function isStageState(value: unknown): value is PipelineStageState {
       stage.status === "running" ||
       stage.status === "succeeded" ||
       stage.status === "failed" ||
-      stage.status === "rate_limited") &&
+      stage.status === "rate_limited" ||
+      stage.status === "blocked") &&
     (typeof stage.actor === "string" || stage.actor === null) &&
     Number.isSafeInteger(stage.attempts) &&
     (stage.attempts as number) >= 0 &&

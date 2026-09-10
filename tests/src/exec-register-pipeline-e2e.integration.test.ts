@@ -65,6 +65,11 @@ const PROJECT_BASE = "docs/ja/projects/test";
 const REGISTER_REL = `${PROJECT_BASE}/controls/project-register`;
 const SCHEDULE_REL = `${PROJECT_BASE}/schedule`;
 const EXECUTION_REL = `${PROJECT_BASE}/execution`;
+const ORIGINAL_PACKAGE = `${JSON.stringify(
+  { scripts: { "test:integration": 'node -e "process.exit(0)"' } },
+  null,
+  2,
+)}\n`;
 
 const CONFIG = {
   version: 1,
@@ -156,7 +161,7 @@ const role = nickname.startsWith("exec-") ? "executor" : "reporter";
 const prompt = readFileSync(0, "utf8");
 
 if (role === "executor") {
-  if (nickname.includes("protected-write")) {
+  if (nickname.includes("protected-write") && !existsSync("protection-applied")) {
     writeFileSync(
       "package.json",
       '{"scripts":{"test:integration":"echo ran > parent-validation-ran"}}\\n',
@@ -216,11 +221,7 @@ function withRepo(fn: (fixture: Fixture) => Promise<void> | void): Promise<void>
         `${JSON.stringify(CONFIG, null, 2)}\n`,
         "utf8",
       );
-      writeFileSync(
-        join(root, "package.json"),
-        `${JSON.stringify({ scripts: { "test:integration": 'node -e "process.exit(0)"' } }, null, 2)}\n`,
-        "utf8",
-      );
+      writeFileSync(join(root, "package.json"), ORIGINAL_PACKAGE, "utf8");
       mkdirSync(join(root, REGISTER_REL, "generated"), { recursive: true });
       mkdirSync(join(root, `${PROJECT_BASE}/controls/generated`), { recursive: true });
       mkdirSync(join(root, SCHEDULE_REL), { recursive: true });
@@ -347,6 +348,16 @@ function withRepo(fn: (fixture: Fixture) => Promise<void> | void): Promise<void>
       }
     }
   })();
+}
+
+function execWorktreePath(root: string): string | null {
+  return (
+    git(root, "worktree", "list", "--porcelain")
+      .split("\n")
+      .filter((line) => line.startsWith("worktree "))
+      .map((line) => line.slice("worktree ".length))
+      .find((path) => path !== root) ?? null
+  );
 }
 
 afterEach(() => {
@@ -489,7 +500,7 @@ describe("exec run --register executor/reporter pipeline (E2E)", () => {
   );
 
   it.each(["exec-codex-protected-write", "exec-claude-protected-write"])(
-    "blocks %s before commit and keeps the register item out of review",
+    "blocks %s distinctly and resumes the executor after the handoff is applied",
     async (executor) => {
       await withRepo(async ({ root, worktreeBase }) => {
         vi.spyOn(process.stdout, "write").mockImplementation(() => true);
@@ -526,9 +537,43 @@ describe("exec run --register executor/reporter pipeline (E2E)", () => {
           "blocked: agent-config-write: protected configuration changes detected; paths=package.json",
         );
         expect(process.exitCode).toBe(1);
+
+        const worktreePath = execWorktreePath(root);
+        expect(worktreePath).not.toBeNull();
+        const evidenceDir = join(worktreePath ?? "", EXECUTION_REL, "exec", "evidence", "PJR-AB12");
+        const blockedRunId = readdirSync(evidenceDir)[0];
+        const blockedState = JSON.parse(
+          readFileSync(join(evidenceDir, blockedRunId, "pipeline-state.json"), "utf8"),
+        ) as { stages: { executor: { status: string } } };
+        expect(blockedState.stages.executor.status).toBe("blocked");
+
+        // 人または orchestrator が申し送りを適用し、agent 由来の保護対象差分を worktree から
+        // 取り除いた状態を再現する。再開後の fake executor は marker を見て同じ変更を再提案しない。
+        writeFileSync(join(worktreePath ?? "", "package.json"), ORIGINAL_PACKAGE, "utf8");
+        writeFileSync(join(worktreePath ?? "", "protection-applied"), "applied\n", "utf8");
+
+        process.exitCode = undefined;
+        await runExec([
+          "run",
+          "--project",
+          "test",
+          "--register",
+          "PJR-AB12",
+          "--worktree",
+          "--worktree-base",
+          worktreeBase,
+          "--resume",
+        ]);
+
+        expect(process.exitCode ?? 0).toBe(0);
+        expect(
+          readFileSync(join(root, REGISTER_REL, "pjr-ab12-pipeline-test.md"), "utf8"),
+        ).toContain("item_status: review");
+        expect(existsSync(join(root, "protection-applied"))).toBe(true);
+        expect(execWorktreePath(root)).toBeNull();
       });
     },
-    60_000,
+    120_000,
   );
 });
 

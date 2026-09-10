@@ -1056,6 +1056,7 @@ async function runWithRetry(
   stderr: string;
   attempts: number;
   limit?: AgentLimitSignal;
+  protectionBlock?: true;
 }> {
   const policy = resolveRateLimitPolicy(execDefaults, candidates[0]?.provider);
   let attempts = 0;
@@ -1067,6 +1068,7 @@ async function runWithRetry(
     stdout: string;
     stderr: string;
     limit?: AgentLimitSignal;
+    protectionBlock?: true;
   }> => {
     let lastStderr = "";
     let lastStdout = "";
@@ -1109,6 +1111,7 @@ async function runWithRetry(
           exitCode: 1,
           stdout: attempt.stdout,
           stderr: `${attempt.stderr}${attempt.stderr.endsWith("\n") || !attempt.stderr ? "" : "\n"}${reason}\n`,
+          protectionBlock: true,
         };
       }
       const gitStateChanges = changedAgentGitStateFields(cwd, gitStateBefore);
@@ -1130,6 +1133,7 @@ async function runWithRetry(
           exitCode: 1,
           stdout: attempt.stdout,
           stderr: `${attempt.stderr}${attempt.stderr.endsWith("\n") || !attempt.stderr ? "" : "\n"}${reason}\n`,
+          protectionBlock: true,
         };
       }
       lastStderr = attempt.stderr;
@@ -1781,7 +1785,13 @@ async function runPreparedTask(
       "executor",
       {
         status:
-          result === "success" ? "succeeded" : result === "rate_limit" ? "rate_limited" : "failed",
+          result === "success"
+            ? "succeeded"
+            : executorOutcome.protectionBlock
+              ? "blocked"
+              : result === "rate_limit"
+                ? "rate_limited"
+                : "failed",
         attempts: pipelineState.stages.executor.attempts + attempts,
         completed_at: executorCompletedAt,
         artifact_ref: executorEvidenceRef,
@@ -2986,9 +2996,11 @@ async function runInPlaceMode(opts: RunOpts): Promise<void> {
         status:
           outcome.result === "success"
             ? "succeeded"
-            : outcome.result === "rate_limit"
-              ? "rate_limited"
-              : "failed",
+            : outcome.protectionBlock
+              ? "blocked"
+              : outcome.result === "rate_limit"
+                ? "rate_limited"
+                : "failed",
         attempts: outcome.attempts,
         completed_at: executorCompletedAt,
         artifact_ref: pipelineEvidenceRef,
@@ -3914,9 +3926,11 @@ async function runAgentPipeline(params: {
       status:
         outcome.result === "success"
           ? "succeeded"
-          : outcome.result === "rate_limit"
-            ? "rate_limited"
-            : "failed",
+          : outcome.protectionBlock
+            ? "blocked"
+            : outcome.result === "rate_limit"
+              ? "rate_limited"
+              : "failed",
       attempts: outcome.attempts,
       completed_at: executorCompletedAt,
       artifact_ref: evidenceRef,
