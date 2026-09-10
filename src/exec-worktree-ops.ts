@@ -21,6 +21,7 @@ import {
   generateWorktreeArtifacts,
   gitOutput,
   gitResult,
+  listRegisteredWorktrees,
   worktreeNameFromTaskId,
   type ExecWorktree,
 } from "./exec-worktree.js";
@@ -632,7 +633,96 @@ export function removeWorktree(params: {
     ...(forceGit ? ["--force"] : []),
     worktree.path,
   ]);
-  if (params.deleteBranch) gitOutput(context.repoRoot, ["branch", "-d", worktree.branch]);
+  if (params.deleteBranch) {
+    try {
+      gitOutput(context.repoRoot, ["branch", "-d", worktree.branch]);
+    } catch (error) {
+      // worktree removal and branch deletion cannot be atomic: Git refuses to delete a branch
+      // while it is checked out. Make the resulting state explicit so the caller does not report
+      // that the worktree was preserved and operators can recover it with `worktree prune`.
+      throw new WorktreeRemovedBranchDeletionError(worktree.branch, error);
+    }
+  }
+}
+
+export type OrphanedExecBranch = {
+  branch: string;
+  mergedIntoCurrent: boolean;
+};
+
+export class WorktreeRemovedBranchDeletionError extends Error {
+  readonly branch: string;
+
+  constructor(branch: string, cause: unknown) {
+    super(
+      `Worktree was removed, but exec branch deletion failed and the branch remains: ` +
+        `${branch}; cause=${cause instanceof Error ? cause.message : String(cause)}`,
+    );
+    this.name = "WorktreeRemovedBranchDeletionError";
+    this.branch = branch;
+  }
+}
+
+// List project-scoped exec branches that are no longer checked out by any registered worktree.
+// A failed/interrupted run intentionally keeps both its worktree and branch, so it is not an
+// orphan. The merged flag lets callers distinguish safely removable residue from unintegrated
+// work that must be preserved.
+export function listOrphanedExecBranches(params: {
+  repoRoot: string;
+  projectId: string;
+}): OrphanedExecBranch[] {
+  const { repoRoot, projectId } = params;
+  const projectPrefix = `exec/${worktreeNameFromTaskId(projectId)}-`;
+  const registeredBranches = new Set(
+    listRegisteredWorktrees(repoRoot)
+      .map((worktree) => worktree.branch)
+      .filter((branch): branch is string => !!branch),
+  );
+  const branches = gitOutput(repoRoot, [
+    "for-each-ref",
+    "--format=%(refname:short)",
+    "refs/heads/exec/",
+  ])
+    .split(/\r?\n/)
+    .map((branch) => branch.trim())
+    .filter((branch) => branch.startsWith(projectPrefix) && !registeredBranches.has(branch))
+    .sort();
+
+  return branches.map((branch) => ({
+    branch,
+    mergedIntoCurrent:
+      gitResult(repoRoot, ["merge-base", "--is-ancestor", branch, "HEAD"]).status === 0,
+  }));
+}
+
+// Delete only merged orphan branches with Git's safe `-d`. Unmerged branches are always retained,
+// even if the caller asks for a real prune. A deletion failure is not swallowed: gitOutput's
+// stderr-backed reason is propagated so the execution log records why residue remains.
+export function pruneOrphanedExecBranches(params: {
+  repoRoot: string;
+  projectId: string;
+  dryRun?: boolean;
+}): OrphanedExecBranch[] {
+  const current = currentBranch(params.repoRoot);
+  if (current.startsWith("exec/")) {
+    throw new Error("Run worktree prune from the merge-target worktree, not an exec branch.");
+  }
+
+  const orphaned = listOrphanedExecBranches(params);
+  for (const item of orphaned) {
+    if (!item.mergedIntoCurrent) continue;
+    if (!params.dryRun) {
+      try {
+        gitOutput(params.repoRoot, ["branch", "-d", item.branch]);
+      } catch (error) {
+        throw new Error(
+          `Failed to delete merged orphaned exec branch ${item.branch}; ` +
+            `cause=${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+  }
+  return orphaned;
 }
 
 // A fresh claim of a task that still owns an exec worktree/branch means a prior lifecycle

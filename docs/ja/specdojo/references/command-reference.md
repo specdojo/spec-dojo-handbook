@@ -532,14 +532,15 @@ tools/grade/run-per-document.sh --run-id 20260908-recheck --kind all \
 
 `exec worktree` は、claim 済みタスクを段階ごとに確認しながら隔離実行するための分割コマンドです。
 
-| サブコマンド | 用途                                                                        |
-| ------------ | --------------------------------------------------------------------------- |
-| `prepare`    | plan、result、claim event を checkpoint commit し、task worktree を作成する |
-| `status`     | task state、actor、worktree、差分、統合状態を表示する                       |
-| `agent`      | task worktree 内で agent command を1回実行する                              |
-| `commit`     | 対象 result と成果物変更を exec ブランチへ commit する                      |
-| `merge`      | exec ブランチを現在のブランチへ merge する                                  |
-| `remove`     | 統合済み task worktree を削除する                                           |
+| サブコマンド | 用途                                                                          |
+| ------------ | ----------------------------------------------------------------------------- |
+| `prepare`    | plan、result、claim event を checkpoint commit し、task worktree を作成する   |
+| `status`     | task state、actor、worktree、差分、統合状態を表示する                         |
+| `agent`      | task worktree 内で agent command を1回実行する                                |
+| `commit`     | 対象 result と成果物変更を exec ブランチへ commit する                        |
+| `merge`      | exec ブランチを現在のブランチへ merge する                                    |
+| `remove`     | 統合済み task worktree を削除する                                             |
+| `prune`      | worktree のない exec ブランチを監査し、現在の HEAD に統合済みのものだけを削除 |
 
 ```bash
 specdojo exec worktree prepare --project prj-0001 --task <task-id>
@@ -549,9 +550,15 @@ specdojo exec worktree commit --project prj-0001 --task <task-id>
 cd <merge-target-worktree>
 specdojo exec worktree merge --project prj-0001 --task <task-id>
 specdojo exec worktree remove --project prj-0001 --task <task-id> --delete-branch
+
+# 孤立ブランチを確認してから、安全に削除する
+specdojo exec worktree prune --project prj-0001 --dry-run
+specdojo exec worktree prune --project prj-0001
 ```
 
 `prepare` は root と tracked `package-lock.json` を持つ独立 package で `npm ci` を実行し、task worktree 内に書き込み可能な `node_modules` を準備します。過去の共有シンボリックリンクがある場合は、リンク先を変更せず実体ディレクトリへ置き換えます。install に失敗した場合、agent は起動されず task worktree が保持されます。
+
+`prune` は登録済み worktree が使うブランチを対象外にし、孤立していても未統合のブランチは `kept (not merged)` として保持します。削除には `git branch -d` 相当だけを使います。
 
 詳細な安全条件は [exec worktree運用ガイド](../guides/exec-worktree-guide.md) を参照します。
 

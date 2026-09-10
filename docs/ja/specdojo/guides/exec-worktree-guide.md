@@ -39,6 +39,7 @@ Exec Worktree Guide
 | `worktree commit`  | result と成果物変更を exec ブランチへ commit する                 | あり      | なし         |
 | `worktree merge`   | exec ブランチを現在のブランチへ merge する                        | あり      | なし         |
 | `worktree remove`  | 統合済み worktree を削除する                                      | あり      | なし         |
+| `worktree prune`   | worktree のない project 配下の exec ブランチを監査・整理する      | 条件付き  | なし         |
 
 分割コマンドは `claim`、`complete`、`block` を暗黙には実行しません。対象タスクは事前に `doing` である必要があります。
 
@@ -228,6 +229,32 @@ specdojo exec worktree remove \
 既定では exec branch を残します。`--delete-branch` を付けた場合だけ、merge 済み branch を `git branch -d` 相当で削除します。
 
 `--force` は `git worktree remove --force` 相当であり、未commit変更が失われる可能性があります。exec branch の削除には `-D` 相当の強制削除を使いません。
+
+worktree の削除とブランチの削除は Git 上で1つの原子的な操作にはできません。ブランチ削除に失敗した場合は、worktree が削除済みで exec ブランチだけが残ったことと Git の失敗理由をエラーへ出力します。自動実行では成果物の統合と task の完了を取り消さず、警告と後述の復旧コマンドを出力します。
+
+### 2.7. prune
+
+`prune` は、対象 project の exec ブランチのうち、どの登録済み worktree にも使われていないものを監査します。merge 先 worktree で実行してください。
+
+```bash
+# 削除せず、孤立したブランチと統合状態だけを確認する
+specdojo exec worktree prune --project <project-id> --dry-run
+
+# 現在の HEAD に統合済みの孤立ブランチだけを削除する
+specdojo exec worktree prune --project <project-id>
+```
+
+判定と削除の安全条件は次のとおりです。
+
+| 状態                                          | 処理                                        |
+| --------------------------------------------- | ------------------------------------------- |
+| worktree に checkout されている exec ブランチ | 孤立とみなさず、表示・削除の対象外          |
+| worktree がなく、現在の HEAD に統合済み       | `--dry-run` では表示のみ、通常実行では削除  |
+| worktree がなく、現在の HEAD に未統合         | `kept (not merged)` と表示し、常に保持      |
+| `git branch -d` が失敗                        | Git の理由を出力し、終了コード1で停止       |
+| exec ブランチ上から実行                       | merge 先を誤認しないよう、終了コード1で拒否 |
+
+削除には常に `git branch -d` 相当を使い、`-D` 相当の強制削除は行いません。失敗・中断直後の実行は、未統合成果の調査と再開に必要なため worktree とブランチを対で保持します。人が worktree だけを撤去した場合や、撤去とブランチ削除の間でプロセスが中断した場合は `prune --dry-run` で孤立を確認し、統合済みのものだけを整理します。
 
 ## 3. complete / blockの記録
 
