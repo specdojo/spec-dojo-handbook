@@ -61,3 +61,19 @@
       from: "-"
       to: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=package.json; agent must record the required change in the result …"
   previous_event_id: reg_3190d9a13fb84ed68f62e2dcd48fcc39
+- v: 1
+  id: reg_d62dc4e253de4979985ecc53d0c33cfa
+  ts: "2026-09-10T15:15:32Z"
+  action: close
+  actor: orchestrator
+  from_status: waiting
+  to_status: done
+  reason: tools/worktree/open-agent-worktree.sh へ集約し、4 つの worktree を worktree/<name> へ改名した。配置も ../worktrees/ へ統一し .claude/worktrees を廃した。git branch --list "worktree/*" で一括列挙でき、sync.sh も動作する。改名前に全 worktree が clean で独自コミットを持たないことを確認した。
+  changes:
+    - field: status
+      from: waiting
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-11"
+  previous_event_id: reg_c5c46296e044468897712d477672baf5

@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-6776-worktree-branch-naming
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: waiting
+  item_status: done
   priority: low
   owner: ARC
   registered_at: "2026-09-10T13:16:40Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-10T15:15:32Z"
   block_reason: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=package.json; agent must record the required change in the result …"
 ---
 
