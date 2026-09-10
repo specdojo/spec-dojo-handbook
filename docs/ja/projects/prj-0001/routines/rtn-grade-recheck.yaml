@@ -13,7 +13,7 @@ action:
     # period は対象期間の表示用であり、Job Run や script の再開キーには使わない。
     period: "{{scheduled_at | iso_week}}"
     kind: all
-    limit: "5"
+    limit: "10"
     changed_only: "true"
     ungraded: "true"
 policy:

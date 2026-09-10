@@ -56,8 +56,6 @@
     "vscode:package": "npm --prefix packages/vscode-specdojo run package",
     "exec:watch-claude-log": "tools/exec/watch-claude-log.sh",
     "worktree:sync": "tools/worktree/sync.sh",
-    "claude:work": "claude --worktree claude-work --permission-mode acceptEdits",
-    "claude": "claude --permission-mode acceptEdits",
     "orch:sonnet": "claude --agent specdojo-orchestrator --model sonnet",
     "orch:sonnet:work": "claude --agent specdojo-orchestrator --model sonnet --worktree claude-work",
     "orch:opus": "claude --agent specdojo-orchestrator --model opus",
