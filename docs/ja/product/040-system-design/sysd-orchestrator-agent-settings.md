@@ -102,9 +102,9 @@ specdojo サブコマンドと引数へマッピング（必要なら --help で
 | スクリプト          | CLI・モデル             | worktree                                        |
 | ------------------- | ----------------------- | ----------------------------------------------- |
 | `orch:sonnet`       | Claude Code / `sonnet`  | なし                                            |
-| `orch:sonnet:work`  | Claude Code / `sonnet`  | `.claude/worktrees/claude-work`（自動作成）     |
+| `orch:sonnet:work`  | Claude Code / `sonnet`  | `../worktrees/claude-work`（無ければ自動作成）  |
 | `orch:opus`         | Claude Code / `opus`    | なし                                            |
-| `orch:opus:work`    | Claude Code / `opus`    | `.claude/worktrees/claude-work`（自動作成）     |
+| `orch:opus:work`    | Claude Code / `opus`    | `../worktrees/claude-work`（無ければ自動作成）  |
 | `orch:terra`        | Codex / `gpt-5.6-terra` | なし                                            |
 | `orch:terra:work`   | Codex / `gpt-5.6-terra` | `../worktrees/codex-work`（無ければ自動作成）   |
 | `orch:sol`          | Codex / `gpt-5.6-sol`   | なし                                            |
@@ -118,10 +118,11 @@ specdojo サブコマンドと引数へマッピング（必要なら --help で
 
 起動方式の要点は次のとおりとする。
 
-- Claude Code は `--agent specdojo-orchestrator --model <model>` で起動し、`:work` は `--worktree claude-work` で worktree を自動作成する。orchestrator の承認フローを維持するため `--permission-mode acceptEdits` は付けない。
+- Claude Code は `--agent specdojo-orchestrator --model <model>` で起動する。orchestrator の承認フローを維持するため `--permission-mode acceptEdits` は付けない。
 - Codex は対話 TUI に agent 選択フラグが無いため、SSOT 本文（`.agents/specdojo-orchestrator.agent.md`）を初期プロンプトとして渡し、`-m <model>` でモデルを指定する。承認・sandbox は `.codex/config.toml` の設定に従う。
 - OpenCode は `--agent qwen-orchestrator` または `--agent gemma-orchestrator` で起動し、モデルは各 agent の frontmatter で固定する。
-- Codex / GitHub Copilot / OpenCode は worktree を作成できないため、`:work` は `git worktree add ../worktrees/<cli>-work` を冪等に先行させてから作業ディレクトリ指定で入る（Codex / Copilot は `-C <path>`、OpenCode は位置引数 `<path>`）。worktree 名を固定することで、Claude Code 以外でも worktree 実行を実現する。
+- `:work` は全 CLI で `tools/worktree/open-agent-worktree.sh <name> <command>...` を使用する。このスクリプトはブランチ `worktree/<name>` と配置 `../worktrees/<name>` を対応させ、未作成なら `git worktree add` で作成し、既存の場合は実際のブランチとの一致を検証してから agent を起動する。
+- Claude Code の `--worktree` はブランチを `worktree-<name>`、配置を `.claude/worktrees/<name>` に固定し、他の CLI と命名・配置を統一できないため使用しない。
 - frontier モデルは Claude が `opus`、Codex が `gpt-5.6-sol` に対応する。通常運用はそれぞれ既定の `sonnet` / `gpt-5.6-terra` を使う。
 
 ## 7. 保守

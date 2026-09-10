@@ -45,9 +45,9 @@ CLI を直接操作する場合の代表フローは [遂行の技活用ガイ�
 | スクリプト          | CLI・モデル             | worktree                                        |
 | ------------------- | ----------------------- | ----------------------------------------------- |
 | `orch:sonnet`       | Claude Code / `sonnet`  | なし                                            |
-| `orch:sonnet:work`  | Claude Code / `sonnet`  | `.claude/worktrees/claude-work`（自動作成）     |
+| `orch:sonnet:work`  | Claude Code / `sonnet`  | `../worktrees/claude-work`（無ければ自動作成）  |
 | `orch:opus`         | Claude Code / `opus`    | なし                                            |
-| `orch:opus:work`    | Claude Code / `opus`    | `.claude/worktrees/claude-work`（自動作成）     |
+| `orch:opus:work`    | Claude Code / `opus`    | `../worktrees/claude-work`（無ければ自動作成）  |
 | `orch:terra`        | Codex / `gpt-5.6-terra` | なし                                            |
 | `orch:terra:work`   | Codex / `gpt-5.6-terra` | `../worktrees/codex-work`（無ければ自動作成）   |
 | `orch:sol`          | Codex / `gpt-5.6-sol`   | なし                                            |
@@ -74,7 +74,7 @@ npm run orch:sonnet:work
 
 frontier モデルは Claude Code が `opus`、Codex が `gpt-5.6-sol` に対応します。通常運用はそれぞれ既定の `sonnet` / `gpt-5.6-terra` を使います。
 
-worktree 付きは、固定名の worktree を使い、無ければ起動時に作成します。Claude Code は `--worktree` で `.claude/worktrees/claude-work` を自動作成します。Codex / GitHub Copilot / OpenCode は worktree を作成できないため、`git worktree add ../worktrees/<cli>-work` を先行させてから作業ディレクトリ指定で入ります（Codex / Copilot は `-C`、OpenCode は起動ディレクトリの位置引数）。
+worktree 付きは、全 CLI で `tools/worktree/open-agent-worktree.sh` を通して固定名の worktree を使い、無ければ起動時に作成します。ブランチは `worktree/<name>`、配置は `../worktrees/<name>` です。既存 worktree のブランチが一致しない場合は agent を起動しません。Claude Code の `--worktree` はブランチ名と配置を他の CLI に揃えられないため使用しません。
 
 ## 3. 対話の進め方
 
