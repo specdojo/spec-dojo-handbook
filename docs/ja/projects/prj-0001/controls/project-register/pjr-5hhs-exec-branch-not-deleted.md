@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-5hhs-exec-branch-not-deleted
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: issue
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-07T22:56:33Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-10T11:45:03Z"
 ---
 
 # PJR-5HHS 統合後に exec ブランチが削除されず蓄積する

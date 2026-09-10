@@ -58,3 +58,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_6ebde19efbac49a88fe033ceff5619f2
+- v: 1
+  id: reg_7eaedf9b857e41eaa164dce86537377e
+  ts: "2026-09-10T11:45:03Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: exec worktree prune を新設し、worktree を持たない統合済み exec ブランチを検査・削除できるようにした。--dry-run で確認もできる。削除失敗時のログ出力と復旧案内も追加した。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-10"
+  previous_event_id: reg_d2aa960ac9404af2b65c5e90f2d80d8f

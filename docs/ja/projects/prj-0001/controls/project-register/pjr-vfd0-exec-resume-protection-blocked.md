@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-vfd0-exec-resume-protection-blocked
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: issue
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-09T22:38:32Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-10T11:45:03Z"
 ---
 
 # PJR-VFD0 保護機構でブロックされた executor を再開できない

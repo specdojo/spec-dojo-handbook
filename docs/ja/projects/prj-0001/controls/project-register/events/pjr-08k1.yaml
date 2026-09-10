@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_5f19de64af1f4c2a9a1d7fdc3abed578
+  ts: "2026-09-10T11:42:54Z"
+  action: add
+  actor: manual
+  from_status: null
+  to_status: open
+  reason: item added
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: 成果物の評価を grade へ寄せ review result の同期問題を解消する
+    - field: description
+      from: ""
+      to: kata は grade が定期的に変更を検知して次のアクションへ繋がるが、成果物は review が一度きりで同じ循環がない。grade は --target deliverable に対応し catalog から done_criteria を持つ DctDeliverableItem を既に手にしているが、パスだけを使って捨てている。done_criteria の viewpoint は grade の観点 ID と同じ体系であり接続できる。一方 review result には content_hash がなく、対象成果物が後から変更されても検知できない。実例として cdfd-agent-config-operation は review 完了の翌日に成果物が更新されている。また grade の frontmatter は既に 58 行あり本文 65 行とほぼ同量のため、done_criteria の結果を全量書き込むことはできない。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-10"
+    - field: due
+      from: ""
+      to: "2026-09-30"

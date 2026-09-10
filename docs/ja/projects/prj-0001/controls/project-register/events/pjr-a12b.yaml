@@ -58,3 +58,19 @@
       from: in-progress
       to: review
   previous_event_id: reg_c57bf616d5e44afa9a4ad3563ea7fcfe
+- v: 1
+  id: reg_613334c399224023bf5aed1cfe35106d
+  ts: "2026-09-10T11:45:02Z"
+  action: close
+  actor: orchestrator
+  from_status: review
+  to_status: done
+  reason: tools/docs/src/lefthook-docs-build.ts を削除した。npm pack --dry-run の同梱物からも消えている。docs:build と lint:md は従来どおり動作する。
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-10"
+  previous_event_id: reg_f5ac2f6127fa4cf2ae83feaab6496654

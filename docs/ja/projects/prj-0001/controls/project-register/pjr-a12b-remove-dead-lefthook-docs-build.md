@@ -2,16 +2,17 @@
 specdojo:
   id: prj-0001:pjr-a12b-remove-dead-lefthook-docs-build
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: low
   owner: ARC
   registered_at: "2026-09-09T15:18:58Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-10T11:45:02Z"
 ---
 
 # PJR-A12B 呼び出し元のない lefthook-docs-build.ts を削除する
