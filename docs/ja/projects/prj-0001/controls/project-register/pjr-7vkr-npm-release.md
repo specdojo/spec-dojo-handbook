@@ -114,7 +114,50 @@ PJR-KK07 により kata を配置しない最小構成でも `register add` と 
 [[prj-0001:pjr-a12b-remove-dead-lefthook-docs-build]] で扱う。Mermaid 生成は Chromium を要する
 ため分離し、呼び出し元のないスクリプトは削除する。
 
-#### 2.2.4. 公開前に残る確認
+#### 2.2.4. generated を除外する
+
+同梱物に `generated` 配下が 52 件含まれている。除外する。
+
+| 場所                                   | 件数 |
+| -------------------------------------- | ---: |
+| `docs/ja/specdojo/templates/generated` |   38 |
+| `docs/ja/specdojo/samples/generated`   |    9 |
+| `docs/specdojo/schemas/v1/generated`   |    4 |
+| `docs/ja/specdojo/defaults/generated`  |    1 |
+
+除外する根拠は 3 点ある。
+
+**git の追跡対象外である**。`.gitignore` の `docs/**/generated/*` に該当し、`git ls-files` は
+0 件を返す。`files` が `docs/ja/specdojo` をディレクトリ単位で指定するため、作業ツリーに存在
+するものがそのまま同梱される。publish 時の作業ツリーの状態に依存し、再現性がない。ビルドして
+いない環境では含まれず、含まれる場合も内容が古い可能性がある。
+
+**利用者側で生成される**。`yaml-pages build` が YAML から導出する閲覧用ページである。
+
+```typescript
+// YAML パス（repo ルート相対）から表示ページのパスを導出する。
+// 例: docs/ja/foo/pm-roles.yaml → docs/ja/foo/generated/pm-roles.md
+```
+
+利用者が `specdojo build` を実行すれば生成されるため、同梱する必要がない。
+
+**生成物は評価対象でも配布対象でもない**。[[prj-0001:pjr-mbvm-grade-exclude-generated]] で
+`generated` を grade の対象から除外した。同じ論理で配布からも除外する。
+
+`schemas/v1/generated` の 4 件も除外して差し支えない。いずれも `.md` の閲覧用ページで、`src` が
+読む schema は `.yaml` のみである。これらも git の追跡対象外である。
+
+```text
+schemas/v1/generated/guide-content.schema.md
+schemas/v1/generated/philosophy-content.schema.md
+schemas/v1/generated/pjr-index-content.schema.md
+schemas/v1/generated/reference-content.schema.md
+```
+
+除外は `files` へ否定パターンを加えて行う。除外後に tarball を展開し、最小構成で動作することを
+確かめる。`公開前に残る確認` に挙げた実地検証と同時に行える。
+
+#### 2.2.5. 公開前に残る確認
 
 - 同梱物の実地検証。`npm pack` した tarball を別環境へ展開し、最小構成で `register` /
   `catalog` / `exec scaffold` が動作することを確かめる。
@@ -269,18 +312,19 @@ npm のパッケージ設定ページで次を登録する必要がある。
 
 ## 6. 作業内容
 
-| No  | 作業                                      | メモ                                |
-| --- | ----------------------------------------- | ----------------------------------- |
-| 1   | `files` を確定する                        | `docs/en/specdojo` を除外           |
-| 2   | 同梱物を別環境で実地検証する              | tarball を展開して最小構成で動かす  |
-| 3   | `package.json` のメタ情報を補う           | `repository` / `license`            |
-| 4   | README の導線を確認する                   | PJR-9M5N は完了済み                 |
-| 5   | npm 側の trusted publisher 設定を確認する | ファイル名は `publish-specdojo.yml` |
-| 6   | workflow の実行実績を確認する             | 過去に成功したことがあるか          |
-| 7   | version を上げて `main` へ push する      | publish は Actions が実行する       |
-| 8   | 導入して動作を確認する                    |                                     |
+| No  | 作業                                      | メモ                                     |
+| --- | ----------------------------------------- | ---------------------------------------- |
+| 1   | `files` を確定する                        | `docs/en/specdojo` と `generated` を除外 |
+| 2   | 同梱ファイル一覧を確認する                | `npm pack --dry-run` の全件を見る        |
+| 3   | 同梱物を別環境で実地検証する              | tarball を展開して最小構成で動かす       |
+| 4   | `package.json` のメタ情報を補う           | `repository` / `license`                 |
+| 5   | README の導線を確認する                   | PJR-9M5N は完了済み                      |
+| 6   | npm 側の trusted publisher 設定を確認する | ファイル名は `publish-specdojo.yml`      |
+| 7   | workflow の実行実績を確認する             | 過去に成功したことがあるか               |
+| 8   | version を上げて `main` へ push する      | publish は Actions が実行する            |
+| 9   | 導入して動作を確認する                    |                                          |
 
-No 5 は npmjs.com のパッケージ設定ページでの操作となるため、人が行う。
+No 6 は npmjs.com のパッケージ設定ページでの操作となるため、人が行う。
 
 ## 7. 対応結果
 
