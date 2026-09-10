@@ -18,13 +18,13 @@ specdojo:
     rubric: grade-rubric-v1
     target: kata
     verdict: pass
-    score: 91
-    graded_at: "2026-09-06T14:18:39.861Z"
+    score: 96
+    graded_at: "2026-09-10T16:57:03.791Z"
     graded_by: codex-expert-executor
-    content_hash: ddb75240bfbbe8870ace8f11000314097c87057856ff87382ee6840cce1c587b
+    content_hash: 304146cecf6b60840e302430117d7ee2098d21fb3abe1fe145099c020280dab9
     categories:
-      consistency: { score: 88 }
-      usability: { score: 92 }
+      consistency: { score: 100 }
+      usability: { score: 100 }
       architecture: { score: 100 }
       quality: { score: 88 }
     viewpoints:
@@ -32,12 +32,12 @@ specdojo:
       vp-arc-conciseness: { level: 4, score: 100 }
       vp-arc-single-responsibility: { level: 4, score: 100 }
       vp-qe-verifiability: { level: 4, score: 100 }
-      vp-qe-omissions-consistency: { level: 3, score: 75 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
       vp-qe-kata-conformance: { level: 3, score: 75 }
       vp-ux-readability: { level: 4, score: 100 }
-      vp-ux-language-consistency: { level: 3, score: 75 }
+      vp-ux-language-consistency: { level: 4, score: 100 }
       vp-arc-document-structure: { level: 4, score: 100 }
-    findings: { blocker: 0, major: 0, minor: 6, note: 0 }
+    findings: { blocker: 0, major: 0, minor: 1, note: 0 }
 ---
 
 # プロジェクト課題と解決アプローチ: _PROJECT_NAME_
@@ -97,6 +97,8 @@ _TODO_: 捨てる・先送りするものと、起きうるリスクおよび軽
 | _TODO_ | _TODO_ | _TODO_ |
 
 ## 6. 次の検討事項（ToDo）
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-kata-conformance line=59 Recipe で指定された `_TODO_:` または `_UNDECIDED` ラベルを項目先頭に付与するよう、ガイドラインに追記する。 -->
 
 _TODO_: 追加調査・確認・承認が必要な事項と責任ロールを記述する。任意章のため不要なら削除する。
 

@@ -4,13 +4,14 @@ specdojo:
   type: exec-result
   task_id: JBR-grade-kata-941d96b2e3ed
   mode: edit
-  status: in_progress
+  status: complete
   project_id: prj-0001
   origin: job
   job_id: job-grade-kata
   run_id: JBR-grade-kata-941d96b2e3ed
   plan_ref: exec/plans/JBR-grade-kata-941d96b2e3ed-plan.md
   started_at: "2026-09-10T15:00:02.811Z"
+  completed_at: "2026-09-10T17:44:38.706Z"
   agent: gemma-reporter
 ---
 
@@ -18,16 +19,25 @@ specdojo:
 
 ## 1. 実施内容
 
-_TODO_: 実施した内容の要約を記入する。
+- 終了コード0で完了。中断やrate limitによる未完了の段は存在せず、同一run-idで再開する必要もない。
+- failedの段が1件確認された（docs/ja/specdojo/templates/pm-risk-register-template.md の stage 1）。これはagent側の失敗である。
+- 3段目が実行されなかった文書は以下の通り。理由はすべて2段目までの結果が閾値（score&gt;=96, findings&lt;=1）を満たさなかったためである。 - pjr-views-by-status-template.md (score 86) - pm-issue-log-template.md (score 59) - pm-risk-register-template.md (score 66) - prj-assumptions-constraints-dependencies-template.md (score 94)
+- verdictとscoreの分布について、3段目に到達した文書の一部（pm-plan-template.md）でscoreが73まで低下しており、閾値の見直しを検討する余地がある。
 
 ## 2. 変更ファイル
 
-_TODO_: 変更したファイルのパスを記入する。
+- `docs/ja/specdojo/templates/pm-issue-log-template.md`: updated
+- `docs/ja/specdojo/templates/pm-plan-template.md`: updated
+- `docs/ja/specdojo/templates/pm-risk-register-template.md`: updated
+- `docs/ja/specdojo/templates/prj-assumptions-constraints-dependencies-template.md`: updated
+- `docs/ja/specdojo/templates/prj-issues-and-approach-template.md`: updated
+- `docs/ja/specdojo/templates/prj-overview-template.md`: updated
+- `docs/ja/specdojo/templates/prj-stakeholder-register-template.md`: updated
 
 ## 3. 申し送り
 
-_TODO_: 後続タスクへの申し送り事項を記入する（なければ削除）。
+- なし
 
 ## 4. 進め方と実践の型の適用
 
-_TODO_: `approach` に従ってどう進めたか、その進め方の中で実践の型（rulebook / recipe / sample / template）をどう適用したかを記入する（`fully-guided` で rulebook / recipe / sample / template をどう使い分けたか、`recipe-guided` で recipe のみを基準にした内容、`freeform` で実践の型より優先した実例やプロジェクト文脈、`retrofit` で実際に参照した実装パス・抽出した現在動作・反映/新設判断・未反映の乖離・未確認範囲、`rulebook-maintenance` などの maintenance 系で見直した実践の型とその根拠、など）。実践の型を基準にしなかった場合は、その判断と代わりに根拠にした内容も記入する。複数文書間に矛盾があり rulebook を正として判断した箇所、参照範囲から外れていた文書とその代わりに根拠にした内容があれば、あわせて記録する。
+runnerが実行したCommand Evidenceのstdout（results.tsv）を分析し、プランに基づいた完了・失敗の切り分けおよび3段目のしきい値判定、スコア分布の確認を行った。

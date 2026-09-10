@@ -16,12 +16,12 @@ specdojo:
     rubric: grade-rubric-v1
     target: kata
     verdict: pass
-    score: 91
-    graded_at: "2026-09-06T13:00:22.272Z"
+    score: 94
+    graded_at: "2026-09-10T16:31:59.583Z"
     graded_by: gemma-expert-executor
-    content_hash: e2e2d0292ac62c9c80abf8fe2b938af1b3ffa03901cd1a3362542adef74a4897
+    content_hash: 5e92245b88a16099fd9560eed10d99fb4a16af96a7be78a99dc6fecb7ba97bbd
     categories:
-      consistency: { score: 88 }
+      consistency: { score: 100 }
       usability: { score: 92 }
       architecture: { score: 100 }
       quality: { score: 88 }
@@ -30,12 +30,12 @@ specdojo:
       vp-arc-conciseness: { level: 4, score: 100 }
       vp-arc-single-responsibility: { level: 4, score: 100 }
       vp-qe-verifiability: { level: 4, score: 100 }
-      vp-qe-omissions-consistency: { level: 3, score: 75 }
+      vp-qe-omissions-consistency: { level: 4, score: 100 }
       vp-qe-kata-conformance: { level: 3, score: 75 }
       vp-ux-readability: { level: 4, score: 100 }
       vp-ux-language-consistency: { level: 3, score: 75 }
       vp-arc-document-structure: { level: 4, score: 100 }
-    findings: { blocker: 0, major: 0, minor: 3, note: 0 }
+    findings: { blocker: 0, major: 0, minor: 2, note: 0 }
 ---
 
 # 前提・制約・依存関係: _PROJECT_NAME_
@@ -61,6 +61,9 @@ _TODO_: 守るべき限界と適用範囲を記載する。スコープの対象
 ## 3. 依存関係
 
 _TODO_: 外部サービス、先行成果物、承認、提供物など、他者または他の条件から受ける必要があるものを記載する。意思決定待ちの依存はプロジェクト登録簿へ登録し、本書からは登録項目 ID を参照する。先行成果物を wikilink で参照する場合は、表セル内のリンク区切りを `[[id\|表示名]]` のように `\|` でエスケープする（エスケープ漏れは表崩れの原因になる）。
+
+<!-- specdojo:finding id=F001 severity=minor rule=vp-qe-kata-conformance line=27 依存関係表の列名が、正本である rulebook 6.3 節の推奨形式と乖離しており、Kata としての整合性が欠けている。 -->
+<!-- specdojo:finding id=F002 severity=minor rule=vp-ux-language-consistency line=27 依存関係表の列名に使用されている用語が, rulebook の推奨表記（「内容または依存先」等）と統一されていない。 -->
 
 | ID              | 依存先・条件 | 必要となる理由 | 受領・成立条件 | 変化のトリガー | 所有者 | 対応方針 |
 | --------------- | ------------ | -------------- | -------------- | -------------- | ------ | -------- |
