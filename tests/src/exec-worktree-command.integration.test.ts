@@ -226,4 +226,46 @@ describe("exec worktree commands", () => {
       rmSync(worktreeBase, { recursive: true, force: true });
     }
   });
+
+  it("inspects orphaned branches and prunes only the merged ones", async () => {
+    const { repo, worktreeBase } = setupRepository();
+    const merged = "exec/test-PJR-MERGED";
+    const unmerged = "exec/test-PJR-UNMERGED";
+    const stdout: string[] = [];
+    vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+      stdout.push(String(chunk));
+      return true;
+    });
+    vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    try {
+      process.chdir(repo);
+      git(repo, "branch", merged);
+      const unmergedCommit = git(
+        repo,
+        "commit-tree",
+        "HEAD^{tree}",
+        "-p",
+        "HEAD",
+        "-m",
+        "unmerged residue",
+      );
+      git(repo, "branch", unmerged, unmergedCommit);
+
+      await runExecWorktree(["prune", "--project", "test", "--dry-run"]);
+      expect(stdout.join("")).toContain(`${merged}: would delete (merged)`);
+      expect(stdout.join("")).toContain(`${unmerged}: kept (not merged)`);
+      expect(() => git(repo, "show-ref", "--verify", `refs/heads/${merged}`)).not.toThrow();
+
+      stdout.length = 0;
+      await runExecWorktree(["prune", "--project", "test"]);
+      expect(stdout.join("")).toContain(`${merged}: deleted (merged)`);
+      expect(stdout.join("")).toContain(`${unmerged}: kept (not merged)`);
+      expect(() => git(repo, "show-ref", "--verify", `refs/heads/${merged}`)).toThrow();
+      expect(() => git(repo, "show-ref", "--verify", `refs/heads/${unmerged}`)).not.toThrow();
+    } finally {
+      process.chdir(originalCwd);
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(worktreeBase, { recursive: true, force: true });
+    }
+  });
 });

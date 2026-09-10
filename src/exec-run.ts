@@ -143,6 +143,7 @@ import {
   removeWorktree,
   stabilizeCommitTargets,
   stageCommitTargets,
+  WorktreeRemovedBranchDeletionError,
   worktreeStatusPaths,
 } from "./exec-worktree-ops.js";
 import {
@@ -1994,12 +1995,19 @@ async function runPreparedTask(
         );
         return "failure";
       }
-      removeWorktree({
-        context,
-        worktree: prepared.worktree,
-        taskId: prepared.task.id,
-        deleteBranch: true,
-      });
+      try {
+        removeWorktree({
+          context,
+          worktree: prepared.worktree,
+          taskId: prepared.task.id,
+          deleteBranch: true,
+        });
+      } catch (error) {
+        if (!(error instanceof WorktreeRemovedBranchDeletionError)) throw error;
+        // The task changes are already merged and the worktree is gone. Keep task completion
+        // independent from branch housekeeping, but make the residue and recovery command clear.
+        process.stderr.write(`Warning: ${error.message}; run exec worktree prune.\n`);
+      }
       spawnComplete(projectId, prepared.task.id, prepared.actor);
       process.stdout.write(`  Done: ${prepared.task.id}\n`);
     } else if (effectiveResult === "rate_limit") {
@@ -4456,22 +4464,29 @@ async function finalizeRegisterWorktreeRun(params: {
       } else {
         mergeWorktreeIntoCurrent({ context: wtContext, worktree, taskId: stem });
       }
-      // 撤去も統合の一部として扱う。ここで失敗しても例外で run を落とさず、worktree を
-      // 残したまま waiting へ戻し、`--resume` が統合段からやり直せるようにする。
+      // 撤去も統合の一部として扱う。worktree の撤去自体が失敗した場合は waiting へ戻し、
+      // `--resume` で統合段からやり直す。撤去後の branch 削除だけが失敗した場合は、成果の
+      // 統合を取り消さず cleanup 警告として扱う。
       removeWorktree({ context: wtContext, worktree, taskId: stem, deleteBranch: true });
     } catch (error) {
-      const reason = sanitizeRegisterConclusion(
-        `integrate failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      const integrateFailedAt = new Date().toISOString();
-      recordIntegrateStage(params.pipelineStatePath, integrateFailedAt, () => ({
-        status: "failed",
-        completed_at: integrateFailedAt,
-      }));
-      await updateResultStatus(worktreeResultPath, "blocked", completedAt, reason);
-      process.stdout.write(`  Blocked: ${item.id} (worktree kept: ${worktree.path})\n`);
-      const summary = waitSummary(reason);
-      return { ...summary, commit: "incomplete" };
+      if (error instanceof WorktreeRemovedBranchDeletionError) {
+        // The task changes are already merged and the worktree is gone. Treat the integration as
+        // complete while preserving an explicit cleanup warning in the run log.
+        process.stderr.write(`Warning: ${error.message}; run exec worktree prune.\n`);
+      } else {
+        const reason = sanitizeRegisterConclusion(
+          `integrate failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        const integrateFailedAt = new Date().toISOString();
+        recordIntegrateStage(params.pipelineStatePath, integrateFailedAt, () => ({
+          status: "failed",
+          completed_at: integrateFailedAt,
+        }));
+        await updateResultStatus(worktreeResultPath, "blocked", completedAt, reason);
+        process.stdout.write(`  Blocked: ${item.id} (worktree kept: ${worktree.path})\n`);
+        const summary = waitSummary(reason);
+        return { ...summary, commit: "incomplete" };
+      }
     }
 
     let transition: RegisterItemTransition = "review";

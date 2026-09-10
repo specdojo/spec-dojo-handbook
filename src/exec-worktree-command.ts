@@ -50,6 +50,7 @@ import {
   checkpointAndEnsureWorktree,
   commitWorktreeChanges,
   mergeWorktreeIntoCurrent,
+  pruneOrphanedExecBranches,
   removeWorktree,
   taskPaths,
   worktreeStatusPaths,
@@ -80,6 +81,11 @@ type MergeOpts = CommonOpts & {
 type RemoveOpts = CommonOpts & {
   deleteBranch?: boolean;
   force?: boolean;
+};
+
+type PruneOpts = {
+  project?: string;
+  dryRun?: boolean;
 };
 
 type TaskExecutionState = {
@@ -434,6 +440,31 @@ function remove(opts: RemoveOpts): void {
   });
 }
 
+function prune(opts: PruneOpts): void {
+  const context = resolveContext(opts);
+  const projectId = context.projectId?.trim();
+  if (!projectId) {
+    throw new Error("Project id is required. Use --project or set current_project.");
+  }
+  const orphaned = pruneOrphanedExecBranches({
+    repoRoot: context.repoRoot,
+    projectId,
+    dryRun: opts.dryRun,
+  });
+  if (orphaned.length === 0) {
+    process.stdout.write(`No orphaned exec branches for project ${projectId}.\n`);
+    return;
+  }
+  for (const item of orphaned) {
+    const action = item.mergedIntoCurrent
+      ? opts.dryRun
+        ? "would delete (merged)"
+        : "deleted (merged)"
+      : "kept (not merged)";
+    process.stdout.write(`${item.branch}: ${action}\n`);
+  }
+}
+
 function addCommonOptions(command: Command): Command {
   return command
     .option("--project <projectId>", "Project id in .specdojo/specdojo.config.json")
@@ -520,6 +551,19 @@ export function registerExecWorktreeCommands(exec: Command): void {
   removeCommand.action((opts: RemoveOpts) => {
     try {
       remove(opts);
+    } catch (error) {
+      commandError(error);
+    }
+  });
+
+  const pruneCommand = worktree
+    .command("prune")
+    .description("Inspect and delete merged exec branches that have no worktree")
+    .option("--project <projectId>", "Project id in .specdojo/specdojo.config.json")
+    .option("--dry-run", "Inspect orphaned branches without deleting them", false);
+  pruneCommand.action((opts: PruneOpts) => {
+    try {
+      prune(opts);
     } catch (error) {
       commandError(error);
     }

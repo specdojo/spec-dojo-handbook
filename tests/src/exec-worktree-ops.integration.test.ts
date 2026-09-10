@@ -9,8 +9,11 @@ import {
   deliverableStatus,
   discardStaleExecWorktree,
   mergeWorktreeIntoCurrent,
+  listOrphanedExecBranches,
+  pruneOrphanedExecBranches,
   removeWorktree,
   selectStageablePaths,
+  WorktreeRemovedBranchDeletionError,
   type WorktreeOpsContext,
 } from "../../src/exec-worktree-ops.js";
 
@@ -383,6 +386,73 @@ describe("exec worktree ops", () => {
     expect(() =>
       git(fixture.repo, "show-ref", "--verify", `refs/heads/${worktree.branch}`),
     ).toThrow();
+  });
+
+  it("reports that the worktree is gone when safe branch deletion fails", () => {
+    const fixture = setupRepository();
+    const taskId = "T-T-doc-010";
+    const worktree = prepare(fixture, taskId);
+    writeFile(join(worktree.path, "docs", "unmerged.md"), "unmerged work\n");
+    commitWorktreeChanges({ context: fixture.context, worktree, taskId });
+
+    expect(() =>
+      removeWorktree({
+        context: fixture.context,
+        worktree,
+        taskId,
+        force: true,
+        deleteBranch: true,
+      }),
+    ).toThrow(WorktreeRemovedBranchDeletionError);
+    expect(findExecWorktree(fixture.repo, taskId)).toBeNull();
+    expect(() =>
+      git(fixture.repo, "show-ref", "--verify", `refs/heads/${worktree.branch}`),
+    ).not.toThrow();
+  });
+
+  it("prunes only merged project exec branches that no worktree uses", () => {
+    const fixture = setupRepository();
+    const active = prepare(fixture, "T-T-doc-010", "prj-0001:T-T-doc-010");
+    const merged = "exec/prj-0001-PJR-MERGED";
+    const unmerged = "exec/prj-0001-PJR-UNMERGED";
+    const otherProject = "exec/prj-0002-PJR-MERGED";
+    git(fixture.repo, "branch", merged);
+    git(fixture.repo, "branch", otherProject);
+    const unmergedCommit = git(
+      fixture.repo,
+      "commit-tree",
+      "HEAD^{tree}",
+      "-p",
+      "HEAD",
+      "-m",
+      "unmerged residue",
+    );
+    git(fixture.repo, "branch", unmerged, unmergedCommit);
+
+    expect(listOrphanedExecBranches({ repoRoot: fixture.repo, projectId: "prj-0001" })).toEqual([
+      { branch: merged, mergedIntoCurrent: true },
+      { branch: unmerged, mergedIntoCurrent: false },
+    ]);
+
+    const inspected = pruneOrphanedExecBranches({
+      repoRoot: fixture.repo,
+      projectId: "prj-0001",
+      dryRun: true,
+    });
+    expect(inspected).toHaveLength(2);
+    expect(() => git(fixture.repo, "show-ref", "--verify", `refs/heads/${merged}`)).not.toThrow();
+
+    pruneOrphanedExecBranches({ repoRoot: fixture.repo, projectId: "prj-0001" });
+
+    expect(() => git(fixture.repo, "show-ref", "--verify", `refs/heads/${merged}`)).toThrow();
+    expect(() => git(fixture.repo, "show-ref", "--verify", `refs/heads/${unmerged}`)).not.toThrow();
+    expect(() =>
+      git(fixture.repo, "show-ref", "--verify", `refs/heads/${otherProject}`),
+    ).not.toThrow();
+    expect(findExecWorktree(fixture.repo, "prj-0001:T-T-doc-010")).toEqual({
+      ...active,
+      created: false,
+    });
   });
 
   it('blocks committing when an agent promotes a new deliverable to "ready"', () => {
