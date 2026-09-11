@@ -41,9 +41,269 @@ specdojo:
 | `P-09` | 報告 | 進捗、判断、課題、費用・参加負荷を、確認者が次の判断に使える情報へまとめる。 | PM、BA | 節目、判断時点、または報告時期が到来した | [[prj-0001:cdfd-reporting\|進捗監視・報告・ログ管理]] |
 | `P-10` | 非推奨化・保管 | 役割を終えた、または新IDへ引き継がれた文書を非推奨化し、誤参照を防ぐ保管場所へ移す。 | PM、ARC | 文書が新IDへ引き継がれた、または継続利用しないと判断された | [[prj-0001:cdfd-deprecation\|非推奨化・保管]] |
 
+revised
+
+<!-- prettier-ignore -->
+| 領域 ID | プロセス領域 | 業務目的 | 主な担当 | 起点イベント | 起動イベント | 領域別 CDFD |
+| --- | --- | --- | --- | --- | --- | --- |
+| `P-01` | プロジェクト初期セットアップ | プロジェクトの目的と運用方針を、計画と実行を開始できる初期状態へ展開する。 | PO、PM、BA | 新しいプロジェクトの開始が承認された | `config init`、`catalog scaffold`、`register scaffold` | [[prj-0001:cdfd-init\|初期セットアップ]] |
+| `P-02` | 登録簿ライフサイクル | todo / question / risk / issue / change-request / decision / note を起票し、状態・判断・次の行動を継続的に管理する。 | 全参加者（管理責任: PM） | 追跡、対応、確認、または判断が必要な事項が発生した | `register` | [[prj-0001:cdfd-register-lifecycle\|登録簿ライフサイクル]] |
+| `P-03` | 成果物カタログ管理 | 必要な成果物とその関係、完了条件を定義・検証し、成果物本体を準備できる正本にする。 | BA、ARC、成果物 owner | 対象範囲または必要な成果物が決定・変更された | `catalog`、`deliverable scaffold` | [[prj-0001:cdfd-catalog-planning\|カタログ〜計画展開]] |
+| `P-04` | スケジュール計画・展開 | 成果物カタログと実行方針から、依存、順序、担当、節目を持つ実行可能な計画を作る。 | PM、成果物 owner | 検証済みの成果物カタログと計画方針が準備または変更された | `schedule`、`timeline`、`exec refresh` | [[prj-0001:cdfd-catalog-planning\|カタログ〜計画展開]] |
+| `P-05` | 定期実行管理 | 定義された時期・条件から実行機会を選択し、対象処理を起動して次回判定に使える結果を残す。 | PM、運用担当 | 定期実行の期限・条件が到来した、または即時実行が要求された | `routine` | [[prj-0001:cdfd-routine\|定期処理]] |
+| `P-06` | ジョブライフサイクル | 再利用可能な Job Definition から冪等な Job Run を生成・実行し、attempt、結果、checkpoint を管理する。 | Job owner、実行担当、運用担当 | Job の手動・定期・CI 実行が要求された | `job`、`exec run --job` | [[prj-0001:cdfd-routine\|定期処理]] |
+| `P-07` | タスク実行ライフサイクル | 実行可能な task または登録項目を人・AI Agent に割り当て、成果物、検証結果、状態遷移を監査可能に残す。 | task owner、レビュー担当、運用担当 | 実行対象が選択され、実行条件を満たした | `exec`、`exec worktree`、`--parallel` | [[prj-0001:cdfd-task-execution\|タスク実行ライフサイクル]]、[[prj-0001:cdfd-multi-project\|複数プロジェクト・ブランチ並行処理]] |
+| `P-08` | 成果物評価 | kata または成果物を共通の観点と rubric で評価し、再評価可能な grade と finding を残す。 | QE、レビュー担当、成果物 owner | 評価対象が作成・更新された、または再評価が要求された | `grade` | 新規作成 |
+| `P-09` | 進捗可視化・報告 | 進捗、判断、課題、実行状況を、確認者が次の判断に使える情報へ集約して伝達する。 | PM、BA | 節目、判断時点、または報告時期が到来した | `dashboard build`、生成済みの実行・登録簿ビュー | [[prj-0001:cdfd-reporting\|進捗監視・報告・ログ管理]] |
+| `P-10` | 派生生成・閲覧提供 | 正本の更新を、利用者が参照できる成果物、表示ページ、索引、ビューへ一貫して展開する。 | BA、ARC、運用担当 | 正本が更新された、派生生成が要求された、または閲覧環境の起動が要求された | `build`、`watch`、`yaml-pages`、`index`、`docs:dev` | [[prj-0001:cdfd-derived-content\|成果物・派生ビュー・索引生成]] |
+| `P-11` | 非推奨化・保管 | 役割を終えた、または新 ID へ引き継がれた文書を非推奨化し、誤参照を防ぐ保管場所へ移す。 | PM、ARC | 文書が新 ID へ引き継がれた、または継続利用しないと判断された | `deliverable trash` | [[prj-0001:cdfd-deprecation\|非推奨化・保管]] |
+| `P-12` | 運用構成管理 | agent、provider、project 構成の承認済み変更を、後続の計画・実行・評価条件へ反映する。 | PO、PM、ARC、運用担当 | 運用構成の変更が承認された | `config scaffold`、`agent`、project 構成操作 | [[prj-0001:cdfd-agent-config-operation\|agent・provider 構成の運用変更]] |
+
+```mermaid
+
+flowchart LR
+  subgraph Setup[立ち上げ]
+    direction LR
+    プロジェクト初期セットアップ("プロジェクト初期セットアップ")
+  end
+
+  Definition[("プロジェクト<br>定義・構成")]
+
+  Orchestrator("オーケストレーター")
+
+  subgraph Plan
+    direction LR
+    登録簿ライフサイクル("登録簿ライフサイクル<br>register")
+    成果物カタログ管理("成果物カタログ管理<br>catalog")
+    スケジュール計画展開("スケジュール計画・展開<br>schedule")
+    定期実行管理("定期実行管理<br>routine")
+    ジョブライフサイクル("ジョブライフサイクル<br>job")
+  end
+
+  Kata[("Kata")]
+  ProjectWorkDoc[("プロジェクト<br>ドキュメント<br>work")]
+  ProjectCtrlDoc[("プロジェクト<br>ドキュメント<br>control")]
+  ProductDoc[("プロダクト<br>ドキュメント")]
+  Product[("プロダクト")]
+
+  subgraph Do
+    direction LR
+    タスク実行ライフサイクル("タスク実行ライフサイクル<br>exec")
+  end
+
+  subgraph Check
+    direction LR
+    成果物評価("成果物評価")
+    進捗可視化報告("進捗可視化・報告")
+    派生生成閲覧提供("派生生成・閲覧提供")
+  end
+
+  ProjectView[("プロジェクトビュー")]
+
+  subgraph Action
+    direction LR
+    運用構成管理("プロジェクト構成変更")
+    非推奨化保管("非推奨化・保管")
+  end
+
+  Setup --> Definition
+
+  Definition --> Orchestrator
+
+  Orchestrator --> Plan
+  Orchestrator --> Do
+  Orchestrator --> Check
+  Orchestrator --> Action
+
+  Definition --> Plan
+  Plan --> ProjectCtrlDoc
+
+  Kata --> Do
+  ProjectCtrlDoc --> Do
+
+  Do --> ProjectWorkDoc
+  Do --> ProductDoc
+  Do --> Product
+
+  ProjectWorkDoc --> Check
+  ProductDoc --> Check
+  Product --> Check
+
+  Check --> ProjectView
+  Check --> Action
+  ProjectView --> Action
+
+  Action --> Definition
+  Action --> Plan
+  Action --> ProjectWorkDoc
+  Action --> ProductDoc
+  Action --> Product
+```
+
 ## 4. 概念データフロー（概要）
 
-本図は、十領域を業務の性質が近い三つのプロセスグループへまとめ、外部主体・データストアとの主要な受け渡しを示す。グループの左右配置は固定の実行順または全領域の必須実行を意味しない。領域ごとの起点イベントは3章、主要入出力は5章を正本とし、領域内プロセスの必須・条件付きの区分と非起動時の経路は各領域別 CDFD へ委譲する。
+### 4.1. revised のプロセス領域に基づく概念データフロー
+
+本図は、revised で定義した十二領域を業務の性質が近い四つのプロセスグループへまとめ、プロセス間の委譲、外部主体からの起動、およびデータストアとの主要な受け渡しを示す。矢印は固定の一括実行順ではなく、情報または実行要求の受け渡しを表す。各領域は起点イベントを満たした場合に起動し、すべての領域を毎回通過することを意味しない。
+
+```mermaid
+flowchart LR
+  classDef process fill:#e3f2fd,stroke:#1e88e5,color:#000
+  classDef storeMaster fill:#c8e6c9,stroke:#2e7d32,color:#000
+  classDef storeTransaction fill:#e8f5e9,stroke:#43a047,color:#000
+  classDef actor fill:#f5f7fa,stroke:#607d8b,color:#000
+  classDef archive fill:#f3e5f5,stroke:#8e24aa,color:#000
+
+  開始判断者["👤 開始・変更の判断者<br>（PO・承認者）"]
+  プロジェクト参加者["👥 プロジェクト参加者"]
+  外部実行基盤["⏰ 外部実行基盤<br>（cron・CI）"]
+  情報利用者["👀 情報利用者"]
+
+  subgraph 立上げ統制["立上げ・統制"]
+    direction TB
+    P01("🚀 P-01<br>プロジェクト初期セットアップ")
+    P02("📒 P-02<br>登録簿ライフサイクル")
+    P12("🔧 P-12<br>運用構成管理")
+  end
+
+  subgraph 計画["成果物・実行計画"]
+    direction TB
+    P03("📚 P-03<br>成果物カタログ管理")
+    P04("🗓️ P-04<br>スケジュール計画・展開")
+  end
+
+  subgraph 実行["起動・実行"]
+    direction TB
+    P05("⏱️ P-05<br>定期実行管理")
+    P06("🔁 P-06<br>ジョブライフサイクル")
+    P07("⚙️ P-07<br>タスク実行ライフサイクル")
+  end
+
+  subgraph 評価共有["評価・活用・共有"]
+    direction TB
+    P08("✅ P-08<br>成果物評価")
+    P09("📈 P-09<br>進捗可視化・報告")
+    P10("🔎 P-10<br>派生生成・閲覧提供")
+    P11("📦 P-11<br>非推奨化・保管")
+  end
+
+  プロジェクト運用構成[("📐 プロジェクト・運用構成<br>project・agent・provider")]
+  登録簿[("📒 登録簿<br>個票・event")]
+  成果物カタログ[("📚 成果物カタログ")]
+  実行計画[("🗓️ Timeline・Schedule<br>・実行状態")]
+  定期実行状態[("⏱️ Routine 定義・実行状態")]
+  ジョブ記録[("🔁 Job Definition・Job Run<br>・attempt・checkpoint")]
+  成果物[("📄 成果物・Kata")]
+  実行記録[("📝 plan・result・event<br>・evidence")]
+  評価記録[("✅ grade・finding")]
+  派生情報[("🔎 表示ページ・索引<br>・管理ビュー・dashboard")]
+  報告記録[("📈 報告・判断材料<br>・申し送り")]
+  保管領域(["🗄️ trash・非推奨文書"])
+
+  開始判断者 -->|"開始承認・初期方針"| P01
+  プロジェクト参加者 -->|"追跡・判断事項"| P02
+  プロジェクト参加者 -->|"成果物要求"| P03
+  プロジェクト参加者 -->|"計画方針"| P04
+  開始判断者 -->|"構成変更承認"| P12
+  外部実行基盤 -->|"定期確認時点"| P05
+  外部実行基盤 -->|"CI Job 実行要求"| P06
+
+  P01 -->|"登録簿の初期化要求"| P02
+  P01 -->|"カタログの初期化要求"| P03
+  P01 -->|"初期構成"| プロジェクト運用構成
+  P02 -->|"合意した要求・制約"| P03
+  P02 -->|"計画制約・変更要求"| P04
+  P02 -->|"計画外事項の実行要求"| P07
+  P03 -->|"検証済み成果物定義"| P04
+  P04 -->|"定期実行の対象・条件"| P05
+  P04 -->|"実行可能 task"| P07
+  P05 -->|"Job 起動要求・scheduled time"| P06
+  P05 -->|"登録項目・Schedule・cycle の実行要求"| P07
+  P06 -->|"Job Run・実行 plan"| P07
+  P07 -->|"判断依頼・計画外事項"| P02
+  P07 -->|"評価要求"| P08
+  P08 -->|"是正事項・再実行要求"| P07
+  P08 -->|"追跡が必要な finding"| P02
+  P10 -->|"集約ビュー"| P09
+  P09 -->|"追加判断・対応要求"| P02
+  P09 -->|"再計画要求"| P04
+  P09 -->|"構成見直し要求"| P12
+  P11 -->|"索引・表示の再生成要求"| P10
+  P12 -->|"構成変更後の再計画要求"| P04
+
+  P02 -->|"個票・状態・event"| 登録簿
+  登録簿 -->|"現在値・判断・制約"| P02
+  登録簿 -->|"課題・リスク・判断"| P09
+  登録簿 -->|"ビュー生成入力"| P10
+
+  P03 -->|"成果物定義・依存・完了条件"| 成果物カタログ
+  成果物カタログ -->|"計画入力"| P04
+  成果物カタログ -->|"表示生成入力"| P10
+  成果物カタログ -->|"非推奨化対象・参照関係"| P11
+
+  P04 -->|"Timeline・Schedule・状態"| 実行計画
+  実行計画 -->|"due・対象 task"| P05
+  実行計画 -->|"Ready task・依存"| P07
+  実行計画 -->|"進捗・節目"| P09
+  実行計画 -->|"表示生成入力"| P10
+
+  定期実行状態 -->|"定義・前回結果・次回判定情報"| P05
+  P05 -->|"last run・結果・予定時刻"| 定期実行状態
+  定期実行状態 -->|"定期実行状況"| P09
+  定期実行状態 -->|"dashboard 生成入力"| P10
+
+  ジョブ記録 -->|"定義・既存 Run・checkpoint"| P06
+  P06 -->|"Run・attempt・checkpoint"| ジョブ記録
+  P07 -->|"Job 実行結果"| ジョブ記録
+  ジョブ記録 -->|"Job 進捗・結果"| P09
+  ジョブ記録 -->|"dashboard 生成入力"| P10
+
+  成果物 -->|"対象成果物・仕様"| P07
+  P07 -->|"更新成果物"| 成果物
+  成果物 -->|"評価対象"| P08
+  成果物 -->|"表示・索引生成入力"| P10
+  成果物 -->|"非推奨化対象"| P11
+
+  P07 -->|"plan・result・event・evidence"| 実行記録
+  実行記録 -->|"実行根拠・検証結果"| P08
+  実行記録 -->|"進捗・実績"| P09
+  実行記録 -->|"実行ビュー生成入力"| P10
+
+  P08 -->|"grade・finding"| 評価記録
+  評価記録 -->|"品質状況"| P09
+  評価記録 -->|"評価表示生成入力"| P10
+  評価記録 -->|"計画方針・品質条件"| P04
+
+  プロジェクト運用構成 -->|"対象範囲・actor・provider"| P03
+  プロジェクト運用構成 -->|"計画条件"| P04
+  プロジェクト運用構成 -->|"定期実行条件"| P05
+  プロジェクト運用構成 -->|"Job 実行条件"| P06
+  プロジェクト運用構成 -->|"agent・実行条件"| P07
+  プロジェクト運用構成 -->|"rubric・評価主体"| P08
+  プロジェクト運用構成 -->|"生成・閲覧条件"| P10
+  P12 -->|"承認済み構成"| プロジェクト運用構成
+
+  P10 -->|"表示ページ・索引・ビュー"| 派生情報
+  派生情報 -->|"進捗・集約情報"| P09
+  派生情報 -->|"閲覧情報"| 情報利用者
+  P09 -->|"報告・判断材料・申し送り"| 報告記録
+  報告記録 -->|"確認・次の判断"| 開始判断者
+  報告記録 -->|"共有情報"| プロジェクト参加者
+  P11 -->|"保管済み文書"| 保管領域
+  P11 -->|"非推奨状態・更新した参照"| 成果物カタログ
+
+  class P01,P02,P03,P04,P05,P06,P07,P08,P09,P10,P11,P12 process
+  class プロジェクト運用構成,成果物カタログ storeMaster
+  class 登録簿,実行計画,定期実行状態,ジョブ記録,成果物,実行記録,評価記録,派生情報,報告記録 storeTransaction
+  class 保管領域 archive
+  class 開始判断者,プロジェクト参加者,外部実行基盤,情報利用者 actor
+```
+
+凡例: 青い角丸長方形は revised の業務プロセス領域、四角は外部主体、円柱はデータストアを表す。濃い緑はマスタ・構成データ、薄い緑はトランザクションデータ、紫のスタジアム形は非推奨文書の保管領域である。プロセス間の矢印は委譲する情報または実行要求、データストアとの矢印は主要な参照または更新を表す。
+
+### 4.2. 比較用の既存概念データフロー
+
+次の図は、従来の十領域を三つのプロセスグループへまとめた概念データフローであり、revised との差分を比較するために残す。領域 ID と境界は revised へ読み替えず、従来定義を表す図として扱う。
 
 ```mermaid
 flowchart LR
