@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, extname, isAbsolute, join, relative, resolve } from "node:path";
+import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { type Command } from "commander";
 import yaml from "js-yaml";
 import remarkParse from "remark-parse";
@@ -52,9 +52,18 @@ export type GradeViewpointInput = {
   findings?: GradeFindingInput[];
 };
 
+export type GradeCriterionStatus = "satisfied" | "unsatisfied";
+
+export type GradeCriterionInput = {
+  id: string;
+  status: GradeCriterionStatus;
+  reason?: string;
+};
+
 export type GradeDocumentInput = {
   path: string;
   viewpoints: GradeViewpointInput[];
+  done_criteria?: GradeCriterionInput[];
 };
 
 export type GradeSubmission = {
@@ -66,6 +75,32 @@ export type GradeSubmission = {
 
 export type GradeExecutorAnalysis = {
   viewpoints: GradeViewpointInput[];
+  doneCriteria?: GradeCriterionInput[];
+};
+
+// 成果物カタログの done_criteria を plan / apply で扱うための定義。id はカタログの並び順から
+// 採番し、同じカタログから生成する限り安定する。
+export type GradeDoneCriterion = {
+  id: string;
+  text: string;
+  roles: string[];
+  viewpoint: string;
+};
+
+export type GradeDoneCriteriaContext = {
+  definitions: GradeDoneCriterion[];
+  detailRef: string;
+};
+
+export type GradeDoneCriteriaDetail = {
+  id: string;
+  document: string;
+  path: string;
+  graded_at: string;
+  graded_by: string;
+  content_hash: string;
+  summary: { satisfied: number; unsatisfied: number; total: number };
+  criteria: Array<GradeDoneCriterion & { status: GradeCriterionStatus; reason?: string }>;
 };
 
 export type GradeValidationIssue = { path: string; message: string };
@@ -80,8 +115,12 @@ const FINDING_RE =
 const KATA_DIRS = ["rulebooks", "recipes", "samples", "templates"] as const;
 const KATA_REFERENCE_EXTENSIONS = new Set([".md", ".yaml", ".yml", ".json"]);
 const KATA_REFERENCE_FIELDS = ["rulebook", "recipe", "sample", "template"] as const;
+const CRITERION_ID_RE = /^DC-[0-9]{3,}$/;
+const CRITERION_STATUSES: readonly GradeCriterionStatus[] = ["satisfied", "unsatisfied"];
+const DONE_CRITERIA_SCHEMA = "docs/specdojo/schemas/v1/grade-done-criteria.schema.yaml";
 const GRADE_PLACEHOLDER = "__SPECDOJO_GRADE_FLOW_PLACEHOLDER__";
 const GRADE_FINDINGS_PLACEHOLDER = "__SPECDOJO_GRADE_FINDINGS_FLOW_PLACEHOLDER__";
+const GRADE_UNSATISFIED_PLACEHOLDER = "__SPECDOJO_GRADE_UNSATISFIED_BLOCK_PLACEHOLDER__";
 const SEVERITY_LEVEL_CAP: Record<GradeSeverity, number> = {
   blocker: 0,
   major: 2,
@@ -148,6 +187,12 @@ function serializeGrade(grade: Record<string, unknown>): string {
   const gradeForDump = structuredClone(grade);
   const findings = isRecord(gradeForDump.findings) ? gradeForDump.findings : undefined;
   if (findings) gradeForDump.findings = GRADE_FINDINGS_PLACEHOLDER;
+  const doneCriteria = isRecord(gradeForDump.done_criteria)
+    ? gradeForDump.done_criteria
+    : undefined;
+  const unsatisfied =
+    doneCriteria && isRecord(doneCriteria.unsatisfied) ? doneCriteria.unsatisfied : undefined;
+  if (doneCriteria && unsatisfied) doneCriteria.unsatisfied = GRADE_UNSATISFIED_PLACEHOLDER;
 
   let dumped = yaml
     .dump(
@@ -162,6 +207,20 @@ function serializeGrade(grade: Record<string, unknown>): string {
       .dump(findings, { lineWidth: -1, noRefs: true, flowLevel: 0 })
       .trimEnd();
     dumped = dumped.replace(GRADE_FINDINGS_PLACEHOLDER, inlineFindings);
+  }
+  if (unsatisfied) {
+    // 未充足条件は viewpoints と同じく「条件ごとに1行、値はフロー」で記録する。
+    // 条件数が増えても1行が伸びず、Prettier の整形後も同じ形を保つ。
+    const blockUnsatisfied = yaml
+      .dump(unsatisfied, { lineWidth: -1, noRefs: true, flowLevel: 1 })
+      .trimEnd()
+      .split("\n")
+      .map((line) => `      ${line}`)
+      .join("\n");
+    dumped = dumped.replace(
+      `    unsatisfied: ${GRADE_UNSATISFIED_PLACEHOLDER}`,
+      `    unsatisfied:\n${blockUnsatisfied}`,
+    );
   }
   // js-yaml は `{score: 100}`、Prettier は `{ score: 100 }` と出力する。
   // 最初から Prettier の形へ合わせ、整形と再評価の往復で差分が出ないようにする。
@@ -548,6 +607,69 @@ function isGeneratedGradeTarget(path: string): boolean {
   return repoRelativePath(path).split("/").includes("generated");
 }
 
+type DeliverableCatalogEntry = {
+  path: string;
+  localId: string;
+  doneCriteria: GradeDoneCriterion[];
+};
+
+function criterionId(index: number): string {
+  return `DC-${String(index + 1).padStart(3, "0")}`;
+}
+
+// カタログの Markdown 成果物を絶対パスで引ける形にする。grade の対象探索と
+// done_criteria の解決が同じ集合を見るよう、両者はこの関数を共有する。
+function loadDeliverableCatalog(projectOption?: string): Map<string, DeliverableCatalogEntry> {
+  const root = specdojoRootDir();
+  const { project } = resolveProject(projectOption);
+  const catalog = getProjectCatalogPath(project);
+  if (!catalog) throw new Error("catalog_path is required for deliverable grading");
+  const entries = new Map<string, DeliverableCatalogEntry>();
+  for (const loaded of loadCatalogDocs(resolve(root, catalog))) {
+    const resolved: Parameters<typeof collectResolvedDeliverables>[2] = [];
+    collectResolvedDeliverables(
+      loaded.doc.groups,
+      resolveBasePath("", loaded.doc.base_path),
+      resolved,
+    );
+    for (const item of resolved) {
+      if (item.item.kind === "generated" || !item.item.path) continue;
+      if (!item.resolvedPath.endsWith(".md")) continue;
+      const path = resolve(root, item.resolvedPath);
+      if (!existsSync(path) || entries.has(path)) continue;
+      entries.set(path, {
+        path,
+        localId: item.item.local_id,
+        doneCriteria: (item.item.done_criteria ?? []).map((criterion, index) => ({
+          id: criterionId(index),
+          text: criterion.text,
+          roles: [...criterion.roles],
+          viewpoint: criterion.viewpoint,
+        })),
+      });
+    }
+  }
+  return entries;
+}
+
+// 成果物ごとの done_criteria 定義を、submission が使うリポジトリ相対パスで引ける形にする。
+// カタログに無い文書（--path で明示した非カタログ文書）は含めず、plan と apply は
+// 定義が無い文書を「完了条件なし」として扱う。
+export function resolveDeliverableDoneCriteria(
+  paths: readonly string[],
+  projectOption?: string,
+): Map<string, GradeDoneCriterion[]> {
+  const catalog = loadDeliverableCatalog(projectOption);
+  const result = new Map<string, GradeDoneCriterion[]>();
+  for (const path of paths) {
+    const entry = catalog.get(resolveSafeMarkdownPath(path));
+    if (entry && entry.doneCriteria.length > 0) {
+      result.set(repoRelativePath(entry.path), entry.doneCriteria);
+    }
+  }
+  return result;
+}
+
 export function discoverGradeTargets(
   opts: {
     target: GradeTarget;
@@ -571,25 +693,7 @@ export function discoverGradeTargets(
       ),
     );
   } else {
-    const { project } = resolveProject(opts.project);
-    const catalog = getProjectCatalogPath(project);
-    if (!catalog) throw new Error("catalog_path is required for deliverable grading");
-    const paths = new Set<string>();
-    for (const loaded of loadCatalogDocs(resolve(root, catalog))) {
-      const resolved: Parameters<typeof collectResolvedDeliverables>[2] = [];
-      collectResolvedDeliverables(
-        loaded.doc.groups,
-        resolveBasePath("", loaded.doc.base_path),
-        resolved,
-      );
-      for (const item of resolved) {
-        if (item.item.kind !== "generated" && item.item.path && item.resolvedPath.endsWith(".md")) {
-          const path = resolve(root, item.resolvedPath);
-          if (existsSync(path)) paths.add(path);
-        }
-      }
-    }
-    candidates = [...paths];
+    candidates = [...loadDeliverableCatalog(opts.project).keys()];
   }
   const unique = [...new Set(candidates)].filter((path) => !isGeneratedGradeTarget(path)).sort();
   if (
@@ -753,6 +857,27 @@ function deterministicResults(
   return results;
 }
 
+function doneCriteriaPlanLines(
+  doneCriteria: readonly GradeDoneCriterion[],
+  definitions: ReviewViewpointsDoc,
+): string[] {
+  const titles = new Map(
+    (definitions.viewpoints ?? []).map((viewpoint) => [viewpoint.id, viewpoint.title]),
+  );
+  return [
+    "### 3.4. 完了条件（done_criteria）",
+    "",
+    "成果物カタログが対象へ宣言する完了条件である。viewpoint と rubric による level 判定とは別の軸として、各条件を現在の本文の根拠だけで `satisfied` / `unsatisfied` のどちらかに判定する。score や level の高低から充足を推論せず、条件文が要求する内容を本文で確認できるかだけで判定する。`roles` は条件の確認責任を持つ Role code、`viewpoint` は条件を見る観点であり、`evaluation: human` の観点に紐づく条件も本文の根拠で一次判定する。",
+    "",
+    ...doneCriteria.map((criterion) => {
+      const title = titles.get(criterion.viewpoint);
+      const viewpoint = title ? `${criterion.viewpoint}（${title}）` : criterion.viewpoint;
+      return `- ${criterion.id} [roles=${criterion.roles.join(",")}; viewpoint=${viewpoint}]: ${criterion.text}`;
+    }),
+    "",
+  ];
+}
+
 export function renderGradePlan(opts: {
   target: GradeTarget;
   path: string;
@@ -760,6 +885,7 @@ export function renderGradePlan(opts: {
   referenceExample?: string;
   viewpoints: ReviewViewpointsDoc;
   projectId: string;
+  doneCriteria?: GradeDoneCriterion[];
 }): string {
   const rubric = assertRubric(opts.viewpoints);
   const viewpoints = agentViewpoints(opts.viewpoints, opts.target);
@@ -777,6 +903,7 @@ export function renderGradePlan(opts: {
   const referenceExample = opts.referenceExample
     ? repoRelativePath(resolveSafeMarkdownPath(opts.referenceExample))
     : undefined;
+  const doneCriteria = opts.target === "deliverable" ? (opts.doneCriteria ?? []) : [];
   const lines = [
     "---",
     yaml
@@ -841,6 +968,11 @@ export function renderGradePlan(opts: {
     "5. level 3 以下には finding を付ける。finding には severity（blocker / major / minor / note）、対象直前の本文行番号、具体的な修正理由を含める。line は Frontmatter を除く本文の1始まり（通常は H1 が1行目）とする。level 4 は finding なしとする。",
     "6. 前回の指摘を対象の現在内容と照合し、解消済みか確認する。未解消なら前回の message を変更せず今回の finding に含め、severity は前回と同等以上を指定する。前回の rule は前回評価時の分類として扱い、各 viewpoint は現在の根拠から独立に評価する。前回の問題が解消され、別の軽微な問題だけが残るため severity を引き下げる場合は、その根拠を新しい finding の message に含める。",
     "7. 前回の指摘の確認だけで終了せず、前回の指摘にない問題もすべての viewpoint で独立して検出する。",
+    ...(doneCriteria.length > 0
+      ? [
+          "8. 完了条件（done_criteria）を1件ずつ本文の根拠と照合し、`satisfied` / `unsatisfied` を判定する。viewpoint の level や総合 score とは独立した判定であり、level が高いことを理由に条件を満たしたとみなさない。`unsatisfied` には不足している内容を1行で記す。",
+        ]
+      : []),
     "",
     "### 3.1. 前回の指摘",
     "",
@@ -864,12 +996,18 @@ export function renderGradePlan(opts: {
         `- ${viewpoint.id} [${viewpoint.category}/${viewpoint.evaluation}]: ${viewpoint.check} Evidence: ${viewpoint.evidence}`,
     ),
     "",
+    ...(doneCriteria.length > 0 ? doneCriteriaPlanLines(doneCriteria, opts.viewpoints) : []),
     "## 4. 完了手順",
     "",
     "1. すべての agent viewpoint の判定と、必要な finding が揃っていることを確認する。",
     "2. 最終応答では各 viewpoint を次のマーカーで1回ずつ宣言する。マーカー間には根拠や検討過程を自由形式で詳しく記述してよい。JSON、Markdown コードフェンス、GradeSubmission は出力しない。",
     "3. `LEVEL` と各 `FINDING` は reporter が忠実性を機械検証する申告値である。message は1行で具体的に記し、reporter が一字一句コピーできるようにする。finding がない場合は `FINDING` 行を記さない。",
     "4. すべての viewpoint marker、0-4 の level、level 3 以下の finding、severity と非空 message が揃っていることを確認する。",
+    ...(doneCriteria.length > 0
+      ? [
+          "5. 完了条件は `[DONE_CRITERIA]` と `[END DONE_CRITERIA]` で囲んだブロックを1回だけ置き、列挙されたすべての条件 ID を1行ずつ `<ID>: satisfied` または `<ID>: unsatisfied: <不足内容>` の形で申告する。列挙にない ID を追加せず、ID を省略しない。",
+        ]
+      : []),
     "",
     "```text",
     ...viewpoints.flatMap((viewpoint) => [
@@ -880,6 +1018,16 @@ export function renderGradePlan(opts: {
       "[END VIEWPOINT]",
       "",
     ]),
+    ...(doneCriteria.length > 0
+      ? [
+          "[DONE_CRITERIA]",
+          ...doneCriteria.map(
+            (criterion) => `${criterion.id}: <satisfied|unsatisfied>: 不足内容を1行で記述する。`,
+          ),
+          "[END DONE_CRITERIA]",
+          "",
+        ]
+      : []),
     "```",
     "",
     "## 5. 異常終了の条件",
@@ -887,6 +1035,9 @@ export function renderGradePlan(opts: {
     "- 評価対象、参考資料、または良い実例を読み取れない場合は、内容を推測せず異常終了する。",
     "- rubric または viewpoint に不足があり、全項目を判定できない場合は異常終了する。",
     "- すべての viewpoint の level と finding を申告できない場合は異常終了する。",
+    ...(doneCriteria.length > 0
+      ? ["- 列挙された完了条件のいずれかを判定できない場合は異常終了する。"]
+      : []),
   ];
   return `${lines.join("\n")}\n`;
 }
@@ -896,6 +1047,7 @@ export function renderGradeReporterPlan(opts: {
   path: string;
   viewpoints: ReviewViewpointsDoc;
   projectId: string;
+  doneCriteria?: GradeDoneCriterion[];
 }): string {
   const rubric = assertRubric(opts.viewpoints);
   const viewpoints = agentViewpoints(opts.viewpoints, opts.target);
@@ -906,6 +1058,7 @@ export function renderGradeReporterPlan(opts: {
   const documentId = typeof metadata.id === "string" ? metadata.id : rel;
   const taskHash = createHash("sha256").update(rel).digest("hex").slice(0, 12).toUpperCase();
   const taskId = `GRADE-${opts.target.toUpperCase()}-${taskHash}-REPORTER`;
+  const doneCriteria = opts.target === "deliverable" ? (opts.doneCriteria ?? []) : [];
   const lines = [
     "---",
     yaml
@@ -949,12 +1102,24 @@ export function renderGradeReporterPlan(opts: {
     "2. level、severity、line、message を executor の申告どおりにコピーする。message の要約、言い換え、校正を行わない。",
     "3. executor が述べていない finding を追加せず、述べた finding を省略しない。finding の `id` は出力しない。",
     "4. marker が欠けている、値が曖昧、または GradeSubmission の検証規則と矛盾する場合は推測せず異常終了する。",
+    ...(doneCriteria.length > 0
+      ? [
+          "5. `[DONE_CRITERIA]` ブロックの各行を `done_criteria` へ写す。`id` と `status`（`satisfied` / `unsatisfied`）は申告どおりにコピーし、`unsatisfied` に続く不足内容は `reason` へ一字一句コピーする。条件の追加・省略・判定変更を行わない。",
+        ]
+      : []),
     "",
     "## 4. 完了手順",
     "",
     "1. facts である `rubric` と `path` を次のテンプレートから変更しない。",
     "2. すべての agent viewpoint が1回ずつあり、level と finding が executor の申告と一致することを確認する。",
-    "3. 正常終了時の最終応答は GradeSubmission JSON オブジェクト1個だけとする。前置き、要約、Markdown コードフェンスを含めない。",
+    ...(doneCriteria.length > 0
+      ? [
+          "3. `done_criteria` の各要素が executor の申告した ID と status に一致することを確認する。",
+          "4. 正常終了時の最終応答は GradeSubmission JSON オブジェクト1個だけとする。前置き、要約、Markdown コードフェンスを含めない。",
+        ]
+      : [
+          "3. 正常終了時の最終応答は GradeSubmission JSON オブジェクト1個だけとする。前置き、要約、Markdown コードフェンスを含めない。",
+        ]),
     "",
     "```json",
     JSON.stringify(
@@ -968,6 +1133,14 @@ export function renderGradeReporterPlan(opts: {
               level: 4,
               findings: [],
             })),
+            ...(doneCriteria.length > 0
+              ? {
+                  done_criteria: doneCriteria.map((criterion) => ({
+                    id: criterion.id,
+                    status: "satisfied",
+                  })),
+                }
+              : {}),
           },
         ],
       },
@@ -1009,6 +1182,8 @@ export function writeGradePlans(opts: {
   projectId: string;
   outputDirectory: string;
   random?: () => number;
+  // リポジトリ相対パスをキーにした done_criteria 定義。deliverable の plan だけが使う。
+  doneCriteriaByPath?: ReadonlyMap<string, GradeDoneCriterion[]>;
 }): {
   path: string;
   changed: boolean;
@@ -1037,6 +1212,7 @@ export function writeGradePlans(opts: {
         candidates: referenceExamples,
         random: opts.random,
       });
+    const doneCriteria = opts.doneCriteriaByPath?.get(repoRelativePath(absolute));
     const content = renderGradePlan({
       target: opts.target,
       path: absolute,
@@ -1044,12 +1220,14 @@ export function writeGradePlans(opts: {
       referenceExample,
       viewpoints: opts.viewpoints,
       projectId: opts.projectId,
+      doneCriteria,
     });
     const reporterContent = renderGradeReporterPlan({
       target: opts.target,
       path: absolute,
       viewpoints: opts.viewpoints,
       projectId: opts.projectId,
+      doneCriteria,
     });
     const changed = !existsSync(output) || readFileSync(output, "utf8") !== content;
     const reporterChanged =
@@ -1069,6 +1247,8 @@ export function writeGradePlans(opts: {
 
 export function parseGradeExecutorAnalysis(raw: string): GradeExecutorAnalysis {
   const viewpoints: GradeViewpointInput[] = [];
+  let doneCriteria: GradeCriterionInput[] | undefined;
+  let inDoneCriteria = false;
   let current:
     | {
         id: string;
@@ -1078,6 +1258,37 @@ export function parseGradeExecutorAnalysis(raw: string): GradeExecutorAnalysis {
     | undefined;
 
   for (const [lineIndex, line] of raw.split(/\r?\n/).entries()) {
+    if (/^\[DONE_CRITERIA\]\s*$/.test(line)) {
+      if (current) throw new Error(`line ${lineIndex + 1}: DONE_CRITERIA inside VIEWPOINT`);
+      if (doneCriteria !== undefined) {
+        throw new Error(`line ${lineIndex + 1}: duplicate DONE_CRITERIA block`);
+      }
+      doneCriteria = [];
+      inDoneCriteria = true;
+      continue;
+    }
+    if (/^\[END DONE_CRITERIA\]\s*$/.test(line)) {
+      if (!inDoneCriteria) {
+        throw new Error(`line ${lineIndex + 1}: unexpected END DONE_CRITERIA marker`);
+      }
+      inDoneCriteria = false;
+      continue;
+    }
+    if (inDoneCriteria) {
+      if (line.trim() === "") continue;
+      const criterion = line.match(
+        /^(DC-[0-9]{3,}):\s*(satisfied|unsatisfied)(?:\s*[:：]\s*(\S.*?))?\s*$/,
+      );
+      if (!criterion) {
+        throw new Error(`line ${lineIndex + 1}: malformed DONE_CRITERIA entry`);
+      }
+      doneCriteria!.push({
+        id: criterion[1],
+        status: criterion[2] as GradeCriterionStatus,
+        ...(criterion[3] ? { reason: criterion[3].trim() } : {}),
+      });
+      continue;
+    }
     const start = line.match(/^\[VIEWPOINT ([A-Za-z0-9][A-Za-z0-9._-]*)\]\s*$/);
     if (start) {
       if (current) {
@@ -1125,8 +1336,9 @@ export function parseGradeExecutorAnalysis(raw: string): GradeExecutorAnalysis {
   }
 
   if (current) throw new Error(`viewpoint ${current.id}: END VIEWPOINT marker is required`);
+  if (inDoneCriteria) throw new Error("END DONE_CRITERIA marker is required");
   if (viewpoints.length === 0) throw new Error("No VIEWPOINT markers found in executor analysis");
-  return { viewpoints };
+  return { viewpoints, ...(doneCriteria !== undefined ? { doneCriteria } : {}) };
 }
 
 function normalizeFindingMessageForFidelity(message: string): string {
@@ -1211,12 +1423,57 @@ function findingSimilarity(declared: GradeFindingInput, reported: GradeFindingIn
   );
 }
 
+function doneCriteriaFidelityIssues(
+  declared: readonly GradeCriterionInput[] | undefined,
+  reported: readonly GradeCriterionInput[] | undefined,
+): GradeValidationIssue[] {
+  const issues: GradeValidationIssue[] = [];
+  const where = "documents[0].done_criteria";
+  if (declared === undefined && reported === undefined) return issues;
+  if (declared === undefined) {
+    issues.push({ path: where, message: "reporter added done_criteria not declared by executor" });
+    return issues;
+  }
+  const reportedById = new Map((reported ?? []).map((criterion) => [criterion.id, criterion]));
+  for (const criterion of declared) {
+    const match = reportedById.get(criterion.id);
+    if (!match) {
+      issues.push({ path: where, message: `reporter omitted executor criterion: ${criterion.id}` });
+      continue;
+    }
+    reportedById.delete(criterion.id);
+    if (match.status !== criterion.status) {
+      issues.push({
+        path: `${where}.${criterion.id}`,
+        message: `reporter status ${match.status} differs from executor status ${criterion.status}`,
+      });
+    }
+    if (
+      normalizeFindingMessageForFidelity(criterion.reason ?? "") !==
+      normalizeFindingMessageForFidelity(match.reason ?? "")
+    ) {
+      issues.push({
+        path: `${where}.${criterion.id}`,
+        message: `reporter changed executor reason: executor=${JSON.stringify(criterion.reason ?? "")} reporter=${JSON.stringify(match.reason ?? "")}`,
+      });
+    }
+  }
+  for (const id of reportedById.keys()) {
+    issues.push({
+      path: where,
+      message: `reporter added criterion not declared by executor: ${id}`,
+    });
+  }
+  return issues;
+}
+
 export function validateGradeReporterFidelity(opts: {
   executorOutput: string;
   submission: GradeSubmission;
   viewpoints: ReviewViewpointsDoc;
   target: GradeTarget;
   expectedPath: string;
+  doneCriteria?: GradeDoneCriterion[];
 }): GradeValidationIssue[] {
   let analysis: GradeExecutorAnalysis;
   try {
@@ -1234,10 +1491,19 @@ export function validateGradeReporterFidelity(opts: {
   const analysisIssues = validateGradeSubmission(
     {
       rubric: rubric.id,
-      documents: [{ path: opts.expectedPath, viewpoints: analysis.viewpoints }],
+      documents: [
+        {
+          path: opts.expectedPath,
+          viewpoints: analysis.viewpoints,
+          ...(analysis.doneCriteria ? { done_criteria: analysis.doneCriteria } : {}),
+        },
+      ],
     },
     opts.viewpoints,
     opts.target,
+    opts.doneCriteria
+      ? { doneCriteriaByPath: new Map([[opts.expectedPath, opts.doneCriteria]]) }
+      : {},
   ).map((issue) => ({ path: `$analysis.${issue.path}`, message: issue.message }));
   if (analysisIssues.length > 0) return analysisIssues;
 
@@ -1304,6 +1570,7 @@ export function validateGradeReporterFidelity(opts: {
       });
     }
   }
+  issues.push(...doneCriteriaFidelityIssues(analysis.doneCriteria, document.done_criteria));
   return issues;
 }
 
@@ -1327,10 +1594,79 @@ export function parseGradeSubmission(raw: string): GradeSubmission {
   return value as GradeSubmission;
 }
 
+export type GradeSubmissionValidationOptions = {
+  // リポジトリ相対パスをキーにした done_criteria 定義。指定した文書は列挙された条件 ID を
+  // 過不足なく申告しなければならない。未指定の文書は書式だけを検証する。
+  doneCriteriaByPath?: ReadonlyMap<string, GradeDoneCriterion[]>;
+};
+
+function validateDoneCriteriaInput(opts: {
+  where: string;
+  target: GradeTarget;
+  value: unknown;
+  expected?: GradeDoneCriterion[];
+}): GradeValidationIssue[] {
+  const issues: GradeValidationIssue[] = [];
+  const { where, value, expected } = opts;
+  if (value === undefined) {
+    if (expected && expected.length > 0) {
+      issues.push({ path: where, message: "done_criteria[] is required for this deliverable" });
+    }
+    return issues;
+  }
+  if (!Array.isArray(value)) {
+    issues.push({ path: `${where}.done_criteria`, message: "done_criteria must be an array" });
+    return issues;
+  }
+  if (opts.target !== "deliverable") {
+    issues.push({
+      path: `${where}.done_criteria`,
+      message: "done_criteria is accepted only for deliverable targets",
+    });
+    return issues;
+  }
+  const expectedIds = expected ? new Set(expected.map((criterion) => criterion.id)) : undefined;
+  const seen = new Set<string>();
+  for (const [index, entry] of value.entries()) {
+    const entryPath = `${where}.done_criteria[${index}]`;
+    if (
+      !isRecord(entry) ||
+      typeof entry.id !== "string" ||
+      !CRITERION_ID_RE.test(entry.id) ||
+      typeof entry.status !== "string" ||
+      !CRITERION_STATUSES.includes(entry.status as GradeCriterionStatus)
+    ) {
+      issues.push({ path: entryPath, message: "id (DC-NNN) and status are required" });
+      continue;
+    }
+    if (entry.reason !== undefined && typeof entry.reason !== "string") {
+      issues.push({ path: `${entryPath}.reason`, message: "reason must be a string" });
+    }
+    if (
+      entry.status === "unsatisfied" &&
+      !(typeof entry.reason === "string" && entry.reason.trim())
+    ) {
+      issues.push({ path: entryPath, message: "unsatisfied requires a non-empty reason" });
+    }
+    if (seen.has(entry.id)) {
+      issues.push({ path: entryPath, message: `duplicate criterion: ${entry.id}` });
+    }
+    seen.add(entry.id);
+    if (expectedIds && !expectedIds.has(entry.id)) {
+      issues.push({ path: entryPath, message: `unknown criterion: ${entry.id}` });
+    }
+  }
+  for (const id of expectedIds ?? []) {
+    if (!seen.has(id)) issues.push({ path: where, message: `missing criterion: ${id}` });
+  }
+  return issues;
+}
+
 export function validateGradeSubmission(
   submission: GradeSubmission,
   doc: ReviewViewpointsDoc,
   target: GradeTarget,
+  options: GradeSubmissionValidationOptions = {},
 ): GradeValidationIssue[] {
   const issues: GradeValidationIssue[] = [];
   const rubric = assertRubric(doc);
@@ -1348,6 +1684,17 @@ export function validateGradeSubmission(
     if (paths.has(document.path))
       issues.push({ path: where, message: `duplicate path: ${document.path}` });
     paths.add(document.path);
+    const normalizedDocumentPath = repoRelativePath(resolve(specdojoRootDir(), document.path));
+    issues.push(
+      ...validateDoneCriteriaInput({
+        where,
+        target,
+        value: document.done_criteria,
+        expected:
+          options.doneCriteriaByPath?.get(document.path) ??
+          options.doneCriteriaByPath?.get(normalizedDocumentPath),
+      }),
+    );
     const ids = new Set<string>();
     const findingIds = new Set<string>();
     for (const [viewpointIndex, result] of document.viewpoints.entries()) {
@@ -1458,6 +1805,36 @@ function scoreDocument(
   return { score, verdict, categories, viewpoints: viewpointOutput, findings: counts };
 }
 
+// 詳細ファイルは成果物ごとに1件で、再評価のたびに上書きする。時点の記録は git 履歴が担う。
+// grade 本体と同じ方式であり、実行ごとにファイルを増やすと最新の評価を判別できなくなる。
+export function doneCriteriaDetailPath(criteriaDirectory: string, documentPath: string): string {
+  const absolute = resolveSafeMarkdownPath(documentPath);
+  const directory = resolveSafeRepositoryPath(criteriaDirectory, "criteria directory");
+  return join(
+    directory,
+    gradePlanFilename(absolute).replace(/-grade-plan\.md$/, "-done-criteria.yaml"),
+  );
+}
+
+function doneCriteriaDetailId(documentId: string | undefined, documentPath: string): string {
+  if (documentId) return `${documentId}-grade-criteria`;
+  const hash = createHash("sha256")
+    .update(repoRelativePath(documentPath))
+    .digest("hex")
+    .slice(0, 10);
+  return `grade-criteria-${hash}`;
+}
+
+export function renderDoneCriteriaDetail(
+  detail: GradeDoneCriteriaDetail,
+  detailPath: string,
+): string {
+  const schemaRef = relative(dirname(detailPath), resolve(specdojoRootDir(), DONE_CRITERIA_SCHEMA))
+    .split(sep)
+    .join("/");
+  return `# yaml-language-server: $schema=${schemaRef}\n${yaml.dump(detail, { lineWidth: 120, noRefs: true, quotingType: '"' })}`;
+}
+
 export function applyGradeSubmission(opts: {
   submission: GradeSubmission;
   viewpoints: ReviewViewpointsDoc;
@@ -1466,8 +1843,12 @@ export function applyGradeSubmission(opts: {
   reference?: string;
   dryRun?: boolean;
   now?: Date;
+  doneCriteriaByPath?: ReadonlyMap<string, GradeDoneCriterion[]>;
+  criteriaDirectory?: string;
 }): string[] {
-  const issues = validateGradeSubmission(opts.submission, opts.viewpoints, opts.target);
+  const issues = validateGradeSubmission(opts.submission, opts.viewpoints, opts.target, {
+    doneCriteriaByPath: opts.doneCriteriaByPath,
+  });
   if (issues.length > 0)
     throw new Error(issues.map((issue) => `${issue.path}: ${issue.message}`).join("\n"));
   const changed: string[] = [];
@@ -1475,7 +1856,16 @@ export function applyGradeSubmission(opts: {
     const absolute = resolveSafeMarkdownPath(input.path);
     const rel = repoRelativePath(absolute);
     const current = readFileSync(absolute, "utf8");
-    const next = gradeMarkdownContent({
+    const definitions = opts.doneCriteriaByPath?.get(rel);
+    const detailPath =
+      definitions && input.done_criteria && opts.criteriaDirectory
+        ? doneCriteriaDetailPath(opts.criteriaDirectory, absolute)
+        : undefined;
+    if (definitions && input.done_criteria && !detailPath) {
+      throw new Error(`${rel}: criteriaDirectory is required to record done_criteria`);
+    }
+    const documentId = parseMarkdown(current, rel).data.specdojo as Record<string, unknown>;
+    const graded = gradeMarkdownDocument({
       content: current,
       path: rel,
       input,
@@ -1484,10 +1874,33 @@ export function applyGradeSubmission(opts: {
       gradedBy: opts.gradedBy,
       reference: opts.reference,
       now: opts.now,
+      doneCriteria:
+        definitions && detailPath
+          ? {
+              definitions,
+              detailRef: doneCriteriaDetailId(
+                typeof documentId.id === "string" ? documentId.id : undefined,
+                absolute,
+              ),
+            }
+          : undefined,
     });
-    if (next !== current) {
+    // 詳細を先に永続化してから成果物へ detail_ref を書く。途中で詳細の書き込みに失敗しても、
+    // 存在しない参照だけが成果物へ残る状態を避ける。
+    if (graded.detail && detailPath) {
+      const rendered = renderDoneCriteriaDetail(graded.detail, detailPath);
+      const detailRel = repoRelativePath(detailPath);
+      if (!existsSync(detailPath) || readFileSync(detailPath, "utf8") !== rendered) {
+        changed.push(detailRel);
+        if (!opts.dryRun) {
+          mkdirSync(dirname(detailPath), { recursive: true });
+          writeFileSync(detailPath, rendered, "utf8");
+        }
+      }
+    }
+    if (graded.content !== current) {
       changed.push(rel);
-      if (!opts.dryRun) writeFileSync(absolute, next, "utf8");
+      if (!opts.dryRun) writeFileSync(absolute, graded.content, "utf8");
     }
   }
   return changed;
@@ -1507,7 +1920,30 @@ export function resolveGradeReferenceId(pathOrId: string): string {
   return metadata.id;
 }
 
-export function gradeMarkdownContent(opts: {
+// score と done_criteria の充足は別の軸として扱う。verdict は score と finding だけで決め、
+// 充足状況は要約として並記する。score の閾値が充足判定を上書きせず、その逆も行わない。
+function summarizeDoneCriteria(
+  definitions: readonly GradeDoneCriterion[],
+  results: readonly GradeCriterionInput[],
+  detailRef: string,
+): Record<string, unknown> {
+  const resultById = new Map(results.map((result) => [result.id, result]));
+  const unsatisfied: Record<string, string[]> = {};
+  let satisfied = 0;
+  for (const criterion of definitions) {
+    const result = resultById.get(criterion.id);
+    if (result?.status === "satisfied") satisfied += 1;
+    else unsatisfied[criterion.id] = [...criterion.roles];
+  }
+  return {
+    satisfied,
+    total: definitions.length,
+    ...(Object.keys(unsatisfied).length > 0 ? { unsatisfied } : {}),
+    detail_ref: detailRef,
+  };
+}
+
+type GradeMarkdownOptions = {
   content: string;
   path: string;
   input: GradeDocumentInput;
@@ -1516,7 +1952,13 @@ export function gradeMarkdownContent(opts: {
   gradedBy: string;
   reference?: string;
   now?: Date;
-}): string {
+  doneCriteria?: GradeDoneCriteriaContext;
+};
+
+export function gradeMarkdownDocument(opts: GradeMarkdownOptions): {
+  content: string;
+  detail?: GradeDoneCriteriaDetail;
+} {
   const document = parseMarkdown(opts.content, opts.path);
   const specdojo = document.data.specdojo as Record<string, unknown>;
   const agentResults = preservePreviousFindingSeverities(document.body, opts.input.viewpoints);
@@ -1527,20 +1969,64 @@ export function gradeMarkdownContent(opts: {
   const rubric = assertRubric(opts.viewpoints);
   const summary = scoreDocument(evaluated, rubric, opts.viewpoints, opts.target);
   const body = insertFindings(document.body, evaluated.viewpoints);
+  const gradedAt = (opts.now ?? new Date()).toISOString();
+  const contentHash = stableContentHash({ data: document.data, body });
+  const criteriaResults =
+    opts.target === "deliverable" && opts.doneCriteria && opts.input.done_criteria
+      ? opts.input.done_criteria
+      : undefined;
   specdojo.grade = {
     rubric: rubric.id,
     ...(opts.reference ? { reference: resolveGradeReferenceId(opts.reference) } : {}),
     target: opts.target,
     verdict: summary.verdict,
     score: summary.score,
-    graded_at: (opts.now ?? new Date()).toISOString(),
+    graded_at: gradedAt,
     graded_by: opts.gradedBy,
-    content_hash: stableContentHash({ data: document.data, body }),
+    content_hash: contentHash,
     categories: summary.categories,
     viewpoints: summary.viewpoints,
     findings: summary.findings,
+    ...(criteriaResults && opts.doneCriteria
+      ? {
+          done_criteria: summarizeDoneCriteria(
+            opts.doneCriteria.definitions,
+            criteriaResults,
+            opts.doneCriteria.detailRef,
+          ),
+        }
+      : {}),
   };
-  return serializeMarkdown({ data: document.data, body });
+  const content = serializeMarkdown({ data: document.data, body });
+  if (!criteriaResults || !opts.doneCriteria) return { content };
+
+  const resultById = new Map(criteriaResults.map((result) => [result.id, result]));
+  const criteria = opts.doneCriteria.definitions.map((criterion) => {
+    const result = resultById.get(criterion.id);
+    return {
+      ...criterion,
+      status: result?.status ?? ("unsatisfied" as const),
+      ...(result?.reason ? { reason: result.reason } : {}),
+    };
+  });
+  const satisfied = criteria.filter((criterion) => criterion.status === "satisfied").length;
+  return {
+    content,
+    detail: {
+      id: opts.doneCriteria.detailRef,
+      document: typeof specdojo.id === "string" ? specdojo.id : opts.path,
+      path: opts.path,
+      graded_at: gradedAt,
+      graded_by: opts.gradedBy,
+      content_hash: contentHash,
+      summary: { satisfied, unsatisfied: criteria.length - satisfied, total: criteria.length },
+      criteria,
+    },
+  };
+}
+
+export function gradeMarkdownContent(opts: GradeMarkdownOptions): string {
+  return gradeMarkdownDocument(opts).content;
 }
 
 export function validateGradedDocument(path: string): string[] {
@@ -1704,6 +2190,10 @@ export function registerGradeCommand(program: Command): void {
           viewpoints,
           projectId,
           outputDirectory,
+          doneCriteriaByPath:
+            target === "deliverable"
+              ? resolveDeliverableDoneCriteria(paths, options.project)
+              : undefined,
         });
         for (const plan of plans) {
           // 無作為選定を求めたのに同種別の ready が無い場合は、種別を跨いで代用せず
@@ -1765,6 +2255,10 @@ export function registerGradeCommand(program: Command): void {
             ungraded: options.ungraded,
           }).map(repoRelativePath),
         );
+        const doneCriteriaByPath =
+          target === "deliverable"
+            ? resolveDeliverableDoneCriteria([...selected], options.project)
+            : undefined;
         if (options.analysisFrom) {
           if (selected.size !== 1) {
             throw new Error("--analysis-from requires exactly one selected --path");
@@ -1779,6 +2273,7 @@ export function registerGradeCommand(program: Command): void {
             viewpoints,
             target,
             expectedPath,
+            doneCriteria: doneCriteriaByPath?.get(expectedPath),
           });
           if (fidelityIssues.length > 0) {
             throw new Error(
@@ -1796,6 +2291,8 @@ export function registerGradeCommand(program: Command): void {
           gradedBy,
           reference: options.reference,
           dryRun: options.dryRun,
+          doneCriteriaByPath,
+          criteriaDirectory: join(getProjectExecutionPath(project), "grade", "criteria"),
         });
         for (const path of changed)
           process.stdout.write(`${options.dryRun ? "would update" : "updated"}: ${path}\n`);

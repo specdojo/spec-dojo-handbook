@@ -13,8 +13,9 @@ same command resumes after an interruption.
 Options:
   --run-id <id>                 Stable id used for resume state (required)
   --project <id>                Project id (default: prj-0001)
+  --target <target>             kata or deliverable (default: kata)
   --kind <kind>                 rulebook, recipe, sample, template, or all
-                                (default: rulebook)
+                                (kata only; default: rulebook)
   --path <markdown>             Limit to one document (repeatable)
   --changed-only[=true|false]   Select documents changed since the latest grade
   --ungraded[=true|false]       Select documents without a stored grade
@@ -22,8 +23,8 @@ Options:
   --work-dir <directory>        State and result directory
   --stage-1-executor <nickname> (default: gemma-expert-executor)
   --stage-1-reporter <nickname> (default: gemma-reporter)
-  --stage-1-reference <path>    Same-kind prj-overview document
-                                (default: follows --kind)
+  --stage-1-reference <path>    Comparison document. Kata defaults to the
+                                same-kind prj-overview; deliverable defaults to none
   --stage-2-executor <nickname> (default: gemma-expert-executor)
   --stage-2-reporter <nickname> (default: gemma-reporter)
   --stage-2-reference <path|none> (default: none)
@@ -53,6 +54,7 @@ validate_scalar() {
 }
 
 project=prj-0001
+target=kata
 kind=rulebook
 run_id=
 limit=0
@@ -85,6 +87,11 @@ while [[ $# -gt 0 ]]; do
     --project)
       require_value "$@"
       project=$2
+      shift 2
+      ;;
+    --target)
+      require_value "$@"
+      target=$2
       shift 2
       ;;
     --kind)
@@ -195,42 +202,52 @@ done
 [[ "$changed_only" == true || "$changed_only" == false ]] ||
   fail "--changed-only must be true or false"
 [[ "$ungraded" == true || "$ungraded" == false ]] || fail "--ungraded must be true or false"
-
-case "$kind" in
-  rulebook) kind_directories=(rulebooks) ;;
-  recipe) kind_directories=(recipes) ;;
-  sample) kind_directories=(samples) ;;
-  template) kind_directories=(templates) ;;
-  all) kind_directories=(rulebooks recipes samples templates) ;;
-  *) fail "--kind must be rulebook, recipe, sample, template, or all" ;;
-esac
+[[ "$target" == kata || "$target" == deliverable ]] ||
+  fail "--target must be kata or deliverable"
 
 declare -a target_roots=()
-for kind_directory in "${kind_directories[@]}"; do
-  target_root="docs/ja/specdojo/$kind_directory"
-  [[ -d "$target_root" ]] || fail "target directory not found: $target_root"
-  target_roots+=("$target_root")
-done
+if [[ "$target" == kata ]]; then
+  case "$kind" in
+    rulebook) kind_directories=(rulebooks) ;;
+    recipe) kind_directories=(recipes) ;;
+    sample) kind_directories=(samples) ;;
+    template) kind_directories=(templates) ;;
+    all) kind_directories=(rulebooks recipes samples templates) ;;
+    *) fail "--kind must be rulebook, recipe, sample, template, or all" ;;
+  esac
 
-if [[ "$kind" != all ]]; then
-  stage_1_reference_root=${target_roots[0]}
-fi
-if ! $stage_1_reference_explicit; then
-  if [[ "$kind" == all ]]; then
-    stage_1_reference=per-kind
-  else
+  for kind_directory in "${kind_directories[@]}"; do
+    target_root="docs/ja/specdojo/$kind_directory"
+    [[ -d "$target_root" ]] || fail "target directory not found: $target_root"
+    target_roots+=("$target_root")
+  done
+
+  if [[ "$kind" != all ]]; then
     stage_1_reference_root=${target_roots[0]}
-    stage_1_reference="$stage_1_reference_root/prj-overview-$kind.md"
-    if [[ ! -f "$stage_1_reference" ]]; then
-      printf 'grade pipeline: default stage 1 reference not found for kind %s; continuing without a reference: %s\n' \
-        "$kind" "$stage_1_reference" >&2
-      stage_1_reference=none
+  fi
+  if ! $stage_1_reference_explicit; then
+    if [[ "$kind" == all ]]; then
+      stage_1_reference=per-kind
+    else
+      stage_1_reference_root=${target_roots[0]}
+      stage_1_reference="$stage_1_reference_root/prj-overview-$kind.md"
+      if [[ ! -f "$stage_1_reference" ]]; then
+        printf 'grade pipeline: default stage 1 reference not found for kind %s; continuing without a reference: %s\n' \
+          "$kind" "$stage_1_reference" >&2
+        stage_1_reference=none
+      fi
     fi
+  fi
+else
+  kind=none
+  if ! $stage_1_reference_explicit; then
+    stage_1_reference=none
   fi
 fi
 
 for option_and_value in \
   "--project:$project" \
+  "--target:$target" \
   "--run-id:$run_id" \
   "--stage-1-executor:$stage_1_executor" \
   "--stage-1-reporter:$stage_1_reporter" \
@@ -245,18 +262,21 @@ for option_and_value in \
 done
 
 if $stage_1_reference_explicit; then
-  [[ "$kind" != all ]] || fail "--stage-1-reference cannot be combined with --kind all"
+  [[ "$target" != kata || "$kind" != all ]] ||
+    fail "--stage-1-reference cannot be combined with --kind all"
   [[ "$stage_1_reference" != none ]] ||
     fail "--stage-1-reference cannot be none; omit the option to use the --kind default"
   [[ -f "$stage_1_reference" ]] || fail "reference not found: $stage_1_reference"
-  case "$(basename "$stage_1_reference")" in
-    prj-overview*.md) ;;
-    *) fail "--stage-1-reference must be a prj-overview Markdown document" ;;
-  esac
-  stage_1_reference_directory=$(cd -- "$(dirname -- "$stage_1_reference")" && pwd -P)
-  stage_1_reference_root_directory=$(cd -- "$stage_1_reference_root" && pwd -P)
-  [[ "$stage_1_reference_directory" == "$stage_1_reference_root_directory" ]] ||
-    fail "--stage-1-reference must be a $kind prj-overview document under $stage_1_reference_root"
+  if [[ "$target" == kata ]]; then
+    case "$(basename "$stage_1_reference")" in
+      prj-overview*.md) ;;
+      *) fail "--stage-1-reference must be a prj-overview Markdown document" ;;
+    esac
+    stage_1_reference_directory=$(cd -- "$(dirname -- "$stage_1_reference")" && pwd -P)
+    stage_1_reference_root_directory=$(cd -- "$stage_1_reference_root" && pwd -P)
+    [[ "$stage_1_reference_directory" == "$stage_1_reference_root_directory" ]] ||
+      fail "--stage-1-reference must be a $kind prj-overview document under $stage_1_reference_root"
+  fi
 fi
 
 for reference in "$stage_1_reference" "$stage_2_reference" "$stage_3_reference"; do
@@ -271,10 +291,14 @@ else
   specdojo_command=(npx tsx src/specdojo.ts)
 fi
 
-path_matches_kind() {
+path_matches_target() {
   local path=$1
   local root
   [[ "$path" != */generated/* ]] || return 1
+  if [[ "$target" == deliverable ]]; then
+    [[ "$path" == *.md ]] && return 0
+    return 1
+  fi
   for root in "${target_roots[@]}"; do
     [[ "$path" == "$root"/*.md ]] && return 0
   done
@@ -284,7 +308,8 @@ path_matches_kind() {
 for path in "${requested_paths[@]}"; do
   validate_scalar "--path" "$path"
   [[ -f "$path" ]] || fail "target not found: $path"
-  path_matches_kind "$path" || fail "target is outside the selected --kind or generated: $path"
+  path_matches_target "$path" ||
+    fail "target is outside the selected target scope or generated: $path"
 done
 
 # The run directory stays outside docs/ because `grade plan --out` writes a plan pair per
@@ -301,21 +326,26 @@ select_documents() {
   local path
   local output
   local -a candidates=()
-  local -a list_command=(grade list --target kata --project "$project")
+  local -a list_command=(grade list --target "$target" --project "$project")
   for path in "${requested_paths[@]}"; do
     list_command+=(--path "$path")
   done
 
-  if ! $changed_only && ! $ungraded; then
-    if [[ ${#requested_paths[@]} -gt 0 ]]; then
-      candidates=("${requested_paths[@]}")
-    else
+  if ! $changed_only && ! $ungraded && [[ ${#requested_paths[@]} -gt 0 ]]; then
+    candidates=("${requested_paths[@]}")
+  elif ! $changed_only && ! $ungraded && [[ "$target" == kata ]]; then
+    if [[ ${#requested_paths[@]} -eq 0 ]]; then
       for root in "${target_roots[@]}"; do
         while IFS= read -r path; do
           [[ -n "$path" ]] && candidates+=("$path")
         done < <(find "$root" -type f -name '*.md' -not -path '*/generated/*' -print)
       done
     fi
+  elif ! $changed_only && ! $ungraded; then
+    output=$("${specdojo_command[@]}" "${list_command[@]}") || fail "grade list failed"
+    while IFS= read -r path; do
+      [[ -n "$path" ]] && candidates+=("$path")
+    done <<<"$output"
   else
     if $changed_only; then
       output=$("${specdojo_command[@]}" "${list_command[@]}" --changed-only) ||
@@ -335,7 +365,7 @@ select_documents() {
 
   selected_paths=()
   while IFS= read -r path; do
-    if [[ -n "$path" ]] && path_matches_kind "$path"; then
+    if [[ -n "$path" ]] && path_matches_target "$path"; then
       selected_paths+=("$path")
     fi
   done < <(printf '%s\n' "${candidates[@]}" | LC_ALL=C sort -u)
@@ -346,11 +376,11 @@ select_documents() {
 
 requested_signature=$(printf '%s\n' "${requested_paths[@]}" | node -e \
   'const c=require("node:crypto");let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(c.createHash("sha256").update(s).digest("hex")))')
-expected_config=$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-  "$project" "$kind" "$limit" "$changed_only" "$ungraded" "$requested_signature" \
+expected_config=$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+  "$project" "$target" "$kind" "$limit" "$changed_only" "$ungraded" "$requested_signature" \
   "$stage_1_executor" "$stage_1_reporter" "$stage_1_reference" \
   "$stage_2_executor:$stage_2_reporter:$stage_2_reference" \
-  "$stage_3_executor:$stage_3_reporter:$stage_3_reference" "selection-v1" "pipeline-v1")
+  "$stage_3_executor:$stage_3_reporter:$stage_3_reference" "selection-v2" "pipeline-v2")
 config_file="$work_dir/config.tsv"
 selection_file="$work_dir/selection.txt"
 results_file="$work_dir/results.tsv"
@@ -380,8 +410,8 @@ else
 fi
 
 print_configuration() {
-  printf 'run_id=%s project=%s kind=%s changed_only=%s ungraded=%s documents=%s work_dir=%s\n' \
-    "$run_id" "$project" "$kind" "$changed_only" "$ungraded" \
+  printf 'run_id=%s project=%s target=%s kind=%s changed_only=%s ungraded=%s documents=%s work_dir=%s\n' \
+    "$run_id" "$project" "$target" "$kind" "$changed_only" "$ungraded" \
     "${#selected_paths[@]}" "$work_dir"
   printf 'stage=1 executor=%s reporter=%s reference=%s\n' \
     "$stage_1_executor" "$stage_1_reporter" "$stage_1_reference"
@@ -501,8 +531,8 @@ execute_stage() {
   local executor_output="$stage_dir/executor-output.txt"
   local reporter_input="$stage_dir/reporter-input.md"
   local reporter_output="$stage_dir/grade-submission.json"
-  local -a plan_command=(grade plan --target kata --project "$project" --path "$document" --out "$stage_dir/plans")
-  local -a apply_command=(grade apply --target kata --project "$project" --path "$document" --analysis-from "$executor_output" --from "$reporter_output" --by "$executor")
+  local -a plan_command=(grade plan --target "$target" --project "$project" --path "$document" --out "$stage_dir/plans")
+  local -a apply_command=(grade apply --target "$target" --project "$project" --path "$document" --analysis-from "$executor_output" --from "$reporter_output" --by "$executor")
 
   if [[ -f "$state_file" ]]; then
     IFS=$'\t' read -r stage_status stage_verdict stage_score stage_findings <"$state_file"
@@ -617,6 +647,10 @@ stage_1_reference_for_document() {
   local document=$1
   local document_kind
   local reference
+  if [[ "$target" == deliverable ]]; then
+    printf '%s' "$stage_1_reference"
+    return 0
+  fi
   if [[ "$stage_1_reference" != per-kind ]]; then
     printf '%s' "$stage_1_reference"
     return 0

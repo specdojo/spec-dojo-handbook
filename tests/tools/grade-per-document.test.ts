@@ -19,6 +19,7 @@ function makeFixture(): {
   root: string;
   fakeSpecdojo: string;
   stateFile: string;
+  argsFile: string;
   target: string;
 } {
   const root = mkdtempSync(join(tmpdir(), "specdojo-grade-per-document-"));
@@ -26,6 +27,7 @@ function makeFixture(): {
   const rulebooks = join(root, "docs/ja/specdojo/rulebooks");
   const target = join(rulebooks, "fixture-rulebook.md");
   const stateFile = join(root, "fake-apply-count.txt");
+  const argsFile = join(root, "fake-args.log");
   const fakeSpecdojo = join(root, "fake-specdojo.mjs");
 
   const markdown = (id: string, type: string) =>
@@ -47,10 +49,11 @@ function makeFixture(): {
   writeFileSync(
     fakeSpecdojo,
     `#!/usr/bin/env node
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const args = process.argv.slice(2);
+if (process.env.FAKE_ARGS_FILE) appendFileSync(process.env.FAKE_ARGS_FILE, args.join(" ") + "\\n");
 const value = (option) => args[args.indexOf(option) + 1];
 if (args[0] === "grade" && args[1] === "list") {
   const mode = process.env.FAKE_GRADE_LIST_MODE ?? "changed";
@@ -102,7 +105,7 @@ process.exit(1);
 `,
   );
   chmodSync(fakeSpecdojo, 0o755);
-  return { root, fakeSpecdojo, stateFile, target };
+  return { root, fakeSpecdojo, stateFile, argsFile, target };
 }
 
 function runPipeline(
@@ -127,7 +130,12 @@ function runPipeline(
     {
       cwd: fixture.root,
       encoding: "utf8",
-      env: { ...process.env, FAKE_STATE_FILE: fixture.stateFile, ...extraEnv },
+      env: {
+        ...process.env,
+        FAKE_STATE_FILE: fixture.stateFile,
+        FAKE_ARGS_FILE: fixture.argsFile,
+        ...extraEnv,
+      },
     },
   );
 }
@@ -282,6 +290,21 @@ describe("grade per-document pipeline", () => {
     expect(resumed.status, resumed.stderr).toBe(0);
     expect(resumed.stdout).toContain("resume skip document=");
     expect(readFileSync(fixture.stateFile, "utf8")).toBe("3");
+  });
+
+  it("routes deliverables through deliverable grade plans and apply", () => {
+    const fixture = makeFixture();
+
+    const result = runPipeline(fixture, {}, ["--target", "deliverable"]);
+
+    expect(result.status, result.stderr).toBe(0);
+    expect(result.stdout).toContain("target=deliverable kind=none");
+    expect(result.stdout).toContain(
+      "stage=1 executor=gemma-expert-executor reporter=gemma-reporter reference=none",
+    );
+    const invocations = readFileSync(fixture.argsFile, "utf8");
+    expect(invocations).toContain("grade plan --target deliverable");
+    expect(invocations).toContain("grade apply --target deliverable");
   });
 
   it("leaves the current stage incomplete on rate limit and resumes it", () => {
