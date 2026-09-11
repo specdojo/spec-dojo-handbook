@@ -90,11 +90,77 @@ npm i -g @anthropic-ai/claude-code@latest
 ```
 
 devcontainer の features 経由で導入されているが実体は npm グローバルパッケージで、
-`/usr/local/share/npm-global/lib/node_modules/@anthropic-ai/claude-code` にある。所有は
-`node:npm` で書き込み可能であり、`sudo` を要しない。
+`/usr/local/share/npm-global/lib/node_modules/@anthropic-ai/claude-code` にある。
+
+`sudo` が必要である。親ディレクトリは `node:npm` で書き込み可能だが、`@anthropic-ai` は
+`root:npm` でグループ書き込み権を持たない。feature が root で作成するためである。
+
+```text
+drwxrwsr-x node:npm  .../lib/node_modules
+drwxr-sr-x root:npm  .../lib/node_modules/@anthropic-ai
+```
+
+`sudo` なしで実行すると `EACCES: permission denied, rename` で失敗する。
+
+なお devcontainer のリビルドでも最新版が入る。feature の install script は版を固定せず
+`npm install -g @anthropic-ai/claude-code` を実行するため、npm が `@latest` を解決する。
+ただしレイヤーがキャッシュされていると再実行されないため、確実に更新するにはキャッシュを
+使わないリビルドが要る。
 
 検証の結果、並行実行で競合しないことを確認できれば、本項目は不要として終端できる。残る問題が
 あればその範囲が明確になる。
+
+### 1.5. 版を更新した（2026-09-11）
+
+2.1.226 から 2.1.268 へ更新した。修正が入った 2.1.259 を超えている。changelog で確認した
+最新は 2.1.267 であったが、その後 2.1.268 が公開されていた。
+
+```sh
+sudo npm i -g @anthropic-ai/claude-code@latest
+```
+
+検証は行っていない。更新時点で稼働していたセッションは 2.1.226 で起動しており、プロセスは
+置き換わらない。旧版の TUI と新版の CLI を並行させても正しい検証にならないため、新版同士で
+行う必要がある。次回セッションは自動的に新版で起動する。
+
+### 1.6. 検証の手順
+
+新版同士で並行実行し、`~/.claude.json` が競合しないことを確かめる。
+
+実務に近い形で行う。TUI で作業しながら claude 系 agent で exec を走らせる。
+
+```sh
+npm run orch:opus
+# 別ターミナルで
+specdojo exec run --register <PJR-XXXX> \
+  --executor-by claude-expert-executor --reporter-by claude-reporter --worktree
+```
+
+これが通れば実用上の解決である。本セッションではこの組み合わせを避け、codex と gemma を
+使っていた。
+
+人工的な再現で確かめる場合は、共有ファイルを事前に保存してから繰り返し起動する。競合は確率的
+に起きるため 1 回では検出できない。
+
+```sh
+cp /home/node/.claude-state/.claude.json /tmp/claude-json-before.json
+# TUI 稼働中に数回実行
+claude -p "1+1は？" --model sonnet
+# 差分を確認
+diff <(python3 -m json.tool /tmp/claude-json-before.json) \
+     <(python3 -m json.tool /home/node/.claude-state/.claude.json)
+```
+
+判定は次による。
+
+| 観察                               | 判定         |
+| ---------------------------------- | ------------ |
+| 設定が巻き戻らない、失われない     | 解消している |
+| `workspace trust` がリセットされる | 未解消       |
+| MCP / project の設定が消える       | 未解消       |
+
+changelog が挙げる症状は `workspace trust no longer resets` と
+`MCP/project state is no longer lost` であり、この 2 点を確認する。
 
 ## 2. 完了条件
 
