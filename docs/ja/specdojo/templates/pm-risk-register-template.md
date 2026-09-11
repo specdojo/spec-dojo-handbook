@@ -16,7 +16,7 @@ specdojo:
     target: kata
     verdict: fail
     score: 66
-    graded_at: "2026-09-10T16:11:37.544Z"
+    graded_at: "2026-09-10T23:12:46.202Z"
     graded_by: gemma-expert-executor
     content_hash: 25df723ceabef7e173d0507cb2eb92e2305091bbad663c47dc16cea3df9e213e
     categories:
@@ -38,8 +38,6 @@ specdojo:
 ---
 
 <!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=1 Frontmatter の rulebook 指定が specdojo:pjr-rulebook となっており、正しくは specdojo:pm-risk-register-rulebook である。 -->
-<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency line=1 rulebook で定義された必須本文構成（概要〜関連ドキュメント）がすべて欠落している。 -->
-<!-- specdojo:finding id=F004 severity=major rule=vp-ux-readability line=1 ルールブックに定義されたリスク登録簿としての構造を持たず、実務上のテンプレートとして機能していない。 -->
 
 # リスク登録簿
 
@@ -47,4 +45,6 @@ specdojo:
 
 > このファイルは各 `pjr-XXXX-<topic>.md`（個票）から生成された派生ビューです。正本は個票の Frontmatter であり、このファイルは再生成可能です。
 
+<!-- specdojo:finding id=F002 severity=major rule=vp-qe-omissions-consistency line=5 rulebook で定義された必須本文構成（概要〜関連ドキュメント）がすべて欠落している。 -->
+<!-- specdojo:finding id=F004 severity=major rule=vp-ux-readability line=5 ルールブックに定義されたリスク登録簿としての構造を持たず、実務上のテンプレートとして機能していない。 -->
 <!-- specdojo:view-slot=table -->
