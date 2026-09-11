@@ -13,7 +13,7 @@ Routine Operation Guide
 
 routineは、既存の未完了Schedule/Register項目を探索するほか、再利用可能なJob Definitionから期間・revisionごとのJob Runを生成できます。週報や変更文書の翻訳は[Job実行設計](../../product/040-system-design/sysd-job-execution.md)を参照してください。
 
-継続品質評価は `job-grade-kata` のような Job Definition から `action.kind: job` の routine で定期起動します。文書の選択、段の順序、各文書の executor / reporter 実行、`grade apply --path --analysis-from` の逐次処理は `tools/grade/run-per-document.sh` が持ちます。Job runnerは`task.command`からその入口を直接起動してevidenceを記録し、成功後の結果判断だけを`task.analysis`のreporter agentへ委譲します。責務の切り分け基準は [Job定義標準](../standards/job-definition-standard.md) を参照します。
+継続品質評価は `job-grade-kata` や `job-grade-deliverable` の Job Definition から `action.kind: job` の routine で定期起動します。文書の選択、段の順序、各文書の executor / reporter 実行、`grade apply --path --analysis-from` の逐次処理は `tools/grade/run-per-document.sh` が持ちます。Job runnerは`task.command`からその入口を直接起動してevidenceを記録し、成功後の結果判断だけを`task.analysis`のreporter agentへ委譲します。責務の切り分け基準は [Job定義標準](../standards/job-definition-standard.md) を参照します。
 
 **対象読者**
 
@@ -92,6 +92,8 @@ action:
 ### 1.2. grade の段階評価
 
 Kata の定期評価は、ローカル評価を2回行った後、見落としの疑いが強い文書だけを expert で再確認します。この3段は文書ごとに通しで実行し、`rtn-grade-kata` は単一の `job-grade-kata` を起動するだけです。段の順序と対象の繰り返しは `tools/grade/run-per-document.sh` が持ちます。変更済み・未評価だけを横断的に再評価する `rtn-grade-recheck` も同じ Job を使い、`kind: all`、`changed_only: true`、`ungraded: true`、`limit: 5` を入力します。
+
+成果物は `rtn-grade-deliverable-recheck` が `job-grade-deliverable` を起動します。Job は同じ script を `--target deliverable` で実行し、成果物カタログから変更済み・未評価の Markdown 成果物だけを選びます。評価結果は成果物の最新 grade と成果物ごとの done_criteria 詳細へ上書きされるため、実行ごとの review result は増やしません。
 
 | 段  | executor / reporter                        | 対象と役割                                                  |
 | --- | ------------------------------------------ | ----------------------------------------------------------- |

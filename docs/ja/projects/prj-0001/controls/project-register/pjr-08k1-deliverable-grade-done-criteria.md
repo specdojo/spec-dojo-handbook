@@ -127,14 +127,18 @@ score の閾値で `done_criteria` を上書きできない形にする。文書
 `unsatisfied` に `roles` を含めれば、誰の確認が残っているかが分かる。`G-*-review-pass` ゲートが
 束ねていた役割別の責任を保てる。
 
-## 6. 判断が要る点
+## 6. 判断結果
 
-- 詳細ファイルを実行ごとに残すか、成果物ごとに 1 ファイルとして上書きするか。後者なら時点の
-  記録は git 履歴が担う。grade が採る方式であり、`br-sample` の改善を履歴から辿れた実績がある。
-- review を置き換えるか併存させるか。併存は二重評価になり、置き換えは 090 タスクと
-  `G-*-review-pass` ゲートの再設計を伴う。
-- `done_criteria` 未充足を検知したとき、誰へどう伝えるか。
-- 既存 26 件の review result の扱い。
+- 詳細ファイルは成果物ごとに 1 ファイルとし、再評価のたびに上書きする。過去時点は Git 履歴で
+  追跡し、実行ごとのファイルは増やさない。
+- grade と review は併存させるが、同じ責務を持たせない。grade は現在品質と `done_criteria` の
+  継続評価、review result は完成時の合意形成履歴とする。
+- 090 タスクと `G-*-review-pass` は人の最終確認・合意ゲートとして維持する。現在品質の判定には
+  review result の日時を使わず、grade の `content_hash` と `done_criteria` を使う。
+- 未充足条件は成果物 Frontmatter に条件 ID と担当 Role code を要約し、不足理由は詳細ファイルへ
+  記録する。定期 Job の analysis も未充足条件と担当ロールを報告する。
+- 既存 26 件の review result は不変の履歴として保持し、移行・削除しない。最新評価としては
+  扱わないため、成果物との同期対象から外す。
 
 ## 7. 完了条件
 
@@ -150,19 +154,34 @@ score の閾値で `done_criteria` を上書きできない形にする。文書
 
 ## 8. 作業内容
 
-| No  | 作業                                      | メモ                   |
-| --- | ----------------------------------------- | ---------------------- |
-| 1   | 詳細ファイルの方式を決める                | 実行ごとか成果物ごとか |
-| 2   | review との関係を決める                   | 置き換えか併存か       |
-| 3   | `done_criteria` を grade の評価へ取り込む | `viewpoint` で照合する |
-| 4   | frontmatter へ要約と参照を記録する        | 分量を抑える           |
-| 5   | score と充足を分離して判定する            |                        |
-| 6   | 既存 26 件の review result の扱いを決める |                        |
-| 7   | テストを追加する                          |                        |
+| No  | 作業                                      | 対応結果                                                   |
+| --- | ----------------------------------------- | ---------------------------------------------------------- |
+| 1   | 詳細ファイルの方式を決める                | 成果物ごとに 1 ファイルを上書きする方式に決定              |
+| 2   | review との関係を決める                   | 最新評価と合意履歴に責務分離して併存                       |
+| 3   | `done_criteria` を grade の評価へ取り込む | 条件 ID、Role code、viewpoint を plan と判定契約へ追加     |
+| 4   | frontmatter へ要約と参照を記録する        | 充足数・総数・未充足担当・詳細参照だけを記録               |
+| 5   | score と充足を分離して判定する            | verdict 計算と条件充足を独立したまま保存                   |
+| 6   | 既存 26 件の review result の扱いを決める | 移行・削除せず合意形成履歴として保持                       |
+| 7   | テストを追加する                          | plan、忠実性、要約、詳細上書き、定期実行経路を回帰テスト化 |
 
 ## 9. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- `grade --target deliverable` が成果物カタログの `done_criteria` を plan へ列挙し、executor の条件別
+  判定と reporter の転記を機械照合してから適用するようにした。
+- 成果物 Frontmatter の `specdojo.grade.done_criteria` に要約を保存し、条件ごとの判定・不足理由・
+  Role code・viewpoint は `<execution_path>/grade/criteria/` の成果物別 YAML に保存するようにした。
+  詳細ファイルは再評価時に同じパスへ上書きされる。
+- 共通 Frontmatter schema と詳細 YAML schema を追加し、要約と詳細の構造を検証可能にした。
+- score / verdict の算出と条件充足を独立させ、未充足条件があっても score を書き換えず、逆に高い
+  score でも条件を自動充足させない契約にした。
+- `tools/grade/run-per-document.sh` を `--target deliverable` に対応させ、
+  `job-grade-deliverable` と `rtn-grade-deliverable-recheck` から毎日、変更済み・未評価の成果物を
+  最大 5 件ずつ再評価できるようにした。
+- [[specdojo:review-guide|レビューガイド]]、[[specdojo:document-metadata-standard|ドキュメントメタ情報標準]]、
+  [[specdojo:command-reference|コマンドリファレンス]]、[[specdojo:routine-operation-guide|routine運用ガイド]]
+  に責務境界、保存形式、実行方法を反映した。
+- 既存 review result の移行・削除、090 タスク、`G-*-review-pass` の変更は行っていない。これらは
+  合意形成履歴・人の最終ゲートとして維持し、最新状態は grade から判定する。
 
 ## 10. 関連ドキュメント
 

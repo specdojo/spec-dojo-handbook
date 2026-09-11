@@ -476,6 +476,8 @@ specdojo grade plan --target kata --changed-only --project prj-0001
 specdojo grade list --target kata --changed-only --project prj-0001
 specdojo grade plan --target kata --verdict pass --min-score 96 --max-findings 1 --project prj-0001
 specdojo grade plan --target kata --ungraded --project prj-0001
+specdojo grade list --target deliverable --changed-only --project prj-0001
+specdojo grade plan --target deliverable --changed-only --project prj-0001
 # executor plan の自由記述を保存し、reporter plan と一緒に reporter へ渡す
 specdojo grade apply --target kata --path <document.md> \
   --analysis-from <executor-output.txt> --from <grade-result.json> --by <executor-nickname>
@@ -487,6 +489,8 @@ specdojo grade validate --target kata --project prj-0001
 保存済みの判定結果では、`--verdict <pass|needs-work|fail>` で最新 verdict、`--min-score <score>` で総合 score が指定値以上、`--max-findings <count>` で全 severity の finding 合計が指定件数以下の文書に絞れます。score は 0 から 100 の整数で指定します。`--ungraded` は `specdojo.grade` が存在しない文書だけを選びます。評価の試行に失敗して grade が保存されなかった文書も未評価に含まれ、失敗試行そのものとの区別はしません。複数の選択条件は AND で適用され、`--path` や `--changed-only` とも併用できます。保存済み grade を前提とする `--verdict`、`--min-score`、`--max-findings` のいずれかと `--ungraded` の併用は入力エラーです。`grade list` はこの選択規則を plan の生成や文書更新なしで利用するための機械可読な入口で、標準出力にはリポジトリ相対パスだけを辞書順で出力します。
 
 `grade plan` は対象ごとに executor plan と reporter plan の2ファイルを生成し、既定では `<execution_path>/grade/plans/<target>/` へ保存します。`--out <directory>` で保存先を変更できます。ファイル名は対象パスから決定され、同じ対象の再生成は同じファイルを上書きするため履歴を増やしません。executor plan は評価対象を1件だけリポジトリ相対パスで示し、Kata の `rulebook` / `recipe` / `sample` / `template` 参照と逆参照から解決した対応文書も参考資料のパスとして列挙します。`--random-reference` を指定した場合は、同じ種別で `status: ready` の別文書から良い実例を1件無作為に選び、記載水準を比較するリファレンスとして記録します。Kata は同じ rulebook / recipe / sample / template 種別、成果物は同じ `specdojo.type` を候補範囲とします。実例は評価対象ではなく、`ready` も品質保証ではありません。対象・参考資料・実例の本文は plan に埋め込みません。再生成のたびに候補集合から選び直すため、同じ対象の plan でも実例だけが変わることがあります。`--random-reference` も `--reference` も指定しなければリファレンスは付けません。reporter plan は対象の固定 facts と GradeSubmission テンプレートだけを持ち、評価資料は持ちません。
+
+成果物の plan は、成果物カタログの `done_criteria` を `DC-001` から順に列挙し、条件文、担当 Role code、viewpoint を executor へ渡します。executor は各条件を `satisfied` / `unsatisfied` として score とは独立に申告し、reporter はその判定と不足理由を変更せず GradeSubmission へ写します。`grade apply --target deliverable` は過不足と忠実性を検証し、成果物 Frontmatter の要約と `<execution_path>/grade/criteria/` の詳細 YAML を同時に更新します。詳細は成果物ごとに1ファイルで、再評価では同じファイルを上書きします。
 
 再評価時は、対象本文に現在残っている `specdojo:finding` コメントから `rule`、`severity`、`line`、`message` を前回の指摘として plan へ含めます。`line` を持たない既存コメントも読み取れます。agent は各指摘が現在も未解消かを確認し、未解消なら前回の message を変更せず、前回と同等以上の severity で今回の finding に含めます。`grade apply` も同じ message の finding を未解消と扱い、提出された severity が前回より軽ければ前回値へ戻し、対応する viewpoint level を severity 上限まで補正します。前回の問題が解消され、別の軽微な問題だけが残る場合は、新しい finding の message に引き下げの根拠を含めます。前回の観点割り当てに判定を引きずられないよう各 viewpoint を現在の根拠から独立に評価し、前回指摘にない問題も検出します。前回の level、score、verdict や解消履歴は plan に引き継ぎません。適用結果は従来どおり最新状態へ上書きされます。コメントは指摘行を含む最上位 Markdown ブロックの直前へ置かれ、リスト、表、引用、コードフェンス、複数行段落を分断しません。実際の指摘行はコメントの `line` 属性で確認します。
 
@@ -504,7 +508,7 @@ finding の忠実性照合では、message に限り、Unicode の正準等価�
 
 ### 8.1. 文書単位の3段評価
 
-3段評価を「文書を外側、段を内側」の順で実行する場合は、リポジトリルートから `tools/grade/run-per-document.sh` を実行します。`--kind` で `rulebook` / `recipe` / `sample` / `template` のいずれか、または `all` で4種別すべてを対象にし、`--path` を繰り返すと明示した文書だけを処理できます。`--changed-only` と `--ungraded` は `grade list` の選択結果を利用し、両方を指定した場合は変更済みと未評価の和集合を処理します。初回運用の既定対象は `rulebook` です。
+3段評価を「文書を外側、段を内側」の順で実行する場合は、リポジトリルートから `tools/grade/run-per-document.sh` を実行します。`--target kata` では `--kind` に `rulebook` / `recipe` / `sample` / `template` のいずれか、または `all` を指定します。`--target deliverable` では成果物カタログの Markdown 成果物を対象にし、`--kind` は使いません。`--path` を繰り返すと明示した文書だけを処理できます。`--changed-only` と `--ungraded` は `grade list` の選択結果を利用し、両方を指定した場合は変更済みと未評価の和集合を処理します。既定 target は `kata`、既定 kind は `rulebook` です。
 
 ```bash
 # 対象と agent / reference の確認だけを行う
@@ -515,6 +519,10 @@ tools/grade/run-per-document.sh --run-id 20260901-rulebooks --kind rulebook
 
 # 変更済みまたは未評価の4種別を最大5件再評価する
 tools/grade/run-per-document.sh --run-id 20260908-recheck --kind all \
+  --changed-only --ungraded --limit 5
+
+# 変更済みまたは未評価の成果物を最大5件再評価する
+tools/grade/run-per-document.sh --run-id 20260912-deliverables --target deliverable \
   --changed-only --ungraded --limit 5
 ```
 

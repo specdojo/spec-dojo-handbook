@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import yaml from "js-yaml";
 import { format } from "prettier";
 import {
+  applyGradeSubmission,
   discoverGradeTargets,
+  doneCriteriaDetailPath,
   gradeMarkdownContent,
+  gradeMarkdownDocument,
   matchesGradeTargetFilters,
   parseGradeExecutorAnalysis,
   parseGradeSubmission,
@@ -20,6 +23,7 @@ import {
   validateGradeSubmission,
   validateGradedMarkdown,
   writeGradePlans,
+  type GradeDoneCriterion,
   type GradeSubmission,
 } from "../../src/grade.js";
 import type { ReviewViewpointsDoc } from "../../src/review-types.js";
@@ -1078,5 +1082,347 @@ LEVEL: 4
     );
     expect(plan).toContain("各 viewpoint は現在の根拠から独立に評価する");
     expect(plan).toContain("前回の指摘にない問題もすべての viewpoint で独立して検出する");
+  });
+});
+
+describe("grade done_criteria for deliverables", () => {
+  const deliverablePath = "docs/ja/specdojo/rulebooks/pm-quality-management-plan-rulebook.md";
+  const doneCriteria: GradeDoneCriterion[] = [
+    {
+      id: "DC-001",
+      text: "品質目標が数値で定義されていること",
+      roles: ["QE"],
+      viewpoint: "vp-qe-verifiability",
+    },
+    {
+      id: "DC-002",
+      text: "承認者と承認時点が明記されていること",
+      roles: ["PO", "PM"],
+      viewpoint: "vp-po-decision-readiness",
+    },
+  ];
+  const deliverableMarkdown = markdown.replace("specdojo:example-rulebook", "prj-0001:example-doc");
+  const deliverableInput = {
+    path: "docs/ja/specdojo/rulebooks/example-rulebook.md",
+    viewpoints: [{ id: "vp-arc-conciseness", level: 4, findings: [] }],
+    done_criteria: [
+      { id: "DC-001", status: "satisfied" as const },
+      { id: "DC-002", status: "unsatisfied" as const, reason: "承認時点の記載がない。" },
+    ],
+  };
+  const executorOutput = `[VIEWPOINT vp-arc-conciseness]
+LEVEL: 4
+重複はない。
+[END VIEWPOINT]
+[DONE_CRITERIA]
+DC-001: satisfied
+DC-002: unsatisfied: 承認時点の記載がない。
+[END DONE_CRITERIA]
+`;
+
+  it("lists catalog done_criteria in the executor plan with roles, viewpoint, and markers", () => {
+    const plan = renderGradePlan({
+      target: "deliverable",
+      path: deliverablePath,
+      references: [],
+      viewpoints,
+      projectId: "prj-0001",
+      doneCriteria,
+    });
+
+    expect(plan).toContain("### 3.4. 完了条件（done_criteria）");
+    expect(plan).toContain(
+      "- DC-001 [roles=QE; viewpoint=vp-qe-verifiability]: 品質目標が数値で定義されていること",
+    );
+    expect(plan).toContain("- DC-002 [roles=PO,PM; viewpoint=vp-po-decision-readiness]:");
+    expect(plan).toContain("score や level の高低から充足を推論せず");
+    expect(plan).toContain("[DONE_CRITERIA]");
+    expect(plan).toContain("DC-002: <satisfied|unsatisfied>:");
+    expect(plan).toContain("[END DONE_CRITERIA]");
+    expect(plan).toContain("列挙された完了条件のいずれかを判定できない場合は異常終了する");
+  });
+
+  it("ignores done_criteria for kata plans", () => {
+    const plan = renderGradePlan({
+      target: "kata",
+      path: deliverablePath,
+      references: [],
+      viewpoints,
+      projectId: "prj-0001",
+      doneCriteria,
+    });
+
+    expect(plan).not.toContain("done_criteria");
+    expect(plan).not.toContain("[DONE_CRITERIA]");
+  });
+
+  it("adds a done_criteria template to the reporter plan", () => {
+    const plan = renderGradeReporterPlan({
+      target: "deliverable",
+      path: deliverablePath,
+      viewpoints,
+      projectId: "prj-0001",
+      doneCriteria,
+    });
+
+    expect(plan).toContain('"done_criteria": [');
+    expect(plan).toContain('"id": "DC-002"');
+    expect(plan).toContain("`reason` へ一字一句コピーする");
+  });
+
+  it("parses the DONE_CRITERIA block and rejects malformed entries", () => {
+    const analysis = parseGradeExecutorAnalysis(executorOutput);
+
+    expect(analysis.doneCriteria).toEqual([
+      { id: "DC-001", status: "satisfied" },
+      { id: "DC-002", status: "unsatisfied", reason: "承認時点の記載がない。" },
+    ]);
+    expect(
+      parseGradeExecutorAnalysis("[VIEWPOINT a]\nLEVEL: 4\n[END VIEWPOINT]\n").doneCriteria,
+    ).toBeUndefined();
+    expect(() =>
+      parseGradeExecutorAnalysis(executorOutput.replace("DC-001: satisfied", "DC-001 = ok")),
+    ).toThrow(/line 6: malformed DONE_CRITERIA entry/);
+    expect(() =>
+      parseGradeExecutorAnalysis(executorOutput.replace("[END DONE_CRITERIA]\n", "")),
+    ).toThrow("END DONE_CRITERIA marker is required");
+  });
+
+  it("requires every catalog criterion exactly once with a reason for unsatisfied", () => {
+    const expected = new Map([[deliverableInput.path, doneCriteria]]);
+    const valid: GradeSubmission = { rubric: "grade-rubric-v1", documents: [deliverableInput] };
+    expect(
+      validateGradeSubmission(valid, viewpoints, "deliverable", { doneCriteriaByPath: expected }),
+    ).toEqual([]);
+
+    const missing = structuredClone(valid);
+    missing.documents[0].done_criteria = [{ id: "DC-001", status: "satisfied" }];
+    expect(
+      validateGradeSubmission(missing, viewpoints, "deliverable", { doneCriteriaByPath: expected }),
+    ).toContainEqual({ path: "documents[0]", message: "missing criterion: DC-002" });
+
+    const unknown = structuredClone(valid);
+    unknown.documents[0].done_criteria!.push({ id: "DC-009", status: "satisfied" });
+    expect(
+      validateGradeSubmission(unknown, viewpoints, "deliverable", { doneCriteriaByPath: expected }),
+    ).toContainEqual({
+      path: "documents[0].done_criteria[2]",
+      message: "unknown criterion: DC-009",
+    });
+
+    const withoutReason = structuredClone(valid);
+    delete withoutReason.documents[0].done_criteria![1].reason;
+    expect(
+      validateGradeSubmission(withoutReason, viewpoints, "deliverable", {
+        doneCriteriaByPath: expected,
+      }),
+    ).toContainEqual({
+      path: "documents[0].done_criteria[1]",
+      message: "unsatisfied requires a non-empty reason",
+    });
+
+    const omitted = structuredClone(valid);
+    delete omitted.documents[0].done_criteria;
+    expect(
+      validateGradeSubmission(omitted, viewpoints, "deliverable", { doneCriteriaByPath: expected }),
+    ).toContainEqual({
+      path: "documents[0]",
+      message: "done_criteria[] is required for this deliverable",
+    });
+
+    expect(validateGradeSubmission(valid, viewpoints, "kata")).toContainEqual({
+      path: "documents[0].done_criteria",
+      message: "done_criteria is accepted only for deliverable targets",
+    });
+
+    const aliasedPath = structuredClone(valid);
+    aliasedPath.documents[0].path = `./${deliverableInput.path}`;
+    delete aliasedPath.documents[0].done_criteria;
+    expect(
+      validateGradeSubmission(aliasedPath, viewpoints, "deliverable", {
+        doneCriteriaByPath: expected,
+      }),
+    ).toContainEqual({
+      path: "documents[0]",
+      message: "done_criteria[] is required for this deliverable",
+    });
+  });
+
+  it("rejects reporter changes to criterion status or reason", () => {
+    const faithful: GradeSubmission = { rubric: "grade-rubric-v1", documents: [deliverableInput] };
+    expect(
+      validateGradeReporterFidelity({
+        executorOutput,
+        submission: faithful,
+        viewpoints,
+        target: "deliverable",
+        expectedPath: deliverableInput.path,
+        doneCriteria,
+      }),
+    ).toEqual([]);
+
+    const flipped = structuredClone(faithful);
+    flipped.documents[0].done_criteria![1] = { id: "DC-002", status: "satisfied" };
+    expect(
+      validateGradeReporterFidelity({
+        executorOutput,
+        submission: flipped,
+        viewpoints,
+        target: "deliverable",
+        expectedPath: deliverableInput.path,
+        doneCriteria,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        path: "documents[0].done_criteria.DC-002",
+        message: "reporter status satisfied differs from executor status unsatisfied",
+      }),
+      expect.objectContaining({
+        message: expect.stringContaining("reporter changed executor reason"),
+      }),
+    ]);
+
+    const dropped = structuredClone(faithful);
+    delete dropped.documents[0].done_criteria;
+    expect(
+      validateGradeReporterFidelity({
+        executorOutput,
+        submission: dropped,
+        viewpoints,
+        target: "deliverable",
+        expectedPath: deliverableInput.path,
+        doneCriteria,
+      }),
+    ).toEqual([
+      expect.objectContaining({ message: "reporter omitted executor criterion: DC-001" }),
+      expect.objectContaining({ message: "reporter omitted executor criterion: DC-002" }),
+    ]);
+  });
+
+  it("records a summary in the frontmatter and keeps score independent of satisfaction", async () => {
+    const now = new Date("2026-09-11T00:00:00.000Z");
+    const graded = gradeMarkdownDocument({
+      content: deliverableMarkdown,
+      path: deliverableInput.path,
+      input: deliverableInput,
+      viewpoints,
+      target: "deliverable",
+      gradedBy: "codex-executor",
+      now,
+      doneCriteria: { definitions: doneCriteria, detailRef: "prj-0001:example-doc-grade-criteria" },
+    });
+
+    // score と verdict は viewpoint と finding だけで決まり、未充足条件では下がらない。
+    expect(graded.content).toContain("verdict: pass");
+    expect(graded.content).toContain("score: 100");
+    expect(graded.content).toContain(
+      "    done_criteria:\n      satisfied: 1\n      total: 2\n      unsatisfied:\n        DC-002: [PO, PM]\n      detail_ref: prj-0001:example-doc-grade-criteria\n",
+    );
+    expect(graded.content).not.toContain("承認時点の記載がない。");
+    expect(graded.content).not.toContain("品質目標が数値で定義されていること");
+    expect(validateGradedMarkdown(graded.content, deliverableInput.path)).toEqual([]);
+
+    const formatted = await format(graded.content, { parser: "markdown" });
+    expect(formatted).toContain("DC-002: [PO, PM]");
+    expect(matchesGradeTargetFilters(formatted, deliverableInput.path, { changedOnly: true })).toBe(
+      false,
+    );
+
+    const grade = (
+      yaml.load(graded.content.match(/^---\n([\s\S]*?)\n---/)![1]) as {
+        specdojo: { grade: { content_hash: string } };
+      }
+    ).specdojo.grade;
+    expect(graded.detail).toEqual({
+      id: "prj-0001:example-doc-grade-criteria",
+      document: "prj-0001:example-doc",
+      path: deliverableInput.path,
+      graded_at: "2026-09-11T00:00:00.000Z",
+      graded_by: "codex-executor",
+      content_hash: grade.content_hash,
+      summary: { satisfied: 1, unsatisfied: 1, total: 2 },
+      criteria: [
+        { ...doneCriteria[0], status: "satisfied" },
+        { ...doneCriteria[1], status: "unsatisfied", reason: "承認時点の記載がない。" },
+      ],
+    });
+
+    const allSatisfied = structuredClone(deliverableInput);
+    allSatisfied.done_criteria = [
+      { id: "DC-001", status: "satisfied" },
+      { id: "DC-002", status: "satisfied" },
+    ];
+    const regraded = gradeMarkdownDocument({
+      content: graded.content,
+      path: deliverableInput.path,
+      input: allSatisfied,
+      viewpoints,
+      target: "deliverable",
+      gradedBy: "codex-executor",
+      now,
+      doneCriteria: { definitions: doneCriteria, detailRef: "prj-0001:example-doc-grade-criteria" },
+    });
+    expect(regraded.content).toContain("      satisfied: 2\n      total: 2\n      detail_ref:");
+    expect(regraded.content).not.toContain("unsatisfied:");
+  });
+
+  it("omits the summary when the document has no catalog criteria or is a kata", () => {
+    const withoutDefinitions = gradeMarkdownContent({
+      content: deliverableMarkdown,
+      path: deliverableInput.path,
+      input: { ...deliverableInput, done_criteria: undefined },
+      viewpoints,
+      target: "deliverable",
+      gradedBy: "codex-executor",
+      now: new Date("2026-09-11T00:00:00.000Z"),
+    });
+
+    expect(withoutDefinitions).not.toContain("done_criteria");
+  });
+
+  it("writes one overwritten detail file per deliverable next to the grade", () => {
+    const directory = "logs/grade-apply-criteria-test";
+    const documentPath = `${directory}/example-doc.md`;
+    const criteriaDirectory = `${directory}/criteria`;
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(documentPath, deliverableMarkdown, "utf8");
+    try {
+      const submission: GradeSubmission = {
+        rubric: "grade-rubric-v1",
+        documents: [{ ...deliverableInput, path: documentPath }],
+      };
+      const options = {
+        submission,
+        viewpoints,
+        target: "deliverable" as const,
+        gradedBy: "codex-executor",
+        now: new Date("2026-09-11T00:00:00.000Z"),
+        doneCriteriaByPath: new Map([[documentPath, doneCriteria]]),
+        criteriaDirectory,
+      };
+      const detailPath = doneCriteriaDetailPath(criteriaDirectory, documentPath);
+
+      const changed = applyGradeSubmission(options);
+
+      expect(changed).toEqual([expect.stringMatching(/-done-criteria\.yaml$/), documentPath]);
+      expect(detailPath).toMatch(/\/criteria\/example-doc-[0-9a-f]{10}-done-criteria\.yaml$/);
+      const detail = readFileSync(detailPath, "utf8");
+      expect(detail).toMatch(
+        /^# yaml-language-server: \$schema=(?:\.\.\/)+docs\/specdojo\/schemas\/v1\/grade-done-criteria\.schema\.yaml\n/,
+      );
+      expect(yaml.load(detail.split("\n").slice(1).join("\n"))).toMatchObject({
+        id: "prj-0001:example-doc-grade-criteria",
+        summary: { satisfied: 1, unsatisfied: 1, total: 2 },
+      });
+      expect(readFileSync(documentPath, "utf8")).toContain(
+        "detail_ref: prj-0001:example-doc-grade-criteria",
+      );
+
+      // 同じ結果を再適用しても履歴は増えず、成果物も詳細ファイルも変更なしになる。
+      expect(applyGradeSubmission(options)).toEqual([]);
+      expect(existsSync(detailPath)).toBe(true);
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });

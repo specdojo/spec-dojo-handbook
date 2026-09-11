@@ -124,6 +124,34 @@ $defs:
           major: { type: integer, minimum: 0 }
           minor: { type: integer, minimum: 0 }
           note: { type: integer, minimum: 0 }
+      done_criteria:
+        type: object
+        additionalProperties: false
+        required: [satisfied, total, detail_ref]
+        description: >-
+          成果物カタログの done_criteria に対する充足状況の要約。score とは別の軸であり、
+          score の閾値では上書きしない。条件ごとの判定と根拠は detail_ref が指す
+          詳細ファイル（grade-done-criteria.schema.yaml）へ記録し、ここには全量を書かない。
+        properties:
+          satisfied:
+            type: integer
+            minimum: 0
+          total:
+            type: integer
+            minimum: 0
+          unsatisfied:
+            type: object
+            description: 未充足条件の ID と、その確認責任を持つ Role code。
+            propertyNames:
+              pattern: "^DC-[0-9]{3,}$"
+            additionalProperties:
+              type: array
+              items:
+                type: string
+                minLength: 1
+              uniqueItems: true
+          detail_ref:
+            $ref: "#/$defs/idRef"
 properties:
   id:
     $ref: "#/$defs/idRef"

@@ -177,6 +177,14 @@ viewpoint は review 専用ではなく、継続品質評価 `specdojo grade` �
 
 grade は継続監視の最新スナップショット、review result は完成時の合意形成履歴です。Kata の grade は schedule strategy の approach 導出に使われますが、目的・業務価値など `evaluation: human` の観点や最終承認を代替しません。
 
+#### 成果物 grade と review result の責務境界
+
+成果物の現在品質と変更後の再評価は `grade --target deliverable` を正とします。成果物カタログの `done_criteria` は grade plan に取り込まれ、score とは独立して条件ごとの充足を判定します。成果物 Frontmatter には充足数・総数・未充足条件の担当 Role code・詳細参照だけを置き、条件文と不足理由は成果物ごとの grade 詳細ファイルに記録します。
+
+評価が現在内容に対するものかは、保存された `content_hash` と grade・finding を除いた現在内容のハッシュが一致するかで判断します。不一致の grade と、実行後に成果物が変更された review result は、どちらも現在品質の根拠には使いません。`grade list --target deliverable --changed-only` と定期 routine は、この不一致を再評価対象として検出します。
+
+review result は特定時点に誰が何を確認し、どの合意を行ったかを残す不変の履歴です。既存 review result は削除・移行せず、最新状態の判定には利用しません。090 の review タスクと `G-*-review-pass` は人の合意形成・最終承認のゲートとして維持し、継続品質の再評価は grade が担います。これにより二つの結果を同じ最新状態として同期させる必要をなくします。
+
 `vp-arc-single-responsibility` は、異なる主題を一つの文書へ同居させている状態を検出します。章を独立して参照・更新できるか、対象読者と利用時点が異なるか、別々の sample・recipe・template に対応するかを組み合わせて判断します。長さや対応する実践の型の数だけでは fail にせず、複数主題の案内自体を責務とする index、catalog、overview は対象外です。同じ主張の反復や正本の過剰な再掲は `vp-arc-conciseness` で扱います。
 
 分割が必要な場合、finding には独立する主題と境界候補、参照・カタログへの影響を記録します。grade はファイル作成や ID 採番を行わず、人が finding を確認して分割の採否と PJR 起票を判断します。起票後は新規ファイル、成果物カタログ、参照元、対応する sample・recipe・template の変更を通常の edit task として扱います。
@@ -217,7 +225,7 @@ review result を直接作らず、review plan を挟むことで、レビュー
 通常の成果物編集を行う edit plan は、観点別の自己レビューを行いません。代わりに、`done_criteria` を「完了の狙い」として素の箇条書き（観点・coverage なし）で提示し、編集者は rulebook / recipe / sample / template と「進め方」に沿って記述する中で、その狙いを満たすことを目指します。
 
 - 品質の担保は rulebook（必須項目・禁止事項）・recipe（書き方・レビュー観点・仕上げチェック）・sample・template が担います。
-- `done_criteria` を満たしているかの多観点での最終判定は、後続の独立した review plan / review result が行います。
+- `done_criteria` を満たしているかの継続的な一次判定は成果物 grade、完成時の多観点確認と最終合意は後続の独立した review plan / review result が行います。
 - maintenance 系 approach は対象と判定基準が異なるため、完了の狙いの提示は行いません。
 
 edit plan で観点別の自己レビューを行わないのは、各観点を満たそうとして成果物へ過剰な記述を挿入する副作用を避けるためです。多観点での判定と証跡は review task に集約し、review task では成果物を修正せず第三者的な立場で残します。
