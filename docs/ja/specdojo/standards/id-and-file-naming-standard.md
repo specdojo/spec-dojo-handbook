@@ -737,7 +737,7 @@ supersedes:
 3. 成果物カタログ（`dct-*.yaml`）の該当エントリは `path` だけを新しいファイル名に更新し、`local_id` は変更しない。
 4. Schedule（`sch-strategy-<track>.yaml` / `sch-track-<track>.yaml`）は変更不要（`local_id` が不変のため、タスクIDも変わらない）。
 5. wikilink は `[[id|新しい表示名]]` の表示名部分だけを更新する（id 自体は変わらないためリンク解決は保たれる）。
-6. sidebar 設定（`.vitepress/sidebar-config.ts` の `PRODUCT_FILE_MENU` / `PROJECTS_FILE_MENU`）のキーを新しいファイル名（拡張子なし）に更新し、表示名も合わせる。
+6. sidebar 設定（`packages/docs-site/.vitepress/sidebar-config.ts` の `PRODUCT_FILE_MENU` / `PROJECTS_FILE_MENU`）のキーを新しいファイル名（拡張子なし）に更新し、表示名も合わせる。
 7. `specdojo index build` → `specdojo catalog validate` → `npm run lint:md` → `npm run docs:build` の順で解決を確認する。
 
 ### 9.2. 経路B: 新IDへの切替（文書の再定義・分割・統合）

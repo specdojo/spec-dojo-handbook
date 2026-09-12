@@ -13,13 +13,14 @@ import {
 } from "./sidebar-config";
 import type { SidebarItem } from "./sidebar-config";
 import type { Plugin } from "vite";
-import { generateMermaidSvgs, generateMermaidSvgsForFile } from "../tools/docs/src/gen-mermaid-svg";
+import { generateMermaidSvgs, generateMermaidSvgsForFile } from "../src/gen-mermaid-svg";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { existsSync, readFileSync } from "node:fs";
 
 const CONFIG_DIR = path.dirname(fileURLToPath(import.meta.url));
-const WORKSPACE_ROOT = path.resolve(CONFIG_DIR, "..");
+const PACKAGE_ROOT = path.resolve(CONFIG_DIR, "..");
+const WORKSPACE_ROOT = path.resolve(process.env.SPECDOJO_DOCS_ROOT ?? process.cwd());
 const CONTENT_ROOT = path.join(WORKSPACE_ROOT, "docs");
 const MERMAID_OUT_DIR = path.join(WORKSPACE_ROOT, "public", "mermaid");
 
@@ -727,12 +728,17 @@ export default defineConfig({
   description: "Documentation for SpecDojo",
   base,
 
-  // srcDir 省略時は root（リポジトリルート）と同一になる。
-  // サイトに含めるのは docs/ 配下の Markdown のみとし、
+  // VitePress の設定は分離 package に置き、閲覧対象は呼び出し元 workspace とする。
+  srcDir: WORKSPACE_ROOT,
+  outDir: path.join(PACKAGE_ROOT, ".vitepress", "dist"),
+  cacheDir: path.join(PACKAGE_ROOT, ".vitepress", "cache"),
+
+  // srcDir は呼び出し元 workspace とする。
+  // サイトに含めるのは workspace の docs/ 配下の Markdown のみとし、
   // リポジトリ直下の README 等やローカル作業用ディレクトリは除外する。
   // logs/ は agent 実行時の plan / 応答を蓄える。VitePress の走査対象にすると、
   // 未知タグを含む agent 出力が Vue のコンパイルを壊す。
-  srcExclude: ["*.md", "local/**", "workspaces/**", "templates/**", "logs/**"],
+  srcExclude: ["*.md", "local/**", "workspaces/**", "templates/**", "logs/**", "packages/**"],
 
   // サイドバー折りたたみ状態の復元（初回描画前に同期実行し、ちらつきを防ぐ）
   head: [
@@ -959,6 +965,7 @@ export default defineConfig({
   },
 
   vite: {
+    publicDir: path.join(WORKSPACE_ROOT, "public"),
     plugins: [mermaidSvgAutoGenerate()],
     build: {
       // 最大のチャンクはローカル検索インデックス（@localSearchIndex*）で、

@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/packages/docs-site/node_modules/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
@@ -58,9 +59,9 @@ config/credentials.json
 *.key
 
 # vitepress build output
-/.vitepress/dist
-/.vitepress/cache
-/.vitepress/.temp
+/packages/docs-site/.vitepress/dist
+/packages/docs-site/.vitepress/cache
+/packages/docs-site/.vitepress/.temp
 /public/mermaid
 /local
 
