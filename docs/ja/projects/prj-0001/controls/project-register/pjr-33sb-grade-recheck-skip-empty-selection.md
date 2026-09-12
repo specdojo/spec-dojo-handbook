@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-33sb-grade-recheck-skip-empty-selection
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-12T07:14:30Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-12T10:11:50Z"
   block_reason: rate limit reached
+  conclusion: Job Definition に task.precondition（command と skip_when）を追加し、Job Run 作成前に grade list で選択を判定して 0 件なら Job Run・plan・result・evidence を作らず skipped を返すようにした。routine は skipped を routine-state.json に記録する。job-grade-kata と job-grade-deliverable に適用し、実機で選択 0 件の Job 起動が 1 秒で記録なしに終了することを確認した。
 ---
 
 # PJR-33SB grade の定期再評価で選択 0 件のときは Job Run の記録を残さない

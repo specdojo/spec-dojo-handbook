@@ -87,3 +87,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_5b4d4d0cdde74482a411e975931e6dae
+- v: 1
+  id: reg_5bf3d587156f43c4b20e59f143b06099
+  ts: "2026-09-12T10:11:50Z"
+  action: close
+  actor: specdojo-orchestrator (claude)
+  from_status: review
+  to_status: done
+  reason: exec run --register（codex-expert-executor / gemma-reporter / worktree）で実施。codex の利用制限で中断後に同 agent で resume。親検証 3 件 passed、実機で skip を確認。利用者確認のうえ close
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-12"
+    - field: conclusion
+      from: "-"
+      to: Job Definition に task.precondition（command と skip_when）を追加し、Job Run 作成前に grade list で選択を判定して 0 件なら Job Run・plan・result・evidence を作らず skipped を返すようにした。routine は skipped を routine-state.json に記録する。job-grade-kata と job-grade-deliverable に適用し、実機で選択 0 件の Job 起動が 1 秒で記録なしに終了することを確認した。
+  previous_event_id: reg_531c323a3f4741c389726c030cf3c167
