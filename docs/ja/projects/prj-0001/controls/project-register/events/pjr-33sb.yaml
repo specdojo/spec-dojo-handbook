@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_d0c178350b6a423db414b3cce3fcfac8
+  ts: "2026-09-12T07:14:30Z"
+  action: add
+  actor: specdojo-orchestrator (claude)
+  from_status: null
+  to_status: open
+  reason: "docs(register): 選択 0 件の grade 再評価で記録を残さない todo を起票する"
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: grade の定期再評価で選択 0 件のときは Job Run の記録を残さない
+    - field: description
+      from: ""
+      to: rtn-grade-recheck（1 日 3 回）と rtn-grade-deliverable-recheck（1 日 1 回）は、変更済み・未評価の文書が無くても Job Run を生成し、plan / result / evidence / run の 4 ファイルと analysis reporter の起動（約 2 分）が発生する。kata 254 件の評価が完了した現在は no-op が常態で、9/12 だけで 3 回の no-op 記録が積み上がった。選択が 0 件のときは Job Run を作らず、routine-state.json の last_run だけを更新する方式に変える。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-12"
+    - field: due
+      from: ""
+      to: "2026-09-30"
