@@ -12,7 +12,7 @@ specdojo:
   owner: ARC
   registered_at: "2026-09-02T22:48:28Z"
   due_on: "2026-09-30"
-  conclusion: docs-structure-guide へ別リポジトリ構成の章を追記した。採用条件、プロダクト文書の配置、統合順序、現行実装の境界を記載している。
+  conclusion: docs-structure-guide の Detached Unit 章を更新した。登録簿 item ID の Refs trailer を主参照とし、PR と commit hash を補助参照にするトレーサビリティ方式を規定している。
 ---
 
 # PJR-QHKA 別リポジトリ構成（Detached Unit）のドキュメント化
@@ -372,17 +372,20 @@ export type SpecDojoConfig = {
 | 5   | 二重 worktree の構成案と統合順序を記述する   | ARC  | done | 部分状態は waiting       |
 | 6   | 適用条件を記述する                           | ARC  | done | 自己完結型と駆動型を区別 |
 | 7   | lint を確認する                              | ARC  | done | Markdown 検査実施        |
+| 8   | 履歴改変に耐える主参照を規定する             | ARC  | done | item ID の Refs trailer  |
+| 9   | rebase / squash 後の確認手順を規定する       | ARC  | done | 統合先の Git 履歴を確認  |
+| 10  | 既存 hash 記録の移行方針を規定する           | ARC  | done | PR と最終 hash を追記    |
 
 ## 5. 対応結果
 
 - [[specdojo:docs-structure-guide]] に「別リポジトリ構成（Detached Unit）」を追加した。
-- 3ディレクトリの配置、プロダクト文書の切り分け、現行実装の境界、result から app commit への片方向トレーサビリティを規定した。
+- 初回対応では、3ディレクトリの配置、プロダクト文書の切り分け、現行実装の境界、result から
+  app commit への片方向トレーサビリティを規定した。
 - 二重 worktree は将来構成として、app 側を先に統合する順序、部分状態での `waiting`、採用前に必要な実装を明記した。多リポジトリ対応の実装自体は本項目の範囲外である。
 
 - 受け入れ時に orchestrator が `lint:md` と `docs:build` の通過を確認した。
-- トレーサビリティの記録時点は、設計整理では「定める必要がある」と課題として挙げるに留めた
-  が、ガイドでは app commit hash を統合後に確定してから docs 側の result へ記録する手順として
-  具体化されている。個票の記述より踏み込んでおり、この点はガイドの記述を採用する。
+- 初回対応では、app commit hash を統合後に確定してから docs 側の result へ記録する手順まで
+  具体化した。この方式の欠陥と再開後の置き換えは `5.1.` と `5.2.` に記録する。
 - 残課題は二重 worktree の実装（親検証の割り当て、agent の作業ディレクトリ、失敗時の worktree
   保持、統合処理の複製）である。本項目は設計の整理とガイド追記までとする。
 
@@ -460,6 +463,23 @@ hash は記録時点のスナップショットとして残す価値はあるが
   書き込むかの判断根拠が示されている。
 - 既に記録済みの hash がある場合の移行方針が示されている。
 - `10.5.` の暫定注意書きが解消されている。
+
+## 5.2. 再開後の対応結果
+
+- 主たる参照を commit hash から登録簿 item ID へ変更し、app の commit message に
+  `Refs: PJR-XXXX` trailer を残す規則を設けた。PR 参照と40文字の最終 commit hash は、レビュー
+  経緯と確認時点を固定する補助情報として result 本文へ記録する。
+- rebase 後は書き換え後の対象 commit、squash merge 後は最終 commit の message を確認する手順を
+  追加した。squash 時の自動的な message 連結には依存せず、統合先ブランチで `git log --grep` を
+  実行して item ID を検索できることを SpecDojo 側の統合前に確認する。
+- 「app 側への逆参照は不要」という旧規定を改め、app のファイルや状態遷移は増やさない一方、
+  commit message 1行の `Refs:` trailer は必須とした。Detached Unit の履歴分離を維持しつつ、hash
+  だけでは失われる追跡可能性を確保するためである。
+- 既存 result の hash は削除せず、到達可能性と PR を調べて item ID、PR、最終 hash を追記する移行
+  方針を定めた。共有済み app 履歴の書き換えは禁止し、特定できない対応は推測せず未解決として
+  記録する。
+- これにより `10.5.` の暫定注意書きを解消し、再開後の完了条件を満たした。二重 worktree の実装は
+  引き続き本項目の範囲外である。
 
 ## 6. 関連ドキュメント
 
