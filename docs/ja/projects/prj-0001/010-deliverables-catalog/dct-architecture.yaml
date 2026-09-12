@@ -58,7 +58,7 @@ groups:
             path: src/specdojo.ts
             purpose: SpecDojo CLIコンテナが持つコマンド領域
           - kind: implementation
-            path: .vitepress/config.mts
+            path: packages/docs-site/.vitepress/config.mts
             purpose: 生成ドキュメントサイト（VitePress）コンテナのビルド構成
         done_criteria:
           - text: 主要コンテナ構成・データフローが業務観点で理解できること
@@ -188,10 +188,10 @@ groups:
         rulebook: specdojo:tsd-rulebook
         evidence_refs:
           - kind: implementation
-            path: .vitepress/config.mts
+            path: packages/docs-site/.vitepress/config.mts
             purpose: VitePressのサイト構成・ビルド設定
           - kind: implementation
-            path: package.json
+            path: packages/docs-site/package.json
             purpose: Mermaid CLI等ドキュメントサイト関連の依存関係
         done_criteria: *tsd-done-criteria
 

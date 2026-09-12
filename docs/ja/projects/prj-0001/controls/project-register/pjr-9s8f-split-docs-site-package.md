@@ -24,32 +24,33 @@ Mermaid 生成時に Chromium の取得へ直面する。文書サイト構築�
 
 ## 2. 依存の実態
 
-`tools/docs/src` の内訳は用途で二分される。
+従来の `tools/docs/src` の内訳は用途で二分される。分離後、Mermaid 生成器だけを
+`packages/docs-site/src` へ移した。
 
-| ファイル                         | 呼び出し元               | 外部依存     | 判断 |
-| -------------------------------- | ------------------------ | ------------ | ---- |
-| `remark-frontmatter-ajv2020.cjs` | remark 設定              | ajv          | 同梱 |
-| `remark-md-content.cjs`          | remark 設定              | Node 標準    | 同梱 |
-| `history-links.ts`               | `validate-history-links` | Node 標準    | 同梱 |
-| `gen-mermaid-svg.ts`             | `docs:build:mermaid`     | **Chromium** | 分離 |
+| ファイル                                    | 呼び出し元               | 外部依存     | 判断 |
+| ------------------------------------------- | ------------------------ | ------------ | ---- |
+| `remark-frontmatter-ajv2020.cjs`            | remark 設定              | ajv          | 同梱 |
+| `remark-md-content.cjs`                     | remark 設定              | Node 標準    | 同梱 |
+| `history-links.ts`                          | `validate-history-links` | Node 標準    | 同梱 |
+| `packages/docs-site/src/gen-mermaid-svg.ts` | `docs:build:mermaid`     | **Chromium** | 分離 |
 
 Mermaid の生成は外部プロセスへ委ねている。
 
 ```typescript
-const PUPPETEER_CONFIG = path.resolve("puppeteer-config.json");
-execSync(`npx mmdc -p "${PUPPETEER_CONFIG}" -c "${MERMAID_CONFIG}" -i "${tmpMmd}" -o "${svgPath}"`);
+const PUPPETEER_CONFIG = path.join(PACKAGE_ROOT, "puppeteer-config.json");
+execFileSync(process.execPath, [MERMAID_CLI, "-p", PUPPETEER_CONFIG, "-c", MERMAID_CONFIG]);
 ```
 
 この環境では、Debian の Chromium ビルド退行により生成できなくなった経緯がある。CLI 本体の
 `register` や `exec` には一切不要な依存である。
 
-## 3. `.vitepress` を含める根拠
+## 3. `.vitepress` を分離パッケージへ含める根拠
 
-`.vitepress/config.mts` が `gen-mermaid-svg` を直接 import している。両者は不可分であり、
-分離するなら同じパッケージへ入れる。
+`packages/docs-site/.vitepress/config.mts` が `gen-mermaid-svg` を直接 import している。両者は
+不可分であり、同じパッケージへ入れる。
 
 ```typescript
-import { generateMermaidSvgs, generateMermaidSvgsForFile } from "../tools/docs/src/gen-mermaid-svg";
+import { generateMermaidSvgs, generateMermaidSvgsForFile } from "../src/gen-mermaid-svg";
 ```
 
 `config.mts` は `vitepress` と `vitepress-sidebar` にも依存する。文書サイトの構築に必要な設定
@@ -76,24 +77,35 @@ import { generateMermaidSvgs, generateMermaidSvgsForFile } from "../tools/docs/s
 
 ## 6. 作業内容
 
-| No  | 作業                                             | メモ                            |
-| --- | ------------------------------------------------ | ------------------------------- |
-| 1   | 分離対象の範囲を確定する                         | `.vitepress` 配下、設定ファイル |
-| 2   | パッケージ構成を決める                           | 名称、依存関係、参照方法        |
-| 3   | 分離を実施する                                   |                                 |
-| 4   | 本体の `files` から文書サイト関連を外す          |                                 |
-| 5   | 分離パッケージ無しでの動作を確認する             | 最小構成で実地確認              |
-| 6   | 本リポジトリの `docs:build` が動くことを確認する |                                 |
+| No  | 作業                                             | メモ                                                        |
+| --- | ------------------------------------------------ | ----------------------------------------------------------- |
+| 1   | 分離対象の範囲を確定する                         | VitePress一式、Mermaid生成器、Mermaid / Puppeteer設定       |
+| 2   | パッケージ構成を決める                           | `@specdojo/docs-site`、独立lockfile、利用者による明示導入   |
+| 3   | 分離を実施する                                   | `packages/docs-site` へ移動し専用CLIを追加                  |
+| 4   | 本体の `files` から文書サイト関連を外す          | `tools/docs/src` には検証系だけが残る                       |
+| 5   | 分離パッケージ無しでの動作を確認する             | 本体lockfileとpack内容からChromium依存が無いことを確認      |
+| 6   | 本リポジトリの `docs:build` が動くことを確認する | ルートnpm scriptとdeploy workflowを分離パッケージ経由へ変更 |
 
-## 7. 判断が要る点
+## 7. 採用した構成
 
-- パッケージ名。`@specdojo/docs-site` などのスコープ付きにするか。
-- 参照方法。`optionalDependencies` は導入を強制しない反面、失敗が分かりにくい。
-- lefthook や CI が分離パッケージへ依存してよいか。本リポジトリ自身は文書サイトを構築する。
+- パッケージ名は責務を表す `@specdojo/docs-site` とする。
+- `specdojo` の `optionalDependencies` には含めない。サイトを使う環境だけが明示導入し、未導入時は
+  `specdojo-docs-site` コマンドが存在しないことで即時に失敗させる。
+- 本リポジトリでは独立 `package-lock.json` を使い、CI は本体の `npm ci` と分けて導入する。ルートの
+  `docs:build` / `docs:dev` は互換入口として分離パッケージの npm scriptへ委譲する。
 
 ## 8. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+文書サイト一式を `packages/docs-site` へ分離し、実行入口 `specdojo-docs-site` を追加した。本体の
+`package.json` / `package-lock.json` から VitePress、Mermaid CLI、Chromium / Puppeteerの依存を
+除去した。remark系、履歴リンク検証、schema検証は従来どおり `tools/docs/src` に残した。
+
+本リポジトリのルートnpm script、devcontainer初期化、GitHub Pages workflowは、分離パッケージを
+明示的に導入して呼び出す。ビルド出力は `packages/docs-site/.vitepress/dist` とする。分離パッケージ
+のCLIは対象workspaceを引数で受けるため、インストール先でも
+`npx specdojo-docs-site build .` として使える。
+日本語・英語の最小文書fixtureを対象に、移動後の設定・theme・Mermaidプラグインを通るVitePress
+buildが成功することも確認した。残課題はない。
 
 ## 9. 関連ドキュメント
 

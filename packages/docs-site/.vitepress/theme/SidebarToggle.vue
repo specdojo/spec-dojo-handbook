@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { useSidebar } from 'vitepress/theme'
-import { ref, onMounted } from 'vue'
+import { useSidebar } from "vitepress/theme";
+import { ref, onMounted } from "vue";
 
-const STORAGE_KEY = 'vp-sidebar-collapsed'
-const COLLAPSED_CLASS = 'vp-sidebar-collapsed'
+const STORAGE_KEY = "vp-sidebar-collapsed";
+const COLLAPSED_CLASS = "vp-sidebar-collapsed";
 
-const { hasSidebar } = useSidebar()
-const collapsed = ref(false)
+const { hasSidebar } = useSidebar();
+const collapsed = ref(false);
 
 onMounted(() => {
-  collapsed.value = document.documentElement.classList.contains(COLLAPSED_CLASS)
-})
+  collapsed.value = document.documentElement.classList.contains(COLLAPSED_CLASS);
+});
 
 function toggle() {
-  collapsed.value = !collapsed.value
-  document.documentElement.classList.toggle(COLLAPSED_CLASS, collapsed.value)
-  localStorage.setItem(STORAGE_KEY, String(collapsed.value))
+  collapsed.value = !collapsed.value;
+  document.documentElement.classList.toggle(COLLAPSED_CLASS, collapsed.value);
+  localStorage.setItem(STORAGE_KEY, String(collapsed.value));
 }
 </script>
 
@@ -56,7 +56,9 @@ function toggle() {
   height: 36px;
   border-radius: 6px;
   color: var(--vp-c-text-2);
-  transition: color 0.25s, background-color 0.25s;
+  transition:
+    color 0.25s,
+    background-color 0.25s;
 }
 
 .sidebar-toggle:hover {

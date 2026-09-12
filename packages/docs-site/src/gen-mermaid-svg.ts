@@ -1,13 +1,18 @@
-import * as fs from "fs";
-import * as path from "path";
-import { execSync } from "child_process";
-import * as crypto from "crypto";
-import { fileURLToPath } from "url";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { execFileSync } from "node:child_process";
+import * as crypto from "node:crypto";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 
-const DEFAULT_ROOT = path.resolve("docs");
-const DEFAULT_OUT_DIR = path.resolve("public", "mermaid");
-const PUPPETEER_CONFIG = path.resolve("puppeteer-config.json");
-const MERMAID_CONFIG = path.resolve("mermaid-config.json");
+const require = createRequire(import.meta.url);
+const WORKSPACE_ROOT = path.resolve(process.env.SPECDOJO_DOCS_ROOT ?? process.cwd());
+const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const DEFAULT_ROOT = path.join(WORKSPACE_ROOT, "docs");
+const DEFAULT_OUT_DIR = path.join(WORKSPACE_ROOT, "public", "mermaid");
+const PUPPETEER_CONFIG = path.join(PACKAGE_ROOT, "puppeteer-config.json");
+const MERMAID_CONFIG = path.join(PACKAGE_ROOT, "mermaid-config.json");
+const MERMAID_CLI = path.join(path.dirname(require.resolve("@mermaid-js/mermaid-cli")), "cli.js");
 
 // ファイル単位の差分判定キャッシュ。outDir 配下に置き、生成済み SVG と一緒に gitignore される。
 const MANIFEST_FILE = ".manifest.json";
@@ -156,8 +161,9 @@ function renderSvg(outDir: string, code: string): string {
 
   try {
     // mermaid-cli を使って .mmd → .svg
-    execSync(
-      `npx mmdc -p "${PUPPETEER_CONFIG}" -c "${MERMAID_CONFIG}" -i "${tmpMmd}" -o "${svgPath}"`,
+    execFileSync(
+      process.execPath,
+      [MERMAID_CLI, "-p", PUPPETEER_CONFIG, "-c", MERMAID_CONFIG, "-i", tmpMmd, "-o", svgPath],
       { stdio: "inherit" },
     );
 

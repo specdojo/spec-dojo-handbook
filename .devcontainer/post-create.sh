@@ -34,6 +34,12 @@ echo "Building and linking SpecDojo CLI..."
   sudo npm link
 )
 
+echo "Installing documentation site dependencies..."
+(
+  cd "$WORKSPACE_DIR"
+  npm --prefix packages/docs-site ci
+)
+
 # Keep safe.directory entries unique to avoid unbounded growth across rebuilds.
 SAFE_DIRS="$(git config --global --get-all safe.directory 2>/dev/null || true)"
 if [ -n "$SAFE_DIRS" ]; then
