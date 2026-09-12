@@ -389,27 +389,89 @@ SpecDojo の成果物カタログが管理するプロダクト文書は、`app1
 
 ### 10.5. result によるトレーサビリティ
 
-> **この節は見直し中です。** 以下に規定する commit hash による参照は、squash merge や rebase を
-> 経ると参照先が到達不能になります。GC 後は元の commit が削除され、追跡できません。squash
-> merge は標準的な運用であるため、この方式をそのまま採用しないでください。履歴改変に耐える
-> 識別子への改訂を検討しています。経緯は `PJR-QHKA` に記録しています。
+プロダクト実装の変更を伴う項目では、登録簿の item ID を履歴改変に依存しないトレースキーとし、
+app 側の commit message と SpecDojo 側の result 本文の両方に記録します。result frontmatter は
+scaffold の構造を維持し、独自キーを追加しません。
 
-プロダクト実装の変更を伴う項目では、SpecDojo 側の result 本文に対応する app commit を記録します。result frontmatter は scaffold の構造を維持し、独自キーを追加しません。
+app 側では、対象項目に対応する commit message の body 末尾に `Refs:` trailer を記載します。
 
-```markdown
-| app repository | app commit                                 | 記録時点                 |
-| -------------- | ------------------------------------------ | ------------------------ |
-| app1           | `0123456789abcdef0123456789abcdef01234567` | 統合先ブランチへの統合後 |
+```text
+feat(auth): トークン失効処理を追加する
+
+認証済み端末を紛失した場合に、利用者がセッションを失効できるようにする。
+
+Refs: PJR-XXXX
 ```
 
-次の規則で記録します。
+SpecDojo 側の result には、同じ item ID と app 側の参照を本文へ記録します。commit hash は特定時点の
+スナップショットであり、主たる参照にはしません。Pull Request を使わない場合は `app PR` を
+`not applicable` とし、理由を添えます。
 
-- リポジトリを識別できる名称と、40文字の完全長 commit hash を対にします。
-- app commit は、意図する統合先ブランチが実装変更を含んだ直後の commit とします。merge commit が作られた場合はその merge commit、fast-forward の場合は fast-forward 後の先端を記録します。
-- 記録時点は app 側の統合成功後、SpecDojo 側の result と成果物を統合する前です。app 側への統合が未完了なら hash を推測で記録しません。
-- 文書のみの項目で app commit がない場合は、`app commit: not applicable`とその理由を記録します。
+```markdown
+| trace key | app repository | app PR | app commit snapshot                        | 確認時点                 |
+| --------- | -------------- | ------ | ------------------------------------------ | ------------------------ |
+| PJR-XXXX  | app1           | #123   | `0123456789abcdef0123456789abcdef01234567` | 統合先ブランチへの統合後 |
+```
 
-この参照は **SpecDojo result から app commit への片方向** です。`app1/` 側の commit message やファイルに SpecDojo result への逆参照を必須とせず、2つのリポジトリを原子的に統合することも保証しません。履歴改変によって hash が到達不能になる可能性と、参照の整合性を自動検証しない制約を受け入れる必要があります。
+次の規則で運用します。
+
+- `Refs:` の値は登録簿の item ID と完全一致させます。表示名や一時的な branch 名をトレースキーに
+  しません。
+- app 側の対象 commit には `Refs:` trailer を付けます。複数 commit を1つへ squash する場合は、
+  最終 commit message に trailer を1行残します。app のソースや設定ファイルへ逆参照を埋め込みません。
+- PR を使う場合は、番号だけでリポジトリを特定できないため、result へ repository 名と PR 番号または
+  URL を対で記録します。
+- app commit snapshot は、意図する統合先ブランチが実装変更を含んだ直後の40文字の完全長 hash と
+  します。merge commit が作られた場合はその merge commit、fast-forward または squash merge の
+  場合は統合後の先端を記録します。
+- 記録と確認は app 側の統合成功後、SpecDojo 側の result と成果物を統合する前に行います。app 側への
+  統合が未完了なら PR や hash を推測で記録しません。
+- 文書のみの項目で app 側の変更がない場合は、`app change: not applicable` とその理由を記録します。
+
+#### 10.5.1. rebase / squash merge 後の確認
+
+rebase や squash により commit hash は変わるため、統合後の commit message にトレースキーが残って
+いることを完了条件として確認します。
+
+1. rebase 後は、書き換え後の各対象 commit の message を確認する。commit をまとめた場合は、残った
+   commit の body 末尾に `Refs: PJR-XXXX` があることを確認する。
+2. squash merge では、最終 commit message を確定する画面またはコマンドで `Refs: PJR-XXXX` を
+   明示的に残す。プラットフォームによる commit message の自動連結には依存しない。
+3. 統合後の app リポジトリで次を実行し、統合先ブランチから到達可能な commit が表示されることを
+   確認する。
+
+```bash
+git log <target-branch> --grep='^Refs: PJR-XXXX$' --format='%H %s'
+```
+
+1. 表示された最終 hash と PR 番号または URL を result へ記録する。対象 commit が表示されなければ、
+   SpecDojo 側を統合せず、app 側のトレースキーを是正する。
+
+この確認により、rebase や squash で hash が変わっても item ID から app の到達可能な履歴を検索
+できます。PR は squash 後の commit とレビュー経緯を結ぶ補助参照、hash は確認時点を固定する補助値
+です。
+
+#### 10.5.2. 逆参照の範囲
+
+Detached Unit は SpecDojo の状態遷移や実行記録を app の履歴から分離しますが、app の変更理由を
+登録簿へ結び直す最小限の逆参照として、commit message の `Refs:` trailer は必須とします。app の
+ファイルへの ID 追記、SpecDojo の遷移 commit の複製、2つのリポジトリの原子的な統合は求めません。
+履歴を汚さない範囲を commit message 1行に限定し、履歴改変後の追跡可能性を優先します。
+
+#### 10.5.3. 既存の hash 記録の移行
+
+既存 result に app commit hash だけが記録されている場合は、次にその項目を再開または監査するときに
+移行します。
+
+- hash が統合先ブランチから到達可能なら、対応する item ID、repository 名、PR 番号または URL を
+  result 本文に追記します。共有済み commit の message は書き換えず、以後の関連 commit に
+  `Refs:` trailer を適用します。
+- hash が到達不能でも PR から最終 commit を特定できるなら、旧 hash を履歴として残し、最終 hash と
+  PR 参照を追記します。
+- hash と PR のどちらからも対応を確定できない場合は、推測で置換せず「未解決の旧 hash」と記録し、
+  item ID、変更内容、期間を使った履歴調査を残課題にします。
+
+移行のために共有済みの app 履歴を rebase、amend、force-push しません。
 
 ### 10.6. 二重 worktree の構成案と統合順序
 
@@ -425,7 +487,8 @@ app1-worktrees/
 統合は次の順序で行います。
 
 1. `src/` で app 側の検証を実行し、`app1/` の統合先ブランチへ統合する。
-2. 統合後の app commit hash を確定し、`docs/` 側の result 本文へ記録する。
+2. 統合後の app 履歴に `Refs:` trailer が残っていることを確認し、trace key、PR 参照、最終 commit
+   snapshot を `docs/` 側の result 本文へ記録する。
 3. `docs/` で SpecDojo 側の検証を実行し、`app1-specdojo/` の統合先ブランチへ統合する。
 
 ソースを先に統合することで、プロダクトの統合を SpecDojo 側の統合成否から切り離します。失敗時の部分状態は次の2つに限定します。
