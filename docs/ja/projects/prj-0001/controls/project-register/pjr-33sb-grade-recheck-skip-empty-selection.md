@@ -7,11 +7,12 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: in-progress
+  item_status: waiting
   priority: medium
   owner: ARC
   registered_at: "2026-09-12T07:14:30Z"
   due_on: "2026-09-30"
+  block_reason: rate limit reached
 ---
 
 # PJR-33SB grade の定期再評価で選択 0 件のときは Job Run の記録を残さない
