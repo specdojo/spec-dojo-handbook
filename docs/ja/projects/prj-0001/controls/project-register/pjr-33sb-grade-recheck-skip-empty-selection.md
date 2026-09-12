@@ -52,6 +52,33 @@ plan と result を scaffold する。文書の選択は `tools/grade/run-per-do
 事前判定には `specdojo grade list --target <kata\|deliverable> --changed-only --ungraded --limit <n>` を
 使う。script の選択規則（selection-v2）と同じ入口であり、判定と実行の対象がずれない。
 
+### 1.4. 方式の決定（2026-09-12）
+
+案 A を採る。「いつ no-op か」を決める入力（対象種別、`changed_only`、`ungraded`、`limit`）は Job の
+`inputs` にあり、routine は時刻しか知らない。Job に置けば `exec run --job` の手動実行や CI でも効き、
+routine の `action.kind: job` を「起動して結果を受け取る」役に絞った現在の設計を崩さない。
+`job-register-sweep` や `job-translate-updated-docs` も同じ「選択が空なら no-op」の形であり、
+同じ仕組みで横展開できる。
+
+実装の形は次を想定する。
+
+```yaml
+task:
+  mode: command
+  precondition:
+    command: specdojo grade list --target kata --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}} --limit {{inputs.limit}}
+    skip_when: empty-output
+  command: |
+    ...
+```
+
+- runner は Job Run を作成する前に `precondition.command` を materialize 済みの引数で実行し、
+  `skip_when` を満たせば Job Run・plan・result・evidence を作らずに `skipped`（理由: empty selection）
+  を返す。
+- routine は `--if-busy skip` と同じ経路で `routine-state.json` に `last_result: skipped` と理由を記録する。
+- `skip_when` は当面 `empty-output` と終了コード指定の 2 通りに限定し、最初から汎用化しない。
+- `precondition` の出力と選択の対象がずれないよう、判定には script と同じ選択規則を持つ `grade list` を使う。
+
 ## 2. 完了条件
 
 - `rtn-grade-recheck` と `rtn-grade-deliverable-recheck` の定期実行で、選択が 0 件のときに Job Run、
@@ -66,12 +93,12 @@ plan と result を scaffold する。文書の選択は `tools/grade/run-per-do
 
 ## 3. 作業内容
 
-| No  | 作業                                                  | 担当 | 状態 | メモ                                          |
-| --- | ----------------------------------------------------- | ---- | ---- | --------------------------------------------- |
-| 1   | 事前判定の置き場所（案 A / B）を決める                | ARC  | open | 案 C は evidence の不変性と相反するため不採用 |
-| 2   | Job schema または routine schema と runner を変更する | ARC  | open | skip の記録先は routine-state.json            |
-| 3   | `job-grade-kata` / `job-grade-deliverable` へ適用する | ARC  | open | 判定は `grade list` を使う                    |
-| 4   | 正本の文書とテストを更新する                          | ARC  | open | 両経路の回帰テスト                            |
+| No  | 作業                                                  | 担当 | 状態 | メモ                                               |
+| --- | ----------------------------------------------------- | ---- | ---- | -------------------------------------------------- |
+| 1   | 事前判定の置き場所（案 A / B）を決める                | ARC  | done | 案 A（Job の `precondition`）に決定。案 C は不採用 |
+| 2   | Job schema または routine schema と runner を変更する | ARC  | open | skip の記録先は routine-state.json                 |
+| 3   | `job-grade-kata` / `job-grade-deliverable` へ適用する | ARC  | open | 判定は `grade list` を使う                         |
+| 4   | 正本の文書とテストを更新する                          | ARC  | open | 両経路の回帰テスト                                 |
 
 ## 4. 対応結果
 
