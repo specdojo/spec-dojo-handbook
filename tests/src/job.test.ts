@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -6,6 +6,7 @@ import {
   completeJobRun,
   deriveJobState,
   executeJobCommand,
+  executeJobPrecondition,
   isJobAgentTask,
   isJobCommandTask,
   jobCheckpoint,
@@ -191,6 +192,48 @@ describe("Job Definition", () => {
     });
   });
 
+  it("parses an empty-output precondition on a command Job", () => {
+    const parsed = parseJobDefinition(
+      {
+        id: "job-grade",
+        name: "Grade",
+        task: {
+          mode: "command",
+          precondition: { command: "list targets", skip_when: "empty-output" },
+          command: "grade targets",
+        },
+        run: { idempotency_key: "{{job_id}}" },
+      },
+      "job-grade.yaml",
+    );
+
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.job?.task).toMatchObject({
+      precondition: { command: "list targets", skip_when: "empty-output" },
+    });
+  });
+
+  it("rejects an unsupported precondition skip condition", () => {
+    const parsed = parseJobDefinition(
+      {
+        id: "job-grade",
+        name: "Grade",
+        task: {
+          mode: "command",
+          precondition: { command: "list targets", skip_when: "contains:no targets" },
+          command: "grade targets",
+        },
+        run: { idempotency_key: "{{job_id}}" },
+      },
+      "job-grade.yaml",
+    );
+
+    expect(parsed.job).toBeUndefined();
+    expect(parsed.errors).toContain(
+      "job-grade.yaml: task.precondition.skip_when must be empty-output or an exit code from 0 to 255",
+    );
+  });
+
   it("rejects agent-driven fields in command mode", () => {
     const parsed = parseJobDefinition(
       {
@@ -210,6 +253,28 @@ describe("Job Definition", () => {
     expect(parsed.job).toBeUndefined();
     expect(parsed.errors).toContain(
       "job-grade.yaml: task.agent is not allowed in command mode; use task.analysis.agent",
+    );
+  });
+
+  it("rejects a precondition outside command mode", () => {
+    const parsed = parseJobDefinition(
+      {
+        id: "job-edit",
+        name: "Edit",
+        task: {
+          mode: "edit",
+          description: "Edit a document",
+          paths: ["docs/example.md"],
+          precondition: { command: "list targets", skip_when: "empty-output" },
+        },
+        run: { idempotency_key: "{{job_id}}" },
+      },
+      "job-edit.yaml",
+    );
+
+    expect(parsed.job).toBeUndefined();
+    expect(parsed.errors).toContain(
+      "job-edit.yaml: task.command, task.precondition, and task.analysis are only allowed in command mode",
     );
   });
 
@@ -303,9 +368,101 @@ describe("Job command execution", () => {
       rmSync(repo, { recursive: true, force: true });
     }
   });
+
+  it("evaluates empty output and a configured exit code as skip conditions", async () => {
+    const repo = mkdtempSync(join(tmpdir(), "specdojo-job-precondition-"));
+    try {
+      const empty = await executeJobPrecondition(
+        { command: "printf '  \\n'", skip_when: "empty-output" },
+        repo,
+      );
+      const exitCode = await executeJobPrecondition({ command: "exit 42", skip_when: 42 }, repo);
+
+      expect(empty).toMatchObject({ skipped: true, reason: "empty selection" });
+      expect(exitCode).toMatchObject({
+        skipped: true,
+        reason: "precondition exited with code 42",
+      });
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("Job Run lifecycle", () => {
+  it("skips an empty selection before creating Run or plan files", async () => {
+    const repo = setupRepo();
+    try {
+      writeFileSync(
+        join(repo, "jobs/job-empty.yaml"),
+        [
+          "id: job-empty",
+          "name: Empty selection",
+          "task:",
+          "  mode: command",
+          "  precondition:",
+          "    command: \"printf '  \\\\n'\"",
+          "    skip_when: empty-output",
+          "  command: touch should-not-run",
+          "run:",
+          '  idempotency_key: "{{job_id}}:{{scheduled_at}}"',
+          "",
+        ].join("\n"),
+      );
+
+      const materialized = await materializeJobRun({
+        projectId: "test",
+        jobId: "job-empty",
+        scheduledAt: "2026-09-12T00:00:00Z",
+      });
+
+      expect(materialized.preconditionSkipped).toBe(true);
+      expect(materialized.preconditionReason).toBe("empty selection");
+      expect(existsSync(materialized.runPath)).toBe(false);
+      expect(existsSync(materialized.planPath)).toBe(false);
+      expect(existsSync(join(repo, "should-not-run"))).toBe(false);
+    } finally {
+      process.chdir(originalCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  it("creates the normal Run and plan when the precondition selects an item", async () => {
+    const repo = setupRepo();
+    try {
+      writeFileSync(
+        join(repo, "jobs/job-selected.yaml"),
+        [
+          "id: job-selected",
+          "name: Selected item",
+          "task:",
+          "  mode: command",
+          "  precondition:",
+          "    command: printf 'docs/selected.md\\n'",
+          "    skip_when: empty-output",
+          "  command: printf 'run\\n'",
+          "run:",
+          '  idempotency_key: "{{job_id}}:{{scheduled_at}}"',
+          "",
+        ].join("\n"),
+      );
+
+      const materialized = await materializeJobRun({
+        projectId: "test",
+        jobId: "job-selected",
+        scheduledAt: "2026-09-12T00:00:00Z",
+      });
+
+      expect(materialized.preconditionSkipped).toBeUndefined();
+      expect(existsSync(materialized.runPath)).toBe(true);
+      expect(existsSync(materialized.planPath)).toBe(true);
+      expect(materialized.record.attempts).toHaveLength(1);
+    } finally {
+      process.chdir(originalCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
   it("scheduled_at ごとに別の再開キーを materialize し、同じ実行枠の retry では再利用する", async () => {
     const repo = setupRepo();
     try {

@@ -875,7 +875,7 @@ export function registerRoutineCommands(program: Command): void {
         if (result === "failure") failed++;
         if (result === "skipped") {
           skipped++;
-          process.stdout.write(`[routine] skipped ${entry.doc.id}: exec busy\n`);
+          process.stdout.write(`[routine] skipped ${entry.doc.id}: job action skipped\n`);
         }
 
         if (!dryRun) {

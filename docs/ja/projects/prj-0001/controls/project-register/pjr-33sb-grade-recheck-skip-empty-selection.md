@@ -67,7 +67,7 @@ routine の `action.kind: job` を「起動して結果を受け取る」役に�
 task:
   mode: command
   precondition:
-    command: specdojo grade list --target kata --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}} --limit {{inputs.limit}}
+    command: "{{specdojo}} grade list --target kata --changed-only --project {{project_id}}"
     skip_when: empty-output
   command: |
     ...
@@ -76,7 +76,7 @@ task:
 - runner は Job Run を作成する前に `precondition.command` を materialize 済みの引数で実行し、
   `skip_when` を満たせば Job Run・plan・result・evidence を作らずに `skipped`（理由: empty selection）
   を返す。
-- routine は `--if-busy skip` と同じ経路で `routine-state.json` に `last_result: skipped` と理由を記録する。
+- routine は `--if-busy skip` と同じ経路で `routine-state.json` に `last_result: skipped` を記録し、標準出力には理由を表示する。
 - `skip_when` は当面 `empty-output` と終了コード指定の 2 通りに限定し、最初から汎用化しない。
 - `precondition` の出力と選択の対象がずれないよう、判定には script と同じ選択規則を持つ `grade list` を使う。
 
@@ -97,13 +97,16 @@ task:
 | No  | 作業                                                  | 担当 | 状態 | メモ                                               |
 | --- | ----------------------------------------------------- | ---- | ---- | -------------------------------------------------- |
 | 1   | 事前判定の置き場所（案 A / B）を決める                | ARC  | done | 案 A（Job の `precondition`）に決定。案 C は不採用 |
-| 2   | Job schema または routine schema と runner を変更する | ARC  | open | skip の記録先は routine-state.json                 |
-| 3   | `job-grade-kata` / `job-grade-deliverable` へ適用する | ARC  | open | 判定は `grade list` を使う                         |
-| 4   | 正本の文書とテストを更新する                          | ARC  | open | 両経路の回帰テスト                                 |
+| 2   | Job schema または routine schema と runner を変更する | ARC  | done | Job `task.precondition` と routine skip 返却を実装 |
+| 3   | `job-grade-kata` / `job-grade-deliverable` へ適用する | ARC  | done | 判定は `grade list` の selection-v2 と同条件       |
+| 4   | 正本の文書とテストを更新する                          | ARC  | done | 選択 0 件・1 件以上の回帰テストを追加              |
 
 ## 4. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- command Job に `task.precondition` を追加し、`empty-output` または指定終了コードで、初回 Job Run の永続化前に skip できるようにした。precondition の失敗は Job Run を作らず実行エラーとし、既存の失敗 Run の retry では保存済み対象の再開性を優先して再評価しない。
+- `job-grade-kata` と `job-grade-deliverable` は `grade list` から変更済み・未評価の和集合を作り、script と同じ辞書順、対象種別、件数上限で事前判定する。選択 0 件では Job Run、plan、result、evidence、command、analysis reporter を生成・起動しない。
+- routine 起動の precondition skip は `last_result: skipped` として扱い、`last_run` と `last_scheduled_for` を従来の routine 状態更新経路で記録する。選択 1 件以上では従来の Job Run 実行へ進む。
+- Job 定義標準、Job 実行設計、routine 運用ガイド、schema、単体テストを更新した。残課題はない。
 
 ## 5. 関連ドキュメント
 

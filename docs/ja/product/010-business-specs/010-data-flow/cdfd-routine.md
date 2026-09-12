@@ -23,7 +23,7 @@ specdojo:
 
 - 対象は、`rtn-*.yaml` の選択と due 判定、実行試行の記録、単一または複数 action の順次制御、登録項目または Schedule task への委譲、exec-cycle の順次制御、Job Definition からの Job Run 生成、実行結果と checkpoint の反映である。
 - 登録項目の対応・審査・終了は [[prj-0001:cdfd-register-lifecycle|概念データフロー図（登録簿ライフサイクル）]]、個々の Schedule task の選択後の実行・結果統合・再開は [[prj-0001:cdfd-task-execution|概念データフロー図（タスク実行ライフサイクル）]] に委譲し、本領域では委譲入力、返却結果、実行順序だけを扱う。
-- Job Run は Schedule task ではなく、Job Definition と入力・checkpoint から生成される再利用可能な実行単位である。本領域では生成、重複判定、実行結果、checkpoint 更新までを扱い、AI Agent の内部作業は扱わない。
+- Job Run は Schedule task ではなく、Job Definition と入力・checkpoint から生成される再利用可能な実行単位である。本領域では生成前の事前判定、生成、重複判定、実行結果、checkpoint 更新までを扱い、AI Agent の内部作業は扱わない。
 - `where`、`list`、`validate`、`dry-run` は正本を更新しない補助操作であり、独立プロセスにしない。外部スケジューラの製品・設定手順、個別 CLI 操作、物理データ項目は対象外とする。
 - 社会課題、期待価値、主要判断、公開可否は人間が責任を持つ。AI Agent は登録済みの権限と変更範囲で実行を支援するが、前提不足や運用方針を推測で補わない。
 
@@ -40,14 +40,14 @@ cron の探索範囲は最大366日であり、`all` で1000件を超える取�
 
 ### 2.2. 結果記録と次回判定
 
-| 結果・状況               | routine 実行状態                                                                                         | 委譲先の記録                                                    | 次回判定                                                                   |
-| ------------------------ | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `success`                | `last_run` と `last_result: success`、cron は処理済みの `last_scheduled_for`                             | 登録項目状態、task event、または Job Run / result               | 次の interval 経過または次の cron occurrence を待つ                        |
-| `failure`                | `last_run` と `last_result: failure`、cron は処理済みの `last_scheduled_for`                             | 項目別失敗、task block、cycle step 失敗、または Job Run failure | 同じ実行機会は直ちに再試行せず、次の定期機会または明示実行を待つ           |
-| `skipped`                | `last_run` と `last_result: skipped`、cron は処理済みの `last_scheduled_for`                             | project busy により委譲先は変更しない                           | 同じ実行機会は消化済みとし、次の定期機会を待つ                             |
-| 対象なし                 | routine を選択しなければ状態を更新しない。action の委譲対象がなければ `last_result: success`             | 登録項目・task・Job Run を新規更新しない                        | 次の定期機会に再選択する                                                   |
-| 完了済み重複 Job Run     | `last_result: success`                                                                                   | 既存 Job Run・attempt・checkpoint を変更しない                  | idempotency key が変わる次の実行機会を待つ                                 |
-| 委譲前記録後の想定外例外 | 新しい `last_run` と必要時の `last_scheduled_for` は残るが、`last_result` は直前値または未記録になり得る | 例外発生点より後は未更新になり得る                              | 同じ実行機会は直ちに再試行されないため、運用担当が状態と外部記録を確認する |
+| 結果・状況               | routine 実行状態                                                                                                | 委譲先の記録                                                                                               | 次回判定                                                                   |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `success`                | `last_run` と `last_result: success`、cron は処理済みの `last_scheduled_for`                                    | 登録項目状態、task event、または Job Run / result                                                          | 次の interval 経過または次の cron occurrence を待つ                        |
+| `failure`                | `last_run` と `last_result: failure`、cron は処理済みの `last_scheduled_for`                                    | 項目別失敗、task block、cycle step 失敗、または Job Run failure                                            | 同じ実行機会は直ちに再試行せず、次の定期機会または明示実行を待つ           |
+| `skipped`                | `last_run` と `last_result: skipped`、cron は処理済みの `last_scheduled_for`                                    | project busy なら委譲先を変更しない。Job precondition skip なら Job Run・plan・result・evidence を作らない | 同じ実行機会は消化済みとし、次の定期機会を待つ                             |
+| 対象なし                 | routine を選択しなければ状態を更新しない。register / task 系 action の委譲対象がなければ `last_result: success` | 登録項目・task を新規更新しない                                                                            | 次の定期機会に再選択する                                                   |
+| 完了済み重複 Job Run     | `last_result: success`                                                                                          | 既存 Job Run・attempt・checkpoint を変更しない                                                             | idempotency key が変わる次の実行機会を待つ                                 |
+| 委譲前記録後の想定外例外 | 新しい `last_run` と必要時の `last_scheduled_for` は残るが、`last_result` は直前値または未記録になり得る        | 例外発生点より後は未更新になり得る                                                                         | 同じ実行機会は直ちに再試行されないため、運用担当が状態と外部記録を確認する |
 
 routine / Job の due、scheduled time、冪等性、`last_run` / `last_result` / `last_scheduled_for`、checkpoint と次回判定は本書を正本とする。委譲後の登録項目状態は [[prj-0001:cdfd-register-lifecycle|概念データフロー図（登録簿ライフサイクル）]]、task 状態・利用制限後の再開は [[prj-0001:cdfd-task-execution|概念データフロー図（タスク実行ライフサイクル）]]、索引の生成順と失敗時の扱いは [[prj-0001:cdfd-derived-content|概念データフロー図（成果物・派生ビュー・索引生成）]] を参照する。
 
@@ -63,7 +63,7 @@ routine / Job の due、scheduled time、冪等性、`last_run` / `last_result` 
 | `P-05-03` | 登録項目実行委譲 | 登録簿の正本から条件に合う計画外事項を選び、項目ごとの対応へ引き渡す。 | PM、運用担当 | action kind が `register` である | 条件付き。対象なしは正常終了する |
 | `P-05-04` | Schedule 実行委譲 | Ready task の自動実行、または再開時刻が到来した task の再開を要求する。 | PM、運用担当 | action kind が `exec-auto` または `exec-resume` である | 条件付き。対象なしは正常終了する |
 | `P-05-05` | exec-cycle 順次制御 | 再開、索引再生成、状態再計算、Ready task 実行を一つの排他的な周期として順序保証する。 | PM、運用担当 | action kind が `exec-cycle` である | 条件付き |
-| `P-05-06` | Job Run 生成 | Job Definition と実行時点の入力から、冪等に識別できる反復実行単位を作る。 | PM、運用担当 | action kind が `job` である | 条件付き |
+| `P-05-06` | Job 事前判定・Run 生成 | Job Definition と実行時点の入力から対象有無を判定し、必要なときだけ冪等に識別できる反復実行単位を作る。 | PM、運用担当 | action kind が `job` である | 条件付き。precondition skip では Run を作らない |
 | `P-05-07` | Job Run 結果反映 | Job Run の作業結果を監査可能にし、成功した反復位置を次回入力へ引き継ぐ。 | 実行担当、運用担当 | 未完了の Job Run と plan が生成または再試行された | 条件付き。完了済み重複は起動しない |
 | `P-05-08` | routine 結果反映 | 委譲結果を次回 due 判定と運用確認に使える一つの結果へまとめる。 | PM、運用担当 | 選択した routine の action が結果を返した | 選択された実行機会ごとに必須 |
 
@@ -189,7 +189,7 @@ flowchart LR
   タスク実行先["⚙️ P-04<br>タスク実行"]
 
   実行試行記録("📝 P-05-02<br>実行試行記録")
-  JobRun生成("🧱 P-05-06<br>Job Run 生成")
+  JobRun生成("🧱 P-05-06<br>事前判定・Job Run 生成")
   JobRun結果反映("✅ P-05-07<br>Job Run 結果反映")
   routine結果反映("📌 P-05-08<br>routine 結果反映")
 
@@ -204,6 +204,7 @@ flowchart LR
   JobRun生成 -->|"Job 実行 plan"| planResult
   JobRun生成 -->|"未完了 Job Run・解決済み入力"| JobRun結果反映
   JobRun生成 -->|"完了済み重複の既存結果"| routine結果反映
+  JobRun生成 -->|"precondition skip・Run なし"| routine結果反映
   planResult -->|"Job 実行 plan・実行 result"| JobRun結果反映
   JobRun結果反映 -->|"Job task 実行要求"| タスク実行先
   タスク実行先 -->|"Job task 結果"| JobRun結果反映
@@ -250,20 +251,20 @@ action kind に応じて、登録項目の対応、Ready task の自動実行、
 <!-- prettier-ignore -->
 | プロセス ID | プロセス | 主要入力 | 主要出力 | データストア |
 | --- | --- | --- | --- | --- |
-| `P-05-06` | Job Run 生成 | Job Definition、routine inputs、scheduled time、timezone、直前 checkpoint、既存 Job Run | idempotency key、Job Run、attempt、実行 plan、解決済み入力、完了済み重複判定 | Job Definition、Job Run 履歴、Job 実行状態、実行 plan |
+| `P-05-06` | Job 事前判定・Run 生成 | Job Definition、routine inputs、scheduled time、timezone、直前 checkpoint、既存 Job Run | idempotency key、precondition 結果、必要時の Job Run・attempt・実行 plan、解決済み入力、完了済み重複判定 | Job Definition、Job Run 履歴、Job 実行状態、実行 plan |
 | `P-05-07` | Job Run 結果反映 | 未完了 Job Run、実行 plan、実行担当、作業結果、result | attempt と `succeeded` / `failed`、完了 result、条件を満たす checkpoint | Job Run 履歴、Job 実行状態、実行 plan / result |
 
 ### 5.4. action kind 別の選択・委譲規則
 
 次表は1つの action に対する規則である。action が配列の場合は要素ごとに同じ規則を適用し、前段の成否にかかわらず先頭から全段を実行する。全体結果は `failure`、`skipped`、`success` の優先順で集約する。
 
-| action kind   | 選択・制御条件                                                                                                                         | 委譲先へ渡す情報                                                                       | 返却結果と本領域での扱い                                                                                                                                                              |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `register`    | 個票 Frontmatter を正本に、実行可能 type、既定 `open` または指定 status、任意の priority を照合し、ID 昇順で limit 件まで選ぶ          | project ID、登録項目 ID                                                                | 項目ごとの `review` / `waiting` と result。全項目を処理し、一件でも失敗なら routine は `failure`。対象なしは `success`                                                                |
-| `exec-auto`   | Ready を `critical-first` または `fifo` で選び、parallel 枠で実行する。loop 指定時は索引・状態を再計算しながら max rounds まで反復する | project ID、strategy、parallel、loop、max rounds、busy 時 `skip`                       | task ごとの complete / block / deferred。実行不能または失敗が終了結果へ反映された場合は routine を `failure` とする                                                                   |
-| `exec-resume` | 再開時刻が到来した deferred limit task だけを排他的に unblock し、元の actor・worktree・result で再開する                              | project ID、parallel、busy 時 `skip`                                                   | 再開結果。対象なし、または利用制限により再度 deferred となっただけなら委譲処理は正常終了し、task 側の block 情報で次回を待つ                                                          |
-| `exec-cycle`  | 同一 project lock 内で resume、索引再生成、Schedule 検証・状態再計算、Ready task 自動実行の順に進める                                  | project ID、strategy、parallel、loop、max rounds、busy 時 `skip`                       | step 別結果を集約する。resume 失敗後は後続を継続し、索引または状態再計算の失敗では auto を起動せず、auto 失敗を含む実行済み step の失敗で routine を `failure` とする                 |
-| `job`         | Job Definition、scheduled time、routine inputs と checkpoint から idempotency key と Job Run ID を導出する                             | project ID、Job ID、解決済み inputs、scheduled time、trigger=`routine`、busy 時 `skip` | 完了済みの同一 Job Run は再実行せず `success`。未完了・失敗済み Run は attempt を追加する。成功時は result と許可された checkpoint、失敗時は blocked result と失敗 attempt を記録する |
+| action kind   | 選択・制御条件                                                                                                                                              | 委譲先へ渡す情報                                                                       | 返却結果と本領域での扱い                                                                                                                                                                                                                           |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `register`    | 個票 Frontmatter を正本に、実行可能 type、既定 `open` または指定 status、任意の priority を照合し、ID 昇順で limit 件まで選ぶ                               | project ID、登録項目 ID                                                                | 項目ごとの `review` / `waiting` と result。全項目を処理し、一件でも失敗なら routine は `failure`。対象なしは `success`                                                                                                                             |
+| `exec-auto`   | Ready を `critical-first` または `fifo` で選び、parallel 枠で実行する。loop 指定時は索引・状態を再計算しながら max rounds まで反復する                      | project ID、strategy、parallel、loop、max rounds、busy 時 `skip`                       | task ごとの complete / block / deferred。実行不能または失敗が終了結果へ反映された場合は routine を `failure` とする                                                                                                                                |
+| `exec-resume` | 再開時刻が到来した deferred limit task だけを排他的に unblock し、元の actor・worktree・result で再開する                                                   | project ID、parallel、busy 時 `skip`                                                   | 再開結果。対象なし、または利用制限により再度 deferred となっただけなら委譲処理は正常終了し、task 側の block 情報で次回を待つ                                                                                                                       |
+| `exec-cycle`  | 同一 project lock 内で resume、索引再生成、Schedule 検証・状態再計算、Ready task 自動実行の順に進める                                                       | project ID、strategy、parallel、loop、max rounds、busy 時 `skip`                       | step 別結果を集約する。resume 失敗後は後続を継続し、索引または状態再計算の失敗では auto を起動せず、auto 失敗を含む実行済み step の失敗で routine を `failure` とする                                                                              |
+| `job`         | Job Definition、scheduled time、routine inputs と checkpoint から idempotency key と Job Run ID を導出し、初回 command Job は任意の precondition を評価する | project ID、Job ID、解決済み inputs、scheduled time、trigger=`routine`、busy 時 `skip` | precondition skip は Job Run と付随成果物を作らず `skipped`。完了済みの同一 Job Run は再実行せず `success`。未完了・失敗済み Run は attempt を追加する。成功時は result と許可された checkpoint、失敗時は blocked result と失敗 attempt を記録する |
 
 ## 6. 主要例外と領域外への委譲
 
@@ -281,6 +282,7 @@ action kind に応じて、登録項目の対応、Ready task の自動実行、
 | `E-08`  | `P-05-06`、`P-05-07` | 同じ idempotency key の Job Run が既に存在する                                                                    | `succeeded` / `noop` なら新しい attempt と実行を作らず既存結果を採用する。`running` / `failed` なら同じ Run に attempt を追加して再試行する                                                       | 完了済みなら新しい idempotency key の実行機会を待つ。未完了なら失敗原因を解消して再試行する           |
 | `E-09`  | `P-05-07`            | Job task が失敗、または終了結果が成功でも result 必須節が未記入である                                             | result と Job Run attempt を `failed` とし、checkpoint を進めない。routine は `failure` とする                                                                                                    | result 不足または作業失敗を解消し、同じ Run の新しい attempt で再実行する                             |
 | `E-10`  | `P-05-02`、`P-05-08` | 試行記録後、委譲結果を返す前に想定外例外が発生した                                                                | 新しい `last_run` と必要時の `last_scheduled_for` を保持する。`last_result` は新しい試行と対応しない可能性があるため、自動で成功・失敗を推測しない                                                | 運用担当が routine 状態と委譲先の event / result / Job Run を照合し、次回実行または状態訂正を判断する |
+| `E-11`  | `P-05-06`            | 初回 command Job の precondition が skip 条件を満たす                                                             | Job Run・plan・result・evidence と task command・analysis reporter を作成・起動せず、routine の `last_result: skipped` を記録する                                                                 | 同じ実行機会は消化済みとし、次の定期機会または明示実行で対象を再評価する                              |
 
 ### 6.2. 領域外への委譲
 

@@ -267,6 +267,51 @@ afterEach(() => {
 });
 
 describe("exec run (in-place, default)", () => {
+  it("returns routine skip without creating Job artifacts when the precondition output is empty", async () => {
+    const { repo, executionPath } = setupRepository();
+    writeFileSync(
+      join(repo, "jobs", "job-command-empty.yaml"),
+      [
+        "id: job-command-empty",
+        "name: Empty command selection",
+        "task:",
+        "  mode: command",
+        "  precondition:",
+        "    command: \"printf '  \\\\n'\"",
+        "    skip_when: empty-output",
+        "  command: touch command-ran.txt",
+        "run:",
+        '  idempotency_key: "{{job_id}}"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+    vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    try {
+      process.chdir(repo);
+      await runExec([
+        "run",
+        "--project",
+        "test",
+        "--job",
+        "job-command-empty",
+        "--job-trigger",
+        "routine",
+      ]);
+
+      expect(process.exitCode).toBe(75);
+      expect(existsSync(join(repo, "command-ran.txt"))).toBe(false);
+      expect(existsSync(join(executionPath, "jobs", "runs"))).toBe(false);
+      expect(existsSync(join(executionPath, "exec", "plans"))).toBe(false);
+      expect(existsSync(join(executionPath, "exec", "results"))).toBe(false);
+      expect(existsSync(join(executionPath, "exec", "evidence", "JBR-command-empty"))).toBe(false);
+    } finally {
+      process.chdir(originalCwd);
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
   it("executes a command Job in the runner and records separate stream evidence", async () => {
     const { repo, executionPath } = setupRepository();
     writeFileSync(

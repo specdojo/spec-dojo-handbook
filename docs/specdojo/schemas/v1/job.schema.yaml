@@ -167,6 +167,20 @@ $defs:
       command:
         type: string
         minLength: 1
+      precondition:
+        type: object
+        additionalProperties: false
+        required: [command, skip_when]
+        properties:
+          command:
+            type: string
+            minLength: 1
+          skip_when:
+            oneOf:
+              - const: empty-output
+              - type: integer
+                minimum: 0
+                maximum: 255
       analysis:
         type: object
         additionalProperties: false
