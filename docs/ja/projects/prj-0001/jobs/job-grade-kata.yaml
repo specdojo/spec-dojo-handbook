@@ -9,9 +9,11 @@ inputs:
   kind:
     type: string
     default: rulebook
+    enum: [rulebook, recipe, sample, template, all]
   limit:
     type: integer
     default: 0
+    minimum: 0
   changed_only:
     type: boolean
     default: false
@@ -21,6 +23,29 @@ inputs:
 task:
   mode: command
   owner: ARC
+  precondition:
+    command: |
+      selection=$(
+        if [ "{{inputs.changed_only}}" = "false" ] && [ "{{inputs.ungraded}}" = "false" ]; then
+          {{specdojo}} grade list --target kata --project {{project_id}}
+        else
+          if [ "{{inputs.changed_only}}" = "true" ]; then
+            {{specdojo}} grade list --target kata --project {{project_id}} --changed-only || exit $?
+          fi
+          if [ "{{inputs.ungraded}}" = "true" ]; then
+            {{specdojo}} grade list --target kata --project {{project_id}} --ungraded || exit $?
+          fi
+        fi
+      )
+      printf '%s\n' "$selection" | LC_ALL=C sort -u | awk -v kind="{{inputs.kind}}" -v limit="{{inputs.limit}}" '
+        NF && (kind == "all" || index($0, "docs/ja/specdojo/" kind "s/") == 1) {
+          if (limit == 0 || selected < limit) {
+            print
+            selected++
+          }
+        }
+      '
+    skip_when: empty-output
   command: |
     npm run build
     tools/grade/run-per-document.sh --run-id {{job_run_id}} --kind {{inputs.kind}} --limit {{inputs.limit}} --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}}
@@ -47,4 +72,4 @@ task:
     - docs/ja/specdojo/templates
 run:
   # scheduled_at は routine の論理実行枠を表す。同じ枠の再試行は同じ Run、次の枠は別 Run にする。
-  idempotency_key: "{{job_id}}:command-v2:{{scheduled_at}}:{{inputs.kind}}:{{inputs.limit}}:{{inputs.changed_only}}:{{inputs.ungraded}}"
+  idempotency_key: "{{job_id}}:command-v3:{{scheduled_at}}:{{inputs.kind}}:{{inputs.limit}}:{{inputs.changed_only}}:{{inputs.ungraded}}"

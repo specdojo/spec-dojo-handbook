@@ -95,6 +95,8 @@ Kata の定期評価は、ローカル評価を2回行った後、見落とし�
 
 成果物は `rtn-grade-deliverable-recheck` が `job-grade-deliverable` を起動します。Job は同じ script を `--target deliverable` で実行し、成果物カタログから変更済み・未評価の Markdown 成果物だけを選びます。評価結果は成果物の最新 grade と成果物ごとの done_criteria 詳細へ上書きされるため、実行ごとの review result は増やしません。
 
+`rtn-grade-recheck` と `rtn-grade-deliverable-recheck` では、Job の `task.precondition` が `grade list` を使って script の selection-v2 と同じ和集合・辞書順・対象種別・件数上限を先に評価します。選択が 0 件なら Job Run、plan、result、evidence を作らず、command と analysis reporter も起動しません。routine はこの結果を `skipped` として受け取り、`routine-state.json` の `last_run` / `last_result` と、cron の場合は `last_scheduled_for` を更新します。選択が 1 件以上なら従来どおり Job Run を生成して3段評価へ進みます。
+
 | 段  | executor / reporter                        | 対象と役割                                                  |
 | --- | ------------------------------------------ | ----------------------------------------------------------- |
 | 1   | `gemma-expert-executor` / `gemma-reporter` | 比較リファレンスありで評価し、具体的な不足を検出する        |
@@ -152,10 +154,10 @@ specdojo routine run --project <project-id> --due --dry-run
 各 action は委譲先へ `--if-busy skip` を渡します。同じ project の `exec run` または `exec resume` が動作中なら待機せず、次のように記録して終了します。単一の routine 実行内では再試行せず、次回の cron tick に委ねます。
 
 ```text
-[routine] skipped rtn-daily-register-sweep: exec busy
+[routine] skipped rtn-daily-register-sweep: job action skipped
 ```
 
-`routine-state.json` の `last_result` は `success`、`failure`、`skipped` のいずれかです。`skipped` は failure 件数や終了コードへ加算されず、`routine list` では最終実行時刻の後ろに `(skipped)` と表示されます。
+`routine-state.json` の `last_result` は `success`、`failure`、`skipped` のいずれかです。`skipped` は project busy または Job precondition の skip を表し、failure 件数や終了コードへ加算されません。`routine list` では最終実行時刻の後ろに `(skipped)` と表示されます。
 
 ### 2.1. devcontainerでのcron設定
 

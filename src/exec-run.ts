@@ -3251,6 +3251,12 @@ async function runCommandJobMode(params: {
 
   if (opts.dryRun) {
     process.stdout.write(`[dry-run] execution: runner command\n`);
+    if (record.task.precondition) {
+      process.stdout.write(`[dry-run] precondition:\n${record.task.precondition.command}\n`);
+      process.stdout.write(
+        `[dry-run] precondition skip_when: ${record.task.precondition.skip_when}\n`,
+      );
+    }
     process.stdout.write(`[dry-run] command:\n${record.task.command}\n`);
     if (analysisCandidate) {
       process.stdout.write(
@@ -3438,6 +3444,13 @@ async function runJobMode(opts: RunOpts): Promise<void> {
     dryRun: !!opts.dryRun,
   });
   const { definition, record, runPath, planPath } = materialized;
+  if (materialized.preconditionSkipped) {
+    process.stdout.write(
+      `Job skipped: ${definition.id} (${materialized.preconditionReason ?? "precondition"})\n`,
+    );
+    if (trigger === "routine") process.exitCode = ROUTINE_BUSY_SKIP_EXIT_CODE;
+    return;
+  }
   if (materialized.duplicateComplete) {
     process.stdout.write(`Job Run already complete: ${record.run_id} (${record.state})\n`);
     return;

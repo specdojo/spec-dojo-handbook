@@ -9,6 +9,7 @@ inputs:
   limit:
     type: integer
     default: 0
+    minimum: 0
   changed_only:
     type: boolean
     default: false
@@ -18,6 +19,27 @@ inputs:
 task:
   mode: command
   owner: ARC
+  precondition:
+    command: |
+      selection=$(
+        if [ "{{inputs.changed_only}}" = "false" ] && [ "{{inputs.ungraded}}" = "false" ]; then
+          {{specdojo}} grade list --target deliverable --project {{project_id}}
+        else
+          if [ "{{inputs.changed_only}}" = "true" ]; then
+            {{specdojo}} grade list --target deliverable --project {{project_id}} --changed-only || exit $?
+          fi
+          if [ "{{inputs.ungraded}}" = "true" ]; then
+            {{specdojo}} grade list --target deliverable --project {{project_id}} --ungraded || exit $?
+          fi
+        fi
+      )
+      printf '%s\n' "$selection" | LC_ALL=C sort -u | awk -v limit="{{inputs.limit}}" '
+        NF && (limit == 0 || selected < limit) {
+          print
+          selected++
+        }
+      '
+    skip_when: empty-output
   command: |
     npm run build
     tools/grade/run-per-document.sh --run-id {{job_run_id}} --target deliverable --limit {{inputs.limit}} --changed-only={{inputs.changed_only}} --ungraded={{inputs.ungraded}}
@@ -40,4 +62,4 @@ task:
   paths:
     - docs/ja/projects/prj-0001
 run:
-  idempotency_key: "{{job_id}}:command-v1:{{scheduled_at}}:{{inputs.limit}}:{{inputs.changed_only}}:{{inputs.ungraded}}"
+  idempotency_key: "{{job_id}}:command-v2:{{scheduled_at}}:{{inputs.limit}}:{{inputs.changed_only}}:{{inputs.ungraded}}"

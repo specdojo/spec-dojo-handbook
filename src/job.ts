@@ -58,9 +58,15 @@ export type JobCommandAnalysisDefinition = {
   description: string;
 };
 
+export type JobPreconditionDefinition = {
+  command: string;
+  skip_when: "empty-output" | number;
+};
+
 export type JobCommandTaskDefinition = {
   mode: "command";
   owner?: string;
+  precondition?: JobPreconditionDefinition;
   command: string;
   analysis?: JobCommandAnalysisDefinition;
   targets?: string[];
@@ -129,6 +135,9 @@ export type MaterializedJobRun = {
   runPath: string;
   planPath: string;
   duplicateComplete: boolean;
+  preconditionSkipped?: boolean;
+  preconditionReason?: string;
+  preconditionResult?: JobCommandResult;
 };
 
 export type JobCommandResult = {
@@ -226,6 +235,13 @@ function isJobTaskDefinition(value: unknown): value is JobTaskDefinition {
   if (value.mode === "command") {
     return (
       typeof value.command === "string" &&
+      (value.precondition === undefined ||
+        (isRecord(value.precondition) &&
+          typeof value.precondition.command === "string" &&
+          (value.precondition.skip_when === "empty-output" ||
+            (Number.isSafeInteger(value.precondition.skip_when) &&
+              Number(value.precondition.skip_when) >= 0 &&
+              Number(value.precondition.skip_when) <= 255)))) &&
       (value.analysis === undefined ||
         (isRecord(value.analysis) &&
           isAgentNickname(value.analysis.agent) &&
@@ -456,6 +472,44 @@ export function parseJobDefinition(
     if (mode === "command") {
       const command = typeof value.task.command === "string" ? value.task.command.trim() : "";
       if (!command) errors.push("task.command is required for command mode");
+      let precondition: JobPreconditionDefinition | undefined;
+      if (value.task.precondition !== undefined) {
+        if (!isRecord(value.task.precondition)) {
+          errors.push("task.precondition must be a mapping with command and skip_when");
+        } else {
+          const unknownPreconditionKeys = Object.keys(value.task.precondition).filter(
+            (key) => key !== "command" && key !== "skip_when",
+          );
+          if (unknownPreconditionKeys.length > 0) {
+            errors.push(
+              `task.precondition has unknown key(s): ${unknownPreconditionKeys.sort().join(", ")}`,
+            );
+          }
+          const preconditionCommand =
+            typeof value.task.precondition.command === "string"
+              ? value.task.precondition.command.trim()
+              : "";
+          if (!preconditionCommand) errors.push("task.precondition.command is required");
+          const skipWhen = value.task.precondition.skip_when;
+          if (
+            skipWhen !== "empty-output" &&
+            (!Number.isSafeInteger(skipWhen) || Number(skipWhen) < 0 || Number(skipWhen) > 255)
+          ) {
+            errors.push(
+              "task.precondition.skip_when must be empty-output or an exit code from 0 to 255",
+            );
+          }
+          if (
+            preconditionCommand &&
+            (skipWhen === "empty-output" || Number.isSafeInteger(skipWhen))
+          ) {
+            precondition = {
+              command: preconditionCommand,
+              skip_when: skipWhen as "empty-output" | number,
+            };
+          }
+        }
+      }
       let analysis: JobCommandAnalysisDefinition | undefined;
       if (value.task.analysis !== undefined) {
         if (!isRecord(value.task.analysis)) {
@@ -495,7 +549,13 @@ export function parseJobDefinition(
         errors.push("task.capabilities and task.proficiency are not allowed in command mode");
       }
       if (command)
-        task = { mode: "command", command, ...(analysis ? { analysis } : {}), ...common };
+        task = {
+          mode: "command",
+          ...(precondition ? { precondition } : {}),
+          command,
+          ...(analysis ? { analysis } : {}),
+          ...common,
+        };
     } else {
       if (mode !== "edit" && mode !== "review") {
         errors.push("task.mode must be edit, review, or command");
@@ -511,8 +571,14 @@ export function parseJobDefinition(
         if (parsedAgent.error) errors.push(parsedAgent.error);
         agent = parsedAgent.agent;
       }
-      if (value.task.analysis !== undefined || value.task.command !== undefined) {
-        errors.push("task.command and task.analysis are only allowed in command mode");
+      if (
+        value.task.analysis !== undefined ||
+        value.task.command !== undefined ||
+        value.task.precondition !== undefined
+      ) {
+        errors.push(
+          "task.command, task.precondition, and task.analysis are only allowed in command mode",
+        );
       }
       if (value.task.capabilities !== undefined && !validStringList(value.task.capabilities)) {
         errors.push("task.capabilities must be a non-empty string list");
@@ -891,6 +957,38 @@ export async function executeJobCommand(command: string, cwd: string): Promise<J
   });
 }
 
+export async function executeJobPrecondition(
+  precondition: JobPreconditionDefinition,
+  cwd: string,
+): Promise<{ result: JobCommandResult; skipped: boolean; reason?: string }> {
+  const result = await executeJobCommand(precondition.command, cwd);
+  if (result.error) {
+    throw new Error(`Job precondition spawn failed: ${result.error}`);
+  }
+
+  if (typeof precondition.skip_when === "number") {
+    if (result.exitCode === precondition.skip_when) {
+      return {
+        result,
+        skipped: true,
+        reason: `precondition exited with code ${precondition.skip_when}`,
+      };
+    }
+    if (result.exitCode !== 0) {
+      throw new Error(`Job precondition exited with code ${result.exitCode ?? "unknown"}`);
+    }
+    return { result, skipped: false };
+  }
+
+  if (result.exitCode !== 0) {
+    throw new Error(`Job precondition exited with code ${result.exitCode ?? "unknown"}`);
+  }
+  if (!result.stdout.trim()) {
+    return { result, skipped: true, reason: "empty selection" };
+  }
+  return { result, skipped: false };
+}
+
 function jobPlanFrontmatter(
   projectId: string,
   definition: JobDefinition,
@@ -1013,6 +1111,12 @@ export async function materializeJobRun(opts: {
     ...(targets ? { targets } : {}),
   };
   if (isJobCommandTask(task)) {
+    if (task.precondition) {
+      task.precondition = {
+        ...task.precondition,
+        command: renderJobTemplate(task.precondition.command, context),
+      };
+    }
     task.command = renderJobTemplate(task.command, context);
     if (task.analysis) {
       task.analysis = {
@@ -1024,8 +1128,9 @@ export async function materializeJobRun(opts: {
     task.description = renderJobTemplate(task.description, context);
   }
   const now = new Date().toISOString();
+  const existingRun = existsSync(runPath);
   let record: JobRunRecord;
-  if (existsSync(runPath)) {
+  if (existingRun) {
     record = readJobRunRecord(runPath);
     if (record.idempotency_key !== idempotencyKey || record.job_id !== definition.id) {
       throw new Error(`Job Run identity collision: ${runId}`);
@@ -1058,6 +1163,21 @@ export async function materializeJobRun(opts: {
       result_ref: `exec/results/${runId}-result.md`,
       attempts: [],
     };
+  }
+  if (!existingRun && !opts.dryRun && isJobCommandTask(task) && task.precondition) {
+    const precondition = await executeJobPrecondition(task.precondition, specdojoRootDir());
+    if (precondition.skipped) {
+      return {
+        definition,
+        record,
+        runPath,
+        planPath: join(paths.executionPath, record.plan_ref),
+        duplicateComplete: false,
+        preconditionSkipped: true,
+        preconditionReason: precondition.reason,
+        preconditionResult: precondition.result,
+      };
+    }
   }
   const attempt: JobRunAttempt = {
     attempt: record.attempts.length + 1,

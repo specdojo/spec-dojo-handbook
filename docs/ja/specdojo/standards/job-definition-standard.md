@@ -22,6 +22,7 @@ Job Definition Standard
 
 - 決定論的な手順（分岐条件が事前に確定し、実行結果が入力から一意に決まる手順）は script または CLI へ実装し、`mode: command` の `task.command` からその入口を呼ぶ。
 - `task.command` は materialize 時に入力を展開して Run へ凍結し、runner が agent の sandbox 外で直接実行する。
+- 対象選択を伴う command Job は任意の `task.precondition` で選択を先に評価できる。skip 条件を満たした場合は Job Run と付随成果物を作らない。
 - command Job が同じプロジェクトの `specdojo exec` を子プロセスとして呼ぶ場合、runner が保持する project 実行 lock の token を子へ継承する。子は owner token の一致を検証した場合だけ再取得を省略し、Job 全体の排他範囲を維持する。
 - 判断（観測した結果の解釈、失敗の切り分け、次の行動の提案）が必要な command Job だけ、`task.analysis` で reporter agent と判断内容を指定する。
 - `edit` / `review` Job は従来どおり agent に作業を委譲し、`task.description` に判断内容を書く。
@@ -61,6 +62,10 @@ Job Definition Standard
 ### 3.3. command mode の規約
 
 - `task.command` は非空のシェルコマンドとし、materialize 後の文字列を Job Run に保存する。
+- `task.precondition` は command mode だけで使用でき、非空の `command` と `skip_when` を持つ。runner は入力と Job Run ID を含む template 値を解決した後、初回の Job Run を保存する前に precondition を実行する。
+- `skip_when: empty-output` は終了コード 0 かつ、前後の空白を除いた stdout が空の場合に skip とする。`skip_when` に 0 から 255 の整数を指定した場合は、その終了コードを skip とする。それ以外の非 0 終了は precondition の失敗として扱う。
+- precondition による skip では Job Run、plan、result、evidence を作らず、analysis reporter と `task.command` も起動しない。routine 起動では routine に `skipped` を返し、routine 側だけが `last_run` / `last_result` を更新する。
+- 既存 Job Run の retry は保存済みの対象と再開状態を維持するため precondition を再実行しない。`--dry-run` は precondition を実行せず、解決済みコマンドと skip 条件を表示する。
 - command から対象プロジェクトを指定するときは template 値 `{{project_id}}` を使い、同じ CLI を子プロセスで呼ぶときは `{{specdojo}}` を使う。`specdojo` という PATH 上の別 checkout を直接呼ばない。
 - script が中断再開用の ID を要求するときは `{{job_run_id}}` を渡す。期間などの `inputs` から再開キーを組み立てない。
 - runner は POSIX 環境では `/bin/sh -eu` でコマンドを実行し、終了コードが0以外なら agent を起動せず Run を失敗にする。
@@ -93,6 +98,7 @@ Job Definition Standard
 | `task.mode`            | ○    | `edit` / `review` / `command`                                      |
 | `task.description`     | 条件 | `edit` / `review` で必須。決定論的手順の列挙を含まない             |
 | `task.command`         | 条件 | `command` で必須。入力展開後も非空                                 |
+| `task.precondition`    | 任意 | `command` と `empty-output` または 0〜255 の終了コードを指定       |
 | `task.analysis`        | 任意 | command 結果の判断が必要な場合だけ agent と description を指定     |
 | `task.targets` `paths` | 条件 | `edit` / `review` はいずれか必須。`command` では任意               |
 | `task.agent.executor`  | 任意 | `pm-members.yaml` の nickname 書式（`^[a-z0-9][a-z0-9_-]{0,62}$`） |
@@ -107,6 +113,9 @@ Job Definition Standard
 task:
   mode: command
   owner: ARC
+  precondition:
+    command: "{{specdojo}} grade list --target kata --changed-only --project {{project_id}}"
+    skip_when: empty-output
   command: |
     tools/grade/run-per-document.sh --run-id {{job_run_id}}
     cat logs/grade/runs/per-document/{{job_run_id}}/results.tsv
@@ -114,7 +123,7 @@ task:
     agent: claude-reporter
     description: |
       command evidence と results.tsv から未完了の段の有無、失敗の切り分け、
-      閾値の見直し要否を判断して報告する。対象が0件の場合は no-op と判断する。
+      閾値の見直し要否を判断して報告する。
   paths:
     - docs/ja/specdojo/rulebooks
 run:
@@ -136,3 +145,4 @@ run:
 - agent の指名を変更した場合は `specdojo exec run --job <job-id> --dry-run` で、解決された nickname とコマンドを確認する。
 - Job を統廃合した場合は、参照する routine の `action` と運用ガイドの記述を同じ変更で更新する。
 - script または CLI へ手順を移した場合は、移し先の入口と引数を `command-reference` に記載し、Job からはその入口だけを呼ぶ。
+- `task.precondition` を追加・変更した場合は、選択 0 件の skip と 1 件以上の通常 materialize の両方をテストする。
