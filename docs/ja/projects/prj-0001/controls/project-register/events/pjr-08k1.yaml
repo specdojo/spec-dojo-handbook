@@ -87,3 +87,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_84978d4235a44774a2ea5b532c91025b
+- v: 1
+  id: reg_1d0f498195104cb4af4db0b7af59ce1d
+  ts: "2026-09-11T22:37:28Z"
+  action: close
+  actor: specdojo-orchestrator (claude)
+  from_status: review
+  to_status: done
+  reason: exec run --register（claude-expert-executor → session limit で中断後 codex-expert-executor が再開、gemma-reporter）で実施。親検証 test-integration / validate-schema / test-unit passed。利用者確認のうえ close
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-12"
+    - field: conclusion
+      from: "-"
+      to: grade --target deliverable が成果物カタログの done_criteria を条件別に評価し、Frontmatter に要約、grade/criteria/ に成果物別の詳細 YAML を保存するようにした。score/verdict と条件充足は独立した軸として保ち、content_hash で変更検知して rtn-grade-deliverable-recheck から毎日最大 5 件を再評価する。既存の review result は合意形成履歴として維持し、最新状態は grade で判定する。
+  previous_event_id: reg_3ca3f309e5024fe99773441820e44142

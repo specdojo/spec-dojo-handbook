@@ -8,9 +8,44 @@ specdojo:
     - prj-0001:cdfd-task-execution
     - prj-0001:cdfd-overview
   supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    target: deliverable
+    verdict: needs-work
+    score: 75
+    graded_at: "2026-09-11T23:34:59.669Z"
+    graded_by: codex-expert-executor
+    content_hash: 2ee04c05fbfc00b2a57fce2b89b9e7775db562cab78e594f56d984b569773ac1
+    categories:
+      consistency: { score: 38 }
+      usability: { score: 81 }
+      architecture: { score: 100 }
+      quality: { score: 83 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 1, score: 25 }
+      vp-arc-conciseness: { level: 3, score: 75 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-done-criteria: { level: 2, score: 50 }
+      vp-qe-verifiability: { level: 4, score: 100 }
+      vp-qe-omissions-consistency: { level: 2, score: 50 }
+      vp-ux-readability: { level: 3, score: 75 }
+      vp-ux-user-flow: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 3, score: 75 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+      vp-qe-config-validity: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 5, minor: 5, note: 0 }
+    done_criteria:
+      satisfied: 3
+      total: 4
+      unsatisfied:
+        DC-002: [ARC]
+      detail_ref: prj-0001:cdfd-agent-config-operation-grade-criteria
 ---
 
 # 概念データフロー図（agent・provider 構成の運用変更）: SpecDojo
+
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=3 上位の cdfd-overview は P-07 の起点を「運用構成の変更が承認された」と定義している一方、本書は未承認の作業要件・実行問題から評価・承認までを P-07 内へ含めており、継承すると宣言した領域境界が矛盾するため、overview または本書の起点と責務を統一する必要がある。 -->
+<!-- specdojo:finding id=F007 severity=major rule=vp-qe-omissions-consistency line=3 上位 CDFD の P-07 は承認済み変更を起点とするのに、本書は変更要否評価と承認を領域内プロセスとしており、rulebook が要求する上位領域境界の継承を満たしていない。 -->
 
 本書は、[[prj-0001:cdfd-overview|概念データフロー図（全体概要）]] が定める `P-07 構成変更` の境界と、[[prj-0001:cdfd-task-execution|概念データフロー図（タスク実行ライフサイクル）]] から引き渡される選択失敗、provider 利用不能、必要能力、権限超過を引き継ぐ。作業要件または実行上の問題に基づく agent・provider・phase 構成の変更を、人間が安全性と影響を承認し、検証済みの後続実行条件として計画展開とタスク実行へ戻す概念仕様である。
 
@@ -31,14 +66,17 @@ specdojo:
 ## 3. 領域内プロセス一覧
 
 <!-- prettier-ignore -->
-| プロセス ID | プロセス | 業務目的 | 主な担当 | 起動条件 | 必須性 |
-| --- | --- | --- | --- | --- | --- |
-| `P-07-01` | 変更要件・問題評価 | 構成変更で解くべき作業要件または実行問題と、影響する task・構成・運用負荷を明確にする。 | BA、PM、task owner | 新しい作業要件が承認対象になった、または `P-04` から選択失敗・利用不能・権限超過・設定不整合が報告された | 必須 |
-| `P-07-02` | 構成案作成 | phase 要件、agent 選択属性、provider 実行条件の責務を混在させず、比較可能な変更案にする。 | PM、ARC | 評価で構成変更が必要と判定され、変更目的・対象範囲・維持要件が確定した | 条件付き。対応不要なら起動せず、評価結果を登録簿ライフサイクルへ渡して現行構成を維持する |
-| `P-07-03` | 権限・安全境界確認 | 必要能力を満たしつつ、認証情報、書込範囲、外部通信、人間専用判断を必要最小限の境界に保つ。 | ARC、セキュリティ確認者、PO | 構成変更案と検証条件が作成された | 条件付き。構成案を作成しない場合は起動しない |
-| `P-07-04` | 構成変更承認 | 変更目的、効果、費用、権限、安全性、差し戻し条件を確認し、適用可否を人間が決定する。 | PO、PM、構成承認者 | 安全性確認が合格し、影響と代替案を比較できる | 条件付き。安全性確認が不合格なら起動せず、構成案作成へ差し戻す |
-| `P-07-05` | 承認済み設定変更 | 承認範囲内で phase、member、provider の正本を更新し、検証可能な一組の構成にする。 | PM、ARC、設定管理者 | 変更が承認され、適用対象、担当、差し戻し条件が確定した | 条件付き。却下・留保時は起動せず、現行の承認済み構成を維持する |
-| `P-07-06` | 構成検証・引き渡し | 更新構成の整合性、安全境界、agent 選択可能性、provider 利用可能性を確認し、後続が再計画・再実行できる状態にする。 | QE、ARC、実行管理者 | 承認済み設定変更が完了した | 条件付き。設定変更を適用しない場合は起動しない |
+<!-- specdojo:finding id=F002 severity=major rule=vp-arc-cross-document-consistency line=24 cdfd-task-execution の P-07 への引き渡し情報には設定不整合が含まれていない一方、本書は P-04 から設定不整合が報告されると定義しているため、領域間インターフェースの項目を双方で一致させる必要がある。 -->
+<!-- specdojo:finding id=F010 severity=minor rule=vp-ux-language-consistency line=24 正式な Role code である BA・PM・ARC・PO・QE と、task owner・セキュリティ確認者・構成承認者・設定管理者・実行管理者を同じ担当欄で併用しているが、pm-roles.yaml への参照や対応関係がないため、公式 Role code へ統一するか対応を明示する必要がある。 -->
+
+| プロセス ID | プロセス           | 業務目的                                                                                                          | 主な担当                    | 起動条件                                                                                                 | 必須性                                                                                   |
+| ----------- | ------------------ | ----------------------------------------------------------------------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `P-07-01`   | 変更要件・問題評価 | 構成変更で解くべき作業要件または実行問題と、影響する task・構成・運用負荷を明確にする。                           | BA、PM、task owner          | 新しい作業要件が承認対象になった、または `P-04` から選択失敗・利用不能・権限超過・設定不整合が報告された | 必須                                                                                     |
+| `P-07-02`   | 構成案作成         | phase 要件、agent 選択属性、provider 実行条件の責務を混在させず、比較可能な変更案にする。                         | PM、ARC                     | 評価で構成変更が必要と判定され、変更目的・対象範囲・維持要件が確定した                                   | 条件付き。対応不要なら起動せず、評価結果を登録簿ライフサイクルへ渡して現行構成を維持する |
+| `P-07-03`   | 権限・安全境界確認 | 必要能力を満たしつつ、認証情報、書込範囲、外部通信、人間専用判断を必要最小限の境界に保つ。                        | ARC、セキュリティ確認者、PO | 構成変更案と検証条件が作成された                                                                         | 条件付き。構成案を作成しない場合は起動しない                                             |
+| `P-07-04`   | 構成変更承認       | 変更目的、効果、費用、権限、安全性、差し戻し条件を確認し、適用可否を人間が決定する。                              | PO、PM、構成承認者          | 安全性確認が合格し、影響と代替案を比較できる                                                             | 条件付き。安全性確認が不合格なら起動せず、構成案作成へ差し戻す                           |
+| `P-07-05`   | 承認済み設定変更   | 承認範囲内で phase、member、provider の正本を更新し、検証可能な一組の構成にする。                                 | PM、ARC、設定管理者         | 変更が承認され、適用対象、担当、差し戻し条件が確定した                                                   | 条件付き。却下・留保時は起動せず、現行の承認済み構成を維持する                           |
+| `P-07-06`   | 構成検証・引き渡し | 更新構成の整合性、安全境界、agent 選択可能性、provider 利用可能性を確認し、後続が再計画・再実行できる状態にする。 | QE、ARC、実行管理者         | 承認済み設定変更が完了した                                                                               | 条件付き。設定変更を適用しない場合は起動しない                                           |
 
 ## 4. 概念データフロー
 
@@ -82,6 +120,10 @@ flowchart LR
   class 変更実行記録 storeTransaction
   class 変更要求者,タスク実行,登録簿ライフサイクル actor
 ```
+
+<!-- specdojo:finding id=F004 severity=minor rule=vp-arc-conciseness line=74 4.1〜4.3 の凡例が委譲境界、後続への引き渡し、未承認・未検証構成の禁止を繰り返しているため、共通記号と複数図間で同一となるノード・イベントの説明だけに絞る必要がある。 -->
+<!-- specdojo:finding id=F008 severity=minor rule=vp-qe-omissions-consistency line=74 凡例に委譲境界、後続引き渡し、未承認・未検証構成の禁止を記載しており、凡例へ他章で確定済みの業務事実を書き写さないという rulebook の禁止事項に反する。 -->
+<!-- specdojo:finding id=F009 severity=minor rule=vp-ux-readability line=74 各図の凡例に記号説明だけでなく委譲・ゲート・後続条件が反復され、業務規則の正本が一覧・適用範囲・例外表のどこかを判断しにくいため、凡例を図の解釈に必要な情報へ限定する必要がある。 -->
 
 凡例: ノード形状・色・絵文字は [[prj-0001:cdfd-overview|概念データフロー図（全体概要）]] の「凡例（本プロダクト共通）」に従い、`-->` は情報の流れを表す。`P-02` と `P-04` は委譲先の代表ノードであり、内部処理は対象外とする。本図は現物の流れを扱わない。構成変更が必要な場合は `構成変更が必要と評価された` イベントを 4.2 の起点として引き渡す。
 
@@ -207,6 +249,8 @@ flowchart LR
 
 ### 5.2. 構成案作成・承認（`P-07-02`〜`P-07-04`）
 
+<!-- specdojo:finding id=F005 severity=minor rule=vp-arc-conciseness line=198 5.2 と 5.3 のグループ要約が「変更が必要な場合だけ」「承認後」という起動条件を3章から再掲しているため、各グループが扱う範囲の説明だけに整理する必要がある。 -->
+
 変更が必要と評価された場合だけ、案作成、安全境界確認、人間承認を順に行う。
 
 <!-- prettier-ignore -->
@@ -227,6 +271,9 @@ flowchart LR
 | `P-07-06` | 構成検証・引き渡し | 更新構成、作業要件、承認範囲、検証条件、認証状態・provider 応答の確認結果 | 検証結果、利用可能な実行条件、再計画・再実行要求、または差し戻し情報 | 検証記録、運用・構成定義、実行記録 |
 
 ### 5.4. 構成正本の変更責務と相互参照
+
+<!-- specdojo:finding id=F003 severity=major rule=vp-arc-cross-document-consistency line=223 現行の exec-defaults.yaml は Codex のモデル・reasoning effort・sandbox や Copilot のモデル・tool 権限も管理しているが、本表はモデルと edit／review 権限を provider 固有設定だけの責務としているため、実設定および provider 別 SYSD に合わせて責務境界を修正する必要がある。 -->
+<!-- specdojo:finding id=F006 severity=major rule=vp-qe-done-criteria line=223 DC-002について、exec-defaults.yaml が実際に管理するモデル・sandbox・tool 権限が責務表から欠落し provider 固有設定へ誤配分されているため、現行正本と整合する変更責務および相互参照を示す必要がある。 -->
 
 | 構成正本                       | 主な変更責務                                                               | 管理する内容                                                                                | 相互参照・境界                                                                                                                                                                                                                                      |
 | ------------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

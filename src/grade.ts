@@ -2181,7 +2181,8 @@ export function registerGradeCommand(program: Command): void {
           ? discoverGradeTargets({ target, project: options.project, changedOnly: false })
           : [];
         const outputDirectory =
-          options.out ?? join(getProjectExecutionPath(project), "grade", "plans", target);
+          options.out ??
+          join(getProjectExecutionPath(project), "grade", "generated", "plans", target);
         const plans = writeGradePlans({
           target,
           paths,

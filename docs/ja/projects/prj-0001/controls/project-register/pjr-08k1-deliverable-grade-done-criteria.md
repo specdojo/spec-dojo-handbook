@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-08k1-deliverable-grade-done-criteria
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-10T11:42:54Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-11T22:37:28Z"
   block_reason: rate limit reached
+  conclusion: grade --target deliverable が成果物カタログの done_criteria を条件別に評価し、Frontmatter に要約、grade/criteria/ に成果物別の詳細 YAML を保存するようにした。score/verdict と条件充足は独立した軸として保ち、content_hash で変更検知して rtn-grade-deliverable-recheck から毎日最大 5 件を再評価する。既存の review result は合意形成履歴として維持し、最新状態は grade で判定する。
 ---
 
 # PJR-08K1 成果物の評価を grade へ寄せ review result の同期問題を解消する
