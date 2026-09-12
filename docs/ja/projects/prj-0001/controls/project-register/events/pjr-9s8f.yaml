@@ -87,3 +87,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_f891b7d3b57c4a538cce5a6dab7089ff
+- v: 1
+  id: reg_1bfc96a297cb4e75a2b86c561387a22d
+  ts: "2026-09-12T06:00:02Z"
+  action: close
+  actor: specdojo-orchestrator (claude)
+  from_status: review
+  to_status: done
+  reason: exec run --register（codex-expert-executor / gemma-reporter / worktree）で実施。agent-config-write の申し送りを orchestrator が適用して resume。親検証 3 件 passed、実機 docs:build 成功。利用者確認のうえ close
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-12"
+    - field: conclusion
+      from: "-"
+      to: VitePress と Mermaid 生成器を packages/docs-site（@specdojo/docs-site）へ分離し、CLI 本体の package.json から vitepress / vitepress-sidebar / @mermaid-js/mermaid-cli を除去した。docs:dev / docs:build は分離パッケージへ委譲し、deploy.yml と post-create.sh を追随させた。保護対象の設定は orchestrator が申し送りを確認して develop へ適用し、実機で npm run docs:build の全量ビルドが成功することを確認した。
+  previous_event_id: reg_788a8abb05e7416fae64c0cb857a920c

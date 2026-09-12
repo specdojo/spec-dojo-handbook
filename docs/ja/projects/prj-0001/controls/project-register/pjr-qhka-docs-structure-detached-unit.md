@@ -7,12 +7,13 @@ specdojo:
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-02T22:48:28Z"
   due_on: "2026-09-30"
-  conclusion: docs-structure-guide の Detached Unit 章を更新した。登録簿 item ID の Refs trailer を主参照とし、PR と commit hash を補助参照にするトレーサビリティ方式を規定している。
+  completed_at: "2026-09-12T06:00:02Z"
+  conclusion: docs-structure-guide に別リポジトリ構成（Detached Unit）の章を追記し、採用条件、ディレクトリレイアウト、result への app commit hash 記録によるトレーサビリティ方式を規定した。
 ---
 
 # PJR-QHKA 別リポジトリ構成（Detached Unit）のドキュメント化

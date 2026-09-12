@@ -2,17 +2,19 @@
 specdojo:
   id: prj-0001:pjr-9s8f-split-docs-site-package
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-09T15:19:06Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-12T06:00:02Z"
   block_reason: "agent exited with non-zero code: agent exited with non-zero code: agent-config-write: protected configuration changes detected; paths=.github/workflows/deploy.yml, package.json; agent must record the …"
+  conclusion: VitePress と Mermaid 生成器を packages/docs-site（@specdojo/docs-site）へ分離し、CLI 本体の package.json から vitepress / vitepress-sidebar / @mermaid-js/mermaid-cli を除去した。docs:dev / docs:build は分離パッケージへ委譲し、deploy.yml と post-create.sh を追随させた。保護対象の設定は orchestrator が申し送りを確認して develop へ適用し、実機で npm run docs:build の全量ビルドが成功することを確認した。
 ---
 
 # PJR-9S8F 文書サイト機能を別パッケージへ分離する

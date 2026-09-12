@@ -119,3 +119,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_1141a240ad1346dbada9301eb44f22e9
+- v: 1
+  id: reg_6e19670557e645589ef11f3ff0752555
+  ts: "2026-09-12T06:00:02Z"
+  action: close
+  actor: specdojo-orchestrator (claude)
+  from_status: review
+  to_status: done
+  reason: exec run --register（codex-expert-executor / gemma-reporter / worktree）で実施。親検証 3 件 passed。利用者確認のうえ close
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-12"
+    - field: conclusion
+      from: docs-structure-guide の Detached Unit 章を更新した。登録簿 item ID の Refs trailer を主参照とし、PR と commit hash を補助参照にするトレーサビリティ方式を規定している。
+      to: docs-structure-guide に別リポジトリ構成（Detached Unit）の章を追記し、採用条件、ディレクトリレイアウト、result への app commit hash 記録によるトレーサビリティ方式を規定した。
+  previous_event_id: reg_79e28753100e49d5916f5c256bf3a27d
