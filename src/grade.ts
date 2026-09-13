@@ -298,26 +298,53 @@ function findingComment(
   return `<!-- specdojo:finding id=${finding.id} severity=${finding.severity} rule=${rule} line=${finding.line ?? 1} ${sanitizeCommentText(finding.message)} -->`;
 }
 
-function markdownBlockRanges(body: string): Array<{ startLine: number; endLine: number }> {
+type MarkdownBlockRange = {
+  startLine: number;
+  endLine: number;
+  isHtmlComment: boolean;
+};
+
+function markdownBlockRanges(body: string): MarkdownBlockRange[] {
   const root = unified().use(remarkParse).parse(body);
   return root.children.flatMap((node) => {
     const startLine = node.position?.start.line;
     const endLine = node.position?.end.line;
-    return startLine === undefined || endLine === undefined ? [] : [{ startLine, endLine }];
+    return startLine === undefined || endLine === undefined
+      ? []
+      : [
+          {
+            startLine,
+            endLine,
+            isHtmlComment:
+              node.type === "html" &&
+              "value" in node &&
+              typeof node.value === "string" &&
+              /^\s*<!--[\s\S]*-->\s*$/.test(node.value),
+          },
+        ];
   });
 }
 
 function safeFindingInsertionIndex(
-  blocks: readonly { startLine: number; endLine: number }[],
+  blocks: readonly MarkdownBlockRange[],
+  lines: readonly string[],
   requestedIndex: number,
 ): number {
   const requestedLine = requestedIndex + 1;
-  for (const block of blocks) {
-    if (block.startLine <= requestedLine && requestedLine <= block.endLine) {
-      return block.startLine - 1;
-    }
+  const containingIndex = blocks.findIndex(
+    (block) => block.startLine <= requestedLine && requestedLine <= block.endLine,
+  );
+  if (containingIndex === -1) return requestedIndex;
+
+  let insertionStartLine = blocks[containingIndex].startLine;
+  for (let index = containingIndex - 1; index >= 0; index -= 1) {
+    const candidate = blocks[index];
+    if (!candidate.isHtmlComment) break;
+    const linesBetween = lines.slice(candidate.endLine, insertionStartLine - 1);
+    if (linesBetween.some((line) => line.trim() !== "")) break;
+    insertionStartLine = candidate.startLine;
   }
-  return requestedIndex;
+  return insertionStartLine - 1;
 }
 
 function insertFindings(body: string, viewpoints: GradeViewpointInput[]): string {
@@ -345,7 +372,7 @@ function insertFindings(body: string, viewpoints: GradeViewpointInput[]): string
       // finding は対象行を含む最上位 Markdown ブロックの直前へ置く。これにより、
       // 入れ子リスト、表、引用、コードフェンス、複数行段落の内部を分断しない。
       // 対象行そのものはコメントの line 属性に残す。
-      const index = safeFindingInsertionIndex(blocks, requestedIndex);
+      const index = safeFindingInsertionIndex(blocks, lines, requestedIndex);
       const existing = insertions.get(index) ?? [];
       existing.push(findingComment({ ...finding, id }, viewpoint.id));
       insertions.set(index, existing);

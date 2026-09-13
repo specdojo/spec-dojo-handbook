@@ -19,7 +19,7 @@ specdojo:
     score: 55
     graded_at: "2026-09-09T17:45:44.993Z"
     graded_by: codex-expert-executor
-    content_hash: 1b7b52ad17468be4aa8f3977bbd2be2957f48bd958bfc16dd187ed327bc005dd
+    content_hash: e3496fe04240f5d809d83cd33f7f10a9d47dc9f0b9341340ef5d7aec784f76f0
     categories:
       consistency: { score: 25 }
       usability: { score: 67 }
@@ -61,13 +61,12 @@ _TODO_: 誰が、領域内フロー、必須・条件付きの境界、主要例
 
 _TODO_: 主要入力・主要出力・データストアは「個別プロセス主要入出力」（5章）へ記載し、本章の列には含めない。
 
-<!-- prettier-ignore -->
 <!-- specdojo:finding id=F002 severity=major rule=vp-arc-cross-document-consistency line=23 必須性のプレースホルダーが `_REQUIRED_OR_CONDITIONAL_` で、rulebook の正規分類「必須／条件付き／選択」のうち「選択」を表現できないため、三分類へ統一する必要がある。 -->
 <!-- specdojo:finding id=F005 severity=major rule=vp-qe-verifiability line=23 条件付きプロセスについて非起動時の扱いを記入する欄または指示がなく、そのプロセスを起動しない経路でも領域の必須出力がそろうかを pass／fail 判定できないため、必須性欄またはフロー指示に非起動時の正常完了条件を追加する必要がある。 -->
 <!-- specdojo:finding id=F007 severity=major rule=vp-qe-omissions-consistency line=23 rulebook が必須性として認める「選択」がプレースホルダーから欠落しているため、「必須／条件付き／選択」の全分類を選べる骨組みに修正する必要がある。 -->
 <!-- specdojo:finding id=F011 severity=major rule=vp-qe-kata-conformance line=23 rulebook の三分類に対して template が必須・条件付きの二分類だけを想定しているため、「選択」を含む正規の必須性分類へ合わせる必要がある。 -->
 <!-- specdojo:finding id=F016 severity=major rule=vp-ux-language-consistency line=23 `_REQUIRED_OR_CONDITIONAL_` と本文中の「必須・条件付き」は rulebook の「必須／条件付き／選択」と一致せず、「選択」を条件付きと混同または欠落させるため、三分類の名称へ統一する必要がある。 -->
-
+<!-- prettier-ignore -->
 | プロセス ID    | プロセス       | 業務目的           | 主な担当     | 起動条件          | 必須性                    |
 | -------------- | -------------- | ------------------ | ------------ | ----------------- | ------------------------- |
 | `_PROCESS_ID_` | _PROCESS_NAME_ | _BUSINESS_PURPOSE_ | _OWNER_ROLE_ | _START_CONDITION_ | _REQUIRED_OR_CONDITIONAL_ |

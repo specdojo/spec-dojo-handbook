@@ -519,6 +519,47 @@ describe("grade markdown update", () => {
     expect(repeated).toBe(graded);
   });
 
+  it("places a finding before a directive comment attached to its block", async () => {
+    const body = `<!-- prettier-ignore -->
+| key | value |
+| --- | --- |
+| id | example |`;
+    const content = markdown.replace("本文です。", body);
+    const input = structuredClone(submission.documents[0]);
+    input.viewpoints[1].findings![0].line = 6;
+    const finding =
+      "<!-- specdojo:finding id=F001 severity=minor rule=vp-arc-conciseness line=6 前置きが重複している。 -->";
+
+    const graded = gradeMarkdownContent({
+      content,
+      path: input.path,
+      input,
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-29T00:00:00.000Z"),
+    });
+    const legacyOrder = graded.replace(
+      `${finding}\n<!-- prettier-ignore -->`,
+      `<!-- prettier-ignore -->\n${finding}`,
+    );
+    const repaired = gradeMarkdownContent({
+      content: legacyOrder,
+      path: input.path,
+      input,
+      viewpoints,
+      target: "kata",
+      gradedBy: "codex-executor",
+      now: new Date("2026-08-29T00:00:00.000Z"),
+    });
+
+    expect(graded).toContain(`${finding}\n<!-- prettier-ignore -->\n| key | value |`);
+    expect(await format(graded, { parser: "markdown" })).toBe(graded);
+    expect(validateGradedMarkdown(graded, input.path)).toEqual([]);
+    expect(matchesGradeTargetFilters(graded, input.path, { changedOnly: true })).toBe(false);
+    expect(repaired).toBe(graded);
+  });
+
   it("detects count drift and edits after grading", () => {
     const graded = gradeMarkdownContent({
       content: markdown,
