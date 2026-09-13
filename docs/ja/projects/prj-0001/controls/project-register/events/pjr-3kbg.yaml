@@ -58,3 +58,22 @@
       from: in-progress
       to: review
   previous_event_id: reg_84494de0d933425ca3be29db1ba9e6e8
+- v: 1
+  id: reg_09609d2c72bc48b0ab263226ab42d4b6
+  ts: "2026-09-13T02:51:27Z"
+  action: close
+  actor: specdojo-orchestrator (claude)
+  from_status: review
+  to_status: done
+  reason: exec run --register（codex-expert-executor / gemma-reporter / worktree）で実施。親検証 3 件 passed、grade validate と prettier check を確認。利用者確認のうえ close
+  changes:
+    - field: status
+      from: review
+      to: done
+    - field: completed
+      from: "-"
+      to: "2026-09-13"
+    - field: conclusion
+      from: "-"
+      to: insertFindings が finding コメントを対象ブロック直前のディレクティブコメント（prettier-ignore など）より前へ挿入するよう修正し、ディレクティブと表が分断されなくなった。分断していた cdfd 3 件と cdfd-template を整えて content_hash を再計算し、grade validate のずれ 0 件、prettier check 通過を確認した。
+  previous_event_id: reg_4c00d74275e64e2a99fc553c17804809

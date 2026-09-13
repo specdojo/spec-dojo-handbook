@@ -2,16 +2,18 @@
 specdojo:
   id: prj-0001:pjr-3kbg-grade-finding-insertion-prettier-ignore
   type: project
-  status: draft
+  status: ready
   rulebook: specdojo:pjr-rulebook
   part_of:
     - prj-0001:pjr-index
   item_type: todo
-  item_status: review
+  item_status: done
   priority: medium
   owner: ARC
   registered_at: "2026-09-13T01:43:13Z"
   due_on: "2026-09-30"
+  completed_at: "2026-09-13T02:51:27Z"
+  conclusion: insertFindings が finding コメントを対象ブロック直前のディレクティブコメント（prettier-ignore など）より前へ挿入するよう修正し、ディレクティブと表が分断されなくなった。分断していた cdfd 3 件と cdfd-template を整えて content_hash を再計算し、grade validate のずれ 0 件、prettier check 通過を確認した。
 ---
 
 # PJR-3KBG grade apply の finding 挿入が prettier-ignore と表を分断し content_hash がずれる
