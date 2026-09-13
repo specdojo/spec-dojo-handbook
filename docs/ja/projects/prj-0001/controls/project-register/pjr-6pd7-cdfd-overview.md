@@ -37,6 +37,7 @@ specdojo:
 - データストア名は [[cdfd-overview]] の「データストア一覧」（稼働構成、Kata、成果物カタログ、スケジュール戦略、定期実行定義、ジョブ定義、登録簿、Schedule（track）、実行計画、実行記録、成果物、保管庫、評価結果、進捗報告、派生ビュー・索引）に統一する。旧文書の「プロジェクト定義・構成」「実行制御」「プロジェクトビュー」などの名称は引き継がない。
 - 凡例は [[cdfd-overview]] の「凡例（本プロダクト共通）」を参照し、各文書で再掲しない。
 - product 文書の `id` は `prj-0001:` などのプロジェクト修飾を付けない（例: `cdfd-plan`）。統合元の `id` は `prj-0001:` 付きのままなので、非推奨化時に参照元の wikilink を確認する。
+- タイムライン（`<project-id>/timeline/`）の位置付けは cdfd-overview で Schedule（track）に含めている。`cdfd-plan` または `cdfd-check` の作成時に、生成物としての扱いと閲覧提供との関係を確定する。
 - ユースケース別 CDFD は、複数のプロセスグループをまたぐ順序と引き渡し条件だけを定め、グループ内部のプロセスは再掲せずプロセスグループ別 CDFD を参照する。
 - 本件は [[prj-0001:sch-track-data-flow]] で進めた領域別 CDFD 整備のやり直しにあたる。生成済みの track は直接編集しない運用のため、[[prj-0001:dct-data-flow]] へ新規成果物を追加したうえで新しい track（例: `data-flow-v2`）の `sch-strategy-<track>.yaml` を作成し、`specdojo schedule build` で track を生成して進める。既存の `data-flow` track は変更しない。
 
@@ -51,20 +52,20 @@ specdojo:
 
 ## 3. 作業内容
 
-| No  | 作業                                                                                                                                              | 担当 | 状態 | メモ                                                 |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ---- | ---------------------------------------------------- |
-| 1   | [[prj-0001:dct-data-flow]] に新規成果物 8 件を追加し、新しい track の `sch-strategy-<track>.yaml` を作成して `schedule build` で track を生成する | PM   | open | 既存の `data-flow` track は変更しない                |
-| 2   | プロセスグループ別・ユースケース別 CDFD の rulebook・template を整備する（`cdfd-overview-rulebook` の改訂含む）                                   | BA   | open | 委譲境界の代替と詳細化先の読み替えを rulebook に反映 |
-| 3   | `cdfd-onboarding` を作成し `cdfd-init` を統合する                                                                                                 | BA   | open | -                                                    |
-| 4   | `cdfd-plan` を作成し登録簿・カタログ計画・routine（定義）を統合する                                                                               | BA   | open | 5 領域を含むため分量に注意                           |
-| 5   | `cdfd-do` を作成しタスク実行・並行処理を統合する                                                                                                  | BA   | open | -                                                    |
-| 6   | `cdfd-check` を作成し報告・派生生成を統合する                                                                                                     | BA   | open | 成果物評価（grade）は新規記述                        |
-| 7   | `cdfd-action` を作成し構成変更・非推奨化を統合する                                                                                                | BA   | open | タスク完了は新規記述                                 |
-| 8   | `cdfd-orchestrator` を作成し routine（起動）を統合する                                                                                            | BA   | open | 対話型運転は新規記述                                 |
-| 9   | `cdfd-uc-register`（登録簿起票から完了まで）を作成する                                                                                            | BA   | open | Plan → Do → Check → Action の引き渡し条件のみ        |
-| 10  | `cdfd-uc-deliverable`（成果物の作成から完了まで）を作成する                                                                                       | BA   | open | 同上                                                 |
-| 11  | 統合元 10 件を非推奨化して `trash` へ退避し、参照元の wikilink を付け替える                                                                       | BA   | open | `deliverable trash` を使用                           |
-| 12  | [[cdfd-overview]] の「詳細 CDFD 一覧」の ID を確定値に更新する                                                                                    | BA   | open | -                                                    |
+| No  | 作業                                                                                                                                              | 担当 | 状態 | メモ                                                                         |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---- | ---- | ---------------------------------------------------------------------------- |
+| 1   | [[prj-0001:dct-data-flow]] に新規成果物 8 件を追加し、新しい track の `sch-strategy-<track>.yaml` を作成して `schedule build` で track を生成する | PM   | open | 既存の `data-flow` track は変更しない                                        |
+| 2   | プロセスグループ別・ユースケース別 CDFD の rulebook・template を整備する（`cdfd-overview-rulebook` の改訂含む）                                   | BA   | open | 委譲境界の代替と詳細化先の読み替えを rulebook に反映                         |
+| 3   | `cdfd-onboarding` を作成し `cdfd-init` を統合する                                                                                                 | BA   | open | repository から setup、既存 prj から setup、Detached Unit の複数ケースを扱う |
+| 4   | `cdfd-plan` を作成し登録簿・カタログ計画・routine（定義）を統合する                                                                               | BA   | open | 5 領域を含むため分量に注意                                                   |
+| 5   | `cdfd-do` を作成しタスク実行・並行処理を統合する                                                                                                  | BA   | open | -                                                                            |
+| 6   | `cdfd-check` を作成し報告・派生生成を統合する                                                                                                     | BA   | open | 成果物評価（grade）は新規記述                                                |
+| 7   | `cdfd-action` を作成し構成変更・非推奨化を統合する                                                                                                | BA   | open | タスク完了は新規記述                                                         |
+| 8   | `cdfd-orchestrator` を作成し routine（起動）を統合する                                                                                            | BA   | open | 対話型運転は新規記述                                                         |
+| 9   | `cdfd-uc-register`（登録簿起票から完了まで）を作成する                                                                                            | BA   | open | Plan → Do → Check → Action の引き渡し条件のみ                                |
+| 10  | `cdfd-uc-deliverable`（成果物の作成から完了まで）を作成する                                                                                       | BA   | open | 同上                                                                         |
+| 11  | 統合元 10 件を非推奨化して `trash` へ退避し、参照元の wikilink を付け替える                                                                       | BA   | open | `deliverable trash` を使用                                                   |
+| 12  | [[cdfd-overview]] の「詳細 CDFD 一覧」の ID を確定値に更新する                                                                                    | BA   | open | -                                                                            |
 
 ## 4. 対応結果
 
