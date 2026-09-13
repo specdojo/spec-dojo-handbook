@@ -66,9 +66,9 @@ SpecDojo を導入して Kata を配置し、その雛形から稼働構成の�
 
 Plan の実行指示に基づき、人または AI Agent が Kata を参照してタスクを実行し、成果物と検証可能な実行記録を残す。定期実行・ジョブ・並行実行はタスク実行の実行形態であり、独立した領域にしない。
 
-- **主要入力**: Orchestrator からの実行要求、実行計画、ジョブ定義、対象成果物、Kata の rulebook・recipe・template、稼働構成の agent 定義・権限
-- **主要出力**: 作成・更新した成果物、実行記録（result）、実行状態（ブロック・判断依頼を含む）
-- **データストア**: Kata、稼働構成、実行計画、ジョブ定義、実行記録、成果物
+- **主要入力**: Orchestrator からの実行要求、実行計画、ジョブ定義、対象成果物、対象登録項目、Kata の rulebook・recipe・template、稼働構成の agent 定義・権限
+- **主要出力**: 作成・更新した成果物、登録項目の状態遷移、実行記録（result）、実行状態（ブロック・判断依頼を含む）
+- **データストア**: Kata、稼働構成、実行計画、ジョブ定義、登録簿、実行記録、成果物
 
 <!-- prettier-ignore -->
 | 領域 ID | プロセス領域 | 業務目的 | 主な担当 | 起点イベント |
@@ -86,7 +86,7 @@ Plan の実行指示に基づき、人または AI Agent が Kata を参照し�
 <!-- prettier-ignore -->
 | 領域 ID | プロセス領域 | 業務目的 | 主な担当 | 起点イベント |
 | --- | --- | --- | --- | --- |
-| `P-08` | 成果物評価 | 成果物の内容を確認し、品質や適合性を評価する。 | レビュー担当者 | 成果物が作成された |
+| `P-08` | 成果物評価 | 成果物や登録項目の対応結果を確認し、品質や適合性を評価する。 | レビュー担当者 | 成果物が作成された、または登録項目の対応が完了した |
 | `P-09` | 進捗可視化報告 | プロジェクトの進捗状況を可視化し、関係者に報告する。 | PM | 定期的な報告時期が到来した |
 | `P-10` | 派生生成閲覧提供 | 派生成果物の生成および閲覧を提供する。 | ARC | 派生成果物の生成が要求された |
 
@@ -127,7 +127,7 @@ SpecDojo のプロジェクト運営で読み書きするデータストアを�
 <!-- prettier-ignore -->
 | データストア | 主な内容 | 主な物理保管先 |
 | --- | --- | --- |
-| 稼働構成 | SpecDojo を稼働させる最低限の設定。リポジトリ層は SpecDojo の依存とバージョン、プロジェクト登録・パス設定、実行既定値、索引規則、agent 権限、オーケストレーター・executor・reporter の定義と入口指示。プロジェクト層はメンバー、ロール、レビュー観点 | `package.json`、<br>`.specdojo/`、<br>`.claude/agents/`、<br>`.claude/settings.json`、<br>`.codex/`、<br>`.opencode/`、<br>`.agents/*.agent.md`、<br>`.github/agents/`、<br>`CLAUDE.md`、<br>`AGENTS.md`、<br>`<project-id>/030-project-management/pm-members.yaml`、<br>`<project-id>/030-project-management/pm-roles.yaml`、<br>`<project-id>/030-project-management/pm-review-viewpoints.yaml` |
+| 稼働構成 | SpecDojo を稼働させる最低限の設定。リポジトリ層は SpecDojo の依存とバージョン、プロジェクト登録・パス設定、実行既定値、索引規則、agent 権限、オーケストレーター・executor・reporter の定義と入口指示。プロジェクト層はメンバー、ロール、レビュー観点 | `package.json`、<br>`.specdojo/specdojo.config.json`、<br>`.specdojo/exec-defaults.yaml`、<br>`.specdojo/index-config.yaml`、<br>`.specdojo/<provider>/`、<br>`.claude/agents/`、<br>`.claude/settings.json`、<br>`.codex/`、<br>`.opencode/`、<br>`.agents/*.agent.md`、<br>`.github/agents/`、<br>`CLAUDE.md`、<br>`AGENTS.md`、<br>`<project-id>/030-project-management/pm-members.yaml`、<br>`<project-id>/030-project-management/pm-roles.yaml`、<br>`<project-id>/030-project-management/pm-review-viewpoints.yaml` |
 | Kata | rulebook、recipe、template、sample、standard、schema、plan・result テンプレート、既定レビュー観点、評価 rubric、provider 別の agent 定義・設定の雛形、agent 向けの記述ルールと skill。内容は product 側で保守し、プロジェクトでは配置とバージョン更新だけを行う | `docs/ja/specdojo/`、<br>`docs/specdojo/schemas/`、<br>`templates/<provider>/`、<br>`.github/instructions/`、<br>`.claude/rules/`、<br>`.claude/skills/`、<br>`.agents/skills/` |
 | 成果物カタログ | 成果物 ID、種別、依存、owner、完了条件 | `<project-id>/010-deliverables-catalog/dct-*.yaml` |
 | スケジュール戦略 | 既定値、トラックごとのタスク生成戦略（対象カタログ、approach、phase の作業要件、ゲート・マイルストーンの定義） | `<project-id>/schedule/sch-defaults.yaml`、<br>`<project-id>/schedule/sch-strategy-<track>.yaml` |
@@ -141,13 +141,13 @@ SpecDojo のプロジェクト運営で読み書きするデータストアを�
 | --- | --- | --- |
 | 登録簿 | 登録項目の個票、登録簿索引、状態遷移イベント | `<project-id>/controls/project-register/` |
 | Schedule（track） | トラックごとのタスク、担当、期間、状態と、タスクに依存するマイルストーン。スケジュール戦略と成果物カタログから `schedule build` で生成 | `<project-id>/schedule/sch-track-<track>.yaml`、<br>`<project-id>/schedule/sch-milestones.yaml`、<br>`<project-id>/timeline/` |
-| 実行計画（plan） | タスクごとの実施手順、対象文書、完了条件 | `<project-id>/execution/exec/plans/` |
-| 実行記録 | result、状態遷移イベント、evidence、trial、ジョブ実行記録、agent 実行ログ | `<project-id>/execution/exec/`、<br>`<project-id>/execution/jobs/runs/`、<br>`logs/` |
-| 成果物 | プロジェクトで作成・更新する成果物本体。プロジェクト定義（概要、憲章、スコープ）や計画書も含む | `docs/ja/product/`、<br>`<project-id>/` 配下の各成果物 |
+| 実行計画 | plan。タスクごとの実施手順、対象文書、完了条件 | `<project-id>/execution/exec/plans/` |
+| 実行記録 | result、状態遷移イベント、evidence、trial、ジョブ実行記録、agent 実行ログ | `<project-id>/execution/exec/results/`、<br>`<project-id>/execution/exec/events/`、<br>`<project-id>/execution/exec/evidence/`、<br>`<project-id>/execution/exec/trials/`、<br>`<project-id>/execution/jobs/runs/`、<br>`logs/` |
+| 成果物 | プロジェクトで作成・更新する成果物本体。プロジェクト定義（概要、憲章、スコープ）や計画書も含む | `docs/ja/product/`、<br>`<project-id>/020-project-definition/`、<br>`<project-id>/030-project-management/`（稼働構成に属する YAML を除く） |
 | 保管庫（trash） | 非推奨化して退避した文書 | `docs/ja/product/trash/`、<br>`<project-id>/trash/` |
 | 評価結果 | 完了条件の判定、grade、finding | `<project-id>/execution/grade/`、<br>成果物 Frontmatter の `grade` |
 | 進捗報告 | ダッシュボード、クリティカルパス、ガントチャート、各種ログの生成ビュー | `<project-id>/execution/generated/`、<br>`<project-id>/controls/generated/` |
-| 派生ビュー・索引 | YAML の閲覧ページ、文書索引、サイトビルド出力 | 各 `generated/`、<br>`.specdojo/doc-index.json` |
+| 派生ビュー・索引 | YAML の閲覧ページ、文書索引、サイトビルド出力（進捗報告に含まれる生成ビューを除く） | 各 `generated/<name>.md`、<br>`.specdojo/doc-index.json` |
 
 ## 5. 概念データフロー（概要）
 
@@ -155,7 +155,7 @@ SpecDojo のプロジェクト運営で読み書きするデータストアを�
 
 ### 5.1. トランザクションデータの流れ
 
-Orchestrator が PDCA を駆動し、Plan が作る登録簿・Schedule（track）・実行計画を Do が消費して成果物と実行記録を生み、Check がそれらを評価結果・進捗報告・派生ビュー・索引へ変換し、Action が判断結果を記録へ戻す流れを示す。
+Orchestrator が PDCA を駆動し、Plan が登録簿・Schedule（track）・実行計画を作り、Do が実行計画と対象の成果物・登録項目に基づいて成果物と実行記録を生み、Check がそれらを評価結果・進捗報告・派生ビュー・索引へ変換し、Action が判断結果を記録へ戻す流れを示す。
 
 ```mermaid
 flowchart LR
@@ -193,6 +193,8 @@ flowchart LR
 
   ExecPlan -->|"実行計画"| Do
   Deliverables -->|"対象成果物"| Do
+  Register -->|"対象登録項目"| Do
+  Do -->|"登録項目の状態遷移"| Register
   Do -->|"作成・更新した成果物"| Deliverables
   Do -->|"実行記録・実行状態"| ExecLog
 
@@ -253,6 +255,7 @@ flowchart LR
   Plan -->|"成果物カタログ"| Catalog
   Catalog -->|"成果物カタログ"| Check
   Catalog -->|"完了条件・rulebook 参照"| Orchestrator
+  Catalog -->|"完了条件"| Action
   Plan -->|"既定値・タスク生成戦略"| Strategy
   Strategy -->|"phase の作業要件"| Orchestrator
   Plan -->|"定期実行定義"| Routine
