@@ -60,6 +60,18 @@ ERROR: .../cdfd-catalog-planning.md: content changed after the last grade
 HTML コメント）が隣接している場合は、そのコメントのさらに前へ挿入する。既存文書で分断されている箇所は
 次回の `grade apply` で並びを直すか、一括で整える。
 
+### 1.4. 補足（2026-09-13 の 2 回目の run で確認）
+
+- 9/13 の run で再評価した `cdfd-agent-config-operation` と `cdfd-catalog-planning` は、同じ位置へ
+  finding が再挿入され、commit 時の整形で再びずれた。`cdfd-overview` も初回評価で同じ状態になり、
+  ずれは 3 件に増えた。修正しない限り、評価と commit のたびに再発する。
+- `insertFindings` は挿入時にブロックの前へ空行を 1 行足し、その空行を含む本文で `content_hash` を
+  計算している（`withoutFindingComments` はコメント行だけを除く）。そのため、コメントをディレクティブの
+  前へ手で移して空行を消しても hash 側と食い違う。修正では、挿入位置をディレクティブの前へ移すことと、
+  ディレクティブとブロックの間に空行を残さないことの両方が要る。
+- 再評価では、前回の finding を引き継いだ gemma の 2 段が閾値未満となり、codex の 3 段目が
+  `skipped_condition` で走らない。不要な再選択を止めることが、判定精度の面でも重要である。
+
 ## 2. 完了条件
 
 - `grade apply` が finding コメントを、対象ブロックの直前にあるディレクティブコメントより前へ挿入する。
