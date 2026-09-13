@@ -158,7 +158,7 @@ specdojo:
 ```mermaid
 flowchart LR
   classDef process fill:#e3f2fd,stroke:#1e88e5,color:#000
-  classDef storeMaster fill:#c8e6c9,stroke:#2e7d32,color:#000
+  classDef storeMaster fill:#a5d6a7,stroke:#1b5e20,color:#000
   classDef storeTransaction fill:#e8f5e9,stroke:#43a047,color:#000
   classDef actor fill:#f5f7fa,stroke:#607d8b,color:#000
 
@@ -260,7 +260,7 @@ flowchart LR
 flowchart LR
   classDef process fill:#e3f2fd,stroke:#1e88e5,color:#000
   classDef event fill:#fff3e0,stroke:#fb8c00,color:#000
-  classDef storeMaster fill:#c8e6c9,stroke:#2e7d32,color:#000
+  classDef storeMaster fill:#a5d6a7,stroke:#1b5e20,color:#000
   classDef storeTransaction fill:#e8f5e9,stroke:#43a047,color:#000
   classDef actor fill:#f5f7fa,stroke:#607d8b,color:#000
 
@@ -289,7 +289,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | プロセス／プロセスグループ | 角丸長方形 | 青（`#e3f2fd` / `#1e88e5`） | 業務内容が伝わる絵文字（例: 🛒） |
 | 起点イベント | 六角形 | 橙（`#fff3e0` / `#fb8c00`） | 出来事が伝わる絵文字（例: 🚦） |
-| データストア（マスタ・構成データ） | 円柱 | 濃い緑（`#c8e6c9` / `#2e7d32`） | 保管物が伝わる絵文字（例: 📐） |
+| データストア（マスタ・構成データ） | 円柱 | 濃い緑（`#a5d6a7` / `#1b5e20`） | 保管物が伝わる絵文字（例: 📐） |
 | データストア（トランザクションデータ） | 円柱 | 薄い緑（`#e8f5e9` / `#43a047`） | 保管物が伝わる絵文字（例: 📒） |
 | 物理保管 | スタジアム形 | 薄い緑（トランザクションデータと同じ） | 保管場所が伝わる絵文字（例: 🏬） |
 | 外部主体 | 四角 | グレー（`#f5f7fa` / `#607d8b`） | 主体が伝わる絵文字（例: 🧑） |

@@ -209,7 +209,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-  classDef storeMaster fill:#c8e6c9,stroke:#2e7d32,color:#000
+  classDef storeMaster fill:#a5d6a7,stroke:#1b5e20,color:#000
   classDef storeTransaction fill:#e8f5e9,stroke:#43a047,color:#000
 
   商品マスタ[("商品マスタ")]
