@@ -84,15 +84,26 @@ HTML コメント）が隣接している場合は、そのコメントのさら
 
 ## 3. 作業内容
 
-| No  | 作業                                                    | 担当 | 状態 | メモ                                          |
-| --- | ------------------------------------------------------- | ---- | ---- | --------------------------------------------- |
-| 1   | `insertFindings` をディレクティブコメントの前へ挿入する | ARC  | open | `specdojo:finding` 以外の HTML コメントが対象 |
-| 2   | 単体テストを追加する                                    | ARC  | open | prettier-ignore 付き表の直前への挿入          |
-| 3   | 既存文書の分断箇所を整え、grade validate で確認する     | ARC  | open | 対象は cdfd 2 件。他になければ記録する        |
+| No  | 作業                                                    | 担当 | 状態 | メモ                                                       |
+| --- | ------------------------------------------------------- | ---- | ---- | ---------------------------------------------------------- |
+| 1   | `insertFindings` をディレクティブコメントの前へ挿入する | ARC  | done | 空白だけを挟む連続 HTML コメントも含めて前方へ補正した     |
+| 2   | 単体テストを追加する                                    | ARC  | done | prettier-ignore 付き表、再適用、Prettier 後の安定性を固定  |
+| 3   | 既存文書の分断箇所を整え、grade validate で確認する     | ARC  | done | 分断 3 箇所を修正し、対象 3 成果物の hash 不一致を解消した |
 
 ## 4. 対応結果
 
-_TODO_: 完了時に、実施内容・成果物・残課題を記載する。未完了の場合は `-` とする。
+- `src/grade.ts` の finding 挿入位置を、対象 Markdown ブロックに付随する HTML コメント群の前まで
+  戻すよう変更した。finding 除去後に空行が残る既存文書も次回適用時に正しい順序へ戻る。
+- `tests/src/grade.test.ts` に `prettier-ignore` 付き表への挿入、旧順序からの再適用、Prettier 後の
+  `content_hash` 安定性を確認する回帰テストを追加した。
+- `cdfd-overview.md` の 2 箇所と `cdfd-template.md` の 1 箇所で finding を
+  `prettier-ignore` より前へ移した。過去の自動整形で hash がずれた
+  `cdfd-agent-config-operation.md`、`cdfd-catalog-planning.md`、`cdfd-overview.md` と、並び替えた
+  `cdfd-template.md` の `content_hash` を現在本文へ同期した。
+- `grade validate` の deliverable / kata 全件確認では `content changed after the last grade` が 0 件に
+  なった。タスク対象外の未評価文書と、finding 集計が既存コメント数と一致しないテンプレートは引き続き
+  全件検証エラーとして報告される。
+- 本項目の残課題はない。
 
 ## 5. 関連ドキュメント
 
