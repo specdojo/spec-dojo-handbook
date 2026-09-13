@@ -125,7 +125,7 @@ SpecDojo のプロジェクト運営で読み書きするデータストアを�
 ### 4.1. マスタ・構成データ
 
 <!-- prettier-ignore -->
-| データストア | 主な内容 | 主な物理保管先 |
+| データストア | 主な内容 | 主な保管先 |
 | --- | --- | --- |
 | 稼働構成 | SpecDojo を稼働させる最低限の設定。リポジトリ層は SpecDojo の依存とバージョン、プロジェクト登録・パス設定、実行既定値、索引規則、agent 権限、オーケストレーター・executor・reporter の定義と入口指示。プロジェクト層はメンバー、ロール、レビュー観点 | `package.json`、<br>`.specdojo/specdojo.config.json`、<br>`.specdojo/exec-defaults.yaml`、<br>`.specdojo/index-config.yaml`、<br>`.specdojo/<provider>/`、<br>`.claude/agents/`、<br>`.claude/settings.json`、<br>`.codex/`、<br>`.opencode/`、<br>`.agents/*.agent.md`、<br>`.github/agents/`、<br>`CLAUDE.md`、<br>`AGENTS.md`、<br>`<project-id>/030-project-management/pm-members.yaml`、<br>`<project-id>/030-project-management/pm-roles.yaml`、<br>`<project-id>/030-project-management/pm-review-viewpoints.yaml` |
 | Kata | rulebook、recipe、template、sample、standard、schema、plan・result テンプレート、既定レビュー観点、評価 rubric、provider 別の agent 定義・設定の雛形、agent 向けの記述ルールと skill。内容は product 側で保守し、プロジェクトでは配置とバージョン更新だけを行う | `docs/ja/specdojo/`、<br>`docs/specdojo/schemas/`、<br>`templates/<provider>/`、<br>`.github/instructions/`、<br>`.claude/rules/`、<br>`.claude/skills/`、<br>`.agents/skills/` |
@@ -137,7 +137,7 @@ SpecDojo のプロジェクト運営で読み書きするデータストアを�
 ### 4.2. トランザクションデータ
 
 <!-- prettier-ignore -->
-| データストア | 主な内容 | 主な物理保管先 |
+| データストア | 主な内容 | 主な保管先 |
 | --- | --- | --- |
 | 登録簿 | 登録項目の個票、登録簿索引、状態遷移イベント | `<project-id>/controls/project-register/` |
 | Schedule（track） | トラックごとのタスク、担当、期間、状態と、タスクに依存するマイルストーン。スケジュール戦略と成果物カタログから `schedule build` で生成 | `<project-id>/schedule/sch-track-<track>.yaml`、<br>`<project-id>/schedule/sch-milestones.yaml`、<br>`<project-id>/timeline/` |
