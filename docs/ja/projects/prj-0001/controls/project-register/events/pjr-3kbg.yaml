@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../../../../specdojo/schemas/v1/register-events.schema.yaml
+- v: 1
+  id: reg_011a36e363f94575a3c6365af8d842c5
+  ts: "2026-09-13T01:43:14Z"
+  action: add
+  actor: specdojo-orchestrator (claude)
+  from_status: null
+  to_status: open
+  reason: "docs(register): finding 挿入位置による content_hash ずれの不具合を起票する"
+  changes:
+    - field: status
+      from: ""
+      to: open
+    - field: title
+      from: ""
+      to: grade apply の finding 挿入が prettier-ignore と表を分断し content_hash がずれる
+    - field: description
+      from: ""
+      to: grade apply は finding コメントを指摘行を含む最上位ブロックの直前へ挿入するが、ブロックの直前に `<!-- prettier-ignore -->` があると、その後ろ（ディレクティブと表の間）に入る。ディレクティブが効かなくなった表は commit 時の lefthook（prettier --write）で整形され、本文が content_hash と食い違って --changed-only で再選択される。成果物評価の 2 回目で評価済みの cdfd-agent-config-operation と cdfd-catalog-planning が再選択されたのはこれが原因で、grade validate でも content changed after the last grade として検出される。finding コメントは直前のディレクティブコメントより前に挿入し、既存の挿入済み文書も整える。
+    - field: type
+      from: ""
+      to: todo
+    - field: priority
+      from: ""
+      to: medium
+    - field: owner
+      from: ""
+      to: ARC
+    - field: registered
+      from: ""
+      to: "2026-09-13"
+    - field: due
+      from: ""
+      to: "2026-09-30"
