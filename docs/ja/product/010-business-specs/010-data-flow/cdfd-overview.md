@@ -6,6 +6,38 @@ specdojo:
   rulebook: specdojo:cdfd-overview-rulebook
   based_on: []
   supersedes: []
+  grade:
+    rubric: grade-rubric-v1
+    target: deliverable
+    verdict: needs-work
+    score: 67
+    graded_at: "2026-09-13T01:19:41.250Z"
+    graded_by: codex-expert-executor
+    content_hash: 1713b41c0164a3e19563b155aa6a279aebe98e9e7d999bed391fa71b240d7338
+    categories:
+      consistency: { score: 25 }
+      usability: { score: 94 }
+      architecture: { score: 100 }
+      quality: { score: 58 }
+    viewpoints:
+      vp-arc-cross-document-consistency: { level: 1, score: 25 }
+      vp-arc-conciseness: { level: 4, score: 100 }
+      vp-arc-single-responsibility: { level: 4, score: 100 }
+      vp-qe-done-criteria: { level: 2, score: 50 }
+      vp-qe-verifiability: { level: 1, score: 25 }
+      vp-qe-omissions-consistency: { level: 1, score: 25 }
+      vp-ux-readability: { level: 4, score: 100 }
+      vp-ux-user-flow: { level: 4, score: 100 }
+      vp-ux-language-consistency: { level: 3, score: 75 }
+      vp-arc-document-structure: { level: 4, score: 100 }
+      vp-qe-config-validity: { level: 4, score: 100 }
+    findings: { blocker: 0, major: 8, minor: 3, note: 0 }
+    done_criteria:
+      satisfied: 3
+      total: 4
+      unsatisfied:
+        DC-003: [ARC]
+      detail_ref: prj-0001:cdfd-overview-grade-criteria
 ---
 
 # 概念データフロー図（全体概要）: SpecDojo
@@ -28,22 +60,32 @@ specdojo:
 業務は十のプロセス領域に分かれる。十領域の分割、領域 ID、領域間の受け渡しに関する規則は本書を正本とし、各領域内の詳細規則は対応する領域別 CDFD を正本とする。主要入力・主要出力・データストアは「個別プロセス領域主要入出力」、委譲境界は「委譲境界」に記載する。
 
 <!-- prettier-ignore -->
-| 領域 ID | プロセス領域 | 業務目的 | 主な担当 | 起点イベント | 領域別 CDFD |
-| --- | --- | --- | --- | --- | --- |
-| `P-01` | 初期セットアップ | プロジェクトの目的と運用方針を、計画と実行を開始できる正本へ展開する。 | PM、BA | 新しいプロジェクトの開始が承認された | [[prj-0001:cdfd-init\|初期セットアップ]] |
-| `P-02` | 登録簿ライフサイクル | 計画外事項、判断、リスク、課題を継続的に追跡し、判断と次の行動へつなぐ。 | PM、PO | 計画外事項または判断事項が発生した | [[prj-0001:cdfd-register-lifecycle\|登録簿ライフサイクル]] |
-| `P-03` | 計画展開 | 成果物カタログと実行方針から、依存と実行可能性を確認できる計画を作る。 | PM | カタログと計画方針が準備または変更された | [[prj-0001:cdfd-catalog-planning\|カタログ〜計画展開]] |
-| `P-04` | タスク実行 | 実行可能なタスクを人または AI Agent が担当し、成果物と検証可能な実行結果を残す。 | タスク owner、レビュー担当 | 実行可能なタスクが選択された | [[prj-0001:cdfd-task-execution\|タスク実行ライフサイクル]] |
-| `P-05` | 定期処理 | 定義された時期・条件に基づき、継続的な確認または実行を起動して結果を反映する。 | PM、運用担当 | 定期実行の期限または条件が到来した | [[prj-0001:cdfd-routine\|定期処理]] |
-| `P-06` | 並行処理 | 独立して進められる複数の実行単位を分離し、競合を管理しながら結果を統合する。 | PM、タスク owner | 独立した実行可能タスクが複数存在する | [[prj-0001:cdfd-multi-project\|複数プロジェクト・ブランチ並行処理]] |
-| `P-07` | 構成変更 | agent、provider、プロジェクト構成の承認済み変更を、後続実行の条件へ反映する。 | PM、PO | 運用構成の変更が承認された | [[prj-0001:cdfd-agent-config-operation\|agent・provider 構成の運用変更]] |
-| `P-08` | 派生生成 | 正本の更新を、利用者が参照できる成果物、索引、ビューへ一貫して展開する。 | BA、運用担当 | 正本が更新された、または派生生成が要求された | [[prj-0001:cdfd-derived-content\|成果物・派生ビュー・索引生成]] |
-| `P-09` | 報告 | 進捗、判断、課題、費用・参加負荷を、確認者が次の判断に使える情報へまとめる。 | PM、BA | 節目、判断時点、または報告時期が到来した | [[prj-0001:cdfd-reporting\|進捗監視・報告・ログ管理]] |
-| `P-10` | 非推奨化・保管 | 役割を終えた、または新IDへ引き継がれた文書を非推奨化し、誤参照を防ぐ保管場所へ移す。 | PM、ARC | 文書が新IDへ引き継がれた、または継続利用しないと判断された | [[prj-0001:cdfd-deprecation\|非推奨化・保管]] |
+<!-- specdojo:finding id=F011 severity=minor rule=vp-ux-language-consistency line=26 「主な担当」で Role code と未定義の「タスク owner」「レビュー担当」「運用担当」を混在させているため、`QE`・`OPS` 等との対応または役割定義への参照を明示する必要がある。 -->
+
+| 領域 ID | プロセス領域         | 業務目的                                                                             | 主な担当                   | 起点イベント                                               | 領域別 CDFD                                                              |
+| ------- | -------------------- | ------------------------------------------------------------------------------------ | -------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `P-01`  | 初期セットアップ     | プロジェクトの目的と運用方針を、計画と実行を開始できる正本へ展開する。               | PM、BA                     | 新しいプロジェクトの開始が承認された                       | [[prj-0001:cdfd-init\|初期セットアップ]]                                 |
+| `P-02`  | 登録簿ライフサイクル | 計画外事項、判断、リスク、課題を継続的に追跡し、判断と次の行動へつなぐ。             | PM、PO                     | 計画外事項または判断事項が発生した                         | [[prj-0001:cdfd-register-lifecycle\|登録簿ライフサイクル]]               |
+| `P-03`  | 計画展開             | 成果物カタログと実行方針から、依存と実行可能性を確認できる計画を作る。               | PM                         | カタログと計画方針が準備または変更された                   | [[prj-0001:cdfd-catalog-planning\|カタログ〜計画展開]]                   |
+| `P-04`  | タスク実行           | 実行可能なタスクを人または AI Agent が担当し、成果物と検証可能な実行結果を残す。     | タスク owner、レビュー担当 | 実行可能なタスクが選択された                               | [[prj-0001:cdfd-task-execution\|タスク実行ライフサイクル]]               |
+| `P-05`  | 定期処理             | 定義された時期・条件に基づき、継続的な確認または実行を起動して結果を反映する。       | PM、運用担当               | 定期実行の期限または条件が到来した                         | [[prj-0001:cdfd-routine\|定期処理]]                                      |
+| `P-06`  | 並行処理             | 独立して進められる複数の実行単位を分離し、競合を管理しながら結果を統合する。         | PM、タスク owner           | 独立した実行可能タスクが複数存在する                       | [[prj-0001:cdfd-multi-project\|複数プロジェクト・ブランチ並行処理]]      |
+| `P-07`  | 構成変更             | agent、provider、プロジェクト構成の承認済み変更を、後続実行の条件へ反映する。        | PM、PO                     | 運用構成の変更が承認された                                 | [[prj-0001:cdfd-agent-config-operation\|agent・provider 構成の運用変更]] |
+| `P-08`  | 派生生成             | 正本の更新を、利用者が参照できる成果物、索引、ビューへ一貫して展開する。             | BA、運用担当               | 正本が更新された、または派生生成が要求された               | [[prj-0001:cdfd-derived-content\|成果物・派生ビュー・索引生成]]          |
+| `P-09`  | 報告                 | 進捗、判断、課題、費用・参加負荷を、確認者が次の判断に使える情報へまとめる。         | PM、BA                     | 節目、判断時点、または報告時期が到来した                   | [[prj-0001:cdfd-reporting\|進捗監視・報告・ログ管理]]                    |
+| `P-10`  | 非推奨化・保管       | 役割を終えた、または新IDへ引き継がれた文書を非推奨化し、誤参照を防ぐ保管場所へ移す。 | PM、ARC                    | 文書が新IDへ引き継がれた、または継続利用しないと判断された | [[prj-0001:cdfd-deprecation\|非推奨化・保管]]                            |
 
 ## 4. 概念データフロー（概要）
 
+<!-- specdojo:finding id=F003 severity=minor rule=vp-arc-cross-document-consistency line=36 概要図から起点イベントを省略する方針は、recipe が求める起点イベントの図への配置および適用 rulebook が包含する `cdfd-mermaid-rulebook` のイベント必須規則と競合するため、図示するか適用規則の優先関係を統一する必要がある。 -->
+<!-- specdojo:finding id=F009 severity=major rule=vp-qe-omissions-consistency line=36 全領域の起点イベントを概要図から省略しているため、recipe および包含先 `cdfd-mermaid-rulebook` が必須とするイベントノードと起動条件エッジが欠落している。 -->
+
 本図は、十領域を業務の性質が近い三つのプロセスグループへまとめ、外部主体・データストアとの主要な受け渡しを示す。グループの左右配置は固定の実行順または全領域の必須実行を意味しない。領域ごとの起点イベントは3章、主要入出力は5章を正本とし、領域内プロセスの必須・条件付きの区分と非起動時の経路は各領域別 CDFD へ委譲する。
+
+<!-- specdojo:finding id=F002 severity=major rule=vp-arc-cross-document-consistency line=91 `P-10` の領域別 CDFD と主要入出力表は成果物カタログの更新と保管先への文書移動を主要出力とするが,概要図には「活用と共有」から成果物カタログへの更新エッジと保管文書への出力がなく、領域間境界が一致しない。 -->
+<!-- specdojo:finding id=F006 severity=major rule=vp-qe-verifiability line=91 `P-10` の主要出力として表に記載された成果物カタログ更新と保管先への文書移動に対応する概要図のエッジがなく、表と図の一致を pass と判定できない。 -->
+<!-- specdojo:finding id=F008 severity=major rule=vp-qe-omissions-consistency line=91 `P-10` の成果物カタログ更新と保管文書への出力が概要図から欠落し、主要入出力表および領域別 CDFDとの対応が完成していない。 -->
+<!-- specdojo:finding id=F010 severity=minor rule=vp-ux-language-consistency line=55 図とデータストア列では `Schedule・実行計画` を単一名称として扱う一方、`P-03` の主要出力では `Schedule` と `実行計画` を別項目として列挙しているため、同一の正本か別成果物かを統一して示す必要がある。 -->
 
 ```mermaid
 flowchart LR
@@ -119,11 +161,16 @@ flowchart LR
 プロジェクトを開始し、計画外事項を管理しながら、成果物カタログと実行方針から実行可能性を確認できる計画を立てる。初期セットアップで正本を整え、登録簿ライフサイクルで計画外の判断を継続的に扱い、計画展開で Schedule・実行計画を作る。
 
 <!-- prettier-ignore -->
-| 領域 ID | プロセス領域 | 主要入力 | 主要出力 | データストア |
-| --- | --- | --- | --- | --- |
-| `P-01` | 初期セットアップ | プロジェクト文脈、初期方針、参加条件 | プロジェクト定義・構成、成果物カタログの初期状態、運用開始条件 | プロジェクト定義・構成、成果物カタログ、運用・構成定義 |
-| `P-02` | 登録簿ライフサイクル | 事項の内容、影響、提起者の期待 | 登録項目、状態、判断、次の行動 | 登録簿 |
-| `P-03` | 計画展開 | 成果物カタログ、依存、計画方針、登録簿の制約 | Schedule、実行計画、実行可能なタスク情報 | 成果物カタログ、Schedule・実行計画 |
+<!-- specdojo:finding id=F001 severity=major rule=vp-arc-cross-document-consistency line=116 `P-03`、`P-04`、`P-08`、`P-09` の主要入力として記載した登録簿、Schedule、成果物カタログ、費用・作業記録が各行のデータストア列から欠落しており、これらを正本として参照する領域別 CDFD との対応が一致しない。 -->
+<!-- specdojo:finding id=F004 severity=major rule=vp-qe-done-criteria line=116 DC-003 が要求する領域別データストアについて、`P-03` の登録簿、`P-04` の Schedule、`P-08` の成果物カタログと Schedule、`P-09` の Schedule・登録簿・費用作業記録がデータストア列に記載されず、各領域が参照する正本を一意に確認できない。 -->
+<!-- specdojo:finding id=F005 severity=major rule=vp-qe-verifiability line=116 `P-03`、`P-04`、`P-08`、`P-09` では主要入力に明記された正本がデータストア列から欠落しているため、各領域が参照・更新するデータストアの完全性を表だけで判定できない。 -->
+<!-- specdojo:finding id=F007 severity=major rule=vp-qe-omissions-consistency line=116 主要入力と図でデータストアとされる登録簿、Schedule、成果物カタログ、費用・作業記録が `P-03`、`P-04`、`P-08`、`P-09` のデータストア列から欠落している。 -->
+
+| 領域 ID | プロセス領域         | 主要入力                                     | 主要出力                                                       | データストア                                           |
+| ------- | -------------------- | -------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------ |
+| `P-01`  | 初期セットアップ     | プロジェクト文脈、初期方針、参加条件         | プロジェクト定義・構成、成果物カタログの初期状態、運用開始条件 | プロジェクト定義・構成、成果物カタログ、運用・構成定義 |
+| `P-02`  | 登録簿ライフサイクル | 事項の内容、影響、提起者の期待               | 登録項目、状態、判断、次の行動                                 | 登録簿                                                 |
+| `P-03`  | 計画展開             | 成果物カタログ、依存、計画方針、登録簿の制約 | Schedule、実行計画、実行可能なタスク情報                       | 成果物カタログ、Schedule・実行計画                     |
 
 ### 5.2. プロジェクト実行（P-04〜P-07）
 

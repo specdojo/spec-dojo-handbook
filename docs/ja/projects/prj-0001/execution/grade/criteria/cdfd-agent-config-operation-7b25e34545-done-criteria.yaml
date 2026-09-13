@@ -2,9 +2,9 @@
 id: prj-0001:cdfd-agent-config-operation-grade-criteria
 document: prj-0001:cdfd-agent-config-operation
 path: docs/ja/product/010-business-specs/010-data-flow/cdfd-agent-config-operation.md
-graded_at: "2026-09-11T23:34:59.669Z"
-graded_by: codex-expert-executor
-content_hash: 2ee04c05fbfc00b2a57fce2b89b9e7775db562cab78e594f56d984b569773ac1
+graded_at: "2026-09-12T23:36:16.658Z"
+graded_by: gemma-expert-executor
+content_hash: 60caa131ba15be2ac330b49322b03e11fe74fa422adf7bc26dab90fa75f9e64b
 summary:
   satisfied: 3
   unsatisfied: 1
@@ -22,7 +22,7 @@ criteria:
       - ARC
     viewpoint: vp-arc-cross-document-consistency
     status: unsatisfied
-    reason: exec-defaults.yaml が現行で管理するモデル・reasoning effort・sandbox・tool 権限が責務表に反映されず、provider 固有設定との正しい責務境界を確認できない。
+    reason: exec-defaults.yaml が実際に管理するモデル・sandbox・tool 権限が責務表から欠落し provider 固有設定へ誤配分されている。
   - id: DC-003
     text: agent・providerの権限範囲、認証情報を設定文書から分離する境界、プロンプトインジェクション対策を承認できること
     roles:

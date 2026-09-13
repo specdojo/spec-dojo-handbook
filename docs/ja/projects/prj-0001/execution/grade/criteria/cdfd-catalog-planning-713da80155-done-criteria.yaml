@@ -2,9 +2,9 @@
 id: prj-0001:cdfd-catalog-planning-grade-criteria
 document: prj-0001:cdfd-catalog-planning
 path: docs/ja/product/010-business-specs/010-data-flow/cdfd-catalog-planning.md
-graded_at: "2026-09-12T00:05:52.807Z"
-graded_by: codex-expert-executor
-content_hash: 012e5119daaf25a201bdb564a7401072e57432e28afc82376576a398712bcc47
+graded_at: "2026-09-13T00:09:15.777Z"
+graded_by: gemma-expert-executor
+content_hash: c17b75cbb3ba0cd035e1922511392c0276f31a66bad77f60869de793d952cc70
 summary:
   satisfied: 3
   unsatisfied: 0
