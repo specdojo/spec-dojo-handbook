@@ -86,7 +86,7 @@ Schedule・event から state、Ready、CPM、critical path、timeline を算出
 flowchart LR
   classDef process fill:#e3f2fd,stroke:#1e88e5,color:#000
   classDef event fill:#fff3e0,stroke:#fb8c00,color:#000
-  classDef storeMaster fill:#c8e6c9,stroke:#2e7d32,color:#000
+  classDef storeMaster fill:#a5d6a7,stroke:#1b5e20,color:#000
   classDef storeTransaction fill:#e8f5e9,stroke:#43a047,color:#000
   classDef actor fill:#f5f7fa,stroke:#607d8b,color:#000
 
@@ -141,7 +141,7 @@ flowchart LR
 flowchart LR
   classDef process fill:#e3f2fd,stroke:#1e88e5,color:#000
   classDef event fill:#fff3e0,stroke:#fb8c00,color:#000
-  classDef storeMaster fill:#c8e6c9,stroke:#2e7d32,color:#000
+  classDef storeMaster fill:#a5d6a7,stroke:#1b5e20,color:#000
   classDef storeTransaction fill:#e8f5e9,stroke:#43a047,color:#000
   classDef actor fill:#f5f7fa,stroke:#607d8b,color:#000
 
